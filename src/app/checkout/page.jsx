@@ -114,14 +114,14 @@ export default function Checkout({ course, user }) {
         {/* Course Details */}
         <div className="border rounded-lg p-4 mb-4">
           <img 
-            src={course.thumbnail || '/api/placeholder/300/200'} 
-            alt={course.title}
+            src={course?.coverImage || '/api/placeholder/300/200'} 
+            alt={course?.title}
             className="w-full h-32 object-cover rounded mb-3"
           />
-          <h3 className="font-semibold text-lg">{course.title}</h3>
-          <p className="text-gray-600 text-sm mb-2">{course.description}</p>
+          <h3 className="font-semibold text-lg">{course?.title}</h3>
+          <p className="text-gray-600 text-sm mb-2">{course?.description}</p>
           <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold text-blue-600">₹{course.price}</span>
+            <span className="text-2xl font-bold text-blue-600">₹{course?.price}</span>
             <span className="text-sm text-gray-500">Lifetime Access</span>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function Checkout({ course, user }) {
           <h4 className="font-semibold mb-2">Billing Details</h4>
           <p className="text-sm text-gray-600">Name: {user.name}</p>
           <p className="text-sm text-gray-600">Email: {user.email}</p>
-          {user.phone && <p className="text-sm text-gray-600">Phone: {user.phone}</p>}
+          {user.phone && <p className="text-sm text-gray-600">Phone: {user?.phone}</p>}
         </div>
 
         {/* Payment Button */}
