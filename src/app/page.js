@@ -50,15 +50,7 @@ export default function Home() {
   const [categoryImages, setCategoryImages] = useState({});
   const router = useRouter();
 
-  // const fetchUser = async () => {
-  //   const response = await axios("/api/users/me");
-  //   console.log("Response from fetchUser", response);
-  //   console.log(response.data.user);
-  //   if (response.data.user) {
-  //     setAuthUser(response.data.user);
-  //     setIsLoadingPage(false);
-  //   }
-  // };
+
 
 
 
@@ -144,11 +136,11 @@ export default function Home() {
     try {
       const response = await axios.get("https://ipapi.co/json/"); // or use ipinfo.io
       const data = response.data;
-      console.log("User location:", data);
-      console.log("This is the user location", userLocation);
+      // console.log("User location:", data);
+      // console.log("This is the user location", userLocation);
       setUserLocation(data); // contains fields like country, city, etc.
     } catch (error) {
-      console.error("Error fetching location:", error);
+      // console.error("Error fetching location:", error);
     }
   }, [authUser]);
 
