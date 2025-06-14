@@ -131,9 +131,9 @@ export default function Checkout({ course, user }) {
         {/* User Details */}
         <div className="border rounded-lg p-4 mb-4">
           <h4 className="font-semibold mb-2">Billing Details</h4>
-          <p className="text-sm text-gray-600">Name: {user.name}</p>
-          <p className="text-sm text-gray-600">Email: {user.email}</p>
-          {user.phone && <p className="text-sm text-gray-600">Phone: {user?.phone}</p>}
+          <p className="text-sm text-gray-600">Name: {user?.name}</p>
+          <p className="text-sm text-gray-600">Email: {user?.email}</p>
+          {user?.phone && <p className="text-sm text-gray-600">Phone: {user?.phone}</p>}
         </div>
 
         {/* Payment Button */}
