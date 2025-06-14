@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -232,23 +232,14 @@ export default function ChatIdPage() {
   const sendMessage = (message) => {
     if (isActive)
       return toast.error("Message limit reached. Please buy a plan.");
-    // setMessages((messages) => [
-    //   ...messages,
-    //   {
-    //     message,
-    //     sender: activeChat?.sender,
-    //     receiver: activeChat?.receiver,
-    //     createdAt: new Date().toISOString(),
-    //     updatedAt: new Date().toISOString(),
-    //   },
-    // ]);
-    console.log("✅ Emitting message", {
-      sender: userId,
-      receiver: activeChat?.receiver,
-      message,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    
+    // // console.log("✅ Emitting message", {
+    //   sender: userId,
+    //   receiver: activeChat?.receiver,
+    //   message,
+    //   createdAt: new Date().toISOString(),
+    //   updatedAt: new Date().toISOString(),
+    // });
     socket.emit("message", {
       sender: activeChat?.sender,
       receiver: activeChat?.receiver,
