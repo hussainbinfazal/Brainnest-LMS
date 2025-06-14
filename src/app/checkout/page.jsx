@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
 export default function Checkout({ course, user }) {
   const [loading, setLoading] = useState(false);
