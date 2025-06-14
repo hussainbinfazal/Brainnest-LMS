@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { sign } from "jsonwebtoken";
-import ProfileImageUpload from "../components/profileImageUpload";
+import ProfileImageUpload from "../components/ProfileImageUpload";
 import axios from "axios";
 import { useUser, useSignUp, useSession } from "@clerk/clerk-react";
 export const loginSchema = z.object({
