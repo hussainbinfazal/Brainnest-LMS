@@ -63,7 +63,7 @@ export default function Checkout({ course, user }) {
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: course.price * 100, // Amount in paisa
+        amount: course?.price * 100, // Amount in paisa
         currency: 'INR',
         name: 'Brainnest LMS',
         description: `Purchase: ${course.title}`,
@@ -76,7 +76,7 @@ export default function Checkout({ course, user }) {
             if (verification.success) {
               alert('Payment successful! You now have access to the course.');
               // Redirect to course page or dashboard
-              router.push(`/courses/${course._id}`);
+              router.push(`/courses/${course?._id}`);
             } else {
               alert('Payment verification failed. Please contact support.');
             }
@@ -142,7 +142,7 @@ export default function Checkout({ course, user }) {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Processing...' : `Pay ₹${course.price}`}
+          {loading ? 'Processing...' : `Pay ₹${course?.price}`}
         </button>
 
         <p className="text-xs text-gray-500 mt-2 text-center">
