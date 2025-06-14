@@ -28,7 +28,7 @@ import { useParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import Image from "next/image";
 import { RxCrossCircled } from "react-icons/rx";
-import Tiptap  from "./components/Tiptap.jsx";
+import Tiptap from "@/components/Tiptap";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState(

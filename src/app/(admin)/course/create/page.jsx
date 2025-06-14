@@ -25,7 +25,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import Tiptap from "./components/Tiptap";
+import Tiptap from "@/components/Tiptap";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState(
