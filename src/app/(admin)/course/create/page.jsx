@@ -25,7 +25,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import Tiptap  from "@/app/components/Tiptap.jsx";
+import Tiptap from "@/app/components/Tiptap";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState(
@@ -392,6 +392,7 @@ const page = () => {
     <div className="flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8">
       <Card className="w-[350px] md:w-[550px] space-y-4">
         <CardHeader>
+        
           <CardTitle>Create project</CardTitle>
           <CardDescription>
             Deploy your new course in one-click.
