@@ -5,10 +5,12 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import useAuthRedirect from '@/hooks/useAuthRedirect';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 export default function Checkout({ course, user }) {
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState(null);
   const router = useRouter();
+  const { user: authUser } = useAuthStore();
   const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: false, interval: 3000,});
   // Load Razorpay script
   useEffect(() => {
@@ -25,9 +27,9 @@ export default function Checkout({ course, user }) {
   const createOrder = async () => {
     try {
       const response = await axios.post('/api/payment/create-order', {
-        courseId: course._id,
-        userId: user._id,
-        amount: course.price
+        courseId: course?._id,
+        userId: user?._id,
+        amount: course?.price
       });
       return response.data;
     } catch (error) {
@@ -42,8 +44,8 @@ export default function Checkout({ course, user }) {
         orderId: paymentData.razorpay_order_id,
         paymentId: paymentData.razorpay_payment_id,
         signature: paymentData.razorpay_signature,
-        courseId: course._id,
-        userId: user._id
+        courseId: course?._id,
+        userId: user?._id
       });
       return response.data;
     } catch (error) {
@@ -83,9 +85,9 @@ export default function Checkout({ course, user }) {
           }
         },
         prefill: {
-          name: user.name,
-          email: user.email,
-          contact: user.phone || ''
+          name: user?.name,
+          email: user?.email,
+          contact: user?.phone || ''
         },
         theme: {
           color: '#3399cc',
