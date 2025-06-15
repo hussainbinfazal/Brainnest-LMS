@@ -47,7 +47,7 @@ const CourseRating = ({ courseId, userRating = 0 }) => {
                 className="hidden"
               />
               <FaStar
-                size={24}
+                size={22}
                 className={`cursor-pointer transition-colors ${
                   currentRating <= (hover || rating)
                     ? 'text-yellow-400'

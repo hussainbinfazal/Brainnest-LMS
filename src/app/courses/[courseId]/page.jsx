@@ -739,7 +739,7 @@ const page = () => {
           </div>
         )}
         <div className="w-full flex flex-col items-start justify-center gap-3 pt-12 md:pt-0">
-          <p className="dark:text-white text-black text-4xl capitalize whitespace-pre line-clamp-2">
+          <p className="dark:text-white text-black text-4xl capitalize whitespace-normal break-words line-clamp-2">
             {course?.title}
           </p>
           {Array.isArray(course?.description)?.topic && (
@@ -765,7 +765,7 @@ const page = () => {
             {isLoading ? (
               <Skeleton className="w-[50px] h-[10px]" />
             ) : (
-              formattedDate
+              <span className="text-sm">{formattedDate}</span>
             )}
           </span>
           <span className="flex gap-2  items-center">
@@ -807,7 +807,7 @@ const page = () => {
           {isLoading ? (
             <Skeleton className="w-2/5 h-full " />
           ) : (
-            <span className="w-2/5 h-full flex justify-start  items-center pl-4">
+            <span className="w-2/5 h-full flex justify-start  items-center md:pl-4">
               <p className="lg:text-[13px] text-[10px] text-center leading-tight whitespace-pre-line font-semibold">
                 Access this top-rated course,plus <br /> 1,300+ more top rated
                 courses <br />
@@ -817,12 +817,12 @@ const page = () => {
           )}
           <Separator
             orientation="vertical"
-            className="!h-3/5 w-px bg-gray-300 mx-2"
+            className="!h-3/5 w-px bg-gray-300 mx-2 hidden sm:block"
           />
           {isLoading ? (
             <Skeleton className="w-1/5 h-full " />
           ) : (
-            <span className="w-1/5 flex flex-col gap-1 justify-center items-center break-words text-center">
+            <span className="w-1/5 hidden  sm:flex flex-col gap-1 justify-center items-center break-words text-center">
               <StarRating rating={course?.rating || 0} />
               <p>{course?.rating || 0} ratings</p>
             </span>
@@ -835,7 +835,7 @@ const page = () => {
           {isLoading ? (
             <Skeleton className="w-2/5 h-full " />
           ) : (
-            <span className="w-1/5 flex flex-col gap-1 justify-center items-center break-words text-center">
+            <span className="w-2/5 sm:w-1/5 flex flex-col gap-1 justify-center items-center break-words text-center">
               <MdOutlinePeopleAlt className="text-2xl" />
               <p>{course?.enrolledStudents?.length || 0} learners</p>
             </span>

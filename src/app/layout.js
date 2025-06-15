@@ -61,7 +61,7 @@ export default function RootLayout({ children }) {
                   <Header />
                   {/* <LoadingBarLoader /> */}
                   <main className="flex-1">
-                    <div className="block md:hidden">
+                    <div className="block md:hidden text-2xl">
                       <SidebarTrigger />
 
                     </div>

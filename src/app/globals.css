@@ -124,6 +124,7 @@
 body {
   scrollbar-width: none; /* For Firefox */
   -ms-overflow-style: none; /* For Internet Explorer 10+ */
+  overflow-x: none; /* Prevent horizontal scroll */
 }
 
 /* Chrome, Safari, and Opera */
