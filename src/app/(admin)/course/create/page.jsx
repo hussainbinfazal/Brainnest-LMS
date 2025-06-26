@@ -417,7 +417,7 @@ const page = () => {
             <div className="space-y-2">
               <Label>Video Upload</Label>
               {isVideoUploading ? (
-                <Skeleton className="w-[500px] h-[30px] rounded-md" />
+                <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
               ) : (
                 <>
                   <Input
@@ -691,7 +691,7 @@ const page = () => {
                 <div className="space-y-2">
                   <Label>video</Label>
                   {isLessonVideoUploading[index] === true ? (
-                    <Skeleton className="w-[500px] h-[30px] rounded-md" />
+                    <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
                   ) : (
                     <>
                       <Input

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/card";
 import { BarLoader, ClipLoader } from "react-spinners";
 import useAuthRedirect from "@/hooks/useAuthRedirect";
+import { ModeToggle } from "@/components/Dark";
 
 export default function Header() {
   const router = useRouter();
@@ -160,7 +161,7 @@ export default function Header() {
         </div>
 
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end ">
-          <div className="hidden md:flex">
+          <div className="hidden min-[970px]:flex">
             <nav className="flex items-center">
               <Link
                 href="/courses"
@@ -202,23 +203,7 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Toggle theme"
-                className="mr-16"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              >
-                {/* Simple sun icon for light mode */}
-                <span className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0">
-                  🔆
-                </span>
-                {/* Simple moon icon for dark mode */}
-                <span className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100">
-                  🌙
-                </span>
-                <span className="sr-only">Toggle theme</span>
-              </Button>
+              <ModeToggle  />
 
               {/* {authUser == null ? (
                 <Button onClick={handleLogout}>Logout</Button>

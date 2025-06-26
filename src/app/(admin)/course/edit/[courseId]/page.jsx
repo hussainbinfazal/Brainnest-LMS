@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect ,useCallback} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -69,7 +69,12 @@ const page = () => {
   const [previewLessonVideo, setPreviewLessonVideo] = useState([]);
   const [isLoadingCourse, setIsLoadingCourse] = useState(true);
   const [description, setDescription] = useState("");
-const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: true, interval: 3000,});
+  const isAuthChecked = useAuthRedirect({
+    redirectIfUnauthenticated: true,
+    redirectIfAuthenticated: false,
+    redirectIfNotInstructor: true,
+    interval: 3000,
+  });
   const getCourseFromParams = useCallback(async () => {
     setLoading(true);
 
@@ -106,7 +111,7 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
     } finally {
       setIsLoadingCourse(false);
     }
-  },[]);
+  }, []);
   const handleSetDataInForm = () => {
     if (course) {
     }
@@ -117,11 +122,11 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
   //   }
   // }, [course, category, subCategory, language]);
   useEffect(() => {
-     const timer = setTimeout(() => {
-       getCourseFromParams();
-     }, 300); // Small delay to prevent immediate load
-     return () => clearTimeout(timer);
-   }, [getCourseFromParams]);
+    const timer = setTimeout(() => {
+      getCourseFromParams();
+    }, 300); // Small delay to prevent immediate load
+    return () => clearTimeout(timer);
+  }, [getCourseFromParams]);
 
   useEffect(() => {
     handleSetDataInForm();
@@ -261,7 +266,6 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
       tags === "" ||
       !price ||
       price === "" ||
-      
       !lessons ||
       lessons === "" ||
       !topics ||
@@ -285,9 +289,6 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
       // console.log("This is the topics", topics)
       // console.log("This is the faq", faq)
 
-      
-
-
       return alert(
         "All fields are required",
         title,
@@ -301,7 +302,7 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
         video,
         lessons,
         coverImage,
-        
+
         duration,
         language,
         level,
@@ -324,10 +325,8 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
         discount: parseFloat(discount) || 0,
         duration: parseInt(duration),
         video,
-        whatYouWillLearn:
-          whatYouWillLearn,
-        requirements:
-          requirements,
+        whatYouWillLearn: whatYouWillLearn,
+        requirements: requirements,
         level: level.toLowerCase(),
         language,
         status: "draft",
@@ -345,18 +344,15 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
       toast.success("Course Updated successfully");
       setCourse(response.data.course);
       router.push("/course/manage");
-    } catch (error) {
-    }
+    } catch (error) {}
   };
   const handleLessonVideoUpload = async (index, file) => {
-    
     setIsLessonVideoUploading((prev) => {
       const newState = { ...prev }; // Create a shallow copy
       newState[index] = true; // Set the specific index to true
       return newState;
     });
 
-    
     try {
       setSelectedLessonVideoNames((prev) => ({
         ...prev,
@@ -401,10 +397,8 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
     try {
       const response = await axios.post("/api/upload", formData);
 
-
       return response.data.filePath;
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -507,7 +501,7 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
             <div className="space-y-2">
               <Label>Video Upload</Label>
               {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
+                <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
               ) : isVideoUploading ? (
                 <Skeleton className="w-[500px] h-[30px] rounded-md" />
               ) : (
@@ -624,7 +618,9 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
                 <Input
                   value={tags.join(", ")}
                   onChange={(e) =>
-                    setTags(e.target.value.split(",").map(item => item.trim()))
+                    setTags(
+                      e.target.value.split(",").map((item) => item.trim())
+                    )
                   }
                   placeholder="e.g. JavaScript Basics, React, Next.js"
                 />
@@ -676,7 +672,11 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
               ) : (
                 <Input
                   value={whatYouWillLearn.join(", ")}
-                  onChange={(e) => setWhatYouWillLearn(e.target.value.split(",").map(item => item.trim()))}
+                  onChange={(e) =>
+                    setWhatYouWillLearn(
+                      e.target.value.split(",").map((item) => item.trim())
+                    )
+                  }
                   placeholder="e.g. Variables, loops, functions"
                 />
               )}
@@ -689,7 +689,11 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
               ) : (
                 <Input
                   value={requirements.join(", ")}
-                  onChange={(e) => setRequirements(e.target.value.split(",").map(item => item.trim()))}
+                  onChange={(e) =>
+                    setRequirements(
+                      e.target.value.split(",").map((item) => item.trim())
+                    )
+                  }
                   placeholder="e.g. Html, CSS, JavaScript"
                 />
               )}
@@ -699,10 +703,7 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
               {isLoadingCourse ? (
                 <Skeleton className="w-full h-[30px] rounded-md" />
               ) : (
-                <Select
-                  value={language}
-                  onValueChange={setLanguage}
-                >
+                <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger className="w-full">
                     <SelectValue
                       placeholder={`${
@@ -876,9 +877,9 @@ const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirec
                 <div className="space-y-2">
                   <Label>video</Label>
                   {isLoadingCourse ? (
-                    <Skeleton className="w-full h-[30px] rounded-md" />
+                    <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
                   ) : isLessonVideoUploading[index] === true ? (
-                    <Skeleton className="w-[500px] h-[30px] rounded-md" />
+                    <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
                   ) : (
                     <>
                       <Input
