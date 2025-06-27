@@ -319,7 +319,10 @@ const page = () => {
       const response = await axios.post("/api/admin/course/create", courseData);
       toast.success("Course created successfully");
       router.push("/course/manage");
+      setLoading(false);
     } catch (error) {
+      setLoading(false);
+      return toast.error(error?.response?.data?.message);
     } finally {
       setLoading(false);
     }
