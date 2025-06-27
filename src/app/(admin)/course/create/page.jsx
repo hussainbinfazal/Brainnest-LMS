@@ -37,7 +37,12 @@ const page = () => {
   const [lessons, setLessons] = useState([
     { name: "", description: "", video: "", duration: "" },
   ]);
-  const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: true, interval: 3000,});
+  const isAuthChecked = useAuthRedirect({
+    redirectIfUnauthenticated: true,
+    redirectIfAuthenticated: false,
+    redirectIfNotInstructor: true,
+    interval: 3000,
+  });
   const [price, setPrice] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [category, setCategory] = useState("");
@@ -59,6 +64,7 @@ const page = () => {
   const [selectedVideoName, setSelectedVideoName] = useState("");
   const [selectedImageName, setSelectedImageName] = useState("");
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
   const categories = [
     "academics",
     "business",
@@ -206,61 +212,77 @@ const page = () => {
   };
 
   const handleCreateCourse = async () => {
-    if (
-      !title ||
-      title === "" ||
-      !coverImage ||
-      coverImage === "" ||
-      !category ||
-      category === "" ||
-      !subCategories ||
-      subCategories === "" ||
-      !whatYouWillLearn ||
-      whatYouWillLearn === "" ||
-      !requirements ||
-      requirements === "" ||
-      !level ||
-      level === "" ||
-      !language ||
-      language === "" ||
-      !tags ||
-      tags === "" ||
-      !price ||
-      price === "" ||
-      !video ||
-      video === "" ||
-      !lessons ||
-      lessons === "" ||
-      !topics ||
-      topics === "" ||
-      !faq ||
-      faq === "" ||
-      !price ||
-      price === ""
-    ) {
-      return alert(
-        "All fields are required",
-        title,
-        description,
-        price,
-        category,
-        subCategories,
-        faq,
-        discount,
+    setLoading(true);
+    const validationErrors = [];
 
-        requirements,
-        whatYouWillLearn,
-        video,
-        lessons,
-        coverImage,
-        status,
-        duration,
-        language,
-        level,
-        certificate,
-        tags
+    if (!title || title.trim() === "") validationErrors.push("Title");
+    if (!description || description.trim() === "")
+      validationErrors.push("Description");
+    if (!coverImage || coverImage.trim() === "")
+      validationErrors.push("Cover Image");
+    if (!category || category.trim() === "") validationErrors.push("Category");
+    if (!subCategories || subCategories.trim() === "")
+      validationErrors.push("Sub Categories");
+    if (
+      !whatYouWillLearn ||
+      whatYouWillLearn.length === 0 ||
+      whatYouWillLearn.every((item) => !item.trim())
+    )
+      validationErrors.push("What You Will Learn");
+    if (!requirements || requirements.trim() === "")
+      validationErrors.push("Requirements");
+    if (!level || level.trim() === "") validationErrors.push("Level");
+    if (!language || language.trim() === "") validationErrors.push("Language");
+    if (!tags || tags.trim() === "") validationErrors.push("Tags");
+    if (!price || price.trim() === "") validationErrors.push("Price");
+    if (!video || video.trim() === "") validationErrors.push("Video");
+    if (!duration || duration === "") validationErrors.push("Duration");
+
+    // Validate topics array
+    if (
+      !topics ||
+      topics.length === 0 ||
+      topics.some((topic) => !topic.topic.trim() || !topic.description.trim())
+    ) {
+      validationErrors.push(
+        "Topics (all topics must have title and description)"
       );
     }
+
+    // Validate lessons array
+    if (
+      !lessons ||
+      lessons.length === 0 ||
+      lessons.some(
+        (lesson) =>
+          !lesson.name.trim() ||
+          !lesson.description.trim() ||
+          !lesson.video.trim()
+      )
+    ) {
+      validationErrors.push(
+        "Lessons (all lessons must have name, description, and video)"
+      );
+    }
+
+    // Validate FAQ array
+    if (
+      !faq ||
+      faq.length === 0 ||
+      faq.some((item) => !item.question.trim() || !item.answer.trim())
+    ) {
+      validationErrors.push("FAQ (all FAQs must have question and answer)");
+    }
+
+    if (validationErrors.length > 0) {
+      setLoading(false);
+      return alert(
+        `Please fill in the following required fields:\n• ${validationErrors.join(
+          "\n• "
+        )}`
+      );
+    }
+
     try {
       const plainDescription = description.replace(/<[^>]*>/g, "");
       const formattedTopics = topics.map((topic) => ({
@@ -298,17 +320,17 @@ const page = () => {
       toast.success("Course created successfully");
       router.push("/course/manage");
     } catch (error) {
+    } finally {
+      setLoading(false);
     }
   };
   const handleLessonVideoUpload = async (index, file) => {
-    
     setIsLessonVideoUploading((prev) => {
       const newState = { ...prev }; // Create a shallow copy
       newState[index] = true; // Set the specific index to true
       return newState;
     });
 
-  
     try {
       setSelectedLessonVideoNames((prev) => ({
         ...prev,
@@ -355,8 +377,7 @@ const page = () => {
       // console.log("Uploaded to Cloudinary:", response.data.filePath);
 
       return response.data.filePath;
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -392,7 +413,6 @@ const page = () => {
     <div className="flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8">
       <Card className="w-[350px] md:w-[550px] space-y-4">
         <CardHeader>
-        
           <CardTitle>Create project</CardTitle>
           <CardDescription>
             Deploy your new course in one-click.
@@ -436,7 +456,7 @@ const page = () => {
             <div className="space-y-2">
               <Label>Cover Image Upload</Label>
               {isImageUploading ? (
-                <Skeleton className="w-[500px] h-[30px] rounded-md" />
+                <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
               ) : (
                 <>
                   <Input
@@ -769,7 +789,9 @@ const page = () => {
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button variant="outline">Cancel</Button>
-          <Button onClick={() => handleCreateCourse()}>Create</Button>
+          <Button onClick={() => handleCreateCourse()}>
+            {loading ? "Creating..." : "Create Course"}
+          </Button>
         </CardFooter>
       </Card>
     </div>
