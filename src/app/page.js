@@ -465,21 +465,23 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   }}
                   className="w-full max-w-full"
                 >
-                  <CarouselContent>
+                  <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                     {(ranndomCoursesOnRating || []).map((course) => (
-                      <CarouselItem key={course.name} className="md:basis-1/2 lg:basis-1/4">
+                      <CarouselItem key={course.name} className="w-full px-2 -ml-2 md:-ml-2
+pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                         <div className="p-1">
 
                           <Link href={`/courses/${course._id}`} className="inline-block">
-                            <Card className="w-[250px] h-[350px] my-2 relative pt-0 pb-3">
-                              <CardContent className="h-3/5 w-full flex justify-center relative p-0">
+                            <Card className="w-[250px] h-[350px] my-2 relative pt-0 pb-3 flex flex-col items-start">
+                              <CardContent className="h-[150px] w-full flex justify-center relative p-0">
                                 {course?.coverImage ? (
-                                  <div className="relative w-full h-full rounded-t-xl  overflow-hidden">
+                                  <div className="relative h-[150px] w-full rounded-t-xl  overflow-hidden">
                                     <Image
                                       src={course.coverImage}
                                       alt={course.title}
                                       fill
                                       className="object-cover p-0"
+                                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                                     />
                                   </div>
                                 ) : (
@@ -526,10 +528,14 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
               <p className="text-gray-600">Know the achievers of the world through their stories</p>
             </div>
               <div className="grid-cols-6 flex-1">
-                <Carousel className="w-full">
-                  <CarouselContent>
+                <Carousel className="w-full px-2 -ml-2 md:-ml-4">
+                  <CarouselContent className="w-full px-2 -ml-2 md:-ml-1
+pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                     {courses.length === 0 ? (
                       <CarouselItem>
+                        <Skeleton className="w-[280px] h-[300px] rounded-md" />
+                        <Skeleton className="w-[280px] h-[300px] rounded-md" />
+                        <Skeleton className="w-[280px] h-[300px] rounded-md" />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                       </CarouselItem>
                     ) : (
