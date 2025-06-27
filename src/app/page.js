@@ -399,7 +399,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                     ) : (
                       (uniqueCategories || []).map((category, index) => (
                         <CarouselItem key={index} className="w-full px-2 -ml-2 md:-ml-4
-pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
+pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                           <div className="w-[250px] h-[280px] my-2 relative">
                             <Link href={`courses`} className="w-full h-full">
 
