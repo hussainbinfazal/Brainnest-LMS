@@ -192,6 +192,7 @@ const page = () => {
       };
       video.src = URL.createObjectURL(file);
     } catch (error) {
+      return alert(error.message);
     } finally {
       setIsVideoUploading(false);
     }
