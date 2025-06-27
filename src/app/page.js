@@ -157,7 +157,7 @@ export default function Home() {
     } finally {
       setIsLoadingPage(false);
     }
-  }, [courses?.length]);
+  }, [fetchCourses]);
 
   const ranndomCoursesOnRating = useMemo(() => {
     if (!courses || courses.length === 0) return [];
@@ -174,16 +174,13 @@ export default function Home() {
   }, [courses])
 
   useEffect(() => {
-
     getAllCourses();
+  }, [getAllCourses]);
+
+  // Effect for fetching user location (if it's independent)
+  useEffect(() => {
     fetchUserLocation();
-    if (courses) {
-      // console.log("This is the unique Categories", uniqueCategories);
-      // console.log("This is the Subcategories", subCategories);
-    }
-
-
-  }, []);
+  }, [fetchUserLocation]);
 
 
 
@@ -203,14 +200,14 @@ export default function Home() {
         <div className="w-4/5 max-w-4/5 flex items-center justify-center ">
           <div className="flex flex-col items-center justify-center w-full ">
             {isLoadingPage ? (<Skeleton className="w-full h-[400px] rounded-md" />) : (<Carousel>
-              <CarouselContent>
+              <CarouselContent className={"w-full"}>
                 {courses.length === 0 ? <Skeleton className="w-[1304px] h-[400px]"></Skeleton> : courses.map((course) => (
                   <CarouselItem key={course._id}>
-                    <picture className="relative">
+                    <div className="relative">
                       <source srcSet="https://img-c.udemycdn.com/notices/web_carousel_slide/image_responsive/e69a9ca9-bb56-4fda-954a-5ccbec2ac33e.png" width="1304" height="400" media="(max-width: 43.75rem)"></source>
-                      <Image src="https://img-c.udemycdn.com/notices/web_carousel_slide/image/d4a1717d-1ad2-4570-adf9-e0ab20b3ab75.png" width={1350} height={500} alt={course?.title} />
-                    </picture>
-                    <div className="absolute inset-0 bg-black opacity-50"></div>
+                      <Image src="https://img-c.udemycdn.com/notices/web_carousel_slide/image/d4a1717d-1ad2-4570-adf9-e0ab20b3ab75.png" width={1350} height={500} alt={course?.title} priority={true} />
+                    </div>
+                    {/* <div className="absolute inset-0 bg-black opacity-50"></div> */}
                   </CarouselItem>
                 ))}
               </CarouselContent>
