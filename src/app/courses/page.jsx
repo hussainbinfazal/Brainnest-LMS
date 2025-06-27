@@ -333,20 +333,20 @@ const page = () => {
   };
  
   return (
-    <div className="w-screen min-h-screen flex flex-col relative">
+    <div className="w-screen min-h-screen h-screen flex flex-col relative overflow-hidden">
       {isLoading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={isLoading} />
         </div>
       )}
-      <div className="w-full min-h-screen flex flex-row gap-6 relative">
+      <div className="w-full h-full flex flex-row gap-6 relative bg-black">
         {isLoading ? (
           <Skeleton className="w-[235px] min-h-screen" />
         ) : (
           <div
-            className={`min-h-screen h-full ${
+            className={`min-h-screen !h-full ${
               closeSidebar ? "w-[70px]" : "w-[250px]"
-            } overflow-y-auto border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white `}
+            }  border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white overflow-y-auto`}
           >
             <div className="min-h-screen h-full flex flex-col relative gap-4">
               <div className="min-h-screen h-full flex flex-col relative ">
@@ -451,7 +451,7 @@ const page = () => {
           <div
             className={`${
               closeSidebar ? "w-[calc(100%-70px)]" : "w-[calc(100%-250px)]"
-            } md:w-2/3 min-h-screen h-full flex flex-col gap-2 justify-between pt-4`}
+            } md:w-2/3 min-h-screen h-full flex flex-col gap-2 justify-between pt-4 overflow-auto`}
           >
             <span className="w-full flex justify-between items-center">
               <span className="inline-block text-3xl">Courses</span>
