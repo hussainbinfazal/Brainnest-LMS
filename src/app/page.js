@@ -231,9 +231,10 @@ export default function Home() {
                 }}
                 className="w-full max-w-full"
               >
-                <CarouselContent className={"w-full px-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"}>
+                <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                   {(courses || []).map((course) => (
-                    <CarouselItem key={course} className="md:basis-1/2 lg:basis-1/4">
+                    <CarouselItem key={course} className="w-full px-2 -ml-2 md:-ml-4
+pl-2 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                       <Link href={`/courses/${course._id}`} className="inline-block">
                         <Card className="w-[300px] h-[350px] my-2 relative">
                           <CardContent className="h-3/5 w-full flex justify-center relative">
@@ -326,9 +327,9 @@ export default function Home() {
                           {(subCategories[category] || []).map((sub) => (
                             <TabsContent key={sub} value={sub} className={"flex justify-center "}>
                               <Carousel className="mt-4 w-full">
-                                <CarouselContent className={"w-full px-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"}>
+                                <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                                   {getCourses(category, sub).map((course) => (
-                                    <CarouselItem key={course._id} className="flex justify-start items-center">
+                                    <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                                       <Link href={`/courses/${course._id}`} className="inline-block">
                                         <Card className="w-[300px] h-[350px] relative">
                                           <CardContent className="h-3/5 w-full flex justify-center relative">
@@ -389,14 +390,16 @@ export default function Home() {
             </div>
               <div className="grid-cols-3 flex-1">
                 <Carousel className="w-full">
-                  <CarouselContent className="w-full px-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0">
+                  <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                     {courses.length === 0 ? (
-                      <CarouselItem>
+                      <CarouselItem className="w-full px-2 -ml-2 md:-ml-4
+pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                         <Skeleton className="w-[280px] h-[350px] rounded-md" />
                       </CarouselItem>
                     ) : (
                       (uniqueCategories || []).map((category, index) => (
-                        <CarouselItem key={index} className="flex justify-start items-center">
+                        <CarouselItem key={index} className="w-full px-2 -ml-2 md:-ml-4
+pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                           <div className="w-[250px] h-[280px] my-2 relative">
                             <Link href={`courses`} className="w-full h-full">
 
@@ -416,7 +419,7 @@ export default function Home() {
                                 <CardFooter className="flex-1 items-start">
                                   <div className="w-full flex flex-col items-center gap-2">
                                     <p className="capitalize text-lg font-semibold">{category}</p>
-                                    <p className="text-[12px] text-muted-foreground">Explore {category} courses</p>
+                                    <p className="text-sm text-muted-foreground">Explore {category} courses</p>
                                   </div>
                                 </CardFooter>
                               </Card>
@@ -462,7 +465,7 @@ export default function Home() {
                   }}
                   className="w-full max-w-full"
                 >
-                  <CarouselContent className={"w-full px-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 grid-rows-1"}>
+                  <CarouselContent>
                     {(ranndomCoursesOnRating || []).map((course) => (
                       <CarouselItem key={course.name} className="md:basis-1/2 lg:basis-1/4">
                         <div className="p-1">
@@ -559,7 +562,7 @@ export default function Home() {
                                             
                                           )
                                         } */}
-                                       
+
                                       </div>
 
                                     </div>
@@ -588,6 +591,6 @@ export default function Home() {
       </div>
 
 
-    </div>
+    </div >
   );
 }
