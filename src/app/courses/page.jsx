@@ -339,7 +339,7 @@ const page = () => {
           <LoadingBarLoader isLoading={isLoading} />
         </div>
       )}
-      <div className="w-full h-full flex flex-row gap-6 relative bg-black">
+      <div className="w-full h-full flex flex-row gap-6 relative bg-white dark:bg-black">
         {isLoading ? (
           <Skeleton className="w-[235px] min-h-screen" />
         ) : (

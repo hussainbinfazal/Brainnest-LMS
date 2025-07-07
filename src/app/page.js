@@ -174,7 +174,9 @@ export default function Home() {
   }, [courses])
 
   useEffect(() => {
-    getAllCourses();
+    setTimeout(() => {
+      getAllCourses();
+    }, 200);
   }, [getAllCourses]);
 
   // Effect for fetching user location (if it's independent)
