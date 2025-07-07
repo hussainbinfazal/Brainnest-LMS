@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Course from "@/models/courseModel";
+import User from "@/models/userModel";
 import { connectDB } from "@/config/db";
 
 export async function GET(request, context) {

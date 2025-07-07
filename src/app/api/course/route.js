@@ -12,6 +12,6 @@ export async function GET(request) {
         return NextResponse.json(courses);
     } catch (error) {
         console.error("Error in /api/course:", error);
-        return NextResponse.json({ message: "Something went wrong on the server side" }, { status: 500 });
+        return NextResponse.json({ message: "Something went wrong on the server side, please try again" }, { status: 500 });
     }
 }
