@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Course from "@/models/courseModel";
+import User from "@/models/userModel";
 import { connectDB } from "@/config/db";
 
 export async function GET(request) {
@@ -10,7 +11,7 @@ export async function GET(request) {
         const courses = await Course.find().populate("instructor", "name email");
         return NextResponse.json(courses);
     } catch (error) {
-        console.log(error);
+        console.error("Error in /api/course:", error);
         return NextResponse.json({ message: "Something went wrong on the server side" }, { status: 500 });
     }
 }
