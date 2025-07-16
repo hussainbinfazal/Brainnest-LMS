@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { getCategoryImagePath } from "@/app/components/getCategoryImagePath";
 import Link from "next/link";
 import { ImQuotesLeft } from "react-icons/im";
+import Autoplay from "embla-carousel-autoplay";
 
 import {
   Tabs,
@@ -48,6 +49,7 @@ export default function Home() {
   // const courses = useCourseStore((state) => state.courses);
   const [allCourses, setAllCourses] = useState([]);
   const [categoryImages, setCategoryImages] = useState({});
+  const [reviews, setReviews] = useState([]);
   const router = useRouter();
 
 
@@ -150,10 +152,9 @@ export default function Home() {
       const allCourses = await fetchCourses();
       setAllCourses(allCourses);
       setCourses(allCourses);
-
-      // console.log("These are the courses in the Homepage ", allCourses);
     } catch (error) {
-      throw Error("Error fetching courses");
+      // console.error("Error fetching courses:", error);
+      
     } finally {
       setIsLoadingPage(false);
     }
@@ -173,6 +174,17 @@ export default function Home() {
     return shuffled.slice(0, randomCourseLength);
   }, [courses])
 
+
+  const fetchReviews = useCallback(async () => {
+    const response = await axios('/reviews/reviews.json')
+    const reviewsData = response.data;
+    setReviews(reviewsData);
+    // console.log("This is the reviews state", reviews);
+    // console.log("This is the reviews data", reviewsData);
+  }, []);
+  useEffect(() => {
+    fetchReviews();
+  }, []);
   useEffect(() => {
     setTimeout(() => {
       getAllCourses();
@@ -213,8 +225,8 @@ export default function Home() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious />
-              <CarouselNext />
+              {/* <CarouselPrevious />
+              <CarouselNext /> */}
             </Carousel>)}
           </div>
         </div>
@@ -232,7 +244,7 @@ export default function Home() {
               >
                 <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                   {(courses || []).map((course) => (
-                    <CarouselItem key={course} className="w-full px-2 -ml-2 md:-ml-4
+                    <CarouselItem key={course?.title} className="w-full px-2 -ml-2 md:-ml-4
 pl-2 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                       <Link href={`/courses/${course._id}`} className="inline-block">
                         <Card className="w-[300px] h-[350px] my-2 relative">
@@ -394,6 +406,8 @@ pl-2 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                       <CarouselItem className="w-full px-2 -ml-2 md:-ml-4
 pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                         <Skeleton className="w-[280px] h-[350px] rounded-md" />
+                        <Skeleton className="w-[280px] h-[350px] rounded-md" />
+                        <Skeleton className="w-[280px] h-[350px] rounded-md" />
                       </CarouselItem>
                     ) : (
                       (uniqueCategories || []).map((category, index) => (
@@ -434,7 +448,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
               </div>
               <div className="w-full bg-[#F6F7F9] dark:bg-black  flex flex-col justify-center items-center gap-4 py-3 mt-4">
                 <p className="text-sm">Trusted by over 1000+ Companies Over and lakhs of Students around the world</p>
-                <div className="w-full max-h-[100px] flex justify-center items-center ">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div className="relative w-[100px] h-[100px] p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9]">
+                <div className="w-full max-h-[100px] flex justify-center items-center ">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-[100px] h-[100px] p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9]">
                   <div className="w-full h-full relative flex justify-center items-center ">
                     <Image
                       src={item}
@@ -459,15 +473,23 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
             </div>
               <div className="w-full ">
                 <Carousel
-                  opts={{
-                    align: "start",
-                  }}
+                  pts={{
+                  align: "start",
+                  loop: true,
+                  dragFree: true,
+                }}
+                  plugins={[
+                    Autoplay({
+                      delay: 2500,
+                      stopOnInteraction: false,
+                      stopOnMouseEnter: true,
+                    }),
+                  ]}
                   className="w-full max-w-full"
                 >
                   <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
-                    {(ranndomCoursesOnRating || []).map((course) => (
-                      <CarouselItem key={course.name} className="w-full px-2 -ml-2 md:-ml-2
-pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
+                    {(ranndomCoursesOnRating || []).map((course,index) => (
+                      <CarouselItem key={index+1} className="w-full  px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                         <div className="p-1">
 
                           <Link href={`/courses/${course._id}`} className="inline-block">
@@ -476,8 +498,8 @@ pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                                 {course?.coverImage ? (
                                   <div className="relative h-[150px] w-full rounded-t-xl  overflow-hidden">
                                     <Image
-                                      src={course.coverImage}
-                                      alt={course.title}
+                                      src={course?.coverImage}
+                                      alt={course?.title}
                                       fill
                                       className="object-cover p-0"
                                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
@@ -526,28 +548,38 @@ pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
               <h2 className="text-3xl font-bold ">See what others are achieving through learning </h2>
               <p className="text-gray-600">Know the achievers of the world through their stories</p>
             </div>
-              <div className="grid-cols-6 flex-1">
-                <Carousel className="w-full px-2 -ml-2 md:-ml-4">
-                  <CarouselContent className="w-full px-2 -ml-2 md:-ml-1
-pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
+              <div className="w-full">
+                <Carousel className="w-full" opts={{
+                  align: "start",
+                  loop: true,
+                  dragFree: true,
+                }}
+                  plugins={[
+                    Autoplay({
+                      delay: 2500,
+                      stopOnInteraction: false,
+                      stopOnMouseEnter: true,
+                    }),
+                  ]}>
+                  <CarouselContent className="w-full -ml-1">
                     {courses.length === 0 ? (
-                      <CarouselItem>
+                      <CarouselItem className="flex">
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                       </CarouselItem>
                     ) : (
-                      (ranndomCoursesOnRating || []).map((course, index) => (
-                        <CarouselItem key={`${index}-${index}`} className="md:basis-1/3 lg:basis-1/3 xl:basis-1/3 2xl:basis-1/4 gap-3">
+                      (reviews || ranndomCoursesOnRating || []).map((course, index, reviews) => (
+                        <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                           <div className=" my-2 relative">
                             <Link href={`/`}>
-                              <Card className="w-[250px] h-[280px] my-2 relative pt-0 pb-3">
+                              <Card className=" h-[280px] my-2 relative pt-0 pb-3">
                                 <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
                                   <ImQuotesLeft />
                                 </CardHeader>
                                 <CardContent className="min-h-1/5 max-h-2/5 w-full flex justify-center relative ">
-                                  <p className="text-sm">{!course?.reviews || "Udemy gives you the ability to be persistent. I learned exactly what I needed to know in the real world. It helped me sell myself to get a new role."}</p>
+                                  <p className="text-sm break-words line-clamp-5">{course?.text}</p>
                                 </CardContent>
                                 <CardFooter className={"h-2/5"}>
                                   <div className="w-full flex justify-start items-center   gap-2">
@@ -572,9 +604,9 @@ pl-2 md:pl-8 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
 
                                     </div>
                                     <div className="h-full flex flex-col  w-2/3">
-                                      <p className="capitalize text-sm font-semibold break-words leading-snug">{course.reviews?.user?.name || "John Doe"}</p>
+                                      <p className="capitalize text-sm font-semibold break-words leading-snug">{course.reviews?.user?.name || course?.user?.name}</p>
                                       <p className="text-sm text-muted-foreground">
-                                        {course?.reveiews?.createdAt || course?.reveiews?.updatedAt || "2 days ago"}
+                                        {course?.reveiews?.createdAt || course?.reveiews?.updatedAt || course?.createdAt || course?.updatedAt}
                                       </p>
                                     </div>
 
