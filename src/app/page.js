@@ -154,7 +154,7 @@ export default function Home() {
       setCourses(allCourses);
     } catch (error) {
       // console.error("Error fetching courses:", error);
-      
+
     } finally {
       setIsLoadingPage(false);
     }
@@ -239,18 +239,27 @@ export default function Home() {
               <Carousel
                 opts={{
                   align: "start",
+                  loop: true,
+                  dragFree: true,
                 }}
+                plugins={[
+                  Autoplay({
+                    delay: 2500,
+                    stopOnInteraction: false,
+                    stopOnMouseEnter: true,
+                  }),
+                ]}
                 className="w-full max-w-full"
               >
-                <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
+                <CarouselContent className="w-full -ml-1">
                   {(courses || []).map((course) => (
-                    <CarouselItem key={course?.title} className="w-full px-2 -ml-2 md:-ml-4
-pl-2 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
-                      <Link href={`/courses/${course._id}`} className="inline-block">
-                        <Card className="w-[300px] h-[350px] my-2 relative">
-                          <CardContent className="h-3/5 w-full flex justify-center relative">
+                    <CarouselItem key={course?.title} className="pl-1 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                      <div className="p-1">
+                        <Link href={`/courses/${course._id}`} className="w-full h-full">
+                          <Card className="w-full h-[350px] my-0 relative overflow-hidden flex flex-col">
+                          <CardContent className="h-[180px] w-full flex justify-start relative -mt-3 p-4">
                             {course?.coverImage ? (
-                              <div className="relative w-full h-full p-4 rounded-xl overflow-hidden">
+                              <div className="relative w-full h-[180px] rounded-xl overflow-hidden">
                                 <Image
                                   src={course.coverImage}
                                   alt={course.title}
@@ -259,29 +268,30 @@ pl-2 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                                 />
                               </div>
                             ) : (
-                              <Skeleton className="w-full h-[200px]" />
+                              <Skeleton className="w-full h-[180px]" />
                             )}
                           </CardContent>
-                          <CardFooter className={"flex-1"}>
-                            <div className="w-full flex flex-col flex-1 gap-2">
-                              <p className="capitalize text-xl font-semibold break-words leading-snug">{course.title}</p>
-                              <p className="text-sm text-muted-foreground">
+                          <CardFooter className="flex-1 p-4">
+                            <div className="w-full flex flex-col gap-1">
+                              <p className="text-lg font-semibold break-words leading-tight line-clamp-2">{course.title}</p>
+                              <p className="text-xs text-muted-foreground truncate">
                                 {course?.instructor?.name}
                               </p>
-                              <div className="flex gap-2">
-                                <Badge variant="outline">{course?.rating && formatRatingNumber(course.rating)}</Badge>
-                                <Badge variant="outline flex gap-2">
-                                  {course?.duration && convertToTotalHours(course.duration)} hours
+                              <div className="flex gap-1 flex-wrap">
+                                <Badge variant="outline" className="text-xs ">{course?.rating && formatRatingNumber(course.rating)}</Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {course?.duration && convertToTotalHours(course.duration)} h
                                 </Badge>
                               </div>
                             </div>
                           </CardFooter>
-                        </Card>
-                      </Link >
+                          </Card>
+                        </Link>
+                      </div>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious />
+                {/* <CarouselPrevious className={"ml-3"} /> */}
                 <CarouselNext />
               </Carousel>
               <Button className="rounded-none mt-4 mx-3" onClick={() => { router.push('courses') }}>All Career Accelerators</Button></>)}
@@ -403,7 +413,7 @@ pl-2 md:pl-6 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                 <Carousel className="w-full">
                   <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                     {courses.length === 0 ? (
-                      <CarouselItem className="w-full px-2 -ml-2 md:-ml-4
+                      <CarouselItem className="w-full flex justify-center px-2 -ml-2 md:-ml-4
 pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                         <Skeleton className="w-[280px] h-[350px] rounded-md" />
                         <Skeleton className="w-[280px] h-[350px] rounded-md" />
@@ -442,8 +452,8 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                       ))
                     )}
                   </CarouselContent>
-                  <CarouselPrevious />
-                  <CarouselNext className={"ml-4"} />
+                  {/* <CarouselPrevious />
+                  <CarouselNext className={"ml-4"} /> */}
                 </Carousel>
               </div>
               <div className="w-full bg-[#F6F7F9] dark:bg-black  flex flex-col justify-center items-center gap-4 py-3 mt-4">
@@ -474,10 +484,10 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
               <div className="w-full ">
                 <Carousel
                   pts={{
-                  align: "start",
-                  loop: true,
-                  dragFree: true,
-                }}
+                    align: "start",
+                    loop: true,
+                    dragFree: true,
+                  }}
                   plugins={[
                     Autoplay({
                       delay: 2500,
@@ -488,8 +498,8 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   className="w-full max-w-full"
                 >
                   <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
-                    {(ranndomCoursesOnRating || []).map((course,index) => (
-                      <CarouselItem key={index+1} className="w-full  px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                    {(ranndomCoursesOnRating || []).map((course, index) => (
+                      <CarouselItem key={index + 1} className="w-full  px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                         <div className="p-1">
 
                           <Link href={`/courses/${course._id}`} className="inline-block">
@@ -542,7 +552,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
 
 
         {/* Reviews About the brainnest */}
-        <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-[350px] p-4 gap-8">
+        <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-[350px]  p-4 mt-15 sm:mt-1 gap-4 sm:gap-8 ">
           {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (
             <div className="w-full"><div className="mb-4 flex flex-col gap-2 w-full h-full">
               <h2 className="text-3xl font-bold ">See what others are achieving through learning </h2>
