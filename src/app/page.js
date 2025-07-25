@@ -406,7 +406,7 @@ export default function Home() {
         <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-[550px] p-4 gap-8">
           {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (
             <div className="w-full"><div className="mb-4 flex flex-col gap-2 w-full h-full">
-              <h2 className="text-3xl font-bold ">Learn from popular categories in {userLocation?.country_name} </h2>
+              <h2 className="text-3xl font-bold ">Popular categories </h2>
               <p className="text-gray-600">Get the skills and real-world experienced employerswant with Career Accelerators.</p>
             </div>
               <div className="grid-cols-3 flex-1">
@@ -442,7 +442,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                 <CardFooter className="flex-1 items-start">
                                   <div className="w-full flex flex-col items-center gap-2">
                                     <p className="capitalize text-lg font-semibold">{category}</p>
-                                    <p className="text-sm text-muted-foreground">Explore {category} courses</p>
+                                    <p className="text-[9px] xl:text-sm text-muted-foreground">Explore {category} courses</p>
                                   </div>
                                 </CardFooter>
                               </Card>
@@ -458,13 +458,13 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
               </div>
               <div className="w-full bg-[#F6F7F9] dark:bg-black  flex flex-col justify-center items-center gap-4 py-3 mt-4">
                 <p className="text-sm">Trusted by over 1000+ Companies Over and lakhs of Students around the world</p>
-                <div className="w-full max-h-[100px] flex justify-center items-center ">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-[100px] h-[100px] p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9]">
-                  <div className="w-full h-full relative flex justify-center items-center ">
+                <div className="w-full max-h-[100px] flex justify-center items-center border-none outline-none">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-[100px] h-[100px] p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9] !border-0 !shadow-none ring-0 !outline-none !border-none ">
+                  <div className="w-full h-full relative flex justify-center items-center !border-0  !border-none !outline-none shadow-none">
                     <Image
                       src={item}
                       alt={item}
                       fill
-                      className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out"
+                      className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out !border-0 !border-none !outline-none shadow-none"
                     />
                   </div>
                 </div>)}</div>
@@ -497,13 +497,12 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   ]}
                   className="w-full max-w-full"
                 >
-                  <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
+                  <CarouselContent className="w-full -ml-1">
                     {(ranndomCoursesOnRating || []).map((course, index) => (
-                      <CarouselItem key={index + 1} className="w-full  px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                        <div className="p-1">
-
+                      <CarouselItem key={index + 1} className="pl-1 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                        <div className="px-3 py-1">
                           <Link href={`/courses/${course._id}`} className="inline-block">
-                            <Card className="w-[250px] h-[350px] my-2 relative pt-0 pb-3 flex flex-col items-start">
+                            <Card className="w-full max-w-[280px] h-[350px] my-2 relative pt-0 pb-3 flex flex-col items-start">
                               <CardContent className="h-[150px] w-full flex justify-center relative p-0">
                                 {course?.coverImage ? (
                                   <div className="relative h-[150px] w-full rounded-t-xl  overflow-hidden">
@@ -522,15 +521,15 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                               <CardFooter className={"flex-1"}>
                                 <div className="w-full flex flex-col flex-1 items-start justify-center gap-2">
                                   <p className="capitalize text-lg font-semibold break-words leading-snug">{course.title}</p>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground">
                                     {course?.instructor?.name}
                                   </p>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className=" text-muted-foreground text-xs">
                                     ₹{parseInt(course?.price)}
                                   </p>
                                   <div className="flex gap-2">
-                                    <Badge variant="outline ">{course?.rating && formatRatingNumber(course.rating)}</Badge>
-                                    <Badge variant="outline flex gap-2">
+                                    <Badge variant="outline text-xs">{course?.rating && formatRatingNumber(course.rating)}</Badge>
+                                    <Badge variant="outline flex gap-2 text-xs">
                                       {course?.duration && convertToTotalHours(course.duration)} hours
                                     </Badge>
                                   </div>
