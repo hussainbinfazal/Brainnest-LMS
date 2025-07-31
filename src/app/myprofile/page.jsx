@@ -31,6 +31,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import LoadingBarLoader from "../components/shared/LoadingBarLoader";
+import { auth } from "@clerk/nextjs/dist/types/server";
 const page = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.authUser);
@@ -99,7 +100,7 @@ const page = () => {
 
   const filteredCourses =
     searchTerm.trim() === ""
-      ? courses
+      ? authUser?.enrolledCourses
       : courses.filter((course) => {
           const title = course.title?.toLowerCase() || "";
           const instructorName = course.instructor?.name?.toLowerCase() || "";
