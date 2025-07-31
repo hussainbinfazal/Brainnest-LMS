@@ -116,7 +116,7 @@ const page = () => {
   const handleLoginSubmit = async (data) => {
     try {
       const response = await axios.post("/api/users/login", data);
-      console.log(response);
+      // console.log(response);
       setAuthUser(response.data.user);
       setHasInitialized(true);
       setUserLoggedInitialized(true);
@@ -126,7 +126,7 @@ const page = () => {
 
       setRefreshUserData(true);
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       const errorMessage =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
@@ -262,7 +262,7 @@ const page = () => {
 
       router.push("/");
     } catch (err) {
-      console.error("Registration error:", err);
+      // console.error("Registration error:", err);
       const errorMessage =
         err.response?.data?.message || // custom message from your backend
         err.response?.data?.error || // some APIs use 'error' instead
