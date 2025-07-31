@@ -31,7 +31,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import LoadingBarLoader from "../components/shared/LoadingBarLoader";
-import { auth } from "@clerk/nextjs/dist/types/server";
+
 const page = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.authUser);
