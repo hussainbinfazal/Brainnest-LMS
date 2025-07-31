@@ -126,7 +126,7 @@ const page = () => {
     async (courseId) => {
       const response = await axios.get(`/api/course/${courseId}`);
       const data = response.data;
-      
+
       setCourse(data.course);
       setIsLoading(false);
       setTotalReviewsOfInstructor(data?.totalReviews);
@@ -356,7 +356,6 @@ const page = () => {
         (item) => item?._id || item === course?._id
       );
       setIsEnrolled(isUserEnrolled);
-      
     }
   }, [user, isEnrolled, course]);
 
@@ -502,7 +501,6 @@ const page = () => {
     }
   }, [user]);
 
-
   useEffect(() => {
     if (user && course && user.completedCourses?.includes(course._id)) {
       setIsCompleted(true);
@@ -555,7 +553,7 @@ const page = () => {
     if (user && cart) {
       checkAlreadyAdded();
     }
-  }, [user,cart]);
+  }, [user, cart]);
 
   return (
     <div className="relative w-full min-h-screen flex flex-col gap-6  py-18 pt-0 ">
@@ -753,7 +751,15 @@ const page = () => {
           ) : (
             <Badge>Bestseller</Badge>
           )}
+          {isLoading ? (
+            <Skeleton className="w-[10px] h-[30px] " />
+          ) : (
+            <p className="dark:text-white text-black text-2xl capitalize whitespace-normal break-words line-clamp-2">
+              ₹ {Number(course?.price)}
+            </p>
+          )}
         </div>
+
         <div className="flex gap-2 w-full   justify-start items-center">
           <span className="flex gap-2  items-center">
             {isLoading ? (
