@@ -737,7 +737,7 @@ const page = () => {
           </div>
         )}
         <div className="w-full flex flex-col items-start justify-center gap-3 pt-12 md:pt-0">
-          <p className="dark:text-white text-black text-4xl capitalize whitespace-normal break-words line-clamp-2">
+          <p className="dark:text-white text-black text-2xl sm:text-3xl lg:text-4xl capitalize whitespace-normal break-words line-clamp-3 leading-tight">
             {course?.title}
           </p>
           {Array.isArray(course?.description)?.topic && (

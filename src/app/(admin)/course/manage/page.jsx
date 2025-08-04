@@ -14,20 +14,10 @@ import { PiChatCircleDotsLight } from "react-icons/pi";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
@@ -41,7 +31,6 @@ const page = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const router = useRouter();
-  const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const getMyCourses = useCallback(async () => {
     try {
@@ -139,7 +128,7 @@ const page = () => {
           <span className="w-full text-3xl flex items-center justify-start my-4 mx-4  font-semibold">
             Manage your courses here
           </span>
-          <span className="flex gap-4 items-center justify-start lg:justify-end w-full lg:w-inline">
+          <span className="flex gap-4 items-start sm:items-center justify-start lg:justify-end w-full lg:w-inline sm:flex-row flex-col">
             <Link href={"/course/manage/chats"}>
               <motion.span>
                 <Button
@@ -202,11 +191,11 @@ const page = () => {
             <IoSearch className="absolute top-2 right-2" />
           </span>
         </span>
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full justify-center sm:justify-start">
           {loading ? (
-            <div className="grid grid-cols-3 gap-4 w-full mt-4 ">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 w-full mt-4 justify-items-center">
               {Array.from({ length: courses.length || 3 }).map((_, index) => (
-                <Card key={index} className="w-[300px] h-[400px] p-4 space-y-4">
+                <Card key={index} className="w-[300px] h-[400px] p-4 space-y-4 ">
                   <Skeleton className="h-[200px] w-full" />
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
@@ -219,7 +208,7 @@ const page = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 justify-items-center gap-4 w-full mt-4">
               {filteredCourses.length === 0 ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <p className="text-muted-foreground text-lg">
@@ -235,7 +224,7 @@ const page = () => {
                       <div>
                         <Card
                           key={course._id}
-                          className="w-[420px] h-[350px] my-2 relative"
+                          className="w-[400px] sm:w-[320px] h-[350px] my-2 relative"
                         >
                           <CardContent className="h-3/5 w-full flex justify-center relative">
                             {course?.coverImage ? (

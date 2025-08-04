@@ -8,10 +8,9 @@ import { getDataFromToken } from "@/utils/getDataFromToken";
 
 export async function GET(request) {
     await connectDB();
-    // console.log("This is the controller of the all courses called",);
     try {
         const user = await getDataFromToken(request);
-        console.log("User", user);
+        console.log("User in the admin all course route", user);
         if (!user) {
             return NextResponse.json({ message: "You are not authorized to acces this route" }, { status: 401 })
         }
