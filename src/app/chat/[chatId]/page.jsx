@@ -27,7 +27,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import axios from "axios";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 export default function ChatIdPage() {
   const user = useAuthStore((state) => state.authUser);
   const userId = useMemo(() => user?._id, [user]);
@@ -36,7 +35,6 @@ export default function ChatIdPage() {
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
   const [socket, setSocket] = useState(null);
-  const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: false, interval: 3000,});
   const [isLimitExceeded, setIsLimitExceeded] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
   const messages = [

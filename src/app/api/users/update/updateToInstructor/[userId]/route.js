@@ -16,16 +16,7 @@ export async function PUT(request, context) {
             return NextResponse.json({ message: "No user und with this id" }, { status: 400 });
         }
         user.role = "instructor" || user.role;
-        const token = generateToken(user._id, user.role);
-        await cookies().set({
-            name: 'token',
-            value: token,
-            httpOnly: true,
-            sameSite: 'strict',
-            //   secure: process.env.NODE_ENV === 'production',
-            maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
-            path: '/',
-        });
+        
         await user.save();
         return NextResponse.json({ message: "User updated successfully", user, token }, { status: 200 });
     } catch (error) {

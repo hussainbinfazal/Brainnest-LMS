@@ -3,15 +3,18 @@ import Razorpay from 'razorpay';
 import { connectDB } from '@/config/db';
 import User from '@/models/userModel';
 import Course from '@/models/courseModel';
-import { getDataFromToken } from '@/utils/getDataFromToken';
+import { auth } from '@/auth';
 import Chat from "@/models/chatModel";
 import Message from "@/models/messageModel";
 
 export async function GET(request) {
     await connectDB();
     try {
-        const user = await getDataFromToken(request);
-        const userId = user._id || user.id;
+        const session = await auth();
+        if (!session?.user) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+        const userId = session.user.id;
 
         const chat = await Chat.find({sender:userId}).populate('sender','_id name profileImage').populate('receiver','_id name profileImage').populate('allMessages').lean();
         if (!chat) return NextResponse.json({ message: "Chat not found" }, { status: 404 });

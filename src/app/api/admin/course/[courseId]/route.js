@@ -8,6 +8,7 @@ import Progress from "@/models/progressModel";
 export async function GET(request, { params }) {
     await connectDB();
     try {
+        
         const user = await getDataFromToken(request);
         if (user.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         const { courseId } = await params;

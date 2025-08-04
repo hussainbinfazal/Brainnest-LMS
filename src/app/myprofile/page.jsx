@@ -21,11 +21,9 @@ import { CiEdit } from "react-icons/ci";
 import axios from "axios";
 import { toast } from "sonner";
 import { validateEmail, validatePhoneNumber } from "@/utils/validators";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -35,7 +33,6 @@ import LoadingBarLoader from "../components/shared/LoadingBarLoader";
 const page = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.authUser);
-  const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: true, interval: 3000,});
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const fetchCourses = useCourseStore((state) => state.fetchCourses);
   const { fetchUser } = useAuthStore();
@@ -54,48 +51,37 @@ const page = () => {
   const [isEditing, setIsEditing] = useState(false);
   const userId = authUser?._id || authUser?.id;
   const completedCourseOfUser = () => {
-    if (courses.length == 0) return;
-
-    let completedCourses = 0;
-    let completedLessons = 0;
-    let pendingCourses = 0;
-    let pendingLessons = 0;
-
-    courses.forEach((course) => {
-      const onlyEnrolledCourse = authUser?.enrolledCourses?.includes(
-        course._id
-      );
-      if (!onlyEnrolledCourse) return;
-
-      let totalLessons = course.lessons.length;
-      let completedInCourse = course.lessons.filter(
-        (lesson) => lesson.status === "completed"
-      ).length;
-      completedLessons += completedInCourse;
-
-      let pendingInCourse = course.lessons.filter(
-        (lesson) => lesson.status === "incomplete"
-      ).length;
-      pendingLessons += pendingInCourse;
-
-      if (totalLessons > 0 && pendingInCourse === totalLessons) {
-        pendingCourses++;
-      }
-      if (totalLessons > 0 && completedInCourse === totalLessons) {
-        completedCourses++;
-      }
-    });
-    setCompletedCourses(completedCourses);
-    setCompletedLessons(completedLessons);
-    setPendingCourses(pendingCourses);
-    setPendingLessons(pendingLessons);
-
-    return {
-      completedCourses,
-      completedLessons,
-      pendingCourses,
-      pendingLessons,
-    };
+    // Use the completedCourses field directly from user data
+    const completedCoursesCount = authUser?.completedCourses?.length || 0;
+    const enrolledCoursesCount = authUser?.enrolledCourses?.length || 0;
+    const pendingCoursesCount = enrolledCoursesCount - completedCoursesCount;
+    
+    setCompletedCourses(completedCoursesCount);
+    setPendingCourses(pendingCoursesCount);
+    
+    // For lessons, we still need to check the courses if available
+    if (courses.length > 0) {
+      let completedLessons = 0;
+      let pendingLessons = 0;
+      
+      courses.forEach((course) => {
+        const isEnrolled = authUser?.enrolledCourses?.some(
+          (enrolledId) => enrolledId.toString() === course._id.toString()
+        );
+        if (!isEnrolled) return;
+        
+        course.lessons?.forEach((lesson) => {
+          if (lesson.status === "completed") {
+            completedLessons++;
+          } else {
+            pendingLessons++;
+          }
+        });
+      });
+      
+      setCompletedLessons(completedLessons);
+      setPendingLessons(pendingLessons);
+    }
   };
 
   const filteredCourses =
@@ -180,6 +166,7 @@ const page = () => {
   };
   useEffect(() => {
     if (authUser) {
+      console.log('AuthUser in useEffect:', authUser);
       completedCourseOfUser();
       setLoading(false);
       setName(authUser?.name || "");
@@ -188,6 +175,14 @@ const page = () => {
       setPassword(authUser?.password || "");
     }
   }, [authUser, courses]);
+  
+  useEffect(() => {
+    // Fetch full user data when component mounts
+    if (!authUser) {
+      fetchUser();
+      console.log('Fetching user data...');
+    }
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchCourses();
@@ -248,7 +243,7 @@ const page = () => {
               {loading ? (
                 <Skeleton className="h-4 w-10" />
               ) : (
-                authUser?.enrolledCourses?.length
+                authUser?.enrolledCourses?.length || 0
               )}
             </span>
             <span className="text-sm">

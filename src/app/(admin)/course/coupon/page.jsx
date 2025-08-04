@@ -21,14 +21,12 @@ import { toast } from "sonner";
 import { MdCancel } from "react-icons/md";
 import { MdDeleteForever } from "react-icons/md";
 import { IoSearch } from "react-icons/io5";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: true, interval: 3000,});
   console.log("Page rendered");
   const [editForm, setEditForm] = useState({
     code: "",

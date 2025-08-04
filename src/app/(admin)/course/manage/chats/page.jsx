@@ -38,7 +38,6 @@ import { BsFillMenuAppFill } from "react-icons/bs";
 import { TfiLayoutMenuSeparated } from "react-icons/tfi";
 import { RiMenuUnfold2Fill } from "react-icons/ri";
 import { RxDropdownMenu } from "react-icons/rx";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { MdCircle } from "react-icons/md";
 export default function AdminChatPage() {
   const router = useRouter();
@@ -266,12 +265,7 @@ export default function AdminChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: true,
-    interval: 10000,
-  });
+  
   useEffect(() => {}, [userId]);
   useEffect(() => {
     const updateChat = async () => {

@@ -29,7 +29,6 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import Image from "next/image";
 import { RxCrossCircled } from "react-icons/rx";
 import Tiptap from "@/components/Tiptap";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState(
     new Set()
@@ -69,12 +68,7 @@ const page = () => {
   const [previewLessonVideo, setPreviewLessonVideo] = useState([]);
   const [isLoadingCourse, setIsLoadingCourse] = useState(true);
   const [description, setDescription] = useState("");
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: true,
-    interval: 3000,
-  });
+ 
   const getCourseFromParams = useCallback(async () => {
     setLoading(true);
 

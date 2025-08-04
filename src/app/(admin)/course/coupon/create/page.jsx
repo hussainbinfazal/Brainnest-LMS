@@ -17,14 +17,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
   const [usageLimit, setUsageLimit] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
   const router = useRouter();
-const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: true, interval: 3000,});
   console.log("Page rendered");
   const handleCreateCoupon = async (e) => {
     e.preventDefault();

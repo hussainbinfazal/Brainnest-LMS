@@ -11,7 +11,6 @@ import { motion, useSpring, useScroll } from "motion/react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IoSearch } from "react-icons/io5";
 import { PiChatCircleDotsLight } from "react-icons/pi";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 import {
   Card,
   CardContent,
@@ -34,12 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 
 const page = () => {
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: true,
-    interval: 5000,
-  });
+  
   const [courses, setCourses] = useState([]);
   const authUser = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);

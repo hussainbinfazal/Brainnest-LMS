@@ -1,14 +1,14 @@
 import { connectDB } from "@/config/db";
 import User from "@/models/userModel";
 import { NextResponse } from "next/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+import { auth } from "@/auth";
 export async function GET(request) {
   await connectDB();
   try {
-    const user = await getDataFromToken(request);
-    console.log(user);
-    if (!user) return NextResponse.json({ message: "User not found" }, { status: 401 });
-    const userDB = await User.findById(user.id || user._id).select('-password').lean();
+    const session = await auth();
+    console.log("Session:", session);
+    if (!session?.user) return NextResponse.json({ message: "User not found" }, { status: 401 });
+    const userDB = await User.findById(session.user.id).select('-password').populate('likedCourses', 'title _id instructor price rating reviews coverimage category').populate('enrolledCourses', 'title _id instructor price rating reviews coverimage category').populate('completedCourses', 'title _id instructor price rating reviews coverimage category').lean();
     console.log("This is the userDB", userDB);
 
 

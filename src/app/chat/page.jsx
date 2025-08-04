@@ -33,7 +33,6 @@ import { MessageCirclePlus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { MdCircle } from "react-icons/md";
 export default function ChatIdPage() {
   const router = useRouter();
@@ -408,12 +407,7 @@ export default function ChatIdPage() {
       });
     }
   };
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: false,
-    interval: 10000,
-  });
+  
   useEffect(() => {
     scrollToBottom();
   }, [messages]);

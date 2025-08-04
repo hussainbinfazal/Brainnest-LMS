@@ -26,7 +26,6 @@ import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 const page = () => {
   const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState(
     new Set()
@@ -37,12 +36,7 @@ const page = () => {
   const [lessons, setLessons] = useState([
     { name: "", description: "", video: "", duration: "" },
   ]);
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: true,
-    interval: 3000,
-  });
+  
   const [price, setPrice] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [category, setCategory] = useState("");

@@ -4,14 +4,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import useAuthRedirect from '@/hooks/useAuthRedirect';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 export default function Checkout({ course, user }) {
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState(null);
   const router = useRouter();
   const { user: authUser } = useAuthStore();
-  const isAuthChecked = useAuthRedirect({redirectIfUnauthenticated: true , redirectIfAuthenticated: false, redirectIfNotInstructor: false, interval: 3000,});
   // Load Razorpay script
   useEffect(() => {
     const script = document.createElement('script');

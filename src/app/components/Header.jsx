@@ -17,17 +17,10 @@ import { LiaShoppingCartSolid } from "react-icons/lia";
 import { CiHeart } from "react-icons/ci";
 import { FaGraduationCap } from "react-icons/fa6";
 import { badgeVariants } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { BarLoader, ClipLoader } from "react-spinners";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
+import { Card, CardContent } from "@/components/ui/card";
+import { BarLoader } from "react-spinners";
 import { ModeToggle } from "@/components/Dark";
+import { signIn, signOut, useSession } from "next-auth/react";
 
 export default function Header() {
   const router = useRouter();
@@ -43,13 +36,13 @@ export default function Header() {
   const setAuthLoading = useAuthStore((state) => state.setAuthLoading);
   const chat = useChatStore((state) => state.chat);
   const setChat = useChatStore((state) => state.setChat);
-  const { signOut } = useClerk();
-  const { clerkUser, isSignedIn } = useUser();
+  // const { signOut } = useClerk();
+  // const { clerkUser, isSignedIn } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null); // <-- Add this
   const avatarRef = useRef(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState(false);
-
+  const { data:session, status } = useSession();
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
@@ -66,14 +59,17 @@ export default function Header() {
   }, [authUser?._id]);
 
   useEffect(() => {
-    // Only fetch user if we don't have one and we're not already loading
-    if (!authUser) {
+    // Set authUser from session if available
+    if (session?.user && !authUser) {
+      setAuthUser(session.user);
+      setHasInitialized(true);
+    } else if (!authUser && status === "unauthenticated") {
       console.log("Fetching user in header...");
       fetchUser().catch((error) => {
         console.error("Failed to fetch user:", error);
       });
     }
-  }, [authUser, isAuthLoading, fetchUser]);
+  }, [session, authUser, status, fetchUser]);
 
   const handleLogout = async () => {
     await signOut();
@@ -90,7 +86,7 @@ export default function Header() {
 
   useEffect(() => {
     console.log("authUser", authUser);
-  }, [user, authUser, clerkUser]);
+  }, [user, authUser]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -132,6 +128,14 @@ export default function Header() {
       return () => clearTimeout(timer);
     }
   }, [authUser, fetchExistingChat]);
+
+  useEffect(()=>{
+    console.log("This is the status", status);
+    console.log("This is the session", session);
+    if (session?.user) {
+      console.log("Session user:", session.user);
+    }
+  },[status, session]);
   return (
     <header className="sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 ">
       <Scroller />
@@ -203,7 +207,7 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center gap-4">
-              <ModeToggle  />
+              <ModeToggle />
 
               {/* {authUser == null ? (
                 <Button onClick={handleLogout}>Logout</Button>
@@ -224,10 +228,15 @@ export default function Header() {
                   </Button>
                 </Link>
               )}
-              {!authUser && (
+              {status === "unauthenticated" && (
                 <Link href={"/login"}>
                   <Button className="ml-6 rounded-sm">Login</Button>
                 </Link>
+              )}
+              {status === "authenticated" && (
+                <Button className="ml-6 rounded-sm" onClick={handleLogout}>
+                  Logout
+                </Button>
               )}
               {/* {!authUser && (
                 
@@ -243,7 +252,7 @@ export default function Header() {
                     }}
                   >
                     <AvatarImage
-                      src={authUser?.imageUrl || authUser?.profileImage}
+                      src={authUser?.imageUrl || authUser?.profileImage || session?.user?.image}
                     />
                     <AvatarFallback>
                       {authUser?.firstName?.charAt(0).toUpperCase()}
@@ -253,7 +262,7 @@ export default function Header() {
                 {isMenuOpen && (
                   <Card
                     className={`menu absolute top-2 right-5 ${
-                      chatAlreadyExists ? "h-50" : authUser ? "h-48" : " h-15"
+                      chatAlreadyExists ? "min-h-45" : authUser ? "min-h-38" : " min-h-10"
                     }  w-40 z-[70]`}
                     ref={menuRef}
                   >

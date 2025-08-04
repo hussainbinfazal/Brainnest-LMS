@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback } from "react";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { CampaignVisitorsChart } from "@/app/components/admin/Charts/campaign-visitors/chart";
 import { CampaignVisitors } from "@/app/components/admin/Charts/campaign-visitors";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -71,9 +70,7 @@ const page = () => {
   const [payments, setPayments] = useState([]);
   const [countRecords, setCountRecords] = useState(10);
 
-  // console.log("📊 useAuthRedirect returned:", isAuthChecked);
 
-  // console.log("Auth verified, rendering main content");
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedView, setSelectedView] = useState("students");
@@ -408,12 +405,7 @@ const page = () => {
     return () => clearTimeout(timer);
   }, [handleFetchChatStats, handleFetchAllPayments]);
 
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: true,
-    interval: 3000,
-  });
+  
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-start items-center py-6 relative">

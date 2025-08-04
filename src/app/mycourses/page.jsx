@@ -19,16 +19,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import axios from "axios";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const courseId = "682ba5c583be348e3f2ea50e";
-  const isAuthChecked = useAuthRedirect({
-    redirectIfAuthenticated: false,
-    redirectIfNotAuthenticated: true,
-    redirectIfNotInstructor: false
-  })
+  
   const fetchMyCourses = async () => {
     try {
       // console.log("fetch my courses called with axios");

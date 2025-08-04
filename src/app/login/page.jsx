@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { motion, useSpring, useScroll } from "motion/react";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
@@ -10,35 +10,22 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import Cookies from "js-cookie";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
 import { OtpSender, OtpVerifier } from "../components/PhoneVerificationForm";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
-import { useSignIn } from "@clerk/clerk-react";
-
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { signIn } from "next-auth/react";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { sign } from "jsonwebtoken";
 import ProfileImageUpload from "../components/ProfileImageUpload";
 import axios from "axios";
-import { useUser, useSignUp, useSession } from "@clerk/clerk-react";
 export const loginSchema = z.object({
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -66,28 +53,9 @@ const page = () => {
   const [isShown, setIsShown] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isOtpVerified, setIsOtpVerified] = React.useState(false);
-  const [refreshUserData, setRefreshUserData] = React.useState(false);
-  const { authUser, setAuthUser } = useAuthStore();
-  const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
-  const userLoggedInitialized = useAuthStore((state) => state.hasInitialized);
-  const setUserLoggedInitialized = useAuthStore(
-    (state) => state.setUserLoggedInitialized
-  );
-  useAuthRedirect({
-    redirectIfUnauthenticated: false,
-    redirectIfAuthenticated: true,
-    redirectIfNotInstructor: false,
-    interval: 3000,
-  });
-
-  const [nonClerkUser, setNonClerkUser] = React.useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("nonClerkUser") !== "false";
-    }
-    return true;
-  });
-  const { user } = useUser();
-  const { signIn, setActive } = useSignIn();
+  const { setAuthUser } = useAuthStore();
+ 
+  
   const router = useRouter();
 
   const loginForm = useForm({
@@ -115,18 +83,21 @@ const page = () => {
 
   const handleLoginSubmit = async (data) => {
     try {
-      const response = await axios.post("/api/users/login", data);
-      // console.log(response);
-      setAuthUser(response.data.user);
-      setHasInitialized(true);
-      setUserLoggedInitialized(true);
-      toast.success("Login successful");
-      // window.location.reload();
-      router.push("/");
+      const res = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
 
-      setRefreshUserData(true);
+      if (res?.error) {
+        toast.error("Invalid credentials");
+        return;
+      }
+
+      toast.success("Login successful");
+      router.push("/");
     } catch (error) {
-      // console.log(error);
+      console.log(error);
       const errorMessage =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
@@ -136,8 +107,7 @@ const page = () => {
   };
 
   const handleSignupSubmit = async (data) => {
-    // console.log(data);
-    // console.log("Sign in function called ");
+   
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -149,13 +119,8 @@ const page = () => {
       const response = await axios.post("/api/users/register", data);
       // console.log(response);
       setAuthUser(response.data.user);
-      setHasInitialized(true);
-      setUserLoggedInitialized(true);
       toast.success("Signup successful");
-      // window.location.reload();
       router.push("/");
-
-      setRefreshUserData(true);
     } catch (error) {
       // console.log(error);
       const errorMessage =
@@ -185,95 +150,6 @@ const page = () => {
     }
   }, [formType]);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("nonClerkUser");
-    if (stored !== null) {
-      setNonClerkUser(stored !== "false");
-    }
-  }, []);
-  const loginWithClerk = async () => {
-    const toastId = toast.loading("loading...");
-
-    const userData = {
-      email: user.primaryEmailAddress?.emailAddress,
-      fromOAuth: true,
-    };
-    // console.log("This is the userData in the login console ", userData);
-
-    try {
-      const response = await axios.post("/api/users/login", userData);
-      const { token, user: registeredUser } = response.data;
-      setAuthUser(registeredUser);
-      setHasInitialized(true);
-      setUserLoggedInitialized(true);
-      toast.success("Login successful");
-      setRefreshUserData(false);
-
-      // console.log("Token Value in the login console ", token);
-
-      localStorage.removeItem("authFormType");
-      router.push("/");
-    } catch (err) {
-      toast.dismiss(toastId);
-
-      // console.log("Login error:", err);
-      const errorMessage =
-        err.response?.data?.message || // custom message from your backend
-        err.response?.data?.error || // some APIs use 'error' instead
-        "Registration failed. Please try again."; // fallback
-
-      toast.error(errorMessage);
-      if (errorMessage === "User already exists") {
-        setFormType("login");
-      }
-    } finally {
-      toast.dismiss();
-    }
-    toast.dismiss(toastId);
-  };
-
-  const registerWithClerk = async () => {
-    const userData = {
-      name: user.fullName,
-      email: user.primaryEmailAddress?.emailAddress,
-      password: user.id,
-      fromOAuth: true,
-      profileImage: user.imageUrl,
-      phoneNumber: user.primaryPhoneNumber?.phoneNumber || "",
-    };
-
-    // console.log("This is the userData in the register console ", userData);
-    try {
-      const response = await axios.post("/api/users/register", userData);
-      // console.log("This is the response from the backend", response);
-      const { token, user } = response.data;
-      setAuthUser(user);
-      setHasInitialized(true);
-      setUserLoggedInitialized(true);
-
-      // console.log("Token Value in the register console ", token);
-
-      toast.success("User registered via Clerk");
-      const toastId = toast.loading("loading...");
-      setRefreshUserData(true);
-
-      toast.dismiss(toastId);
-      localStorage.removeItem("authFormType");
-
-      router.push("/");
-    } catch (err) {
-      // console.error("Registration error:", err);
-      const errorMessage =
-        err.response?.data?.message || // custom message from your backend
-        err.response?.data?.error || // some APIs use 'error' instead
-        "Registration failed. Please try again."; // fallback
-
-      toast.error(errorMessage);
-    } finally {
-      toast.dismiss();
-    }
-  };
-
   const handleTabChange = (value) => {
     setFormType(value);
     // When changing tabs manually, update localStorage
@@ -282,39 +158,6 @@ const page = () => {
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // console.log("DEBUG useEffect check", {
-      //   user,
-      //   formType,
-      //   nonClerkUser,
-      // });
-      // if (user && !authUser || nonClerkUser) return;
-
-      // Fix your useEffect logic
-      if (formType === "signup" && !userLoggedInitialized) {
-        if (user && !authUser && !nonClerkUser) {
-          registerWithClerk(); // Call registerWithClerk();
-        }
-      }
-      if (formType === "login" && !userLoggedInitialized) {
-        if (user && !authUser && !nonClerkUser) {
-          loginWithClerk();
-        }
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [user, formType, nonClerkUser]);
-
-  useEffect(() => {
-    if (refreshUserData) {
-      router.refresh();
-      setRefreshUserData(false);
-    }
-  }, [refreshUserData]);
-
-  // if(authUser) return null;
   return (
     <div className="flex justify-center items-center min-h-screen gap-4 overflow-auto pt-8">
       <Tabs
@@ -400,31 +243,27 @@ const page = () => {
                 )}
               />
 
-              <Button
-                type="submit "
-                onClick={() => {
-                  setNonClerkUser(true);
-                  localStorage.setItem("nonClerkUser", "true");
-                }}
-              >
-                Submit
-              </Button>
+              <Button type="submit ">Submit</Button>
               <Separator className="my-4" />
               <div className="flex justify-center items-center gap-4 flex-col">
                 <h2>Other Sign In options</h2>
-                <SignInButton mode="redirect" redirectUrl="/login">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNonClerkUser(false);
-                      localStorage.setItem("nonClerkUser", "false");
-                    }}
-                    className="w-full h-[50px] border border-black rounded-sm mt-4 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <FcGoogle className="w-6 h-6" />
-                    Log In With Google
-                  </button>
-                </SignInButton>
+
+                <Button
+                  type="button"
+                  onClick={() => signIn("google", { callbackUrl: "/" })}
+                  className="w-full p-2 bg-red-500 text-white rounded"
+                >
+                  <FcGoogle className="w-6 h-6" />
+                  Log in With Google
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => signIn("github", { callbackUrl: "/" })}
+                  className="w-full p-2 bg-black text-white rounded"
+                >
+                  <FaGithub className="w-6 h-6" />
+                  Log In With GitHub
+                </Button>
               </div>
             </form>
           </Form>
@@ -563,31 +402,26 @@ const page = () => {
                   </FormItem>
                 )}
               />
-              <Button
-                type="submit"
-                onClick={() => {
-                  setNonClerkUser(true);
-                  localStorage.setItem("nonClerkUser", "true");
-                }}
-              >
-                Submit
-              </Button>
+              <Button type="submit">Submit</Button>
               <Separator className="my-4" />
               <div className="flex justify-center items-center gap-4 flex-col">
                 <h2>Other Sign In options</h2>
-                <SignUpButton mode="redirect" redirectUrl="/login">
-                  <button
-                    onClick={() => {
-                      setNonClerkUser(false);
-                      localStorage.setItem("nonClerkUser", "false");
-                    }}
-                    type="button"
-                    className="w-full h-[50px] border border-black rounded-sm mt-4 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <FcGoogle className="w-6 h-6" />
-                    Sign In With Google
-                  </button>
-                </SignUpButton>
+                <Button
+                  type="button"
+                  onClick={() => signIn("google")}
+                  className="w-full p-2 bg-red-500 text-white rounded"
+                >
+                  <FcGoogle className="w-6 h-6" />
+                  Sign In with Google
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => signIn("github")}
+                  className="w-full p-2 bg-red-500 text-white rounded"
+                >
+                  <FaGithub className="w-6 h-6" />
+                  Sign In with GitHub
+                </Button>
               </div>
             </form>
           </Form>

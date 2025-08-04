@@ -24,6 +24,8 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { LiaShoppingCartSolid } from "react-icons/lia";
 import { CiHeart } from "react-icons/ci";
 import { useState, useRef } from "react";
+import { signIn, signOut, useSession } from "next-auth/react"
+
 import { useClerk, useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import axios from "axios";
@@ -32,7 +34,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 export function AppSidebar() {
   const router = useRouter();
-  const { signOut } = useClerk();
+  // const { signOut } = useClerk();
   const authUser = useAuthStore((state) => state.authUser);
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
   const setHasInitialized = useAuthStore((state) => state.setHasInitialized);

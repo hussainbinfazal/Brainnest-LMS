@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import useAuthRedirect from "@/hooks/useAuthRedirect";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { useCourseStore } from "@/lib/store/useCourseStore";
 import { useRouter } from "next/navigation";
@@ -16,12 +15,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.11.174/bui
 const MyCertificatesPage = () => {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.authUser);
-  const isAuthChecked = useAuthRedirect({
-    redirectIfUnauthenticated: true,
-    redirectIfAuthenticated: false,
-    redirectIfNotInstructor: true,
-    interval: 3000,
-  });
+  
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const fetchCourses = useCourseStore((state) => state.fetchCourses);
   const { fetchUser } = useAuthStore();

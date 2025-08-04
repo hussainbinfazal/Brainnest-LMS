@@ -22,6 +22,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { HiOutlineChevronLeft } from "react-icons/hi";
 import LoadingBarLoader from "./components/shared/LoadingBarLoader";
+import NextAuthSessionProvider from "./provider/sessionProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -44,8 +45,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <ClerkProvider>
+        <NextAuthSessionProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -75,7 +77,7 @@ export default function RootLayout({ children }) {
               </div>
             </SidebarProvider>
           </ThemeProvider>
-        </ClerkProvider>
+        </NextAuthSessionProvider>
 
       </body>
     </html>

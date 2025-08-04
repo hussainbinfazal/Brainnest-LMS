@@ -7,10 +7,11 @@ import { getDataFromToken } from "@/utils/getDataFromToken";
 export async function POST(request) {
     await connectDB();
     try {
-        const user = await getDataFromToken(request);
+       
+               const user = await auth()
+               const userId = session.user._id || session.user.id;
         const { code, discount, expiresAt, usageLimit } = await request.json();
         const exitingCoupon = await Coupon.findOne({ code: code });
-        const userId = user._id || user.id;
         if (!userId) return NextResponse.json({ message: "User id is required" }, { status: 400 });
         if (exitingCoupon) {
             return NextResponse.json({ message: "Coupon already exists" }, { status: 400 });
@@ -38,8 +39,9 @@ export async function GET(request) {
 
 export async function DELETE(request) {
     try {
-        const user = await getDataFromToken(request);
-        const userId = user._id || user.id;
+      await connectDB();
+        const user = await auth()
+        const userId = session.user._id || session.user.id;
         const { couponId, } = await request.json();
         if (!couponId) return NextResponse.json({ message: "Coupon id is required" }, { status: 400 });
         if (!userId) return NextResponse.json({ message: "User id is required" }, { status: 400 });
