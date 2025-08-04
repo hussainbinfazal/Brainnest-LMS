@@ -14,10 +14,11 @@ import { FcLike } from "react-icons/fc";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { useCourseStore } from "@/lib/store/useCourseStore";
+import { Skeleton } from "@/components/ui/skeleton";
 const page = () => {
   const [likedCourses, setLikedCourses] = useState([]);
   const user = useAuthStore((state) => state.authUser);
- const courses = useCourseStore((state) => state.courses);
+  const courses = useCourseStore((state) => state.courses);
   const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState({
     _id: "6641320fd8342c7f98765432",
@@ -125,7 +126,7 @@ const page = () => {
     } finally {
       setLoading(false);
     }
-  },[user,likedCourses.length]);
+  }, [user, likedCourses.length]);
   const handleDeleteCourseFromLiked = async (courseId) => {
     try {
       const response = await axios.delete(
@@ -153,17 +154,39 @@ const page = () => {
   };
 
   useEffect(() => {
-    if (user ) {
+    if (user) {
       handleFetchedLikedCourses();
     }
   }, [user]);
   return (
-    <div className="min-h-screen w-screen flex flex-col overflow-auto px-4">
+    <div className="min-h-screen w-screen flex flex-col overflow-auto px-8 sm:px-8 ">
       <div className="w-full h-screen py-8 flex flex-col ">
         {likedCourses.length === 0 ? (
-          <div className="w-full h-screen  flex justify-center items-center">
-            No course Found
-          </div>
+          loading ? (
+            <div className="w-full h-screen grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 justify-items-center gap-4">
+              <Skeleton className="h-[400px] w-[300px]">
+                <Skeleton className="h-64 w-64" />
+              </Skeleton>
+              <Skeleton className="h-[400px] w-[300px]">
+                <Skeleton className="h-64 w-64" />
+              </Skeleton>
+              <Skeleton className="h-[400px] w-[300px]">
+                <Skeleton className="h-64 w-64" />
+              </Skeleton>
+              <Skeleton className="h-[400px] w-[300px]">
+                <Skeleton className="h-64 w-64" />
+              </Skeleton>
+              <Skeleton className="h-[400px] w-[300px]">
+                <Skeleton className="h-64 w-64" />
+              </Skeleton>
+              
+              
+            </div>
+          ) : (
+            <div className="w-full h-screen  flex justify-center items-center">
+              No course Found
+            </div>
+          )
         ) : (
           <div className="w-full h-full  flex flex-col  gap-4">
             <div className="text-3xl font-semibold flex gap-4 w-full justify-start items-center">
@@ -183,15 +206,12 @@ const page = () => {
                 <>
                   {(likedCourses || []).map((course) => {
                     return (
-                      <div
-                        key={course._id}
-                        className="inline-block"
-                      >
+                      <div key={course._id} className="inline-block">
                         <div className="inline-block">
                           <Card className=" h-[400px] w-[300px]">
                             <CardContent className="">
                               <div className="grid w-full items-center gap-2">
-                                <div className="flex flex-col space-y-1.5 w-[250px] h-[160px] relative">
+                                <div className="flex flex-col space-y-1.5 w-[250px] h-[120px] relative">
                                   <Image
                                     src={course?.coverImage} // image path or URL
                                     alt="Description of the image"
@@ -248,7 +268,7 @@ const page = () => {
           </div>
         )}
         {likedCourses.length > 0 && (
-          <div className="flex justify-end mt-8 ">
+          <div className="flex justify-end mt-8 mb-10 ">
             <Button
               onClick={() => {
                 addToCart();
