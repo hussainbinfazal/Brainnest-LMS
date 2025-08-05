@@ -176,11 +176,18 @@ export default function Home() {
 
 
   const fetchReviews = useCallback(async () => {
-    const response = await axios('/reviews/reviews.json')
-    const reviewsData = response.data;
-    setReviews(reviewsData);
-    // console.log("This is the reviews state", reviews);
-    // console.log("This is the reviews data", reviewsData);
+    try {
+      const response = await axios('/reviews/reviews.json')
+      const reviewsData = response.data;
+      if (Array.isArray(reviewsData)) {
+        setReviews(reviewsData);
+      } else {
+        setReviews([]);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      setReviews([]);
+    }
   }, []);
   useEffect(() => {
     fetchReviews();
@@ -257,34 +264,34 @@ export default function Home() {
                       <div className="p-1">
                         <Link href={`/courses/${course._id}`} className="w-full h-full">
                           <Card className="w-full h-[350px] my-0 relative overflow-hidden flex flex-col">
-                          <CardContent className="h-[180px] w-full flex justify-start relative -mt-3 p-4">
-                            {course?.coverImage ? (
-                              <div className="relative w-full h-[180px] rounded-xl overflow-hidden">
-                                <Image
-                                  src={course.coverImage}
-                                  alt={course.title}
-                                  fill
-                                  className="object-cover"
-                                />
+                            <CardContent className="h-[180px] w-full flex justify-start relative -mt-3 p-4">
+                              {course?.coverImage ? (
+                                <div className="relative w-full h-[180px] rounded-xl overflow-hidden">
+                                  <Image
+                                    src={course.coverImage}
+                                    alt={course.title}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <Skeleton className="w-full h-[180px]" />
+                              )}
+                            </CardContent>
+                            <CardFooter className="flex-1 p-4">
+                              <div className="w-full flex flex-col gap-1">
+                                <p className="text-lg font-semibold break-words leading-tight line-clamp-2">{course.title}</p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {course?.instructor?.name}
+                                </p>
+                                <div className="flex gap-1 flex-wrap">
+                                  <Badge variant="outline" className="text-xs ">{course?.rating && formatRatingNumber(course.rating)}</Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    {course?.duration && convertToTotalHours(course.duration)} h
+                                  </Badge>
+                                </div>
                               </div>
-                            ) : (
-                              <Skeleton className="w-full h-[180px]" />
-                            )}
-                          </CardContent>
-                          <CardFooter className="flex-1 p-4">
-                            <div className="w-full flex flex-col gap-1">
-                              <p className="text-lg font-semibold break-words leading-tight line-clamp-2">{course.title}</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {course?.instructor?.name}
-                              </p>
-                              <div className="flex gap-1 flex-wrap">
-                                <Badge variant="outline" className="text-xs ">{course?.rating && formatRatingNumber(course.rating)}</Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  {course?.duration && convertToTotalHours(course.duration)} h
-                                </Badge>
-                              </div>
-                            </div>
-                          </CardFooter>
+                            </CardFooter>
                           </Card>
                         </Link>
                       </div>
@@ -579,7 +586,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                       </CarouselItem>
                     ) : (
-                      (reviews || ranndomCoursesOnRating || []).map((course, index, reviews) => (
+                      (reviews.length > 0 ? reviews : ranndomCoursesOnRating || []).map((course, index) => (
                         <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                           <div className=" my-2 relative">
                             <Link href={`/`}>

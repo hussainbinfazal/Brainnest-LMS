@@ -245,11 +245,12 @@ const page = () => {
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
   const shouldTruncate = description.length > characterLimit;
   const ranndomCoursesOnRating = useMemo(() => {
-    if (!course || course.reviews.length === 0) return [];
+    if (!course || !course.reviews || course.reviews.length === 0) return [];
+    if (!reviews || !Array.isArray(reviews)) return [];
     const randomCourseLength = Math.floor(Math.random() * 12) + 1;
     const shuffled = [...reviews].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, randomCourseLength);
-  }, [courseId]);
+  }, [course, reviews]);
 
   const fetchUser = async () => {
     const response = await axios("/api/users/me");
