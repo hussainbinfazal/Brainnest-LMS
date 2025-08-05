@@ -6,18 +6,10 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import Header from './components/Header'
 import Footer from "./components/Footer"
-import { motion, useSpring, useScroll } from "motion/react";
 import { Toaster } from "@/components/ui/sonner"
-import Scroller from "./components/Scroller";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs';
+
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { HiOutlineChevronLeft } from "react-icons/hi";
@@ -78,7 +70,7 @@ export default function RootLayout({ children }) {
             </SidebarProvider>
           </ThemeProvider>
         </NextAuthSessionProvider>
-
+        <SpeedInsights />
       </body>
     </html>
   );

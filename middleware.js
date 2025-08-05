@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server"
-import { getToken } from "next-auth/jwt"
+import { auth } from "@/auth"
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl
   console.log('🔥 Middleware running for:', pathname)
   
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  console.log('🔑 Token exists:', !!token)
+  const session = await auth()
+  console.log('🔑 Session exists:', !!session?.user)
 
   // Redirect authenticated users away from login/register pages
-  if ((pathname === "/login" || pathname === "/register") && token) {
+  if ((pathname === "/login" || pathname === "/register") && session?.user) {
     console.log('↩️ Redirecting authenticated user away from auth pages')
     return NextResponse.redirect(new URL("/", req.url))
   }
@@ -21,13 +21,13 @@ export async function middleware(req) {
   }
 
   // Require authentication for all other pages
-  if (!token) {
-    console.log('🚫 No token, redirecting to login')
+  if (!session?.user) {
+    console.log('🚫 No session, redirecting to login')
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
   // Check admin access for admin routes
-  if (pathname.startsWith("/admin") && token.role !== "admin") {
+  if (pathname.startsWith("/admin") && session.user.role !== "instructor") {
     console.log('⛔ Non-admin trying to access admin route')
     return NextResponse.redirect(new URL("/", req.url))
   }
