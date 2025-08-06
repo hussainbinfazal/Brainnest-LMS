@@ -69,6 +69,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - reviews (static JSON files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|reviews).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|reviews|assets).*)',
   ],
 }
