@@ -6,7 +6,6 @@ import { motion, useSpring, useScroll } from "motion/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { useClerk, useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -29,20 +28,14 @@ export default function Header() {
   let [user, setUser] = useState(null);
   const authUser = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
-  const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
-  const hasInitialized = useAuthStore((state) => state.hasInitialized);
   const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
-  const isAuthLoading = useAuthStore((state) => state.isAuthLoading);
-  const setAuthLoading = useAuthStore((state) => state.setAuthLoading);
   const chat = useChatStore((state) => state.chat);
   const setChat = useChatStore((state) => state.setChat);
-  // const { signOut } = useClerk();
-  // const { clerkUser, isSignedIn } = useUser();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null); // <-- Add this
   const avatarRef = useRef(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState(false);
-  const { data:session, status } = useSession();
+  const { data: session, status } = useSession();
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
@@ -52,7 +45,7 @@ export default function Header() {
         setHasInitialized(true);
       }
     } catch (err) {
-      console.error("Failed to fetch user:", err);
+      // console.error("Failed to fetch user:", err);
     } finally {
       setLoading(false);
     }
@@ -64,24 +57,18 @@ export default function Header() {
       setAuthUser(session.user);
       setHasInitialized(true);
     } else if (!authUser && status === "unauthenticated") {
-      console.log("Fetching user in header...");
+      // console.log("Fetching user in header...");
       fetchUser().catch((error) => {
-        console.error("Failed to fetch user:", error);
+        // console.error("Failed to fetch user:", error);
       });
     }
   }, [session, authUser, status, fetchUser]);
 
   const handleLogout = async () => {
     await signOut();
-
-    await axios.post("/api/users/logout");
-    // setUser(null);
-
-    clearAuthUser();
-    setHasInitialized(false);
     setIsMenuOpen(false);
     toast.success("Logout successful");
-    router.push("/login");
+    
   };
 
   useEffect(() => {
@@ -116,7 +103,7 @@ export default function Header() {
       setChatAlreadyExists(data.length > 0);
       setChat(data);
     } catch (error) {
-      console.log("Error fetching chat:", error);
+      // console.log("Error fetching chat:", error);
     }
   }, []);
 
@@ -129,13 +116,13 @@ export default function Header() {
     }
   }, [authUser, fetchExistingChat]);
 
-  useEffect(()=>{
-    console.log("This is the status", status);
-    console.log("This is the session", session);
-    if (session?.user) {
-      console.log("Session user:", session.user);
-    }
-  },[status, session]);
+  // useEffect(() => {
+  //   // console.log("This is the status", status);
+  //   // console.log("This is the session", session);
+  //   if (session?.user) {
+  //     // console.log("Session user:", session.user);
+  //   }
+  // }, [status, session]);
   return (
     <header className="sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 ">
       <Scroller />
@@ -209,14 +196,6 @@ export default function Header() {
             <div className="flex items-center gap-4">
               <ModeToggle />
 
-              {/* {authUser == null ? (
-                <Button onClick={handleLogout}>Logout</Button>
-              ) : (
-                <Link href="/login">
-                  <Button className="rounded-sm">Login</Button>
-                </Link>
-              )} */}
-
               {authUser?.role === "instructor" ? (
                 <Link href="/course/manage">
                   <Button className="ml-4 rounded-sm">Manage courses</Button>
@@ -238,10 +217,7 @@ export default function Header() {
                   Logout
                 </Button>
               )}
-              {/* {!authUser && (
-                
-                  <Button className="ml-4 rounded-sm" onClick={handleLogout}>Logout</Button>
-              )} */}
+
               <div className="relative ml-4" ref={avatarRef}>
                 {authUser && (
                   <Avatar
@@ -252,7 +228,11 @@ export default function Header() {
                     }}
                   >
                     <AvatarImage
-                      src={authUser?.imageUrl || authUser?.profileImage || session?.user?.image}
+                      src={
+                        authUser?.imageUrl ||
+                        authUser?.profileImage ||
+                        session?.user?.image
+                      }
                     />
                     <AvatarFallback>
                       {authUser?.firstName?.charAt(0).toUpperCase()}
@@ -262,7 +242,11 @@ export default function Header() {
                 {isMenuOpen && (
                   <Card
                     className={`menu absolute top-2 right-5 ${
-                      chatAlreadyExists ? "min-h-45" : authUser ? "min-h-38" : " min-h-10"
+                      chatAlreadyExists
+                        ? "min-h-45"
+                        : authUser
+                        ? "min-h-38"
+                        : " min-h-10"
                     }  w-40 z-[70]`}
                     ref={menuRef}
                   >

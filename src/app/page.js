@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 
 export default function Home() {
@@ -211,6 +212,15 @@ export default function Home() {
       // console.log("This is the Subcategories", subCategories);
     }
   }, [uniqueCategories, subCategories]);
+
+  useEffect(() => {
+    // Check for OAuth success toast
+    const hasJustLoggedIn = sessionStorage.getItem('justLoggedIn');
+    if (hasJustLoggedIn) {
+      toast.success('Login successful');
+      sessionStorage.removeItem('justLoggedIn');
+    }
+  }, []);
 
   return (
     <div className=" flex  items-center justify-center  min-h-screen  pb-20 gap-10 font-[family-name:var(--font-geist-sans)] dark:bg-black bg-white">
@@ -442,6 +452,9 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                         alt={category}
                                         fill
                                         className="object-cover hover:scale-150 transition-transform duration-300 ease-in-out"
+                                        onError={(e) => {
+                                          e.target.src = `https://via.placeholder.com/150x150/f0f0f0/666666?text=${category}`;
+                                        }}
                                       />
                                     </div>
                                   </div>

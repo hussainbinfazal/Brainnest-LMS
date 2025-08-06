@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-import { OtpSender, OtpVerifier } from "../components/PhoneVerificationForm";
+import { OtpSender, OtpVerifier, EmailOtpSender, EmailOtpVerifier } from "../components/PhoneVerificationForm";
 import { signIn } from "next-auth/react";
 import {
   Form,
@@ -53,9 +53,10 @@ const page = () => {
   const [isShown, setIsShown] = React.useState(false);
   const [isOtpSent, setIsOtpSent] = React.useState(false);
   const [isOtpVerified, setIsOtpVerified] = React.useState(false);
+  const [isEmailOtpSent, setIsEmailOtpSent] = React.useState(false);
+  const [isEmailOtpVerified, setIsEmailOtpVerified] = React.useState(false);
   const { setAuthUser } = useAuthStore();
- 
-  
+
   const router = useRouter();
 
   const loginForm = useForm({
@@ -78,6 +79,8 @@ const page = () => {
   });
   const watchedPhone = signupForm.watch("phoneNumber");
   const isPhoneValid = /^\d{10}$/.test(watchedPhone);
+  const watchedEmail = signupForm.watch("email");
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(watchedEmail);
   const password = signupForm.watch("password");
   const confirmPassword = signupForm.watch("confirmPassword");
 
@@ -94,10 +97,10 @@ const page = () => {
         return;
       }
 
-      toast.success("Login successful");
+      toast.success("Log in successfull");
       router.push("/");
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       const errorMessage =
         error.response?.data?.message ||
         "Something went wrong. Please try again.";
@@ -107,14 +110,17 @@ const page = () => {
   };
 
   const handleSignupSubmit = async (data) => {
-   
+    if (!isEmailOtpVerified) {
+      return toast.error("Please verify your email address");
+    }
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
-    if (!isOtpVerified) {
-      return toast.error("Please verify your phone number");
-    }
+    // Phone verification is disabled for now
+    // if (!isOtpVerified) {
+    //   return toast.error("Please verify your phone number");
+    // }
     try {
       const response = await axios.post("/api/users/register", data);
       // console.log(response);
@@ -142,6 +148,17 @@ const page = () => {
     toast.success("OTP verified successfully!");
     setIsOtpSent(false);
     setIsOtpVerified(true);
+  };
+
+  const onEmailOtpSent = () => {
+    toast.success("Email OTP sent successfully!");
+    setIsEmailOtpSent(true);
+  };
+
+  const onEmailVerified = () => {
+    toast.success("Email OTP verified successfully!");
+    setIsEmailOtpSent(false);
+    setIsEmailOtpVerified(true);
   };
 
   useEffect(() => {
@@ -250,7 +267,10 @@ const page = () => {
 
                 <Button
                   type="button"
-                  onClick={() => signIn("google", { callbackUrl: "/" })}
+                  onClick={() => {
+                    sessionStorage.setItem('justLoggedIn', 'true');
+                    signIn("google", { callbackUrl: "/" });
+                  }}
                   className="w-full p-2 bg-red-500 text-white rounded"
                 >
                   <FcGoogle className="w-6 h-6" />
@@ -258,7 +278,10 @@ const page = () => {
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => signIn("github", { callbackUrl: "/" })}
+                  onClick={() => {
+                    sessionStorage.setItem('justLoggedIn', 'true');
+                    signIn("github", { callbackUrl: "/" });
+                  }}
                   className="w-full p-2 bg-black text-white rounded"
                 >
                   <FaGithub className="w-6 h-6" />
@@ -302,7 +325,26 @@ const page = () => {
                   </FormItem>
                 )}
               />
-              <FormField
+              {isEmailOtpVerified ? (
+                <div className="w-full flex justify-end">Email Verified! ✅</div>
+              ) : isEmailOtpSent ? (
+                <EmailOtpVerifier
+                  email={signupForm.watch("email")}
+                  onVerified={onEmailVerified}
+                  onChangeEmail={() => {
+                    setIsEmailOtpSent(false);
+                    setIsEmailOtpVerified(false);
+                  }}
+                />
+              ) : (
+                isEmailValid && (
+                  <EmailOtpSender
+                    email={signupForm.watch("email")}
+                    onOtpSent={onEmailOtpSent}
+                  />
+                )
+              )}
+              {/* <FormField
                 control={signupForm.control}
                 name="phoneNumber"
                 render={({ field }) => (
@@ -331,7 +373,7 @@ const page = () => {
                     onOtpSent={onOtpSent}
                   />
                 )
-              )}
+              )} */}
 
               <FormField
                 control={signupForm.control}
@@ -408,7 +450,10 @@ const page = () => {
                 <h2>Other Sign In options</h2>
                 <Button
                   type="button"
-                  onClick={() => signIn("google")}
+                  onClick={() => {
+                    sessionStorage.setItem('justLoggedIn', 'true');
+                    signIn("google", { callbackUrl: "/" });
+                  }}
                   className="w-full p-2 bg-red-500 text-white rounded"
                 >
                   <FcGoogle className="w-6 h-6" />
@@ -416,7 +461,10 @@ const page = () => {
                 </Button>
                 <Button
                   type="button"
-                  onClick={() => signIn("github")}
+                  onClick={() => {
+                    sessionStorage.setItem('justLoggedIn', 'true');
+                    signIn("github", { callbackUrl: "/" });
+                  }}
                   className="w-full p-2 bg-red-500 text-white rounded"
                 >
                   <FaGithub className="w-6 h-6" />

@@ -35,6 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   pages: {
     signIn: "/login",
+    signOut: "/",
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -67,12 +68,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           
           return true;
         } catch (error) {
-          console.error("OAuth sign in error:", error);
+          // console.error("OAuth sign in error:", error);
           return true; // Allow sign in even if DB fails
         }
       }
       return true;
     },
+    
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

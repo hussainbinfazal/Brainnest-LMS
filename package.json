@@ -68,6 +68,7 @@
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
+    "twilio": "^5.8.0",
     "uuid": "^11.1.0",
     "zod": "^3.24.3",
     "zustand": "^5.0.4"

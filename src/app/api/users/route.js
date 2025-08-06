@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import User from "@/models/userModel";
 import { connectDB } from "@/config/db";
-import { generateToken } from "@/utils/generateToken";
 
 export async function POST(request) {
     await connectDB();
@@ -14,7 +13,6 @@ export async function POST(request) {
 
         const newUser = new User({ name, email, password, profileImage, phoneNumber });
         await newUser.save();
-        const token = generateToken(newUser._id, newUser.role);
         return NextResponse.json({ message: "User created successfully", newUser,token }, { status: 201 });
     } catch (error) {
         console.log(error);

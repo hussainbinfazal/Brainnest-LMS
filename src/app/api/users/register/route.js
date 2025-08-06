@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import User from "@/models/userModel";
 import { connectDB } from "@/config/db";
-import { generateToken } from "@/utils/generateToken";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 export async function POST(request) {
@@ -15,7 +14,6 @@ export async function POST(request) {
         if (fromOAuth) {
             const newUser = new User({ name, email, password, profileImage, phoneNumber });
             await newUser.save();
-            const token = generateToken(newUser._id, newUser.role);
 
             console.log("Generated Token in the registerd console ", token);
 
@@ -39,7 +37,6 @@ export async function POST(request) {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ name, email, password: hashedPassword, profileImage, phoneNumber });
         await newUser.save();
-        const token = generateToken(newUser._id, newUser.role);
         const response = NextResponse.json({
             message: fromOAuth ? "User logged in successfully" : "Welcome Back",
             user,

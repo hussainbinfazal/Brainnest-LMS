@@ -3,7 +3,10 @@ const nextConfig = {
 
   // Optional: Add image domains for next/image optimization
   images: {
-    domains: ['res.cloudinary.com','img-c.udemycdn.com','img.clerk.com'],
+    domains: ['res.cloudinary.com','img-c.udemycdn.com','img.clerk.com','cms-images.udemycdn.com'],
+    unoptimized: false,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
    webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Fix for react-pdf and canvas issues

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/config/db";
 import User from "@/models/userModel";
-import { generateToken } from "@/utils/generateToken";
 import { cookies } from "next/headers";
 
 export async function PUT(request, context) {
