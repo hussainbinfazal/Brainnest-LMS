@@ -33,7 +33,9 @@ This LMS platform provides a complete e-learning solution with unique features l
 - **User Engagement**: Student activity and participation tracking
 
 ### 🔐 Security & Authentication
-- **Dual Authentication**: JWT tokens combined with Clerk authentication
+- **Auth.js v5 Integration**: Modern authentication with Google, GitHub, and credentials providers
+- **JWT Session Management**: Secure token-based authentication with 30-day sessions
+- **OAuth Integration**: Seamless social login with automatic user creation
 - **Role-Based Access Control**: Separate permissions for instructors, students, and admins
 - **Secure API Endpoints**: Protected routes with proper authorization
 - **Data Encryption**: Secure handling of sensitive user information
@@ -54,8 +56,10 @@ This LMS platform provides a complete e-learning solution with unique features l
 ### Backend
 - **Next.js API Routes** - Server-side API endpoints
 - **Socket.IO** - Real-time bidirectional communication
-- **JWT (JSON Web Tokens)** - Secure authentication
-- **Clerk** - User management and authentication service
+- **Auth.js v5** - Modern authentication framework with multiple providers
+- **JWT Sessions** - Secure token-based session management
+- **OAuth Providers** - Google and GitHub social authentication
+- **bcryptjs** - Password hashing for credentials authentication
 
 ### Database & Storage
 - **Database**: MongoDB
@@ -76,7 +80,9 @@ Payment Gateway ↔ Message Quota System
 
 ### Authentication Flow
 ```
-User Login → Clerk Auth → JWT Generation → Role Assignment → Protected Routes
+User Login → Auth.js Provider → Database Sync → JWT Token → Session Creation → Protected Routes
+                ↓
+    OAuth (Google/GitHub) or Credentials → User Creation/Update → Role Assignment
 ```
 
 ### Payment Processing
@@ -90,7 +96,8 @@ Course/Chat Purchase → Payment Gateway → Database Update → Feature Unlock
 - Node.js (v16 or higher)
 - npm or yarn package manager
 - Database setup
-- Clerk account for authentication
+- Auth.js v5 providers configuration (Google OAuth, GitHub OAuth)
+- MongoDB database for user management
 - Payment gateway credentials
 
 ### Installation
@@ -114,7 +121,11 @@ Course/Chat Purchase → Payment Gateway → Database Update → Feature Unlock
    ```
    Configure your environment variables:
    - Database connection strings
-   - Clerk authentication keys
+   - Auth.js provider credentials:
+  - `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`
+  - `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET`
+  - `NEXTAUTH_SECRET` for JWT signing
+  - `NEXTAUTH_URL` for callback URLs
    - Payment gateway credentials
    - JWT secrets
    - Socket.IO configuration

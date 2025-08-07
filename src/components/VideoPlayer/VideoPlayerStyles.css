@@ -1,0 +1,423 @@
+/* Video.js Custom Theme Styles - Clean Skip Controls */
+
+/* Hide ALL default Video.js skip controls to prevent duplicates */
+.vjs-theme-brainnest .vjs-seek-to-live-control,
+.vjs-theme-brainnest .vjs-live-control,
+.vjs-theme-brainnest .vjs-live-display,
+.vjs-theme-brainnest .vjs-liveui,
+.vjs-theme-brainnest .vjs-skip-forward-5,
+.vjs-theme-brainnest .vjs-skip-backward-5 {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Custom Video.js Theme */
+.vjs-theme-brainnest {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.vjs-theme-brainnest .vjs-control-bar {
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 0 0 12px 12px;
+  padding: 8px 16px;
+  height: 60px;
+  opacity: 0.9;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+}
+
+.vjs-theme-brainnest .vjs-control-bar > * {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.vjs-theme-brainnest:hover .vjs-control-bar {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Universal Button Styles */
+.vjs-theme-brainnest .vjs-button {
+  color: white;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  margin: 0 2px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.vjs-theme-brainnest .vjs-button .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+}
+
+.vjs-theme-brainnest .vjs-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.vjs-theme-brainnest .vjs-button:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* ========================================
+   CUSTOM SKIP CONTROLS - Only these will be visible
+   ======================================== */
+
+/* Skip Forward and Backward Button Styles */
+.vjs-theme-brainnest .vjs-skip-forward-button,
+.vjs-theme-brainnest .vjs-skip-backward-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px;
+  height: 44px;
+  color: white !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px;
+  opacity: 1 !important;
+  visibility: visible !important;
+  margin: 0 2px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Skip Button Icon Containers */
+.vjs-theme-brainnest .vjs-skip-forward-button .vjs-icon-placeholder,
+.vjs-theme-brainnest .vjs-skip-backward-button .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+  color: white !important;
+}
+
+/* Ensure SVG icons are properly styled */
+.vjs-theme-brainnest .vjs-skip-forward-button .vjs-icon-placeholder svg,
+.vjs-theme-brainnest .vjs-skip-backward-button .vjs-icon-placeholder svg {
+  color: white !important;
+  fill: white !important;
+  width: 20px;
+  height: 20px;
+}
+
+/* Skip Button Hover Effects */
+.vjs-theme-brainnest .vjs-skip-forward-button:hover,
+.vjs-theme-brainnest .vjs-skip-backward-button:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.05);
+}
+
+/* Play Control */
+.vjs-theme-brainnest .vjs-play-control {
+  font-size: 1.8rem;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 48px;
+  height: 48px;
+}
+
+.vjs-theme-brainnest .vjs-play-control .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
+
+/* Progress Control */
+.vjs-theme-brainnest .vjs-progress-control {
+  flex: 1;
+  margin: 0 12px;
+}
+
+.vjs-theme-brainnest .vjs-progress-holder {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  transition: height 0.3s ease;
+}
+
+.vjs-theme-brainnest .vjs-progress-holder:hover {
+  height: 8px;
+}
+
+.vjs-theme-brainnest .vjs-play-progress {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px;
+  position: relative;
+}
+
+.vjs-theme-brainnest .vjs-play-progress::before {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.vjs-theme-brainnest .vjs-progress-holder:hover .vjs-play-progress::before {
+  opacity: 1;
+}
+
+.vjs-theme-brainnest .vjs-load-progress {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+}
+
+/* Volume Control */
+.vjs-theme-brainnest .vjs-volume-panel {
+  transition: width 0.3s ease;
+}
+
+.vjs-theme-brainnest .vjs-mute-control {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px;
+  height: 44px;
+}
+
+.vjs-theme-brainnest .vjs-mute-control .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+}
+
+.vjs-theme-brainnest .vjs-volume-control {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  padding: 4px 8px;
+}
+
+.vjs-theme-brainnest .vjs-volume-bar {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  height: 4px;
+}
+
+.vjs-theme-brainnest .vjs-volume-level {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 2px;
+}
+
+/* Time Display */
+.vjs-theme-brainnest .vjs-time-control {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 44px;
+  padding: 0 4px;
+}
+
+.vjs-theme-brainnest .vjs-current-time,
+.vjs-theme-brainnest .vjs-duration,
+.vjs-theme-brainnest .vjs-time-divider {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 44px;
+  line-height: 44px;
+}
+
+/* Playback Rate Button */
+.vjs-theme-brainnest .vjs-playback-rates,
+.vjs-theme-brainnest .vjs-playback-rates .vjs-playback-rates-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 44px;
+  height: 44px;
+  color: white !important;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.vjs-theme-brainnest .vjs-playback-rates .vjs-playback-rates-button .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+}
+
+.vjs-theme-brainnest .vjs-playback-rates .vjs-playback-rates-button .vjs-icon-placeholder::before {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: white !important;
+  margin: 0;
+}
+
+/* Fullscreen Button */
+.vjs-theme-brainnest .vjs-fullscreen-control {
+  font-size: 1.4rem;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 44px;
+  height: 44px;
+}
+
+.vjs-theme-brainnest .vjs-fullscreen-control .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+}
+
+/* Universal Control Alignment */
+.vjs-theme-brainnest .vjs-control {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 44px;
+}
+
+.vjs-theme-brainnest .vjs-control .vjs-icon-placeholder {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
+
+.vjs-theme-brainnest .vjs-control .vjs-icon-placeholder::before {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0;
+  vertical-align: middle;
+}
+
+/* Custom Menus */
+.vjs-theme-brainnest .vjs-menu-content {
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vjs-theme-brainnest .vjs-menu-item {
+  color: white;
+  padding: 8px 16px;
+  transition: background 0.2s ease;
+}
+
+.vjs-theme-brainnest .vjs-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vjs-theme-brainnest .vjs-menu-item.vjs-selected {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Chapter Markers */
+.vjs-chapter-marker {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.vjs-chapter-marker:hover {
+  background: white;
+  width: 3px;
+  transform: scaleY(1.2);
+}
+
+/* Watermark */
+.vjs-watermark {
+  position: absolute;
+  z-index: 5;
+  opacity: 0.7;
+  pointer-events: none;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  backdrop-filter: blur(5px);
+}
+
+.vjs-watermark[style*="top-right"] {
+  top: 16px;
+  right: 16px;
+}
+
+.vjs-watermark[style*="top-left"] {
+  top: 16px;
+  left: 16px;
+}
+
+.vjs-watermark[style*="bottom-right"] {
+  bottom: 80px;
+  right: 16px;
+}
+
+.vjs-watermark[style*="bottom-left"] {
+  bottom: 80px;
+  left: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .vjs-theme-brainnest .vjs-control-bar {
+    height: 50px;
+    padding: 6px 12px;
+  }
+  
+  .vjs-theme-brainnest .vjs-button {
+    margin: 0 1px;
+  }
+  
+  .vjs-theme-brainnest .vjs-time-control {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .vjs-theme-brainnest .vjs-control-bar {
+    height: 45px;
+    padding: 4px 8px;
+  }
+  
+  .vjs-theme-brainnest .vjs-progress-control {
+    margin: 0 8px;
+  }
+}

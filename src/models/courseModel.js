@@ -187,7 +187,10 @@ const courseSchema = new mongoose.Schema({
  
 
 
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  strictPopulate: false 
+});
 
 const Course = mongoose.models.Course || mongoose.model('Course', courseSchema);
 export default Course;

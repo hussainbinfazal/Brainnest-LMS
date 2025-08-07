@@ -35,6 +35,7 @@ export default function Header() {
   const menuRef = useRef(null); // <-- Add this
   const avatarRef = useRef(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState(false);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
   const { data: session, status } = useSession();
   const fetchUser = useCallback(async () => {
     setLoading(true);
@@ -107,14 +108,25 @@ export default function Header() {
     }
   }, []);
 
+  const fetchCartCount = useCallback(async () => {
+    try {
+      const response = await axios.get("/api/cart");
+      const cartData = response.data;
+      setCartItemsCount(cartData?.courses?.length || 0);
+    } catch (error) {
+      setCartItemsCount(0);
+    }
+  }, []);
+
   useEffect(() => {
     if (authUser) {
       const timer = setTimeout(() => {
         fetchExistingChat();
+        fetchCartCount();
       }, 500); // Add slight delay
       return () => clearTimeout(timer);
     }
-  }, [authUser, fetchExistingChat]);
+  }, [authUser, fetchExistingChat, fetchCartCount]);
 
   // useEffect(() => {
   //   // console.log("This is the status", status);
@@ -168,9 +180,14 @@ export default function Header() {
               </Link>
               <Link
                 href="/cart"
-                className="px-4 hover:underline underline-offset-4"
+                className="px-4 hover:underline underline-offset-4 relative"
               >
                 <LiaShoppingCartSolid className="text-3xl" />
+                {cartItemsCount > 0 && (
+                  <span className="absolute -top-2 -right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemsCount}
+                  </span>
+                )}
               </Link>
               <Link href="/courses/liked-courses" className="px-4">
                 <CiHeart className="text-2xl hover:text-gray-200 font-semibold" />

@@ -39,6 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useSession } from "next-auth/react";
 
 
 export default function Home() {
@@ -52,6 +53,7 @@ export default function Home() {
   const [categoryImages, setCategoryImages] = useState({});
   const [reviews, setReviews] = useState([]);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
 
 
@@ -226,7 +228,11 @@ export default function Home() {
     <div className=" flex  items-center justify-center  min-h-screen  pb-20 gap-10 font-[family-name:var(--font-geist-sans)] dark:bg-black bg-white">
       <div className="!w-[95%]  flex flex-col justify-center items-center gap-6">
         <div className="inline-block py-8 " >
-          <h1 className="text-4xl font-bold text-center ">Welcome to Brainnest where education is a game</h1>
+
+          <h1 className="text-4xl font-bold text-center ">  {session ?  `${session?.user?.name.split(" ").length === 3
+              ? session?.user?.name.split(" ")[1]  // Middle name for 3 parts
+              : session?.user?.name.split(" ")[0]  // First name for 2 parts
+            }, welcome to` : "Welcome to"}  Brainnest where education is a game</h1>
         </div>
         <div className="w-4/5 max-w-4/5 flex items-center justify-center ">
           <div className="flex flex-col items-center justify-center w-full ">

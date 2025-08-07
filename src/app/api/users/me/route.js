@@ -12,11 +12,11 @@ export async function GET(request) {
     const userRaw = await User.findById(session.user.id).select('enrolledCourses completedCourses').lean();
     console.log("Raw enrolled courses:", userRaw.enrolledCourses);
     console.log("Raw completed courses:", userRaw.completedCourses);
-    
+
     const userDB = await User.findById(session.user.id)
       .select('-password')
       .populate('likedCourses', 'title _id instructor price rating reviews coverImage category')
-      .populate('enrolledCourses', 'title _id instructor price rating reviews coverImage category')
+      .populate('enrolledCourses', 'title _id instructor price rating reviews coverImage category instructor')
       .populate('completedCourses', 'title _id instructor price rating reviews coverImage category')
       .lean();
     console.log("This is the userDB", userDB);

@@ -203,7 +203,7 @@ const page = () => {
     toast.loading("Initializing chat...");
     try {
       const response = await axios.post("/api/chat", {
-        sender: user._id,
+        sender: user.id || user._id,
         receiver: course?.instructor?._id,
       });
       const data = response.data.chat;
@@ -352,22 +352,30 @@ const page = () => {
   }, [user, cart]);
 
   useEffect(() => {
-    if (user) {
+    if (user && course) {
       const isUserEnrolled = user.enrolledCourses?.some(
-        (item) => item?._id || item === course?._id
+        (item) => (item?._id || item).toString() === course._id.toString()
       );
       setIsEnrolled(isUserEnrolled);
     }
-  }, [user, isEnrolled, course]);
+  }, [user, course]);
 
   const verifyPayment = async (paymentData) => {
     try {
+      console.log("Verifying payment with user:", user);
+      console.log("User ID:", user?.id || user?._id);
+
+      const userId = user?.id || user?._id;
+      if (!user || !userId) {
+        throw new Error("User not authenticated");
+      }
+
       const response = await axios.post("/api/order/payment/verify", {
         orderId: paymentData.razorpay_order_id,
         paymentId: paymentData.razorpay_payment_id,
         signature: paymentData.razorpay_signature,
         courseId: course._id,
-        userId: user._id,
+        userId: userId,
         amount: course?.price,
       });
 
@@ -441,11 +449,18 @@ const page = () => {
               // Redirect to course page or dashboard
               toast.dismiss();
               router.push(`/courses/${course._id}`);
+              fetchUser();
             } else {
-              alert("Payment verification failed. Please contact support.");
+              toast.error(
+                "Payment verification failed. Please contact support."
+              );
+              // add verification failure handling here like order failed
+              toast.error(verification.data.message);
             }
           } catch (error) {
-            alert("Payment verification failed. Please contact support.");
+            toast.error("Payment verification failed. Please contact support.");
+            // add verification failure handling here like order failed
+            toast.error(verification.data.message);
           }
         },
         prefill: {
@@ -555,6 +570,9 @@ const page = () => {
       checkAlreadyAdded();
     }
   }, [user, cart]);
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   return (
     <div className="relative w-full min-h-screen flex flex-col gap-6  py-18 pt-0 ">

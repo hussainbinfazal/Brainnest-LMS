@@ -23,7 +23,8 @@ export async function middleware(req) {
     "/privacy",
     "/terms",
     "/blog",
-    "/search"
+    "/search",
+    "/courses"
   ]
   
   const isPublicRoute = publicRoutes.some(route => 

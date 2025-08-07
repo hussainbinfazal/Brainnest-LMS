@@ -75,7 +75,8 @@ export async function POST(request) {
         }, { status: 400 })
 
         if (!hasExisted) {
-            user.enrolledCourses.push(order.orderItems.map((item) => item.course));
+            const courseIds = order.orderItems.map((item) => item.course);
+            user.enrolledCourses.push(...courseIds);
             await user.save();
         }
 

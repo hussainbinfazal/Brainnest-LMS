@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState, useRef ,useCallback } from "react";
 import { useCourseStore } from "@/lib/store/useCourseStore";
 import axios from "axios";
-import ReactPlayer from "react-player";
+import VideoPlayer from "@/components/VideoPlayer";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -17,6 +17,9 @@ const page = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [video, setVideo] = useState(null);
   const [course, setCourse] = useState(null);
+  const [currentLesson, setCurrentLesson] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [watchTime, setWatchTime] = useState(0);
   const { courseId, lessonId } = useParams();
   const playerRef = useRef();
   const fetchCourseFromDB = useCallback(async (courseId) => {
@@ -31,6 +34,7 @@ const page = () => {
       const lesson = data.lessons.find((lesson) => lesson._id === lessonId);
       if (lesson) {
         setVideo(lesson.video);
+        setCurrentLesson(lesson);
       } else {
         console.warn("Lesson not found!");
       }
@@ -48,13 +52,42 @@ const page = () => {
   const handleCompleteLesson = async (lessonId) => {
     try {
       await axios.post(`/api/progress/complete/${courseId}/${lessonId}`);
-      toast.success("congrats ,you've completed the lesson!");
+      toast.success("Congrats, you've completed the lesson!");
       router.back();
     } catch (error) {
       console.error("Error marking lesson complete:", error);
     }
+  };
 
-    // Refresh progress or update local state
+  const handleProgress = (progressPercent) => {
+    const validProgress = isNaN(progressPercent) ? 0 : progressPercent;
+    setProgress(validProgress);
+  };
+
+  const handleTimeUpdate = (currentTime, duration) => {
+    const validCurrentTime = isNaN(currentTime) ? 0 : currentTime;
+    const validDuration = isNaN(duration) ? 0 : duration;
+    
+    setWatchTime(validCurrentTime);
+    
+    // Calculate progress percentage
+    if (validDuration > 0) {
+      const progressPercent = (validCurrentTime / validDuration) * 100;
+      setProgress(isNaN(progressPercent) ? 0 : progressPercent);
+    }
+    
+    // Auto-save progress every 10 seconds
+    if (Math.floor(validCurrentTime) % 10 === 0 && validDuration > 0) {
+      saveProgress(validCurrentTime, validDuration);
+    }
+  };
+
+  const saveProgress = async (currentTime, duration) => {
+    // Progress saving disabled - API endpoint not implemented
+    if (duration > 0 && !isNaN(currentTime) && !isNaN(duration)) {
+      const progressPercent = ((currentTime / duration) * 100).toFixed(1);
+      console.log(`Progress: ${progressPercent}%`);
+    }
   };
 
    useEffect(() => {
@@ -71,46 +104,101 @@ const page = () => {
   useEffect(() => {
     console.log("video :", video);
   }, [video]);
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white text-xl">Loading lesson...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen flex items-center justify-center flex-col bg-black">
-      <div
-        className="max-w-[70%] w-[70%] flex justify-center items-start
-      "
-      >
-        <div className="w-full flex flex-col gap-4 items-center justify-center">
-          <ReactPlayer
-            ref={playerRef}
-            url={video}
-            onEnded={() => handleCompleteLesson(lessonId)}
-            controls
-            playIcon
-            volume={0.8}
-            config={{
-              file: {
-                attributes: {
-                  controlsList: "nodownload", // disables download button
-                  disablePictureInPicture: true,
-                },
-              },
-            }}
-          />
-          <div className="flex flex-col items-center min-h-[100px] justify-between w-full">
-            <Button
-              variant="outline"
-              onClick={() => playerRef.current?.getInternalPlayer().play()}
-              className="px-6 py-2 rounded-sm"
-            >
-              Play
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              className="px-6 py-2 rounded-sm"
-            >
-              Back to course page
-            </Button>
+    <div className="min-h-screen bg-gray-900 py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Lesson Header */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => router.back()}
+            className="mb-4 text-white border-gray-600 hover:bg-gray-800"
+          >
+            ← Back to Course
+          </Button>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            {currentLesson?.name || 'Video Lesson'}
+          </h1>
+          <p className="text-gray-400">
+            {course?.title} - Lesson {currentLesson?.order || ''}
+          </p>
+        </div>
+
+        {/* Video Player */}
+        <div className="mb-8">
+          {video ? (
+            <VideoPlayer
+              src={video}
+              title={currentLesson?.name}
+              poster={course?.coverImage}
+              onProgress={handleProgress}
+              onTimeUpdate={handleTimeUpdate}
+              onComplete={() => handleCompleteLesson(lessonId)}
+              playbackRates={[0.5, 0.75, 1, 1.25, 1.5, 2]}
+              analytics={true}
+              watermark={{
+                text: "Brainnest LMS",
+                position: "bottom-right"
+              }}
+              className="w-full"
+            />
+          ) : (
+            <div className="bg-gray-800 p-8 rounded-lg text-center">
+              <p className="text-white text-lg">No video available for this lesson</p>
+              <p className="text-gray-400 text-sm mt-2">Please contact support if this is an error</p>
+            </div>
+          )}
+        </div>
+
+        {/* Progress Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <h3 className="text-white font-semibold mb-2">Watch Progress</h3>
+            <div className="bg-gray-700 rounded-full h-2 mb-2">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress || 0}%` }}
+              ></div>
+            </div>
+            <p className="text-gray-400 text-sm">{Math.round(progress || 0)}% completed</p>
+          </div>
+          
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <h3 className="text-white font-semibold mb-2">Watch Time</h3>
+            <p className="text-2xl font-bold text-white">
+              {Math.floor((watchTime || 0) / 60)}:{(Math.floor((watchTime || 0) % 60)).toString().padStart(2, '0')}
+            </p>
+            <p className="text-gray-400 text-sm">minutes watched</p>
+          </div>
+          
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <h3 className="text-white font-semibold mb-2">Lesson Status</h3>
+            <p className="text-lg font-semibold text-yellow-400">
+              {(progress || 0) >= 90 ? '✅ Completed' : '📚 In Progress'}
+            </p>
+            <p className="text-gray-400 text-sm">
+              {(progress || 0) >= 90 ? 'Well done!' : 'Keep watching'}
+            </p>
           </div>
         </div>
+
+        {/* Lesson Description */}
+        {currentLesson?.description && (
+          <div className="bg-gray-800 p-6 rounded-lg">
+            <h3 className="text-white font-semibold mb-3">About this lesson</h3>
+            <p className="text-gray-300 leading-relaxed">
+              {currentLesson.description}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

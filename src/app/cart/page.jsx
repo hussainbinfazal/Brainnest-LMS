@@ -161,12 +161,16 @@ const CartPage = () => {
   }, [cartItems?.length]);
   const verifyPayment = async (paymentData) => {
     try {
+      const userId = user?.id || user?._id;
+      if (!user || !userId) {
+        throw new Error("User not authenticated");
+      }
       const response = await axios.post("/api/order/cartOrder/verify", {
         orderId: paymentData.razorpay_order_id,
         paymentId: paymentData.razorpay_payment_id,
         signature: paymentData.razorpay_signature,
 
-        userId: user._id,
+        userId: userId,
         amount: paymentData.amount,
       });
 
@@ -230,7 +234,7 @@ const CartPage = () => {
             const verification = await verifyPayment({
               ...response,
               amount: data.amount,
-              userId: user._id,
+              userId: user?.id || user?._id,
             });
             const responseFromVerifyPayment = verification?.data?.message;
             setPaymentError(responseFromVerifyPayment);
@@ -240,6 +244,9 @@ const CartPage = () => {
               );
               // Redirect to course page or dashboard
               toast.dismiss(toastId);
+              // Clear cart items after successful payment
+              setCartItems([]);
+              setCart(null);
               router.push(`/myprofile`);
             } else {
               alert("Payment verification failed. Please contact support.");

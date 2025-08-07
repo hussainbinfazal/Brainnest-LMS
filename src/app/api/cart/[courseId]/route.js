@@ -27,7 +27,7 @@ export async function POST(request, context) {
             const newCart = new Cart({
                 user: user._id || user.id,
                 courses: [course._id],
-                subtotal,
+                subTotal: subtotal,
                 discount: discountAmount,
                 tax,
                 total
@@ -43,9 +43,21 @@ export async function POST(request, context) {
         } else {
             const isCourseExist = cart.courses.find((item) => item._id.toString() === course._id.toString());
             if (isCourseExist) return NextResponse.json({ message: "Course already exists in cart" }, { status: 400 });
+            
             cart.courses.push(course._id);
+            
+            // Recalculate totals
+            await cart.populate('courses');
+            const totalCoursePrice = cart.courses.reduce((sum, course) => sum + course.price, 0);
+            const totalDiscount = cart.courses.reduce((sum, course) => sum + (course.discount || 0), 0);
+            
+            cart.subTotal = totalCoursePrice;
+            const discountAmount = parseFloat(((totalDiscount / 100) * cart.subTotal).toFixed(2));
+            cart.discount = discountAmount;
+            cart.tax = parseFloat(((cart.subTotal - discountAmount) * 0.1).toFixed(2));
+            cart.total = parseFloat((cart.subTotal - discountAmount + cart.tax).toFixed(2));
+            
             await cart.save();
-
         }
 
         return NextResponse.json({ message: "Course added to cart successfully", course }, { status: 200 });

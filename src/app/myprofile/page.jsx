@@ -94,8 +94,8 @@ const page = () => {
           return title.includes(term) || instructorName.includes(term);
         });
   const lessonProgress = (course) => {
-    const totalLessons = course.lessons.length;
-    const completedLessons = course.lessons.filter(
+    const totalLessons = course?.lessons?.length;
+    const completedLessons = course?.lessons?.filter(
       (lesson) => lesson.status === "completed"
     ).length;
     const progressPercentage = (completedLessons / totalLessons) * 100;
@@ -185,8 +185,9 @@ const page = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchCourses();
+      fetchUser();
       return () => clearTimeout(timer);
-    },350)
+    },150)
     
   }, []);
   return (

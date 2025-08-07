@@ -43,6 +43,7 @@
     "jspdf": "^3.0.1",
     "lucide-react": "^0.507.0",
     "mongoose": "^8.14.1",
+    "morgan": "^1.10.1",
     "motion": "^12.9.4",
     "next": "15.3.1",
     "next-auth": "^5.0.0-beta.29",
@@ -70,6 +71,8 @@
     "tailwind-merge": "^3.2.0",
     "twilio": "^5.8.0",
     "uuid": "^11.1.0",
+    "video.js": "^8.23.3",
+    "videojs-hotkeys": "^0.2.30",
     "zod": "^3.24.3",
     "zustand": "^5.0.4"
   },
