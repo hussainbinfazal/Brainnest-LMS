@@ -16,7 +16,7 @@
 
 *A comprehensive full-stack Learning Management System built with cutting-edge technologies, featuring real-time communication, intelligent payment systems, and advanced analytics dashboards.*
 
-[🌟 **Live Demo**](https://brainnest-lms.vercel.app) • [📖 **Documentation**](#-getting-started) • [🎯 **Features**](#-key-features) • [🛠️ **Tech Stack**](#️-technology-stack)
+[🌟 **Live Demo**](https://brainnest-lms-fzqv.vercel.app/) • [📖 **Documentation**](#-getting-started) • [🎯 **Features**](#-key-features) • [🛠️ **Tech Stack**](#️-technology-stack)
 
 </div>
 
