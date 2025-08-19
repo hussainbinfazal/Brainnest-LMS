@@ -33,7 +33,7 @@ This LMS platform provides a complete e-learning solution with unique features l
 - **User Engagement**: Student activity and participation tracking
 
 ### 🔐 Security & Authentication
-- **Dual Authentication**: JWT tokens combined with Clerk authentication
+- **Dual Authentication**: JWT tokens combined with Auth.js authentication
 - **Role-Based Access Control**: Separate permissions for instructors, students, and admins
 - **Secure API Endpoints**: Protected routes with proper authorization
 - **Data Encryption**: Secure handling of sensitive user information
@@ -55,7 +55,7 @@ This LMS platform provides a complete e-learning solution with unique features l
 - **Next.js API Routes** - Server-side API endpoints
 - **Socket.IO** - Real-time bidirectional communication
 - **JWT (JSON Web Tokens)** - Secure authentication
-- **Clerk** - User management and authentication service
+- **Auth.js** - User management and authentication service
 
 ### Database & Storage
 - **Database**: MongoDB
@@ -76,7 +76,7 @@ Payment Gateway ↔ Message Quota System
 
 ### Authentication Flow
 ```
-User Login → Clerk Auth → JWT Generation → Role Assignment → Protected Routes
+User Login → Auth.js → JWT Generation → Role Assignment → Protected Routes
 ```
 
 ### Payment Processing
@@ -90,7 +90,7 @@ Course/Chat Purchase → Payment Gateway → Database Update → Feature Unlock
 - Node.js (v16 or higher)
 - npm or yarn package manager
 - Database setup
-- Clerk account for authentication
+- Auth.js for account for authentication
 - Payment gateway credentials
 
 ### Installation
@@ -114,7 +114,7 @@ Course/Chat Purchase → Payment Gateway → Database Update → Feature Unlock
    ```
    Configure your environment variables:
    - Database connection strings
-   - Clerk authentication keys
+   - Auth secret for authentication keys
    - Payment gateway credentials
    - JWT secrets
    - Socket.IO configuration
