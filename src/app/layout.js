@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner"
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { HiOutlineChevronLeft } from "react-icons/hi";
@@ -71,6 +72,7 @@ export default function RootLayout({ children }) {
           </ThemeProvider>
         </NextAuthSessionProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
