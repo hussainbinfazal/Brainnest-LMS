@@ -42,9 +42,9 @@
 ### 📈 **Platform Statistics**
 
 ```
-🎓 Courses Created: 500+
-👥 Active Users: 10,000+
-💰 Revenue Generated: $50,000+
+🎓 Courses Created: 50+
+👥 Active Users: 10+
+💰 Revenue Generated: $50+
 ⚡ Response Time: <200ms
 🔒 Security Score: 99.9%
 ```
