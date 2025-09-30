@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import Razorpay from 'razorpay';
 import { connectDB } from '@/config/db';
 import User from '@/models/userModel';
-import Course from '@/models/courseModel';
+import Course from '@/models/course/courseModel';
 import { auth } from '@/auth';
 import Chat from "@/models/chatModel";
 import Message from "@/models/messageModel";

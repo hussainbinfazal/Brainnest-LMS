@@ -5,7 +5,7 @@ import { connectDB } from "@/config/db";
 import User from "@/models/userModel";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import Razorpay from 'razorpay';
-import Course from '@/models/courseModel';
+import Course from '@/models/course/courseModel';
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,

@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/config/db';
 import User from '@/models/userModel';
 import Order from '@/models/orderModel';
-import Course from '@/models/courseModel';
+import Course from '@/models/course/courseModel';
 import Chat from '@/models/chatModel';
 import Message from '@/models/messageModel';
 import Payment from "@/models/paymentModel"

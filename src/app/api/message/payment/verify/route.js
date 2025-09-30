@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/config/db';
 import User from '@/models/userModel';
 import Order from '@/models/orderModel';
-import Course from '@/models/courseModel';
+import Course from '@/models/course/courseModel';
 import Message from '@/models/messageModel';
 import Chat from '@/models/chatModel';
 export async function PUT(request) {

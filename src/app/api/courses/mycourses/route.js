@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from "@/config/db";
-import Course from "@/models/courseModel";
+import Course from "@/models/course/courseModel";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import mongoose from 'mongoose';
 

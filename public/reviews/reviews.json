@@ -1,56 +1,75 @@
+
 [
   {
-    "id": 1,
+    "_id": "r1",
+    "rating": 5,
+    "comment": "Brainnest gives you the ability to be persistent. I learned exactly what I needed to know in the real world. It helped me sell myself to get a new role.",
     "text": "Brainnest gives you the ability to be persistent. I learned exactly what I needed to know in the real world. It helped me sell myself to get a new role.",
     "user": {
       "name": "Sarah Johnson",
       "profileImage": null
     },
-    "createdAt": "2 days ago"
+    "createdAt": "2025-09-28T12:00:00Z",
+    "updatedAt": "2025-09-28T12:00:00Z"
   },
   {
-    "id": 2,
+    "_id": "r2",
+    "rating": 5,
+    "comment": "The courses here are incredibly practical. I gained skills that directly translated to my job performance. My manager noticed the improvement immediately.",
     "text": "The courses here are incredibly practical. I gained skills that directly translated to my job performance. My manager noticed the improvement immediately.",
     "user": {
       "name": "Michael Chen",
       "profileImage": null
     },
-    "createdAt": "1 week ago"
+    "createdAt": "2025-09-23T12:00:00Z",
+    "updatedAt": "2025-09-23T12:00:00Z"
   },
   {
-    "id": 3,
+    "_id": "r3",
+    "rating": 5,
+    "comment": "What sets Brainnest apart is the real-world application. Every lesson felt relevant to my career goals. I landed my dream job within months.",
     "text": "What sets Brainnest apart is the real-world application. Every lesson felt relevant to my career goals. I landed my dream job within months.",
     "user": {
       "name": "Emily Rodriguez",
       "profileImage": null
     },
-    "createdAt": "3 days ago"
+    "createdAt": "2025-09-27T12:00:00Z",
+    "updatedAt": "2025-09-27T12:00:00Z"
   },
   {
-    "id": 4,
+    "_id": "r4",
+    "rating": 4,
+    "comment": "The instructors understand industry needs perfectly. The knowledge I gained here made me confident in interviews and helped me negotiate better salary.",
     "text": "The instructors understand industry needs perfectly. The knowledge I gained here made me confident in interviews and helped me negotiate better salary.",
     "user": {
       "name": "David Thompson",
       "profileImage": null
     },
-    "createdAt": "5 days ago"
+    "createdAt": "2025-09-25T12:00:00Z",
+    "updatedAt": "2025-09-25T12:00:00Z"
   },
   {
-    "id": 5,
+    "_id": "r5",
+    "rating": 5,
+    "comment": "Brainnest transformed my career trajectory completely. The skills are current, relevant, and exactly what employers are looking for in today's market.",
     "text": "Brainnest transformed my career trajectory completely. The skills are current, relevant, and exactly what employers are looking for in today's market.",
     "user": {
       "name": "Lisa Wang",
       "profileImage": null
     },
-    "createdAt": "1 day ago"
+    "createdAt": "2025-09-29T12:00:00Z",
+    "updatedAt": "2025-09-29T12:00:00Z"
   },
   {
-    "id": 6,
+    "_id": "r6",
+    "rating": 5,
+    "comment": "I was stuck in my career for years. Brainnest gave me the tools and confidence to break through. Now I'm leading projects I never thought possible.",
     "text": "I was stuck in my career for years. Brainnest gave me the tools and confidence to break through. Now I'm leading projects I never thought possible.",
     "user": {
       "name": "James Miller",
       "profileImage": null
     },
-    "createdAt": "4 days ago"
+    "createdAt": "2025-09-26T12:00:00Z",
+    "updatedAt": "2025-09-26T12:00:00Z"
   }
 ]

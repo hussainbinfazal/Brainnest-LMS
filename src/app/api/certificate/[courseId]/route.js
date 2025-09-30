@@ -1,7 +1,7 @@
 
 import jsPDF from "jspdf";
 import { NextResponse } from "next/server";
-import Course from "@/models/courseModel";
+import Course from "@/models/course/courseModel";
 import User from "@/models/userModel";
 import { connectDB } from "@/config/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";

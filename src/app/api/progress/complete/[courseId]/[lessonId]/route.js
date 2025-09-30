@@ -1,6 +1,6 @@
 import { connectDB } from "@/config/db";
 import Progress from "@/models/progressModel";
-import Course from "@/models/courseModel";
+import Course from "@/models/course/courseModel";
 import User from "@/models/userModel"
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { NextResponse } from "next/server";
