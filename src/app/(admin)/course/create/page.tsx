@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { v4 as uuidv4 } from "uuid";
 import {
   Card,
   CardContent,
@@ -26,39 +25,43 @@ import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap";
-const page = () => {
-  const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState(
-    new Set()
+import { Faq, Lesson, Topic } from "@/types/client";
+
+
+
+const CreateCoursePage: React.FC = () => {
+  const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState<string[]>(
+    [],
   );
-  const [isLessonVideoUploading, setIsLessonVideoUploading] = useState({});
-  const [topics, setTopics] = useState([{ topic: "", description: "" }]);
-  const [title, setTitle] = useState("");
-  const [lessons, setLessons] = useState([
+  const [isLessonVideoUploading, setIsLessonVideoUploading] = useState< Record<string, boolean>>({});
+  const [topics, setTopics] = useState<{ topic: string; description: string }[]>([{ topic: "", description: "" }]);
+  const [title, setTitle] = useState<string>("");
+  const [lessons, setLessons] = useState< { name: string; description: string; video: string; duration: string }[]>([
     { name: "", description: "", video: "", duration: "" },
   ]);
   
-  const [price, setPrice] = useState("");
-  const [coverImage, setCoverImage] = useState("");
-  const [category, setCategory] = useState("");
-  const [subCategories, setSubCategories] = useState("");
-  const [discount, setDiscount] = useState("");
-  const [duration, setDuration] = useState("");
-  const [durationInput, setDurationInput] = useState("");
-  const [video, setVideo] = useState("");
-  const [whatYouWillLearn, setWhatYouWillLearn] = useState([]);
-  const [requirements, setRequirements] = useState("");
-  const [certificate, setCertificate] = useState("");
-  const [level, setLevel] = useState("");
-  const [language, setLanguage] = useState("");
-  const [status, setStatus] = useState("");
-  const [faq, setFaq] = useState([{ question: "", answer: "" }]);
-  const [tags, setTags] = useState([]);
-  const [isVideoUploading, setIsVideoUploading] = useState(false);
-  const [isImageUploading, setIsImageUploading] = useState(false);
-  const [selectedVideoName, setSelectedVideoName] = useState("");
-  const [selectedImageName, setSelectedImageName] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [price, setPrice] = useState<string>("");
+  const [coverImage, setCoverImage] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
+  const [subCategories, setSubCategories] = useState<string>("");
+  const [discount, setDiscount] = useState<string>("");
+  const [duration, setDuration] = useState<string |  number>("");
+  const [durationInput, setDurationInput] = useState<string | null>("");
+  const [video, setVideo] = useState<string>("");
+  const [whatYouWillLearn, setWhatYouWillLearn] = useState<string[]>([]);
+  const [requirements, setRequirements] = useState<string>("");
+  const [certificate, setCertificate] = useState<string | boolean>("");
+  const [level, setLevel] = useState<string>("");
+  const [language, setLanguage] = useState<string>("");
+  const [status, setStatus] = useState<string>("");
+  const [faq, setFaq] = useState< { question: string; answer: string }[]>([{ question: "", answer: "" }]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [isVideoUploading, setIsVideoUploading] = useState<boolean>(false);
+  const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
+  const [selectedVideoName, setSelectedVideoName] = useState<string>("");
+  const [selectedImageName, setSelectedImageName] = useState<string>("");
+  const [description, setDescription] = useState< string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const categories = [
     "academics",
     "business",
@@ -89,38 +92,39 @@ const page = () => {
     productivity: ["time-management", "tools", "automation"],
     technology: ["ai", "cloud", "iot"],
   };
-  const handleCategoryChange = (value) => {
+  type CategoryKeys = keyof typeof categoryToSubcategories;
+  const handleCategoryChange = (value: string) : void => {
     setCategory(value);
     setSubCategories(""); // reset subCategories on category change
   };
   const router = useRouter();
-  const handleTopicChange = (index, field, value) => {
+  const handleTopicChange = (index: number, field: keyof Topic, value:Topic[typeof field] ): void => {
     const newTopics = [...topics];
     newTopics[index][field] = value;
     setTopics(newTopics);
   };
 
-  const handleFaqChange = (index, field, value) => {
+  const handleFaqChange = (index: number, field: keyof Faq, value: Faq[typeof field]) : void => {
     const newFaq = [...faq];
     newFaq[index][field] = value;
     setFaq(newFaq);
   };
 
-  const handleLessonChange = (index, field, value) => {
+  const handleLessonChange = (index: number, field: keyof Lesson, value: Lesson[typeof field]) : void => {
     const newLessons = [...lessons];
     newLessons[index][field] = value;
     setLessons(newLessons);
   };
-  const addTopic = () => {
+  const addTopic = (): void => {
     setTopics([...topics, { topic: "", description: "" }]);
   };
-  const removeTopic = (index) => {
+  const removeTopic = (index: number): void => {
     const newTopics = [...topics];
     newTopics.splice(index, 1);
     setTopics(newTopics);
   };
 
-  const addLesson = () => {
+  const addLesson = (): void => {
     setLessons([
       ...lessons,
       { duration: "", description: "", video: "", name: "" },
@@ -131,26 +135,26 @@ const page = () => {
     }));
   };
 
-  const removeLesson = (index) => {
+  const removeLesson = (index: number): void => {
     const newLessons = [...lessons];
     newLessons.splice(index, 1);
     setLessons(newLessons);
   };
-  const addFaq = () => {
+  const addFaq = (): void => {
     setFaq([...faq, { question: "", answer: "" }]);
   };
-  const removeFaq = (index) => {
+  const removeFaq = (index: number): void => {
     const newFaq = [...faq];
     newFaq.splice(index, 1);
     setFaq(newFaq);
   };
 
-  const handleManualDurationChange = (e) => {
+  const handleManualDurationChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const input = e.target.value;
     setDurationInput(input);
 
     const parts = input.split(":").map(Number);
-    let totalSeconds = 0;
+    let totalSeconds: number | string = 0;
 
     if (parts.length === 3) {
       totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
@@ -163,10 +167,12 @@ const page = () => {
     setDuration(totalSeconds);
   };
 
-  const handleVideoUpload = async (e) => {
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     try {
       setIsVideoUploading(true);
-      const file = e.target.files[0];
+      const target = e.target as HTMLInputElement;
+      if(!target.files) throw new Error("No file selected");
+      const file = target.files[0];
       setSelectedVideoName(file.name);
       const url = await handleUpload(file);
       setVideo(url);
@@ -185,28 +191,30 @@ const page = () => {
         setDurationInput(`${hrs}:${mins}:${secs}`);
       };
       video.src = URL.createObjectURL(file);
-    } catch (error) {
+    } catch (error: any) {
       return alert(error.message);
     } finally {
       setIsVideoUploading(false);
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e : React.ChangeEvent<HTMLInputElement>) : Promise<void> => {
     try {
       setIsImageUploading(true);
-      const file = e.target.files[0];
+      const target  = e.target as HTMLInputElement;
+      if(!target.files) throw new Error("No file selected");
+      const file = target.files[0];
       setSelectedImageName(file.name);
       const url = await handleUpload(file);
       setCoverImage(url);
-    } catch (error) {
+    } catch (error: any) {
       return alert(error.message);
     } finally {
       setIsImageUploading(false);
     }
   };
 
-  const handleCreateCourse = async () => {
+  const handleCreateCourse: React.FormEventHandler = async () : Promise<void | string | number> => {
     setLoading(true);
     const validationErrors = [];
 
@@ -228,7 +236,10 @@ const page = () => {
       validationErrors.push("Requirements");
     if (!level || level.trim() === "") validationErrors.push("Level");
     if (!language || language.trim() === "") validationErrors.push("Language");
-    if (!tags || tags.trim() === "") validationErrors.push("Tags");
+    // if (!tags || tags.trim() === "") validationErrors.push("Tags");
+    if (!tags || tags.length === 0 || tags.every(tag => !tag.trim())) {
+    validationErrors.push("Tags");
+    }
     if (!price || price.trim() === "") validationErrors.push("Price");
     if (!video || video.trim() === "") validationErrors.push("Video");
     if (!duration || duration === "") validationErrors.push("Duration");
@@ -304,7 +315,7 @@ const page = () => {
         level: level.toLowerCase(),
         language,
         status: "draft",
-        tags: tags.split(",").map((tag) => tag.trim()),
+        tags: tags.map((tag) => tag.trim()),
         description: plainDescription,
         topics,
         lessons,
@@ -315,14 +326,14 @@ const page = () => {
       toast.success("Course created successfully");
       router.push("/course/manage");
       setLoading(false);
-    } catch (error) {
+    } catch (error : any) {
       setLoading(false);
       return toast.error(error?.response?.data?.message);
     } finally {
       setLoading(false);
     }
   };
-  const handleLessonVideoUpload = async (index, file) => {
+  const handleLessonVideoUpload = async (index : number, file : File)  : Promise<void> => {
     setIsLessonVideoUploading((prev) => {
       const newState = { ...prev }; // Create a shallow copy
       newState[index] = true; // Set the specific index to true
@@ -330,15 +341,16 @@ const page = () => {
     });
 
     try {
-      setSelectedLessonVideoNames((prev) => ({
-        ...prev,
-        [index]: file.name,
-      }));
+      setSelectedLessonVideoNames((prev) => {
+        const updated =  [...prev];
+        updated[index] = file.name;
+        return updated
+      });
 
       const videoElement = document.createElement("video");
       videoElement.preload = "metadata";
 
-      videoElement.onloadedmetadata = async () => {
+      videoElement.onloadedmetadata = async () : Promise<void> => {
         window.URL.revokeObjectURL(videoElement.src);
 
         const seconds = Math.floor(videoElement.duration);
@@ -346,7 +358,7 @@ const page = () => {
         const updatedLessons = [...lessons];
         const url = await handleUpload(file);
         setIsLessonVideoUploading((prev) => {
-          const newState = { ...prev }; // Create a shallow copy
+          const newState = { ...prev }; 
           newState[index] = false; // Set the specific index to false
           return newState;
         });
@@ -361,11 +373,11 @@ const page = () => {
       };
 
       videoElement.src = URL.createObjectURL(file);
-    } catch (error) {
+    } catch (error : any) {
     } finally {
     }
   };
-  const handleUpload = async (file) => {
+  const handleUpload = async (file : File) : Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -375,70 +387,62 @@ const page = () => {
       // console.log("Uploaded to Cloudinary:", response.data.filePath);
 
       return response.data.filePath;
-    } catch (error) {}
+    } catch (error: any) {
+      console.error("Error uploading to Cloudinary:", error);
+      throw new Error("Upload failed");
+    }
   };
 
   useEffect(() => {
     // Initialize states for each lesson
-    const initialUploadingState = {};
-    const initialVideoNames = {};
+    const initialUploadingState: Record<number, boolean> = {};
+    const initialVideoNames = lessons.map(() => "");
 
     lessons.forEach((_, index) => {
       initialUploadingState[index] = false;
-      initialVideoNames[index] = "";
     });
 
     setIsLessonVideoUploading(initialUploadingState);
     setSelectedLessonVideoNames(initialVideoNames);
   }, []);
 
-  function convertToTotalHours(timeStr) {
-    const parts = timeStr.toString().split(":").map(Number);
-
-    let hours = 0;
-    if (parts.length === 3) {
-      hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
-    } else if (parts.length === 2) {
-      hours = parts[0] / 60 + parts[1] / 3600;
-    } else if (parts.length === 1) {
-      hours = parts[0] / 3600;
-    }
-
-    return parseFloat(hours.toFixed(2)); // rounded to 2 decimals
-  }
+  
 
   return (
     <div className="flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8">
       <Card className="w-[350px] md:w-[550px] space-y-4">
-        <CardHeader>
-          <CardTitle>Create project</CardTitle>
-          <CardDescription>
+        <CardHeader className="">
+          <CardTitle className="">Create project</CardTitle>
+          <CardDescription className="">
             Deploy your new course in one-click.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="">
           <form className="space-y-4">
             <div className="space-y-2">
-              <Label>Title</Label>
+              <Label className="">Title</Label>
               <Input
+                type="text"
+                className=""
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e : React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
                 placeholder="e.g. JavaScript Course"
               />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label className="">Description</Label>
               <div className="min-h-[150px]">
                 <Tiptap description={description} onChange={setDescription} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Video Upload</Label>
+              <Label className="">Video Upload</Label>
               {isVideoUploading ? (
                 <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
               ) : (
                 <>
                   <Input
+                    className=""
                     type="file"
                     accept="video/*"
                     onChange={handleVideoUpload}
@@ -452,12 +456,13 @@ const page = () => {
               )}
             </div>
             <div className="space-y-2">
-              <Label>Cover Image Upload</Label>
+              <Label className="">Cover Image Upload</Label>
               {isImageUploading ? (
                 <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
               ) : (
                 <>
                   <Input
+                    className=""
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
@@ -471,30 +476,34 @@ const page = () => {
               )}
             </div>
             <div className="space-y-2">
-              <Label>Price</Label>
+              <Label className="">Price</Label>
               <Input
+                className=""
+                type="text"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrice(e.target.value)}
                 placeholder="e.g. ₹ 69.99"
               />
             </div>
             <div className="space-y-2">
-              <Label>Discount</Label>
+              <Label className="">Discount</Label>
               <Input
+              className=""
+                type="text"
                 value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDiscount(e.target.value)}
                 placeholder="e.g. '%' 10,20,40 "
               />
             </div>
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label className="">Category</Label>
               <Select value={category} onValueChange={handleCategoryChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="">
                   {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
+                    <SelectItem className="" key={cat} value={cat}>
                       {cat
                         .replace(/-/g, " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase())}
@@ -504,7 +513,7 @@ const page = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>SubCategory</Label>
+              <Label className="">SubCategory</Label>
               <Select
                 value={subCategories}
                 onValueChange={setSubCategories}
@@ -513,9 +522,9 @@ const page = () => {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a SubCategory" />
                 </SelectTrigger>
-                <SelectContent>
-                  {(categoryToSubcategories[category] || []).map((sub) => (
-                    <SelectItem key={sub} value={sub}>
+                <SelectContent className="">
+                  {(categoryToSubcategories[category as keyof typeof categoryToSubcategories] || []).map((sub: string) => (
+                    <SelectItem className="" key={sub} value={sub}>
                       {sub
                         .replace(/-/g, " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase())}
@@ -525,32 +534,37 @@ const page = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tags</Label>
+              <Label className="">Tags</Label>
               <Input
-                value={tags}
-                onChange={(e) =>
-                  setTags(e.target.value.toString().split(",").join(","))
+              className=""
+                type="text"
+                value={tags.join(", ")}
+                onChange={(e : React.ChangeEvent<HTMLInputElement>) =>
+                  // setTags(e.target.value.toString().split(",").join(","))
+                  setTags(e.target.value.split(",").map((tag) => tag.trim()).filter(Boolean))
                 }
                 placeholder="e.g. JavaScript Basics, React, Next.js"
               />
             </div>
             <div className="space-y-2">
-              <Label>Duration (hh:mm:ss or auto from video)</Label>
+              <Label className="">Duration (hh:mm:ss or auto from video)</Label>
               <Input
+                className=""
+                type="text"
                 value={durationInput}
                 onChange={handleManualDurationChange}
                 placeholder="e.g. 01:30:00"
               />
             </div>
             <div className="space-y-2">
-              <Label>Level</Label>
+              <Label className="">Level</Label>
               <Select value={level} onValueChange={setLevel}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a level" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="">
                   {["Beginner", "Intermediate", "Expert"].map((lvl) => (
-                    <SelectItem key={lvl} value={lvl}>
+                    <SelectItem className="" key={lvl} value={lvl}>
                       {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
                     </SelectItem>
                   ))}
@@ -558,10 +572,12 @@ const page = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>What you will learn</Label>
+              <Label className="">What you will learn</Label>
               <Input
+                type="text"
+                className=""
                 value={whatYouWillLearn.join(", ")}
-                onChange={(e) =>
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setWhatYouWillLearn(
                     e.target.value.split(",").map((item) => item.trim())
                   )
@@ -571,15 +587,17 @@ const page = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Requirements</Label>
+              <Label className="">Requirements</Label>
               <Input
+                className=""
+                type="text"
                 value={requirements}
-                onChange={(e) => setRequirements(e.target.value)}
+                onChange={(e : React.ChangeEvent<HTMLInputElement>) => setRequirements(e.target.value)}
                 placeholder="e.g. Html, CSS, JavaScript"
               />
             </div>
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label className="">Language</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a language" />
@@ -629,7 +647,7 @@ const page = () => {
                     "Latvian",
                     "Lithuanian",
                   ].map((lang) => (
-                    <SelectItem key={lang} value={lang.toLowerCase()}>
+                    <SelectItem className="" key={lang} value={lang.toLowerCase()}>
                       {lang}
                     </SelectItem>
                   ))}
@@ -651,20 +669,24 @@ const page = () => {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Topic</Label>
+                  <Label className="">Topic</Label>
                   <Input
+                    type="text"
+                    className=""
                     value={item.topic}
-                    onChange={(e) =>
+                    onChange={(e : React.ChangeEvent<HTMLInputElement>) =>
                       handleTopicChange(index, "topic", e.target.value)
                     }
                     placeholder="e.g. JavaScript Basics"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label className="">Description</Label>
                   <Input
+                    type="text"
+                    className=""
                     value={item.description}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleTopicChange(index, "description", e.target.value)
                     }
                     placeholder="e.g. Variables, loops, functions"
@@ -672,7 +694,7 @@ const page = () => {
                 </div>
               </div>
             ))}
-            <Button type="button" onClick={addTopic} variant="outline">
+            <Button size="" className="" type="button" onClick={addTopic} variant="outline">
               + Add Topics
             </Button>
             <Label className={"my-4"}>Lessons</Label>
@@ -687,36 +709,43 @@ const page = () => {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label className="">Name</Label>
                   <Input
+                    type="text"
+                    className=""
                     value={item.name}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleLessonChange(index, "name", e.target.value)
                     }
                     placeholder="e.g. JavaScript Basics"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label className="">Description</Label>
                   <Input
+                    type="text"
+                    className=""
                     value={item.description}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleLessonChange(index, "description", e.target.value)
                     }
                     placeholder="e.g. Variables, loops, functions"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>video</Label>
+                  <Label className="">video</Label>
                   {isLessonVideoUploading[index] === true ? (
                     <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
                   ) : (
                     <>
                       <Input
+                        className=""
                         type="file"
                         accept="video/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const target = e.target as HTMLInputElement;
+                          if(!target.files) return;
+                          const file = target.files[0];
                           if (file) {
                             handleLessonVideoUpload(index, file);
                           }
@@ -732,10 +761,12 @@ const page = () => {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label>Duration</Label>
+                  <Label className="">Duration</Label>
                   <Input
+                    type="text"
+                    className=""
                     value={item.duration}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleLessonChange(index, "duration", e.target.value)
                     }
                     placeholder="e.g. Variables, loops, functions"
@@ -743,7 +774,7 @@ const page = () => {
                 </div>
               </div>
             ))}
-            <Button type="button" onClick={addLesson} variant="outline">
+            <Button size="" className="" type="button" onClick={addLesson} variant="outline">
               + Add Lessons
             </Button>
             <Label className={"my-4"}>Faqs</Label>
@@ -759,20 +790,24 @@ const page = () => {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label className="">Name</Label>
                   <Input
+                    type="text"
+                    className=""
                     value={item.question}
-                    onChange={(e) =>
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleFaqChange(index, "question", e.target.value)
                     }
                     placeholder="e.g. what is async and await ?"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Answer</Label>
+                  <Label className="">Answer</Label>
                   <Input
-                    value={item.description}
-                    onChange={(e) =>
+                    type="text"
+                    className=""
+                    value={item.answer}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       handleFaqChange(index, "answer", e.target.value)
                     }
                     placeholder="e.g. async is responsible for executing code asynchronously like promises and await is used to wait for a promise to resolve before executing the next line of code."
@@ -780,14 +815,14 @@ const page = () => {
                 </div>
               </div>
             ))}
-            <Button type="button" onClick={addFaq} variant="outline">
+            <Button size="" className="" type="button" onClick={addFaq} variant="outline">
               + Add Faqs
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline">Cancel</Button>
-          <Button onClick={() => handleCreateCourse()}>
+          <Button size="" className="" variant="outline">Cancel</Button>
+          <Button variant=""  size="" className="" onClick={handleCreateCourse}>
             {loading ? "Creating..." : "Create Course"}
           </Button>
         </CardFooter>
@@ -796,4 +831,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default CreateCoursePage;

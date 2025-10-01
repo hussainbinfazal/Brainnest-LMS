@@ -321,3 +321,20 @@ interface CourseStore {
 declare global {
   var otpStore: Record<string, string>;
 }
+
+type Topic = {
+  topic: string;
+  description: string;
+  
+};
+type Faq = {
+  question: string;
+  answer: string;
+};
+
+type Lesson = {
+  name: string;
+  description: string;
+  video: string;
+  duration: string; 
+};
