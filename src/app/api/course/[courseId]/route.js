@@ -27,14 +27,20 @@ export async function GET(request, context) {
         const coursesByInstructor = await Course.find({ instructor: instructorId });
 
         // Get total enrolled students and reviews
-        let totalEnrolled = 0;
-        let totalReviews = 0;
-        let totalRatings = 0;
-        coursesByInstructor.forEach(course => {
-            totalEnrolled += course.enrolledStudents.length;
-            totalReviews += course.reviews.length;
-            totalRatings += course.reviews.reduce((acc, review) => acc + review.rating, 0);
-        });
+        // let totalEnrolled = 0;
+        // let totalReviews = 0;
+        // let totalRatings = 0;
+        // coursesByInstructor.forEach(course => {
+        //     totalEnrolled += course.enrolledStudents.length;
+        //     totalReviews += course.reviews.length;
+        //     totalRatings += course.reviews.reduce((acc, review) => acc + review.rating, 0);
+        // });
+        const totalEnrolled = coursesByInstructor.reduce((acc, c) => acc + c.enrolledStudents.length, 0);
+    const totalReviews = coursesByInstructor.reduce((acc, c) => acc + c.reviews.length, 0);
+    const totalRatings = coursesByInstructor.reduce(
+      (acc, c) => acc + c.reviews.reduce((sum, r) => sum + r.rating, 0),
+      0
+    );
         return NextResponse.json({ course, coursesByInstructor, totalEnrolled, totalReviews, totalRatings }, { status: 200 });
     } catch (error) {
         console.log(error)

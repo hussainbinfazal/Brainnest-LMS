@@ -1,11 +1,7 @@
+import { ClientToServerEvents, ServerToClientEvents } from '@/types/client';
 import { io , Socket } from 'socket.io-client';
 
-interface ClientToServerEvents {
-  testEvent: (data: { hello: string }) => void;
-}
-interface ServerToClientEvents {
-  someServerEvent: (data: any) => void;
-}
+
 
 
 let socket : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -39,7 +35,7 @@ export const connectSocket = (userId : string): Socket<ServerToClientEvents, Cli
 
   return socket;
 };
-export const getSocket = (): Socket | null => socket;
+export const getSocket = (): Socket<ServerToClientEvents, ClientToServerEvents> | null => socket;
 
 
 

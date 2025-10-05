@@ -1,3 +1,5 @@
+import React, { ReactNode } from "react";
+
 export interface Certificate {
   courseId: string;
   courseName?: string;
@@ -34,11 +36,112 @@ export interface AuthUser {
 
 
 export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'instructor';
   content: string;
+  createdAt: Date; 
+  updatedAt?: Date; 
 }
 
-import React, { ReactNode } from "react";
+export interface Payment {
+  _id?: string; 
+  amount: number;
+  paymentId?: string;
+  paymentAt?: Date;
+  paymentBy?: {
+    _id: string;
+    name: string; 
+    email: string; 
+    role: string;
+    phoneNumber?: string;
+  } | string; 
+  paymentOf: string; 
+  paymentOnModel: 'Course' | 'Chat';
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+
+
+export interface Chat {
+  _id: string;
+  isPaid: boolean;
+  isLimitExceeded: boolean;
+  isRenewed: boolean;
+  isActive: boolean;
+  allMessages: Message[];
+  sender: {
+    _id: string;
+    name: string;
+    profileImage: string;
+  } ;
+  receiver: {
+    _id: string;
+    name: string;
+    profileImage: string;
+  }; 
+  isFromAdmin?: boolean;
+  messageLimit: number;
+  messageCount: number;
+  messageRemaining: number;
+  totalInterval: number;
+  totalSessions: number;
+  userId?: string;
+  paymentMethod: string;
+  razorpayChatId?: string;
+  paymentResult?: {
+    id?: string;
+    _id?: string;
+    status?: string;
+    update_time?: string;
+    email_address?: string;
+  };
+  paymentsByUser: Payment[];
+  lastMessage?: string;
+  lastMessageAt?: Date;
+  unreadCount?: number;
+  instructorUnreadCount?: number;
+  studentUnreadCount?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Message {
+  _id: string;
+  sender:{
+    _id: string;
+    name: string;
+    profileImage: string;
+  }; 
+  receiver: {
+    _id: string;
+    name: string;
+    profileImage: string;
+  }; 
+  message: string;
+  messageofTheLimit?: string;
+  isReadByInstructor?: boolean;
+  isReadByStudent?: boolean;
+  senderType?: 'user' | 'instructor' | string;
+  isDeleted?: boolean;
+  isDeletedByReceiver?: boolean;
+  isDeletedBySender?: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ServerToClientEvents {
+  message: (messageData: Message) => void;       
+  messageByAdmin: (messageData:Message) => void;
+  userStatus: (status: { userId: string; status: 'online' | 'offline' }) => void;
+  
+}
+
+// Events that the client sends to the server
+export interface ClientToServerEvents {
+  message: (messageData: Message) => void; 
+  messageByAdmin: (messageData: Message) => void; 
+  testEvent: (data: { hello: string }) => void;
+}
 
 export interface Chapter {
   time: number;
@@ -338,3 +441,27 @@ type Lesson = {
   video: string;
   duration: string; 
 };
+
+
+export interface PaymentsResponse {
+  payments: Payment[];
+}
+
+export interface EnrolledStudent {
+  _id: string;
+  user: User;
+  instructor?: Instructor;
+  enrolledAt: string;
+}
+
+interface EnrolledStudent {
+  _id: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  phoneNumber?: string;
+  instructor?: {
+    _id: string;
+    name: string;
+  };
+}

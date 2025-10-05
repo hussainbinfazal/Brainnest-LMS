@@ -25,25 +25,29 @@ import mongoose, { Schema, Model  } from "mongoose";
         likedCourses: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Course'
+                ref: 'Course',
+                index: true
             }
         ],
         enrolledCourses: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Course'
+                ref: 'Course',
+                index: true
             }
         ],
 
         role: {
             type: String,
             enum: ['user', 'admin', 'instructor'],
-            default: 'user'
+            default: 'user',
+            index: true
         },
         completedCourses: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Course'
+                ref: 'Course',
+                index: true
             }
         ],
         certificates: [{
@@ -78,6 +82,7 @@ import mongoose, { Schema, Model  } from "mongoose";
         resetPasswordToken: {
             type: String,
             default: null,
+            index: true
         },
         resetPasswordTokenExpires: {
             type: Date,
@@ -86,6 +91,7 @@ import mongoose, { Schema, Model  } from "mongoose";
         verificationToken: {
             type: String,
             default: null,
+            index: true
         },
         verificationTokenExpires: {
             type: Date,

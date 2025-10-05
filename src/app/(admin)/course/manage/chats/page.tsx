@@ -3,77 +3,81 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-} from "@/components/ui/sidebar";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AiOutlineSend } from "react-icons/ai";
 import { connectSocket } from "@/lib/socket";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import axios from "axios";
-import { Plus } from "lucide-react";
 import { Minus } from "lucide-react";
 import { MessageCirclePlus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { CiCircleInfo } from "react-icons/ci";
-import { BsFillMenuAppFill } from "react-icons/bs";
 import { TfiLayoutMenuSeparated } from "react-icons/tfi";
-import { RiMenuUnfold2Fill } from "react-icons/ri";
+
 import { RxDropdownMenu } from "react-icons/rx";
 import { MdCircle } from "react-icons/md";
+import { AuthUser, Chat, ChatMessage, ClientToServerEvents, Message, ServerToClientEvents } from "@/types/client";
+import { Socket } from "socket.io-client";
+
+type MinimalUser = {
+  _id: string;
+  name: string;
+  profileImage: string;
+};
+
 export default function AdminChatPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.authUser);
   const userId = useMemo(() => user?._id, [user]);
-  const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [message, setMessage] = useState("");
-  const [chats, setChats] = useState([]);
-  const [socket, setSocket] = useState(null);
-  const [isLimitExceeded, setIsLimitExceeded] = useState();
-  const [isActive, setIsActive] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [users, setUsers] = useState([]);
-  const [activeChat, setActiveChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const messagesEndRef = useRef< HTMLDivElement>(null);
+  const messagesContainerRef = useRef< HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState< boolean>(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState< boolean>(true);
+  const [messageText, setMessageText] = useState<string>("");
+  const [message, setMessage] = useState<Message>({_id:"" ,message: "", sender: {
+    _id: "",
+    name: "",
+    profileImage: ""
+  }, receiver: {
+    _id: "",
+    name: "",
+    profileImage: ""
+  }, createdAt: new Date(), updatedAt: new Date() });
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [socket, setSocket] = useState<Socket<ClientToServerEvents, ServerToClientEvents> | null>(null);
+  const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>();
+  const [isActive, setIsActive] = useState< boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState< string>("");
+  const [users, setUsers] = useState< MinimalUser[]>([]);
+  const [activeChat, setActiveChat] = useState< Chat | null >(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isCollapsed, setIsCollapsed] = useState< boolean>(false);
 
-  const [isComponentLoading, setIsComponentLoading] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
-  const [activeChatId, setActiveChatId] = useState();
-  const [messageCount, setMessageCount] = useState(0);
-  const [viewLimitInfo, setViewLimitInfo] = useState();
-  const [viewRemainingInfo, setViewRemainingInfo] = useState();
-  const [viewCountInfo, setViewCountInfo] = useState();
-  const [showInfo, setShowInfo] = useState(false);
-  const [userStatus, setUserStatus] = useState({});
+  const [isComponentLoading, setIsComponentLoading] = useState< boolean>(false);
+  const [isPaid, setIsPaid] = useState< boolean>(false);
+  const [activeChatId, setActiveChatId] = useState<string>();
+  const [messageCount, setMessageCount] = useState<number>(0);
+  const [viewLimitInfo, setViewLimitInfo] = useState<string | null | boolean>("");
+  const [viewRemainingInfo, setViewRemainingInfo] = useState< string | number | boolean>("");
+  const [viewCountInfo, setViewCountInfo] = useState<string | boolean>("");
+  const [showInfo, setShowInfo] = useState< boolean>(false);
+  const [userStatus, setUserStatus] = useState< { [key: string]: string }>({});
   const onlineUserIds = useMemo(() => {
     return Object.entries(userStatus)
       .filter(([_, status]) => status === "online")
       .map(([userId]) => userId);
   }, [userStatus]);
-  const socketRef = useRef(null);
-  const fetchChat = useCallback(async () => {
+  const socketRef = useRef<Socket<ClientToServerEvents, ServerToClientEvents> | null>(null);
+  const fetchChat = useCallback(async (): Promise<void> => {
     setIsComponentLoading(true);
     try {
       const response = await axios.get("/api/chat/admin");
@@ -94,9 +98,16 @@ export default function AdminChatPage() {
     }
   },[]);
 
-  const sendMessage = (message) => {
-    if (isActive)
-      return toast.error("Message limit reached. Please buy a plan.");
+  const sendMessage = (message: Message):  void => {
+      if (isActive) {
+    toast.error("Message limit reached. Please buy a plan.");
+    return;
+  }
+
+  if (!socket) {
+    toast.error("Socket not connected");
+    return;
+  }
     // setMessages((messages) => [
     //   ...messages,
     //   {
@@ -114,25 +125,35 @@ export default function AdminChatPage() {
     //   createdAt: new Date().toISOString(),
     //   updatedAt: new Date().toISOString(),
     // });
+    
     socket.emit("messageByAdmin", {
-      sender: activeChat?.sender,
-      receiver: activeChat?.receiver,
-      message,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      _id:"",
+      sender: activeChat!.sender,
+      receiver: activeChat!.receiver,
+      message:messageText,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
-    const response = console.log("This is the message :", message);
+    const response = console.log("This is the message :", messageText);
 
-    setMessage("");
+    setMessage({_id:"", message: "", sender: {
+    _id: "",
+    name: "",
+    profileImage: ""
+  }, receiver: {
+    _id: "",
+    name: "",
+    profileImage: ""
+  }, createdAt: new Date(), updatedAt: new Date() });
   };
 
-  const saveMessage = async () => {
+  const saveMessage = async () : Promise<void> => {
     if (isActive) {
       toast.error("Message limit reached. Please buy a plan.");
       return;
     }
     const messageData = {
-      message,
+      message: messageText,
       sender: userId,
       receiver: activeChat?.sender,
       chatId: activeChat?._id,
@@ -147,21 +168,21 @@ export default function AdminChatPage() {
       const updatedChats = await axios.get("/api/chat/admin");
       const updatedChat = updatedChats?.data?.chatOfAdmins;
       const updatedActiveChat = updatedChat.filter(
-        (c) => c._id === activeChat._id
+        (c: Chat) => c._id === activeChat?._id
       );
       setChats(updatedChat);
       setActiveChat(updatedActiveChat[0]);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.message || "Something went wrong");
       throw error;
     } finally {
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (message.trim()) {
+      if (message) {
         saveMessage();
       }
     }else if(e.key ==='Enter' && e.shiftKey){
@@ -186,7 +207,9 @@ export default function AdminChatPage() {
     if (user && !socketRef.current) {
       fetch("/api/socket").then(() => {
         if (isMounted) {
+          if(!userId) return;
           const newSocket = connectSocket(userId);
+           
           setSocket(newSocket);
           socketRef.current = newSocket;
 
@@ -194,20 +217,24 @@ export default function AdminChatPage() {
             console.log("Socket connected:", newSocket.id);
           });
 
-          newSocket.on("messageByAdmin", (msg) => {
+          newSocket?.on("messageByAdmin" , (msg: Message) => {
             setMessages((prev) => [...prev, msg]);
           });
 
-          newSocket.on("message", (msg) => {
+          newSocket?.on("message", (msg: Message) => {
             setMessages((prev) => [...prev, msg]);
-            const usersMessageCount = activeChat.MessageCount++;
-            setActiveChat((prevChat) => ({
+            if(!activeChat) return;
+            const usersMessageCount = activeChat.messageCount++;
+            setActiveChat((prevChat) => {
+             if(!prevChat) return prevChat;
+              return {
               ...prevChat,
               messageCount: usersMessageCount,
               messageRemaining: prevChat.messageRemaining - 1,
-            }));
+            };
+            });
           });
-          newSocket.on("userStatus", ({ userId, status }) => {
+          newSocket?.on("userStatus", ({ userId, status }:{userId: string, status: 'online' | 'offline'}) => {
             console.log(`${userId} is now ${status}`);
             setUserStatus((prev) => ({
               ...prev,
@@ -231,7 +258,7 @@ export default function AdminChatPage() {
   }, [user, userId]);
   useEffect(() => {
     if (activeChat?.allMessages) {
-      setMessages(activeChat.allMessages);
+      setMessages(activeChat?.allMessages);
     }
   }, [activeChat]);
 
@@ -268,11 +295,11 @@ export default function AdminChatPage() {
   
   useEffect(() => {}, [userId]);
   useEffect(() => {
-    const updateChat = async () => {
+    const updateChat = async (): Promise<void> => {
       const updatedChats = await axios.get("/api/chat");
       const updatedChat = updatedChats?.data?.chat;
       const updatedActiveChat = updatedChat?.filter(
-        (c) => c._id === activeChat._id
+        (c: Chat) => c._id === activeChat?._id
       );
       setChats(updatedChat);
       setActiveChat(updatedActiveChat[0]);
@@ -295,7 +322,8 @@ export default function AdminChatPage() {
           ) : (
             <div className="w-full h-full  overflow-y-auto border-r bg-black  ">
               <div
-                defaultOpen={isSidebarOpen}
+                
+                // defaultOpen={isSidebarOpen}
                 className=" h-full w-full !bg-black"
               >
                 {/* <div className="w-full flex justify-end items-center px-2">
@@ -353,7 +381,9 @@ export default function AdminChatPage() {
                             ) : (
                               <div className="w-12 h-12  relative">
                                 <Image
-                                  src={chat.sender?.profileImage}
+                                  alt="profile"
+
+                                  src={chat?.sender?.profileImage}
                                   fill
                                   className="object-cover rounded-full"
                                 />
@@ -386,18 +416,19 @@ export default function AdminChatPage() {
           {activeChat ? (
             <>
               <div className="w-full h-20  flex items-center justify-start gap-4 z-0 border-b border-opacity-50">
-                {activeChat === null || activeChat === "" ? (
+                {activeChat === null  ? (
                   <Skeleton className="w-15 h-15  relative rounded-full" />
                 ) : (
                   <div className="w-15 h-15  relative">
                     <Image
+                      alt="profile"
                       src={activeChat?.receiver?.profileImage}
                       fill
                       className="object-cover rounded-full"
                     />
                   </div>
                 )}
-                {activeChat === null || activeChat === "" ? (
+                {activeChat === null ? (
                   <Skeleton className="w-[80px] h-[15px] rounded-lg" />
                 ) : (
                   <p>{activeChat?.receiver?.name}</p>
@@ -407,7 +438,7 @@ export default function AdminChatPage() {
                 <div className=" flex-1 overflow-y-auto px-4 h-[calc(100%-110px)]">
                   {messages?.map((message) => {
                     const isCurrentUserSender =
-                      message?.sender === activeChat?.receiver?._id || message?.sender?._Id === activeChat?.receiver?._id;
+                      message?.sender._id === activeChat?.receiver?._id || message?.sender?._id === activeChat?.receiver?._id;
 
                     console.log(
                       "This is the sender and userId of the message",
@@ -435,7 +466,7 @@ export default function AdminChatPage() {
                         >
                           <div className="absolute bottom-0 right-1 text-sm">
                             {message.createdAt &&
-                            !isNaN(new Date(message.createdAt))
+                            ((message?.createdAt))
                               ? new Date(message.createdAt).toLocaleTimeString(
                                   "en-US"
                                 )
@@ -471,7 +502,7 @@ export default function AdminChatPage() {
                           <CiCircleInfo className="text-xl cursor-pointer" />
                           {viewCountInfo && (
                             <Card className="absolute -top-24 right-3 z-10 w-[350px] h-[100px] rounded-br-none">
-                              <CardContent>
+                              <CardContent className="">
                                 <p>
                                   This count shows the number of messages the
                                   user has sent.
@@ -501,7 +532,7 @@ export default function AdminChatPage() {
                           <CiCircleInfo className="text-xl cursor-pointer" />
                           {viewRemainingInfo && (
                             <Card className="absolute -top-24 right-3 z-10 w-[350px] h-[100px] rounded-br-none">
-                              <CardContent>
+                              <CardContent className="">
                                 <p>
                                   This count shows the number of remaining
                                   messages user can send.
@@ -528,7 +559,7 @@ export default function AdminChatPage() {
                           <CiCircleInfo className="text-xl cursor-pointer" />
                           {viewLimitInfo && (
                             <Card className="absolute -top-24 right-3 z-10 w-[350px] h-[100px] rounded-br-none">
-                              <CardContent>
+                              <CardContent className="">
                                 <p>
                                   This count shows the total number of messages
                                   user can send.
@@ -552,27 +583,30 @@ export default function AdminChatPage() {
 
               <div className="w-full h-[20] flex items-center justify-start gap-4 py-2 z-0">
                 <div className="w-full flex justify-between gap-2 relative">
-                  {activeChat === null || activeChat === "" ? (
+                  {activeChat === null || activeChat === null ? (
                     <Skeleton className="h-12 w-full" />
                   ) : (
                     <Input
+                      type="text"
                       placeholder="Type a message"
-                      value={message}
-                      onChange={(e) => {
-                        setMessage(e.target.value);
+                      value={messageText}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        setMessageText(e.target.value);
                       }}
                       className="w-full h-12 "
                       disabled={isActive}
                       onKeyDown={handleKeyDown}
                     />
                   )}
-                  {activeChat === null || activeChat === "" ? (
+                  {activeChat === null || activeChat === null ? (
                     <Skeleton className=" w-12 h-12 rounded-full mx-auto my-auto " />
                   ) : (
                     <Button
+                    variant=""
+                     size=""
                       className="w-9 h-9 rounded-full absolute right-2 top-2 z-11"
                       onClick={() => saveMessage()}
-                      disabled={isActive || !message.trim()}
+                      disabled={isActive || !messageText.trim()}
                     >
                       <AiOutlineSend />
                     </Button>

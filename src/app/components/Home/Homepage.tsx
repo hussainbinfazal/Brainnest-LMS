@@ -142,7 +142,7 @@ export default function HomePage() {
   //Fetch user geographical location to show popular categories
   const fetchUserLocation = useCallback(async () => {
     try {
-      const response = await axios.get("https://ipapi.co/json/"); 
+      const response = await axios.get("https://ipapi.co/json/");
       const data = response.data;
       // console.log("User location:", data);
       // console.log("This is the user location", userLocation);
@@ -199,12 +199,12 @@ export default function HomePage() {
     fetchReviews();
   }, []);
   useEffect(() => {
-  if (ranndomCoursesOnRating.length > 0) {
-    const allReviews = ranndomCoursesOnRating.flatMap(course => course.reviews || []);
-    const shuffledReviews = [...allReviews].sort(() => 0.5 - Math.random());
-    setRandomReviews(shuffledReviews);
-  }
-}, [ranndomCoursesOnRating]);
+    if (ranndomCoursesOnRating.length > 0) {
+      const allReviews = ranndomCoursesOnRating.flatMap(course => course.reviews || []);
+      const shuffledReviews = [...allReviews].sort(() => 0.5 - Math.random());
+      setRandomReviews(shuffledReviews);
+    }
+  }, [ranndomCoursesOnRating]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -240,9 +240,9 @@ export default function HomePage() {
       <div className="!w-[95%]  flex flex-col justify-center items-center gap-6">
         <div className="inline-block py-8 " >
 
-          <h1 className="text-4xl font-bold text-center ">  {session ?  `${session?.user?.name.split(" ").length === 3
-              ? session?.user?.name.split(" ")[1]  // Middle name for 3 parts
-              : session?.user?.name.split(" ")[0]  // First name for 2 parts
+          <h1 className="text-4xl font-bold text-center ">  {session ? `${session?.user?.name.split(" ").length === 3
+            ? session?.user?.name.split(" ")[1]  // Middle name for 3 parts
+            : session?.user?.name.split(" ")[0]  // First name for 2 parts
             }, welcome to` : "Welcome to"}  Brainnest where education is a game</h1>
         </div>
         <div className="w-4/5 max-w-4/5 flex items-center justify-center ">
@@ -410,8 +410,8 @@ export default function HomePage() {
                                               <p className="text-sm text-muted-foreground">{course?.instructor?.name}</p>
                                               <div className="flex gap-2">
                                                 <Badge
-                                                 className=""
-                                                 variant="outline">{course?.rating ? formatRatingNumber(course.rating) : "0"}</Badge>
+                                                  className=""
+                                                  variant="outline">{course?.rating ? formatRatingNumber(course.rating) : "0"}</Badge>
                                                 <Badge
                                                   className=""
                                                   size=""
@@ -454,10 +454,11 @@ export default function HomePage() {
                   <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                     {courses.length === 0 ? (
                       <CarouselItem className="w-full flex justify-center px-2 -ml-2 md:-ml-4
-pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
-                        <Skeleton className="w-[280px] h-[350px] rounded-md" />
-                        <Skeleton className="w-[280px] h-[350px] rounded-md" />
-                        <Skeleton className="w-[280px] h-[350px] rounded-md" />
+pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 xl:basis-1/4  gap-4">
+                        <Skeleton className="w-full h-[200px] rounded-md  " />
+                        <Skeleton className="w-full h-[200px] rounded-md" />
+                        <Skeleton className="w-full h-[200px] rounded-md" />
+                        <Skeleton className="w-full h-[200px] rounded-md" />
                       </CarouselItem>
                     ) : (
                       (uniqueCategories || []).map((category, index) => (
@@ -501,17 +502,19 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                 </Carousel>
               </div>
               <div className="w-full bg-[#F6F7F9] dark:bg-black  flex flex-col justify-center items-center gap-4 py-3 mt-4">
-                <p className="text-sm">Trusted by over 1000+ Companies Over and lakhs of Students around the world</p>
-                <div className="w-full max-h-[100px] flex justify-center items-center border-none outline-none">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-[100px] h-[100px] p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9] !border-0 !shadow-none ring-0 !outline-none !border-none ">
-                  <div className="w-full h-full relative flex justify-center items-center !border-0  !border-none !outline-none shadow-none">
-                    <Image
-                      src={item}
-                      alt={item}
-                      fill
-                      className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out !border-0 !border-none !outline-none shadow-none"
-                    />
-                  </div>
-                </div>)}</div>
+                {isLoadingPage ? (<Skeleton className="w-full h-[50px] rounded-md" />) : (<>
+                  <p className="text-sm">Trusted by over 1000+ Companies Over and lakhs of Students around the world</p>
+                  <div className="w-full max-h-[100px] flex justify-center items-center border-none outline-none">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-[100px] h-[100px] p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9] !border-0 !shadow-none ring-0 !outline-none !border-none ">
+                    <div className="w-full h-full relative flex justify-center items-center !border-0  !border-none !outline-none shadow-none">
+                      <Image
+                        src={item}
+                        alt={item}
+                        fill
+                        className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out !border-0 !border-none !outline-none shadow-none"
+                      />
+                    </div>
+                  </div>)}</div></>
+                )}
               </div>
             </div>)}
         </div>
@@ -520,14 +523,20 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
 
         {/* // Random Courses // */}
         <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  h-[550px] p-4 gap-8">
-          {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (
+          {isLoadingPage ? (<div className="w-full h-full flex flex-row justify-center items-center gap-4">
+            <Skeleton className="w-max-w-[280px]  h-full rounded-md" />
+            <Skeleton className="w-full h-full rounded-md" />
+            <Skeleton className="w-full h-full rounded-md" />
+            <Skeleton className="w-full h-full rounded-md" />
+
+          </div>) : (
             <div className="w-full"><div className="mb-4 flex flex-col gap-2 w-full h-full">
               <h2 className="text-3xl font-bold ">Learn from popular categories in {userLocation?.country_name} </h2>
               <p className="text-gray-600">Get the skills and real-world experienced employerswant with Career Accelerators.</p>
             </div>
               <div className="w-full ">
                 <Carousel
-                
+
                   setApi=""
                   opts={{
                     align: "start",
@@ -544,7 +553,12 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   className="w-full max-w-full"
                 >
                   <CarouselContent className="w-full -ml-1">
-                    {(ranndomCoursesOnRating || []).map((course, index) => (
+                    {ranndomCoursesOnRating.length === 0 ? <CarouselItem className="flex gap-4">
+                      <Skeleton className="w-[280px] h-[350px] rounded-md  " />
+                      <Skeleton className="w-[280px] h-[350px] rounded-md" />
+                      <Skeleton className="w-[280px] h-[350px] rounded-md" />
+                      <Skeleton className="w-[280px] h-[350px] rounded-md" />
+                    </CarouselItem> : (ranndomCoursesOnRating || []).map((course, index) => (
                       <CarouselItem key={index + 1} className="pl-1 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                         <div className="px-3 py-1">
                           <Link href={`/courses/${course._id}`} className="inline-block">
@@ -575,7 +589,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                   </p>
                                   <div className="flex gap-2">
                                     <Badge className="" variant="outline text-xs">{course?.rating && formatRatingNumber(course.rating)}</Badge>
-                                    <Badge className=""  variant="outline flex gap-2 text-xs">
+                                    <Badge className="" variant="outline flex gap-2 text-xs">
                                       {course?.duration && convertToTotalHours(course.duration)} hours
                                     </Badge>
                                   </div>
@@ -598,7 +612,9 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
 
         {/* Reviews About the brainnest */}
         <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-[350px]  p-4 mt-15 sm:mt-1 gap-4 sm:gap-8 ">
-          {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (
+          {isLoadingPage ? (
+            <Skeleton className="w-full h-full rounded-md" />
+          ) : (
             <div className="w-full"><div className="mb-4 flex flex-col gap-2 w-full h-full">
               <h2 className="text-3xl font-bold ">See what others are achieving through learning </h2>
               <p className="text-gray-600">Know the achievers of the world through their stories</p>
@@ -619,8 +635,8 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   ]}>
                   <CarouselContent className="w-full -ml-1">
                     {courses.length === 0 ? (
-                      <CarouselItem className="flex">
-                        <Skeleton className="w-[280px] h-[300px] rounded-md" />
+                      <CarouselItem className="flex gap-4">
+                        <Skeleton className="w-[280px] h-[300px] rounded-md  " />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
                         <Skeleton className="w-[280px] h-[300px] rounded-md" />
@@ -643,14 +659,14 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                     <div className="h-full w-1/3 flex flex-col items-center justify-start">
                                       <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                                      
+
                                       </div>
 
                                     </div>
                                     <div className="h-full flex flex-col  w-2/3">
-                                      <p className="capitalize text-sm font-semibold break-words leading-snug">{formatRelativeDate( review?.user?.name)}</p>
+                                      <p className="capitalize text-sm font-semibold break-words leading-snug">{review?.user?.name}</p>
                                       <p className="text-sm text-muted-foreground">
-                                        {formatRelativeDate( review?.createdAt || review?.updatedAt)}
+                                        {formatRelativeDate(review?.createdAt || review?.updatedAt)}
                                       </p>
                                     </div>
 

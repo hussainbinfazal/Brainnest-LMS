@@ -58,7 +58,7 @@ export default function Header() {
     // Set authUser from session if available
     if (session?.user && !authUser) {
   const mappedUser: AuthUser = {
-    id: session.user.id || "",
+
     _id: session.user.id || "",
     name: session.user.name || "",
     email: session.user.email || "",

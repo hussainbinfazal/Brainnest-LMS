@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { CampaignVisitorsChart } from "@/app/components/admin/Charts/campaign-visitors/chart";
-import { CampaignVisitors } from "@/app/components/admin/Charts/campaign-visitors";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { useCourseStore } from "@/lib/store/useCourseStore";
 import { useRouter } from "next/navigation";
@@ -46,44 +44,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
+import { Course, EnrolledStudent, Payment } from "@/types/client";
 
-const page = () => {
+
+interface PaymentsResponse{
+  
+}
+const CourseStatsPage = () => {
   const router = useRouter();
-  const [courses, setCourses] = useState([]);
-  const [coursesByInstructor, setCoursesByInstructor] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesByInstructor, setCoursesByInstructor] = useState<Course[]>([]);
   const authUser = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [totalStudentsEnrolled, setTotalStudentsEnrolled] = useState([]);
+  const [totalRevenue, setTotalRevenue] = useState<number>(0);
+  const [searchTerm, setSearchTerm] = useState<string | null>("");
+  const [totalStudentsEnrolled, setTotalStudentsEnrolled] = useState<number>(0);
 
   const [totalStudentsEnrolledThisMonth, setTotalStudentsEnrolledThisMonth] =
-    useState([]);
-  const [totalRevenueThisMonth, setTotalRevenueThisMonth] = useState(0);
-  const [studentsEnrolled, setStudentsEnrolled] = useState([]);
-  const [totalChatRevenueThisMonth, setTotalChatRevenueThisMonth] = useState(0);
-  const [totalChatRevenueThisWeek, setTotalChatRevenueThisWeek] = useState(0);
-  const [totalChatRevenue, setTotalChatRevenue] = useState(0);
-  const [totalChatRevenueLastMonth, setTotalChatRevenueLastMonth] = useState(0);
-  const [totalChatRevenueToday, setTotalChatRevenueToday] = useState(0);
-  const [payments, setPayments] = useState([]);
-  const [countRecords, setCountRecords] = useState(10);
+    useState<number>(0);
+  const [totalRevenueThisMonth, setTotalRevenueThisMonth] = useState<number>(0);
+  const [studentsEnrolled, setStudentsEnrolled] = useState< EnrolledStudent[]>([]);
+  const [totalChatRevenueThisMonth, setTotalChatRevenueThisMonth] = useState<number>(0);
+  const [totalChatRevenueThisWeek, setTotalChatRevenueThisWeek] = useState<number>(0);
+  const [totalChatRevenue, setTotalChatRevenue] = useState<number>(0);
+  const [totalChatRevenueLastMonth, setTotalChatRevenueLastMonth] = useState<number>(0);
+  const [totalChatRevenueToday, setTotalChatRevenueToday] = useState<number>(0);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [countRecords, setCountRecords] = useState<number>(10);
 
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [selectedView, setSelectedView] = useState("students");
+  const [isUploading, setIsUploading] = useState< boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedView, setSelectedView] = useState< string>("students");
   const filteredEnrolledStudents =
-    searchTerm.trim() === ""
+    searchTerm!.trim() === ""
       ? studentsEnrolled
       : studentsEnrolled.filter((user) => {
-          const id = user._id || "";
-          const username = user.name?.toLowerCase() || "";
+          const id = user?._id || "";
+          const username = user?.name?.toLowerCase() || "";
           const email = user.email?.toLowerCase() || "";
           const number = user.phoneNumber || "";
           const instructorName = user.instructor?.name?.toLowerCase() || "";
-          const term = searchTerm.toLowerCase();
+          const term = searchTerm!.toLowerCase();
 
           return (
             id.includes(term) ||
@@ -94,18 +97,18 @@ const page = () => {
           );
         });
   const filteredPayments =
-    searchTerm.trim() === ""
+    searchTerm?.trim() === ""
       ? payments
       : payments?.filter((payment) => {
           const id = payment?.paymentId || "";
           const amount = String(payment?.amount || "");
           const paymentDate = payment?.paymentAt || "";
-          const paymentBy = payment?.paymentBy.toLowerCase() || "";
+          const paymentBy = payment?.paymentBy?.name?.toLowerCase() || "";
           const paymentReleatedTo = payment?.paymentOf || "";
-          const term = searchTerm.toLowerCase();
+          const term = searchTerm?.toLowerCase();
 
           return (
-            id.includes(term) ||
+            id.includes(term ?? "") ||
             amount.includes(term) ||
             paymentDate.includes(term) ||
             paymentBy.includes(term) ||
@@ -113,14 +116,14 @@ const page = () => {
           );
         });
   const filteredCourses =
-    searchTerm.trim() === ""
+    searchTerm?.trim() === ""
       ? courses
       : courses.filter((course) => {
           const id = course._id || course.id || "";
           const courseName = course.title?.toLowerCase() || "";
           const instructorName = course?.instructor?.name?.toLowerCase() || "";
           const price = String(course?.price || "");
-          const term = searchTerm.toLowerCase();
+          const term = searchTerm?.toLowerCase();
 
           return (
             id.includes(term) ||
@@ -134,13 +137,13 @@ const page = () => {
       if (!authUser) return;
 
       const instructorCourses = courses.filter(
-        (course) => course.instructor._id === authUser._id
+        (course) => course?.instructor?._id === authUser._id
       );
 
       setCoursesByInstructor(instructorCourses);
 
       const revenue = instructorCourses.reduce((sum, course) => {
-        return sum + course.enrolledStudents?.length * course.price;
+        return sum + course.enrolledStudents?.length * course?.price;
       }, 0);
 
       setTotalRevenue(revenue);
@@ -151,7 +154,7 @@ const page = () => {
       setTotalStudentsEnrolled(enrolledStudents);
 
       const revenueThisMonth = instructorCourses.reduce((sum, course) => {
-        const createdAt = new Date(course.createdAt);
+        const createdAt = new Date(course?.createdAt);
         const now = new Date();
 
         // Compare months and years
@@ -376,7 +379,7 @@ const page = () => {
       setPayments(data);
       console.log("This is the data of all the payments", data);
     } catch (error) {
-      console.log("This is the error on the console page :", error);
+      console.log("This is the error on the console CourseStatsPage :", error);
       throw error;
     }
   }, [authUser]);
@@ -756,4 +759,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default CourseStatsPage;

@@ -28,7 +28,8 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
   instructor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   price: {
     type: Number,
@@ -117,7 +118,8 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
 
   tags: [
     {
-      type: String
+      type: String,
+      index: true 
     }
   ],
   status: {
@@ -177,7 +179,8 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
   category: {
     name: {
       type: String,
-      required: true
+      required: true,
+      index: true 
     },
     subCategories: [
       {

@@ -12,6 +12,7 @@ export const cartSchema: Schema<ICart> = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Course',
+            index: true
 
         }
     ],
