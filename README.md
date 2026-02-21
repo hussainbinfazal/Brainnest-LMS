@@ -466,7 +466,7 @@ open http://localhost:3000
 <td width="50%">
 
 #### 🛡️ **Reliability**
-- 🏗️ **Scalable Architecture** - Handles 10K+ concurrent users
+- 🏗️ **Scalable Architecture** - Handles 100+ concurrent users
 - 🔐 **Enterprise Security** - Bank-grade encryption
 - 📊 **99.9% Uptime** - Reliable and always available
 
