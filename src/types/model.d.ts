@@ -72,7 +72,7 @@ export interface IReview extends Document {
   spamScore: number;
   status: "clean" | "suspicious" | "spam";
   ipAdress: string;
-  score:number;
+  score: number;
   createdAt: Date | string;
   updatedAt?: Date | string;
 }
@@ -205,7 +205,11 @@ export interface IProgress extends Document {
   _id: string;
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
-  completedLessons: Types.ObjectId[];
+  completedLessons: [{
+    lessonId: Types.ObjectId;
+    progress: number;
+    isCompleted: boolean
+  }];
   completedLessonsCount: number;
   percentageCompleted: number;
   lastAccessedAt: Date;

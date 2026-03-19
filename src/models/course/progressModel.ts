@@ -18,8 +18,18 @@ const progressSchema = new mongoose.Schema<IProgress>(
     },
     completedLessons: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Lesson",
+        lessonId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Lesson",
+        },
+        progress: {
+          type: Number,
+          default: 0
+        },
+        isCompleted: {
+          type: Boolean,
+          default: false
+        }
       },
     ],
     completedLessonsCount: [
@@ -36,7 +46,7 @@ const progressSchema = new mongoose.Schema<IProgress>(
       type: Date,
       default: Date.now,
     },
-    
+
   },
   { timestamps: true }
 );
