@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
-import User from "../models/userModel";
-import { connectDB } from "@/config/db";
+import User from "../models/User/userModel";
+import { connectDB } from "@/config/mongoDB/db";
 import { AuthenticatedUser, Credentials } from "@/types/auth";
+import { logger } from "@/utils/logger/logger";
 
 
 
@@ -13,16 +14,16 @@ export async function authenticateUser(credentials: Credentials): Promise<Authen
     const user = await (User).findOne({ email: credentials.email }).select(
       "+password"
     );
-    console.log("User found:", !!user);
-    
+    logger.info({ found: !!user }, "User found");
+
     if (!user) {
-      console.log("No user found with email:", credentials.email);
+      logger.warn("No user found with this email");
       return null;
     }
 
     const isValid = await bcrypt.compare(credentials.password, user.password);
-    console.log("Password valid:", isValid);
-    
+    logger.info({ valid: isValid }, "Password valid");
+
     if (!isValid) return null;
 
     return {
@@ -32,10 +33,10 @@ export async function authenticateUser(credentials: Credentials): Promise<Authen
       phoneNumber: user.phoneNumber,
       role: user.role,
       profile: user.profileImage,
-      
+
     };
-  } catch (error) {
-    console.error("Auth error:", error);
+  } catch (error: any) {
+    logger.error("Auth error:", error);
     return null;
   }
 }

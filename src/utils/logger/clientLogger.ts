@@ -1,0 +1,24 @@
+import axios from "axios";
+
+
+export const clientLogger = {
+    info: (message: string, meta?: unknown) => {
+        console.info(message, meta);
+    },
+
+    error: (message: string, meta?: unknown) => {
+        console.error(message, meta);
+
+        
+        axios.post("/api/log", {
+            level: "error",
+            message,
+            meta,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+        }).catch(() => {
+           
+        });
+    }
+};

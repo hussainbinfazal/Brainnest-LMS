@@ -21,17 +21,17 @@ import { BarLoader } from "react-spinners";
 import { ModeToggle } from "@/components/Dark";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { User } from "next-auth";
-import { AuthUser } from "@/types/client";
+import { CAuthUser, CChatMessage } from "@/types/client";
 
 export default function Header() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
-  let [user, setUser] = useState<AuthUser | null | undefined>(null);
-  const authUser = useAuthStore((state) => state.authUser);
+  let [user, setUser] = useState<CAuthUser | null | undefined>(null);
+  const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
-  const chat = useChatStore((state) => state.chat);
+  const chat: CChatMessage[] | null = useChatStore((state) => state.chat);
   const setChat = useChatStore((state) => state.setChat);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const menuRef = useRef<HTMLDivElement>(null); // <-- Add this
@@ -57,22 +57,22 @@ export default function Header() {
   useEffect(() => {
     // Set authUser from session if available
     if (session?.user && !authUser) {
-  const mappedUser: AuthUser = {
+      const mappedUser: CAuthUser = {
 
-    _id: session.user.id || "",
-    name: session.user.name || "",
-    email: session.user.email || "",
-    role: "user", // default role if not provided
-    phoneNumber: undefined,
-    imageUrl: session.user.image || undefined,
-    profileImage: undefined,
-    firstName: session.user.name?.split(" ")[0] || "",
-    enrolledCourses: [], // default empty array
-    certificates: [],     // default empty array
-  };
-  setAuthUser(mappedUser);
-  setHasInitialized(true);
-   } else if (!authUser && status === "unauthenticated") {
+        _id: session.user.id || "",
+        name: session.user.name || "",
+        email: session.user.email || "",
+        role: "student", // default role if not provided
+        phoneNumber: undefined,
+        imageUrl: session.user.image || undefined,
+        profileImage: undefined,
+        firstName: session.user.name?.split(" ")[0] || "",
+        enrolledCourses: [], // default empty array
+        certificates: [],     // default empty array
+      };
+      setAuthUser(mappedUser);
+      setHasInitialized(true);
+    } else if (!authUser && status === "unauthenticated") {
       // console.log("Fetching user in header...");
       fetchUser().catch((error) => {
         // console.error("Failed to fetch user:", error);
@@ -84,7 +84,7 @@ export default function Header() {
     await signOut();
     setIsMenuOpen(false);
     toast.success("Logout successful");
-    
+
   };
 
   useEffect(() => {
@@ -160,7 +160,7 @@ export default function Header() {
             color={theme === "dark" ? "#ffff3f" : "#2196f3"}
             width="100%"
             height="3px"
-            // className="dark:bg-[#ffff3f]"
+          // className="dark:bg-[#ffff3f]"
           />
         </div>
       )}
@@ -231,106 +231,110 @@ export default function Header() {
 
               {authUser?.role === "instructor" ? (
                 <Link href="/course/manage">
-                  <Button size="" variant="" className="ml-4 rounded-sm">Manage courses</Button>
+                  <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
               ) : (
                 <Link href={"/course/manage"}>
-                  <Button size="" variant="" className="ml-6 rounded-sm">
+                  <Button className="ml-6 rounded-sm cursor-pointer">
                     Teach on Brainnest
                   </Button>
                 </Link>
               )}
               {status === "unauthenticated" && (
                 <Link href={"/login"}>
-                  <Button size="" variant="" className="ml-6 rounded-sm">Login</Button>
+                  <Button className="ml-6 rounded-sm cursor-pointer">Login</Button>
                 </Link>
               )}
               {status === "authenticated" && (
-                <Button size="" variant="" className="ml-6 rounded-sm" onClick={handleLogout}>
+                <Button className="ml-6 rounded-sm cursor-pointer" onClick={handleLogout}>
                   Logout
                 </Button>
               )}
 
-              <div className="relative ml-4" ref={avatarRef}>
+              <div className="relative ml-4"
+                ref={avatarRef}
+              >
                 {authUser && (
                   <Avatar
-                    ref={avatarRef}
-                    className="ml-4 relative"
+
+                    className="ml-4 relative cursor-pointer"
                     onClick={() => {
                       setIsMenuOpen((prev) => !prev);
                     }}
+
                   >
                     <AvatarImage
                       src={
-                        authUser?.imageUrl ||
-                        authUser?.profileImage ||
-                        session?.user?.image
+                        authUser?.imageUrl || ""
+                        // authUser?.profileImage ||
+                        // session?.user?.image
                       }
                       alt="User Avatar"
-                      className=""
+                      className="cursor-pointer"
                     />
-                    <AvatarFallback className="">
+                    <AvatarFallback className="cursor-pointer">
                       {authUser?.firstName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 )}
                 {isMenuOpen && (
-                  <Card
-                    className={`menu absolute top-2 right-5 ${
-                      chatAlreadyExists
+                  <div ref={menuRef}>
+                    <Card
+                      className={`menu absolute top-2 right-5 ${chatAlreadyExists
                         ? "min-h-45"
                         : authUser
-                        ? "min-h-38"
-                        : " min-h-10"
-                    }  w-40 z-[70]`}
-                    ref={menuRef}
-                  >
-                    <CardContent className="flex flex-col gap-3 items-center justify-center">
-                      {authUser && authUser.role === "instructor" && (
-                        <Link href={`/course/manage`} className="mt-4">
-                          <p className="whitespace-pre">Manage Courses</p>
-                        </Link>
-                      )}
-                      {authUser?.role === "instructor" && (
-                        <Link
-                          href={`/`}
-                          className={`${badgeVariants({
-                            variant: "outline",
-                          })} absolute right-1  top-0.5`}
+                          ? "min-h-38"
+                          : " min-h-10"
+                        }  w-40 z-[70]`}
+
+                    >
+                      <CardContent className="flex flex-col gap-3 items-center justify-center">
+                        {authUser && authUser.role === "instructor" && (
+                          <Link href={`/course/manage`} className="mt-4">
+                            <p className="whitespace-pre">Manage Courses</p>
+                          </Link>
+                        )}
+                        {authUser?.role === "instructor" && (
+                          <Link
+                            href={`/`}
+                            className={`${badgeVariants({
+                              variant: "outline",
+                            })} absolute right-1  top-0.5`}
+                          >
+                            Instructor
+                          </Link>
+                        )}
+
+                        {authUser && authUser?.enrolledCourses?.length ? (
+                          <Link href={`/mycourses`}>
+                            <p>My courses</p>
+                          </Link>
+                        ) : null}
+                        {authUser && (
+                          <Link href="/myprofile">
+                            <p>Profile</p>
+                          </Link>
+                        )}
+                        {authUser && chatAlreadyExists && (
+                          <Link href="/chat">
+                            <p>Chat</p>
+                          </Link>
+                        )}
+                        {authUser && authUser?.certificates?.length > 0 && (
+                          <Link href="/myprofile/mycertificates">
+                            <p>My Certificates</p>
+                          </Link>
+                        )}
+
+                        <p
+                          className="cursor-pointer"
+                          onClick={() => handleLogout()}
                         >
-                          Instructor
-                        </Link>
-                      )}
-
-                      {authUser && authUser?.enrolledCourses?.length ? (
-                        <Link href={`/mycourses`}>
-                          <p>My courses</p>
-                        </Link>
-                      ) : null}
-                      {authUser && (
-                        <Link href="/myprofile">
-                          <p>Profile</p>
-                        </Link>
-                      )}
-                      {authUser && chatAlreadyExists && (
-                        <Link href="/chat">
-                          <p>Chat</p>
-                        </Link>
-                      )}
-                      {authUser && authUser?.certificates?.length > 0 && (
-                        <Link href="/myprofile/mycertificates">
-                          <p>My Certificates</p>
-                        </Link>
-                      )}
-
-                      <p
-                        className="cursor-pointer"
-                        onClick={() => handleLogout()}
-                      >
-                        Logout
-                      </p>
-                    </CardContent>
-                  </Card>
+                          Logout
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </div>
             </div>

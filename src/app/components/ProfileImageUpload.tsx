@@ -1,10 +1,10 @@
 
-import { ProfileImageUploadProps } from "@/types/client";
+import { CProfileImageUploadProps } from "@/types/client";
 import React, { useState, useRef, useEffect } from "react";
 
 
 
-const ProfileImageUpload = ({ setValue, trigger }: ProfileImageUploadProps) => {
+const ProfileImageUpload = ({ control,setValue, trigger }: CProfileImageUploadProps) => {
   const [image, setImage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);

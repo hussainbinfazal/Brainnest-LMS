@@ -3,7 +3,7 @@ const nextConfig = {
 
   // Optional: Add image domains for next/image optimization
   images: {
-    domains: ['res.cloudinary.com','img-c.udemycdn.com','img.clerk.com','cms-images.udemycdn.com'],
+    domains: ['res.cloudinary.com','img-c.udemycdn.com','img.clerk.com','cms-images.udemycdn.com','images.unsplash.com','plus.unsplash.com'],
     unoptimized: false,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

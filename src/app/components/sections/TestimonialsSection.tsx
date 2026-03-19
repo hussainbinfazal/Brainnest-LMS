@@ -4,14 +4,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Star, Quote } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
-import { TestimonialsSectionProps } from "@/types/client";
+import { CTestimonialsSectionProps } from "@/types/client";
 
+export interface CDefaultTestimonials {
+  text: string;
+  user: {
+    name: string;
+  };
+  rating: number;
+  position: string;
+}
 
-
-export default function TestimonialsSection({ reviews: reviews, fallbackCourses }: TestimonialsSectionProps) {
+export default function TestimonialsSection({ reviews: reviews, fallbackCourses }: CTestimonialsSectionProps) {
   const testimonials = reviews.length > 0 ? reviews : fallbackCourses.slice(0, 8);
 
-  const defaultTestimonials = [
+  const defaultTestimonials: CDefaultTestimonials[] = [
     {
       text: "Brainnest transformed my career completely. The courses are incredibly well-structured and the instructors are world-class.",
       user: { name: "Sarah Johnson" },
@@ -61,7 +68,7 @@ export default function TestimonialsSection({ reviews: reviews, fallbackCourses 
             loop: true,
             dragFree: true,
           }}
-          setApi={() => {}}
+          setApi={() => { }}
           plugins={[
             Autoplay({
               delay: 4000,
@@ -72,7 +79,7 @@ export default function TestimonialsSection({ reviews: reviews, fallbackCourses 
           className="w-full"
         >
           <CarouselContent className="w-full -ml-4">
-            {displayTestimonials.map((testimonial, index) => (
+            {displayTestimonials.map((testimonial: CDefaultTestimonials, index: number) => (
               <CarouselItem key={index} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
                 <Card className="h-80 border-0 shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
                   <CardContent className="p-8 h-full flex flex-col">
@@ -82,28 +89,31 @@ export default function TestimonialsSection({ reviews: reviews, fallbackCourses 
                         {testimonial.text}
                       </p>
                     </div>
-                    
+
                     <div className="mt-auto">
                       <div className="flex items-center gap-1 mb-3">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`w-4 h-4 ${
-                              i < (testimonial.rating || 5) 
-                                ? "fill-yellow-400 text-yellow-400" 
-                                : "text-gray-300"
-                            }`} 
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${i < (testimonial.rating || 5)
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                              }`}
                           />
                         ))}
                       </div>
-                      
+
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                          {(testimonial.user?.name || testimonial.name || "User").charAt(0)}
+                          {(testimonial.user?.name ||
+                            // testimonial?.name ||
+                            "User").charAt(0)}
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">
-                            {testimonial.user?.name || testimonial.name || "Anonymous"}
+                            {testimonial.user?.name ||
+                              //  testimonial.name || 
+                              "Anonymous"}
                           </p>
                           <p className="text-sm text-gray-600">
                             {testimonial.position || "Verified Learner"}

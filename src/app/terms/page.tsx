@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -12,7 +12,7 @@ import {
   Mail,
 } from "lucide-react";
 
-const TermsPage = (): React.ReactNode => {
+const TermsPage = (): JSX.Element => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const toggleSection = (sectionId : string): void => {

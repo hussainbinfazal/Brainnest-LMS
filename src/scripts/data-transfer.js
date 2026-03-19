@@ -13,21 +13,19 @@ async function copyCollection() {
 
   for (let coll of collections) {
     const docs = await coll.find().toArray();
-    console.log(
-      `Collection: ${coll.collectionName}, Docs Found: ${docs.length}`
-    );
+    logger.info(`Collection: ${coll.collectionName}, Docs Found: ${docs.length}`);
 
     if (docs.length) {
       await testDB.collection(coll.collectionName).insertMany(docs);
-      console.log(`✅ Copied ${docs.length} docs into ${coll.collectionName}`);
+      logger.info(`✅ Copied ${docs.length} docs into ${coll.collectionName}`);
     } else {
-      console.log(`⚠️ Skipped ${coll.collectionName} (no docs)`);
+      logger.warn(`⚠️ Skipped ${coll.collectionName} (no docs)`);
     }
   }
 
   await prodClient.close();
   await testClient.close();
-  console.log("🎉 Copy complete!");
+  logger.info("🎉 Copy complete!");
 }
 
 copyCollection();

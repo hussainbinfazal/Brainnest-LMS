@@ -1,7 +1,10 @@
 import Image from "next/image";
 
+export interface CCompanies {
+  name: string; logo: string;
+}
 export default function SocialProof() {
-  const companies = [
+  const companies: CCompanies[] = [
     { name: "Volkswagen", logo: "https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals" },
     { name: "Samsung", logo: "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals" },
     { name: "Cisco", logo: "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals" },
@@ -20,7 +23,7 @@ export default function SocialProof() {
             Trusted by professionals at leading companies worldwide
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 items-center justify-items-center">
-            {companies.map((company, index) => (
+            {companies.map((company: CCompanies, index: number) => (
               <div
                 key={index}
                 className="relative w-20 h-12 opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0"
@@ -35,7 +38,7 @@ export default function SocialProof() {
             ))}
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div>
             <div className="text-3xl font-bold text-blue-600 mb-2">10K+</div>

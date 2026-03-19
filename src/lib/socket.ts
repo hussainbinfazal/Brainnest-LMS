@@ -1,12 +1,13 @@
 import { ClientToServerEvents, ServerToClientEvents } from '@/types/client';
-import { io , Socket } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
+import { logger } from "@/utils/logger/logger";
 
 
 
 
-let socket : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
-export const connectSocket = (userId : string): Socket<ServerToClientEvents, ClientToServerEvents> => {
+export const connectSocket = (userId: string): Socket<ServerToClientEvents, ClientToServerEvents> => {
   if (!socket) {
     socket = io({
       path: "/api/socket",
@@ -21,15 +22,14 @@ export const connectSocket = (userId : string): Socket<ServerToClientEvents, Cli
 
     // Optional: listen to connection event
     socket.on('connect', () => {
-      // console.log('Connected to socket:', socket.id);
+      logger.info({ socketId: socket.id }, 'Connected to socket');
       socket?.emit("testEvent", { hello: "world" });
 
 
     });
 
-    socket.on('connect_error', (err) => {
-      // console.log(err)
-      console.error('Socket connection error:', err.message);
+    socket.on('connect_error', (err: any) => {
+      logger.error('Socket connection error:', err.message);
     });
   }
 

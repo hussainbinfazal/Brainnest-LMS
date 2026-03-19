@@ -1,14 +1,15 @@
 "use client";
-import React from "react";
+import React, { JSX } from "react";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/utils/logger/logger";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 
-const page = (): React.ReactNode => {
+const page = (): JSX.Element => {
   const [token, setToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const paramsToken = useSearchParams().get("token");
@@ -17,15 +18,15 @@ const page = (): React.ReactNode => {
   const [loading, setLoading] = useState<boolean>(false);
   const authUser = useAuthStore((state) => state.authUser);
 
-  let userId= authUser?._id || authUser?.id;
+  let userId = authUser?._id || authUser?.id;
   const verifyEmail = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/api/users/verifyemail", { token,userId });
-      console.log(response.data);
+      const response = await axios.post("/api/users/verifyemail", { token, userId });
+      logger.info({ data: response.data }, "verifyEmail response");
       setEmailVerified(true);
     } catch (error) {
-      console.log(error);
+      logger.error(error);
       setEmailVerified(false);
       throw error;
     } finally {
@@ -41,7 +42,7 @@ const page = (): React.ReactNode => {
     if (token && token.length > 0) {
       verifyEmail();
     }
-    console.log("Token in the verify email page", token);
+    logger.info({ token }, "Token in the verify email page");
   }, [token]);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
@@ -55,8 +56,6 @@ const page = (): React.ReactNode => {
             </h1>
             <span>
               <Button
-              size=""
-                variant=""
                 className=""
                 onClick={() => {
                   router.push("/myprofile");

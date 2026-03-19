@@ -1,6 +1,9 @@
 import React, { ReactNode } from "react";
+import { ICourse, IUser } from "./model";
+import { LucideIcon } from "lucide-react";
 
-export interface Certificate {
+export interface CCertificate {
+  _id: string;
   courseId: string;
   courseName?: string;
   instructorName?: string;
@@ -10,51 +13,46 @@ export interface Certificate {
   generatedAt?: Date;
 }
 
-export interface AuthUser {
+export interface CAuthUser {
   _id?: string;
   name: string;
   email: string;
-  password?: string; 
+  password?: string;
   phoneNumber?: string;
   profileImage?: string;
-  imageUrl?: string; 
+  imageUrl?: string;
   firstName?: string;
-  role: 'user' | 'admin' | 'instructor';
-  likedCourses?: string[]; 
-  enrolledCourses: string[]; 
-  completedCourses?: string[]; 
-  certificates: Certificate[]; 
-  resetPasswordToken?: string | null;
-  resetPasswordTokenExpires?: Date | null;
-  verificationToken?: string | null;
-  verificationTokenExpires?: Date | null;
-  isResetTokenVerified?: boolean;
+  role: 'student' | 'admin' | 'instructor';
+  isVerified: boolean;
+  likedCourses?: string[] | CCourse[];
+  enrolledCourses: string[] | CCourse[];
+  completedCourses?: string[] | CCourse[];
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 
 
-export interface ChatMessage {
+export interface CChatMessage {
   role: 'user' | 'instructor';
   content: string;
-  createdAt: Date; 
-  updatedAt?: Date; 
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
-export interface Payment {
-  _id?: string; 
+export interface CPayment {
+  _id?: string;
   amount: number;
   paymentId?: string;
   paymentAt?: Date;
   paymentBy?: {
     _id: string;
-    name: string; 
-    email: string; 
+    name: string;
+    email: string;
     role: string;
     phoneNumber?: string;
-  } | string; 
-  paymentOf: string; 
+  } | string;
+  paymentOf: string;
   paymentOnModel: 'Course' | 'Chat';
   createdAt?: Date;
   updatedAt?: Date;
@@ -62,7 +60,7 @@ export interface Payment {
 
 
 
-export interface Chat {
+export interface CChat {
   _id: string;
   isPaid: boolean;
   isLimitExceeded: boolean;
@@ -73,12 +71,12 @@ export interface Chat {
     _id: string;
     name: string;
     profileImage: string;
-  } ;
+  };
   receiver: {
     _id: string;
     name: string;
     profileImage: string;
-  }; 
+  };
   isFromAdmin?: boolean;
   messageLimit: number;
   messageCount: number;
@@ -101,27 +99,27 @@ export interface Chat {
   unreadCount?: number;
   instructorUnreadCount?: number;
   studentUnreadCount?: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export interface Message {
-  _id: string;
-  sender:{
+export interface CMessage {
+  _id?: string;
+  sender: {
     _id: string;
     name: string;
     profileImage: string;
-  }; 
+  };
   receiver: {
     _id: string;
     name: string;
     profileImage: string;
-  }; 
+  };
   message: string;
   messageofTheLimit?: string;
   isReadByInstructor?: boolean;
   isReadByStudent?: boolean;
-  senderType?: 'user' | 'instructor' | string;
+  senderinterface?: 'user' | 'instructor' | string;
   isDeleted?: boolean;
   isDeletedByReceiver?: boolean;
   isDeletedBySender?: boolean;
@@ -129,45 +127,46 @@ export interface Message {
   updatedAt: Date;
 }
 
-export interface ServerToClientEvents {
-  message: (messageData: Message) => void;       
-  messageByAdmin: (messageData:Message) => void;
+export interface CServerToClientEvents {
+  message: (messageData: Message) => void;
+  messageByAdmin: (messageData: Message) => void;
   userStatus: (status: { userId: string; status: 'online' | 'offline' }) => void;
-  
+
 }
 
 // Events that the client sends to the server
-export interface ClientToServerEvents {
-  message: (messageData: Message) => void; 
-  messageByAdmin: (messageData: Message) => void; 
+export interface CClientToServerEvents {
+  message: (messageData: Message) => void;
+  messageByAdmin: (messageData: Message) => void;
   testEvent: (data: { hello: string }) => void;
+
 }
 
-export interface Chapter {
+export interface CChapter {
   time: number;
   title: string;
 }
 
-export interface Subtitle {
+export interface CSubtitle {
   src: string;
   lang: string;
   label: string;
   default?: boolean;
 }
 
-export interface QualityOption {
+export interface CQualityOption {
   label: string;
   src: string;
   selected?: boolean;
 }
 
-export interface Watermark {
+export interface CWatermark {
   text?: string;
   image?: string;
   position?: string;
 }
 
-export interface VideoPlayerProps extends React.HTMLAttributes<HTMLVideoElement> {
+export interface CVideoPlayerProps extends React.HTMLAttributes<HTMLVideoElement> {
   src: string;
   poster?: string;
   title?: string;
@@ -188,65 +187,84 @@ export interface VideoPlayerProps extends React.HTMLAttributes<HTMLVideoElement>
   watermark?: Watermark | null;
 }
 
-type Chapter = {
+export interface CChapter {
   title: string;
-  time: number; 
+  time: number;
 };
-type Subtitle = {
-  src: string;        
-  lang: string;       
-  label: string;      
-  default?: boolean;  
-};
-
-type QualityOption = {
-  label: string;      
-  src: string;        
-  selected?: boolean; 
+export interface CSubtitle {
+  src: string;
+  lang: string;
+  label: string;
+  default?: boolean;
 };
 
-type Watermark = {
+export interface CQualityOption {
+  label: string;
+  src: string;
+  selected?: boolean;
+};
+
+export interface CWatermark {
   text?: string;
   image?: string;
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 };
 
 
-interface CategoriesSectionProps {
+export interface CCategoriesSectionProps {
   categories: string[];
   isLoading: boolean;
 }
 
 
 
-const carouselOptions: EmblaOptionsType = {
+const CCarouselOptions: EmblaOptionsinterface = {
   align: "start",
   loop: false,
   dragFree: true,
 };
+export interface CCategory {
+  name: string;
+  slug: string;
+  isParent: string;
+};
 
-
-interface Course {
+export interface CCourse {
   _id: string;
   title: string;
-  coverImage?: string;
-  instructor?: { name: string };
-  rating?: number;
-  duration?: string;
-  price?: number | string;
-  reviews?: Review[];
-
-   category?: { 
-    name: string; 
-    subCategories: string[]; 
-  };
   description?: string;
-  image?: string;
+  coverImage?: string;
+  instructorId?: {
+    _id: string;
+    name?: string;
+    profileImage?: string;
+  };
+  rating?: number;
+  duration?: number;
+  price?: number;
+  isPaid?: boolean;
+  discount?: number;
+  level?: 'beginner' | 'intermediate' | 'expert';
+  language?: string;
+  status?: 'draft' | 'published';
+  topics?: CTopic[];
+  lessons?: CLesson[];
+  reviews?: CReview[];
+  enrolledStudents?: EnrolledStudent[];
+  faq?: CFaq[];
+  requirements?: string[];
+  whatYouWillLearn?: string[];
+  video?: string;
+  previewVideo?: string;
+  tags?: string[];
+  category?: CCategory;
   published?: boolean;
   purchased?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-interface CourseShowcaseProps {
+export interface CCourseShowcaseProps {
   courses: Course[];
   isLoading: boolean;
   title: string;
@@ -256,56 +274,60 @@ interface CourseShowcaseProps {
   convertToTotalHours: (timeStr: string) => number;
 }
 
-export interface Review {
+// Temporary User interface for Reviews
+export interface CReviewUser {
+  name: string;
+  profileImage?: string;
+};
+
+
+export interface CReview {
   _id?: string;
-  rating: number; 
-  comment: string; 
-  user?: {
-    name?: string;
-    profileImage?: string;
-  };
+  rating: number;
+  comment: string;
+  user?: CReviewUser;
   text?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
-interface TestimonialsSectionProps {
+export interface CTestimonialsSectionProps {
   reviews: Review[];
   fallbackCourses: any[];
 }
 
-interface LoadingBarLoaderProps {
+export interface CLoadingBarLoaderProps {
   isLoading?: boolean;
   color?: string;
   className?: string;
 }
 
-interface StarRatingProps {
+export interface CStarRatingProps {
   rating: number;
   maxStars?: number;
 }
 
 // Footer.tsx
-interface FooterProps {
+export interface CFooterProps {
   className?: string;
 }
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface CButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "outline" | "filled";
 }
 
 //Homepage
-interface UserLocation {
+export interface CUserLocation {
   country_name: string;
   city?: string;
   [key: string]: any;
 }
 
-interface OtpSenderProps {
+export interface COtpSenderProps {
   phoneNumber: string;
   setPhoneNumber: (number: string) => void;
   onOtpSent: () => void;
 }
-interface EmailOtpVerifierProps {
+export interface CEmailOtpVerifierProps {
   email: string;
 
   phoneNumber: string;
@@ -313,37 +335,38 @@ interface EmailOtpVerifierProps {
   onChangeNumber: () => void;
   onChangeEmail: () => void;
 }
-interface EmailOtpSenderProps {
+export interface CEmailOtpSenderProps {
   email: string;
   onOtpSent: () => void;
 }
 
-interface SendOtpResponse {
+export interface CSendOtpResponse {
   message: string;
-  otp?: string; 
-  
+  otp?: string;
+
 }
-interface VerifyOtpResponse {
+export interface CVerifyOtpResponse {
   message: string;
   // add other fields your API returns if needed
 }
-interface ResendOtpResponse {
+export interface CResendOtpResponse {
   otp: string;
   message: string;
   // add other fields your API returns if needed
 }
 
 
-interface ProfileImageUploadProps {
+export interface CProfileImageUploadProps {
   setValue?: (field: string, value: any) => void;
   trigger?: (field: string) => void;
+  control?: any;
 }
 
-interface CourseRatingProps {
+export interface CCourseRatingProps {
   courseId: string;
   userRating?: number;
 }
-interface CreateCouponResponse {
+export interface CCreateCouponResponse {
   code: string;
   discount: number | string;
   expiresAt: string;
@@ -354,94 +377,122 @@ interface CreateCouponResponse {
 
 }
 
-interface Coupon {
+export interface CCoupon {
   _id: string;
   code: string;
   discount: number | string;
-  expiresAt: string | Date  | number;
+  expiresAt: string | Date | number;
   usageLimit: number | string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
 
 
-interface UpdateCouponResponse {
+export interface CUpdateCouponResponse {
   updatedCoupon: Coupon;
 }
-interface DeleteCouponResponse {
+export interface CDeleteCouponResponse {
   message: string;
 }
-interface fetchCouponsProps {
+export interface CfetchCouponsProps {
   coupons: Coupon[];
 }
 
-interface fetchCouponsResponse {
- coupons: Coupon[];
+export interface CfetchCouponsResponse {
+  coupons: Coupon[];
   total: number;
 }
 
-interface AuthStore {
-  authUser: AuthUser | null;
+export interface CAuthStore {
+  authUser: CAuthUser | null;
   userLoggedInitialized: boolean;
   hasInitialized: boolean;
   isAuthLoading: boolean;
-  
-  setAuthUser: (authUser: AuthUser | null) => void;
+
+  setAuthUser: (authUser: CAuthUser | null) => void;
   clearAuthUser: () => void;
   setAuthLoading: (loading: boolean) => void;
   setHasInitialized: (value: boolean) => void;
   setUserLoggedInitialized: (value: boolean) => void;
   fetchUser: () => Promise<void>;
 }
-export interface CartItem {
-  productId: string;
-  quantity: number;
-  price: number;
-  name?: string;
-  image?: string;
-}
-interface CartStore {
+
+export interface CCartStore {
   cart: Record<string, CartItem>; // key can be productId
   fetchCart: () => Promise<Record<string, CartItem> | void>;
 }
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+
+export interface CCart {
+  _id?: string;
+  user?: CAuthUser | string;
+  courses: (Course | string)[];
+  subTotal: number;
+  discount: number;
+  tax: number;
+  total: number;
+  createdAt?: string;
+  updatedAt?: string;
+  coupon?: Coupon | null;
+}
+export interface CChatMessage {
+  role: 'user' | 'instructor' | 'system';
   content: string;
 }
 
-interface ChatStore {
-  chat: ChatMessage[];
+export interface CChatStore {
+  chat: CChatMessage[];
   setChat: (chat: ChatMessage[]) => void;
   addMessage?: (message: ChatMessage) => void;
   clearChat?: () => void;
 }
-interface CourseStore {
+export interface CCourseStore {
   courses: Course[];
   fetchCourses: () => Promise<Course[]>;
-  setCourses?: (courses: Course[]) => void ; 
+  setCourses?: (courses: Course[]) => void;
 
 }
-declare global {
-  var otpStore: Record<string, string>;
-}
 
-type Topic = {
-  topic: string;
+
+export interface CTopic {
+  _id?: string;
+  name: string;
+  slug: string;
   description: string;
-  
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+
 };
-type Faq = {
+export interface CFaq {
   question: string;
   answer: string;
-};
+}
 
-type Lesson = {
+export interface CLesson {
+  _id?: string;
+  courseId?: string;
   name: string;
+  videoUrl: string;
+  sectionId?: string;
   description: string;
-  video: string;
-  duration: string; 
+  durationInSeconds: number;
+  isPreview: boolean;
+  isPreviewVideo?: string;
+  order: number;
+  createdAt?: string;
+  updatedAt?: string;
+  order: number;
+  status?: 'completed' | 'incomplete';
 };
 
+export interface CSections {
+  _id?: string,
+  title: string;
+  description: string;
+  order: number;
+  createdAt: string;
+  updatedAt:string
+}
 
 export interface PaymentsResponse {
   payments: Payment[];
@@ -454,14 +505,85 @@ export interface EnrolledStudent {
   enrolledAt: string;
 }
 
-interface EnrolledStudent {
+export interface CEnrolledStudent {
   _id: string;
   name?: string;
   email?: string;
   role?: string;
+  profileImage?: string;
   phoneNumber?: string;
   instructor?: {
     _id: string;
     name: string;
   };
+  enrolledAt: string;
+}
+
+// Razorpay Interfaces
+export interface CRazorpayPaymentResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export interface CRazorpayVerifyRequest {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+  courseId?: string;
+  chatId?: string;
+  userId: string;
+  sender?: any;
+  receiver?: any;
+}
+
+export interface CRazorpayCreateOrderRequest {
+  courseId?: string;
+  chatId?: string;
+  userId: string;
+  amount: number | string;
+  messageLimit?: string;
+}
+
+export interface CRazorpayOrderResponse {
+  razorpayOrderId: string;
+  razorpayChatId?: string;
+  success: boolean;
+  message?: string;
+}
+
+export interface CRazorpayVerifyResponse {
+  success: boolean;
+  message: string;
+  paymentId?: string;
+}
+
+export interface CorderItem {
+  course: ICourse | string;
+
+}
+
+export interface CpaymentResultS {
+  id?: string;
+  status?: string;
+  update_time?: string;
+  email_address?: string;
+}
+export interface COrder {
+  _id?: string;
+  user: CAuthUser | string;
+  orderItems: CorderItem[];
+  paymentMethod: string;
+  razorpayOrderId: string;
+  paymentResult: CpaymentResultS;
+  totalPrice?: number;
+  isPaid?: boolean;
+  email_address?: string;
+  status?: string;
+  paidAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export interface CFeatureSection {
+  icon: LucideIcon, title: string, description: string, color: string
 }

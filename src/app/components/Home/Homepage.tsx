@@ -40,21 +40,25 @@ import { Separator } from "@/components/ui/separator"
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useSession } from "next-auth/react";
-import { Course, Review, UserLocation } from "@/types/client";
+import { CCategory, CCourse, CReview, CUserLocation } from "@/types/client";
 import { formatRelativeDate } from "@/utils/date";
 
 
-export default function HomePage() {
-  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+export interface HomeProps {
+  initialCourses: CCourse[];
+  fetchedReviews: CReview[];
+}
+export default function HomePage({ initialCourses, fetchedReviews }: HomeProps) {
+  const [userLocation, setUserLocation] = useState<CUserLocation | null>(null);
   const authUser = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const [isLoadingPage, setIsLoadingPage] = useState<boolean>(false);
   const { fetchCourses, courses, setCourses } = useCourseStore();
   // const courses = useCourseStore((state) => state.courses);
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [allCourses, setAllCourses] = useState<CCourse[]>(initialCourses || []);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [randomReviews, setRandomReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<CReview[]>([]);
+  const [randomReviews, setRandomReviews] = useState<CReview[]>([]);
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -88,11 +92,11 @@ export default function HomePage() {
   }
 
   //Filtered Categories //
-  const uniqueCategories = useMemo(() => {
+  const uniqueCategories = useMemo<string[]>(() => {
     if (!courses || courses.length === 0) return [];
 
-    const categoriesSet = new Set(
-      courses.map((course) => course?.category?.name).filter(Boolean)
+    const categoriesSet = new Set<string>(
+      courses.map((course: CCourse) => course?.category?.name).filter(Boolean)
     );
 
     return Array.from(categoriesSet);
@@ -103,7 +107,7 @@ export default function HomePage() {
   const subCategories = useMemo(() => {
     const map: Record<string, Set<string>> = {};
 
-    courses.forEach((course) => {
+    courses.forEach((course: CCourse) => {
       const mainCategory = course?.category?.name;
       const subCategories = course?.category?.subCategories;
 
@@ -115,8 +119,8 @@ export default function HomePage() {
         // Ensure subCategories is a comma-separated string, then split and trim
         subCategories
 
-          .map((sub) => sub.trim())
-          .forEach((sub) => {
+          .map((sub: string) => sub.trim())
+          .forEach((sub: string) => {
             if (sub) map[mainCategory].add(sub);
           });
       }
@@ -131,8 +135,8 @@ export default function HomePage() {
     return result;
   }, [courses]);
   // Filter the course on behalf of the selected categories //
-  function getCourses(category: string, subCategories: string): Course[] {
-    const categoryReleatedCourses = courses.filter(course =>
+  function getCourses(category: string, subCategories: string): CCourse[] {
+    const categoryReleatedCourses = courses.filter((course: CCourse) =>
       course?.category?.name === category && course?.category?.subCategories?.includes(subCategories)
     );
     // console.log("This is the category related courses", categoryReleatedCourses);
@@ -140,25 +144,25 @@ export default function HomePage() {
   }
 
   //Fetch user geographical location to show popular categories
-  const fetchUserLocation = useCallback(async () => {
+  const fetchUserLocation = useCallback(async (): Promise<void> => {
     try {
       const response = await axios.get("https://ipapi.co/json/");
       const data = response.data;
       // console.log("User location:", data);
       // console.log("This is the user location", userLocation);
       setUserLocation(data); // contains fields like country, city, etc.
-    } catch (error) {
+    } catch (error: any) {
       // console.error("Error fetching location:", error);
     }
   }, [authUser]);
 
-  const getAllCourses = useCallback(async () => {
+  const getAllCourses = useCallback(async (): Promise<void> => {
     setIsLoadingPage(true);
     try {
       const allCourses = await fetchCourses();
       setAllCourses(allCourses);
       setCourses?.(allCourses);
-    } catch (error) {
+    } catch (error: any) {
       // console.error("Error fetching courses:", error);
 
     } finally {
@@ -173,15 +177,15 @@ export default function HomePage() {
     return shuffled.slice(0, randomCourseLength);
   }
     , [courses])
-  const randomCategories = useMemo(() => {
-    if (!courses || courses.length === 0) return [];
-    const randomCourseLength = Math.floor(Math.random() * 12) + 1;
-    const shuffled = [...uniqueCategories].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, randomCourseLength);
-  }, [courses])
+  // const randomCategories = useMemo(() => {
+  //   if (!courses || courses.length === 0) return [];
+  //   const randomCourseLength = Math.floor(Math.random() * 12) + 1;
+  //   const shuffled = [...uniqueCategories].sort(() => 0.5 - Math.random());
+  //   return shuffled.slice(0, randomCourseLength);
+  // }, [courses])
 
 
-  const fetchReviews = useCallback(async () => {
+  const fetchReviews = useCallback(async (): Promise<void> => {
     try {
       const response = await axios('/reviews/reviews.json')
       const reviewsData = response.data;
@@ -190,7 +194,7 @@ export default function HomePage() {
       } else {
         setReviews([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching reviews:', error);
       setReviews([]);
     }
@@ -247,9 +251,9 @@ export default function HomePage() {
         </div>
         <div className="w-4/5 max-w-4/5 flex items-center justify-center ">
           <div className="flex flex-col items-center justify-center w-full ">
-            {isLoadingPage ? (<Skeleton className="w-full h-[400px] rounded-md" />) : (<Carousel opts="" plugins={[]} orientation="" setApi="" className="">
+            {isLoadingPage ? (<Skeleton className="w-full h-[400px] rounded-md" />) : (<Carousel plugins={[]} className="">
               <CarouselContent className={"w-full"}>
-                {courses.length === 0 ? <Skeleton className="w-[1304px] h-[400px]"></Skeleton> : courses.map((course) => (
+                {courses.length === 0 ? <Skeleton className="w-[1304px] h-[400px]"></Skeleton> : courses.map((course: CCourse) => (
                   <CarouselItem className="" key={course._id}>
                     <div className="relative">
                       <source srcSet="https://img-c.udemycdn.com/notices/web_carousel_slide/image_responsive/e69a9ca9-bb56-4fda-954a-5ccbec2ac33e.png" width="1304" height="400" media="(max-width: 43.75rem)"></source>
@@ -271,7 +275,7 @@ export default function HomePage() {
               <p className="text-gray-600">Get the skills and real-world experienced employerswant with Career Accelerators.</p>
             </div>
               <Carousel
-                setApi=""
+
                 opts={{
                   align: "start",
                   loop: true,
@@ -287,7 +291,7 @@ export default function HomePage() {
                 className="w-full max-w-full"
               >
                 <CarouselContent className="w-full -ml-1">
-                  {(courses || []).map((course) => (
+                  {(courses || []).map((course: CCourse) => (
                     <CarouselItem key={course?.title} className="pl-1 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                       <div className="p-1">
                         <Link href={`/courses/${course._id}`} className="w-full h-full">
@@ -329,117 +333,117 @@ export default function HomePage() {
                 {/* <CarouselPrevious className={"ml-3"} /> */}
                 <CarouselNext className="" />
               </Carousel>
-              <Button size="" variant="" className="rounded-none mt-4 mx-3" onClick={() => { router.push('courses') }}>All Career Accelerators</Button></>)}
+              <Button size="default" variant="default" className="rounded-none mt-4 mx-3" onClick={() => { router.push('courses') }}>All Career Accelerators</Button></>)}
           </div>
         </div>
 
         {/* skill section */}
-        <div className=" w-full flex items-center justify-center gap-4 bg-[#F6F7F9] dark:bg-black ">
-          <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-[550px] p-4 gap-8">
-            {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (<><div className="mb-4 flex flex-col gap-2">
+        {isLoadingPage ? (<Skeleton className="w-[700px] h-[550px] rounded-md" />) : (<div className=" w-full flex items-center justify-center gap-4 bg-[#F6F7F9] dark:bg-black ">
+          {isLoadingPage ? (<Skeleton className="min-w-[500px] h-[550px] rounded-md" />) : (<div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-[550px] p-4 gap-8">
+            <div className="mb-4 flex flex-col gap-2">
               <h2 className="text-3xl font-bold ">All the skills you need in one place</h2>
               <p className="text-gray-600">Form critical skills to technical topics,Brainnest supports you every step of the way</p>
             </div>
-              <div className="flex w-full h-[500px] ">
-                {uniqueCategories.length > 0 && (
-                  <Tabs defaultValue={uniqueCategories[0]} className={"w-full h-full"}>
-                    <Carousel opts="" setApi="" plugins={[]} className="w-full ">
-                      <CarouselContent className="flex w-full px-2 border-b-2 border-b-gray-300 dark:border-b-gray-500   z-0">
-                        {uniqueCategories.map((category) => (
-                          <CarouselItem key={category} className="flex-none w-auto px-2 -mb-[2px] z-50 relative">
-                            <TabsList className={"m-0 border-0 shadow-none ring-0 bg-transparent p-0 w-auto"}>
-                              <TabsTrigger value={category} className="capitalize w-full h-full border-r-0 border-t-0 border-l-0 border-b-2 rounded -none shadow-none ring-0 bg-transparent  p-0 pl-0 dark:data-[state=active]:border-b-gray-300 data-[state=active]:border-b-black data-[state=active]:shadow-none data-[state=active]:ring-0 data-[state=active]:!bg-transparent data-[state=active]:p-0 data-[state=active]:rounded-none ">{category}</TabsTrigger>
-                            </TabsList>
-                          </CarouselItem>
-                        ))}
+            <div className="flex w-full h-[500px] ">
+              {uniqueCategories.length > 0 && (
+                <Tabs defaultValue={uniqueCategories[0]} className={"w-full h-full"}>
+                  <Carousel plugins={[]} className="w-full ">
+                    <CarouselContent className="flex w-full px-2 border-b-2 border-b-gray-300 dark:border-b-gray-500   z-0">
+                      {uniqueCategories.map((category:string) => (
+                        <CarouselItem key={category} className="flex-none w-auto px-2 -mb-[2px] z-50 relative">
+                          <TabsList className={"m-0 border-0 shadow-none ring-0 bg-transparent p-0 w-auto"}>
+                            <TabsTrigger value={category} className="capitalize w-full h-full border-r-0 border-t-0 border-l-0 border-b-2 rounded -none shadow-none ring-0 bg-transparent  p-0 pl-0 dark:data-[state=active]:border-b-gray-300 data-[state=active]:border-b-black data-[state=active]:shadow-none data-[state=active]:ring-0 data-[state=active]:!bg-transparent data-[state=active]:p-0 data-[state=active]:rounded-none ">{category}</TabsTrigger>
+                          </TabsList>
+                        </CarouselItem>
+                      ))}
 
-                      </CarouselContent>
+                    </CarouselContent>
 
-                      <CarouselNext className={"-ml-4"} />
-                    </Carousel>
+                    <CarouselNext className={"-ml-4"} />
+                  </Carousel>
 
 
-                    {/* Tabs Content */}
-                    {uniqueCategories.map((category) => (
-                      <TabsContent key={category} value={category} className={"bg-transparent py-4 px-2 pt-8"}>
-                        {/* Nested Tabs for subcategories */}
-                        {category && subCategories[category]?.length > 0 && <Tabs defaultValue={subCategories[category][0] || ""} className={"w-full "}>
-                          <TabsList className="flex w-full border-0 shadow-none ring-0 bg-transparent p-0 mr-auto">
-                            <Carousel opts="" setApi="" plugins={[]} className={"w-full px-2"}>
-                              <CarouselContent className="" >
-                                {(subCategories[category] || []).map((sub) => (
-                                  <CarouselItem key={sub} className={"px-4 "}>
-                                    <TabsTrigger value={sub} className={"border-0 shadow-none ring-0 bg-transparent px-4 py-4 rounded-full data-[state=active]:!bg-[#F6F7F9] dark:bg-black dark:data-[state=active]:!bg-white dark:data-[state=active]:!border-white dark:data-[state=active]:!border-1  dark:text-black dark:data-[state=active]:!text-black "}>{sub}</TabsTrigger>
+                  {/* Tabs Content */}
+                  {uniqueCategories.map((category: string) => (
+                    <TabsContent key={category} value={category} className={"bg-transparent py-4 px-2 pt-8"}>
+                      {/* Nested Tabs for subcategories */}
+                      {category && subCategories[category]?.length > 0 && <Tabs defaultValue={subCategories[category][0] || ""} className={"w-full "}>
+                        <TabsList className="flex w-full border-0 shadow-none ring-0 bg-transparent p-0 mr-auto">
+                          <Carousel   className={"w-full px-2"}>
+                            <CarouselContent className="" >
+                              {(subCategories[category] || []).map((sub) => (
+                                <CarouselItem key={sub} className={"px-4 "}>
+                                  <TabsTrigger value={sub} className={"border-0 shadow-none ring-0 bg-transparent px-4 py-4 rounded-full data-[state=active]:!bg-[#F6F7F9] dark:bg-black dark:data-[state=active]:!bg-white dark:data-[state=active]:!border-white dark:data-[state=active]:!border-1  dark:text-black dark:data-[state=active]:!text-black "}>{sub}</TabsTrigger>
+                                </CarouselItem>
+                              ))}
+
+                            </CarouselContent>
+
+                            <CarouselNext className={"ml-4"} />
+                          </Carousel>
+                        </TabsList>
+
+                        {/* Subcategory Content */}
+                        {(subCategories[category] || []).map((sub: string) => (
+                          <TabsContent key={sub} value={sub} className={"flex justify-center "}>
+                            <Carousel  className="mt-4 w-full">
+                              <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
+                                {getCourses(category, sub).map((course) => (
+                                  <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
+                                    <Link href={`/courses/${course._id}`} className="inline-block">
+                                      <Card className="w-[300px] h-[350px] relative">
+                                        <CardContent className="h-3/5 w-full flex justify-center relative">
+                                          {course?.coverImage ? (
+                                            <div className="relative w-full h-full p-4 rounded-xl overflow-hidden">
+                                              <Image
+                                                src={course.coverImage}
+                                                alt={course.title}
+                                                fill
+                                                className="object-cover"
+                                              />
+                                            </div>
+                                          ) : (
+                                            <Skeleton className="w-full h-[200px]" />
+                                          )}
+                                        </CardContent>
+                                        <CardFooter className="flex-1">
+                                          <div className="w-full flex flex-col flex-1 gap-2">
+                                            <p className="capitalize text-xl font-semibold break-words leading-snug">
+                                              {course.title}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">{course?.instructor?.name}</p>
+                                            <div className="flex gap-2">
+                                              <Badge
+                                                className=""
+                                                variant="outline">{course?.rating ? formatRatingNumber(course.rating) : "0"}</Badge>
+                                              <Badge
+                                                className=""
+                                              
+                                                variant="outline">
+                                                {course?.duration ? convertToTotalHours(course.duration) : "0"} hours
+                                              </Badge>
+                                            </div>
+                                          </div>
+                                        </CardFooter>
+                                      </Card>
+                                    </Link>
                                   </CarouselItem>
                                 ))}
-
                               </CarouselContent>
-
+                              <CarouselPrevious className="" />
                               <CarouselNext className={"ml-4"} />
                             </Carousel>
-                          </TabsList>
+                          </TabsContent>
+                        ))}
+                      </Tabs>}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              )}
+            </div>
 
-                          {/* Subcategory Content */}
-                          {(subCategories[category] || []).map((sub) => (
-                            <TabsContent key={sub} value={sub} className={"flex justify-center "}>
-                              <Carousel opts="" setApi="" plugins={[]} className="mt-4 w-full">
-                                <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
-                                  {getCourses(category, sub).map((course) => (
-                                    <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
-                                      <Link href={`/courses/${course._id}`} className="inline-block">
-                                        <Card className="w-[300px] h-[350px] relative">
-                                          <CardContent className="h-3/5 w-full flex justify-center relative">
-                                            {course?.coverImage ? (
-                                              <div className="relative w-full h-full p-4 rounded-xl overflow-hidden">
-                                                <Image
-                                                  src={course.coverImage}
-                                                  alt={course.title}
-                                                  fill
-                                                  className="object-cover"
-                                                />
-                                              </div>
-                                            ) : (
-                                              <Skeleton className="w-full h-[200px]" />
-                                            )}
-                                          </CardContent>
-                                          <CardFooter className="flex-1">
-                                            <div className="w-full flex flex-col flex-1 gap-2">
-                                              <p className="capitalize text-xl font-semibold break-words leading-snug">
-                                                {course.title}
-                                              </p>
-                                              <p className="text-sm text-muted-foreground">{course?.instructor?.name}</p>
-                                              <div className="flex gap-2">
-                                                <Badge
-                                                  className=""
-                                                  variant="outline">{course?.rating ? formatRatingNumber(course.rating) : "0"}</Badge>
-                                                <Badge
-                                                  className=""
-                                                  size=""
-                                                  variant="outline">
-                                                  {course?.duration ? convertToTotalHours(course.duration) : "0"} hours
-                                                </Badge>
-                                              </div>
-                                            </div>
-                                          </CardFooter>
-                                        </Card>
-                                      </Link>
-                                    </CarouselItem>
-                                  ))}
-                                </CarouselContent>
-                                <CarouselPrevious className="" />
-                                <CarouselNext className={"ml-4"} />
-                              </Carousel>
-                            </TabsContent>
-                          ))}
-                        </Tabs>}
-                      </TabsContent>
-                    ))}
-                  </Tabs>
-                )}
-              </div> </>)}
-
-          </div>
-        </div>
+          </div>)}
+        </div>)}
 
 
         {/* Popular Categories */}
@@ -450,15 +454,17 @@ export default function HomePage() {
               <p className="text-gray-600">Get the skills and real-world experienced employerswant with Career Accelerators.</p>
             </div>
               <div className="grid-cols-3 flex-1">
-                <Carousel opts="" setApi="" plugins={[]} className="w-full">
+                <Carousel plugins={[]} className="w-full">
                   <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
                     {courses.length === 0 ? (
                       <CarouselItem className="w-full flex justify-center px-2 -ml-2 md:-ml-4
 pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 xl:basis-1/4  gap-4">
-                        <Skeleton className="w-full h-[200px] rounded-md  " />
-                        <Skeleton className="w-full h-[200px] rounded-md" />
-                        <Skeleton className="w-full h-[200px] rounded-md" />
-                        <Skeleton className="w-full h-[200px] rounded-md" />
+                        <Skeleton className="min-w-[200px] h-[200px] rounded-md  " />
+                        <Skeleton className="min-w-[200px] h-[200px] rounded-md" />
+                        <Skeleton className="min-w-[200px] h-[200px] rounded-md" />
+                        <Skeleton className="min-w-[200px] h-[200px] rounded-md" />
+                        <Skeleton className="min-w-[200px] h-[200px] rounded-md" />
+                        <Skeleton className="min-w-[200px] h-[200px] rounded-md" />
                       </CarouselItem>
                     ) : (
                       (uniqueCategories || []).map((category, index) => (
@@ -537,7 +543,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
               <div className="w-full ">
                 <Carousel
 
-                  setApi=""
+
                   opts={{
                     align: "start",
                     loop: true,
@@ -588,8 +594,8 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                     ₹{parseInt(String(course?.price || 0))}
                                   </p>
                                   <div className="flex gap-2">
-                                    <Badge className="" variant="outline text-xs">{course?.rating && formatRatingNumber(course.rating)}</Badge>
-                                    <Badge className="" variant="outline flex gap-2 text-xs">
+                                    <Badge className="text-xs" variant="outline">{course?.rating && formatRatingNumber(course.rating)}</Badge>
+                                    <Badge className="flex gap-2 text-xs" variant="outline">
                                       {course?.duration && convertToTotalHours(course.duration)} hours
                                     </Badge>
                                   </div>
@@ -625,7 +631,6 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   loop: true,
                   dragFree: true,
                 }}
-                  setApi=""
                   plugins={[
                     Autoplay({
                       delay: 2500,
@@ -658,7 +663,8 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
 
                                     <div className="h-full w-1/3 flex flex-col items-center justify-start">
                                       <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                        {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
+                                        {/*  */}
 
                                       </div>
 

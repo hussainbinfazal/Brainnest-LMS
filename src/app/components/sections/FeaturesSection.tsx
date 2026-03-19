@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap, Shield, Target, Award, Clock, Users } from "lucide-react";
+import { CFeatureSection } from "@/types/client";
 
 export default function FeaturesSection() {
-  const features = [
+  const features: CFeatureSection[] = [
     {
       icon: Zap,
       title: "Lightning Fast Learning",
@@ -46,7 +47,7 @@ export default function FeaturesSection() {
     <section className="py-20 bg-gray-50">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="text-center mb-16">
-          <Badge variant="" className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-200">
+          <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-200">
             Why Choose Brainnest
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -62,8 +63,8 @@ export default function FeaturesSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Card 
-              key={index} 
+            <Card
+              key={index}
               className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 shadow-md"
             >
               <CardContent className="p-8">

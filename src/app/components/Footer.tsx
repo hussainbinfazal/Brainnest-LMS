@@ -1,12 +1,12 @@
 "use client";
-import { ButtonProps } from "@/types/client";
+import { CButtonProps } from "@/types/client";
 import Link from "next/link";
 import { useState } from "react";
 import { FaGraduationCap } from "react-icons/fa6";
 import { toast } from "sonner";
 
 // Simple Button component to handle variant styles and props with types
-const Button: React.FC<ButtonProps> = ({ variant, className, ...props }) => {
+const Button: React.FC<CButtonProps> = ({ variant, className, ...props }) => {
   const variantClasses =
     variant === "outline"
       ? "border border-white text-white bg-transparent"

@@ -1,13 +1,13 @@
 "use client"
 
-import { CourseRatingProps } from '@/types/client';
+import { CCourseRatingProps } from '@/types/client';
 import { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 import { toast } from 'sonner'; // or use `alert` if you prefer
 
 
 
-const CourseRating = ({ courseId, userRating = 0 }: CourseRatingProps) => {
+const CourseRating = ({ courseId, userRating = 0 }: CCourseRatingProps) => {
   const [rating, setRating] = useState<number>(userRating);
   const [hover, setHover] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

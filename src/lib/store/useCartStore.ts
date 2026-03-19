@@ -1,9 +1,10 @@
 'use client';
 
-import { create} from "zustand";
+import { create } from "zustand";
 import axios from "axios";
 import { toast } from "sonner"
 import { CartStore } from "@/types/client";
+import { logger } from "@/utils/logger/logger";
 
 
 export const useCartStore = create<CartStore>((set) => ({
@@ -13,16 +14,15 @@ export const useCartStore = create<CartStore>((set) => ({
     fetchCart: async () => {
         try {
             const response = await axios.get("/api/cart")
-            set({ cart: response.data});
+            set({ cart: response.data });
 
-            // console.log("Response", response.data);
+            // logger.debug("Response", response.data);
             return response.data
 
         } catch (error: any) {
-            console.log(error);
+            logger.error(error);
             const errorMessage = error?.response?.data?.message || error || "Something went wrong";
             toast.error(errorMessage);
-
 
         }
     },

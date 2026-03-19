@@ -1,31 +1,27 @@
 import { ICourse } from "@/types/model";
-import mongoose ,{Schema,Model,Document,Types} from "mongoose";
+import mongoose, { Model } from "mongoose";
+import Lesson from "./lessonModel";
+import Section from "./sectionModel";
 
 
-const courseSchema: Schema<ICourse> = new mongoose.Schema({
+const courseSchema = new mongoose.Schema<ICourse>({
   title: {
     type: String,
     required: true
   },
-  topics: [
-    {
-      topic: {
-        type: String,
-        required: true
-      },
-      description: {
-        type: String,
-        required: true
-      }
-    }
-  ],
+  topic: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Topic",
+    required: true,
+    index: true
+  },
   description:
   {
     type: String,
 
   }
   ,
-  instructor: {
+  instructorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
@@ -36,81 +32,25 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
     required: true
   },
 
-  rating: {
+  averageRating: {
     type: Number,
     default: 0
   },
-  enrolledStudents: [
-    {
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-      enrolledAt: {
-        type: Date,
-        default: Date.now,
-      },
-    }
-  ],
-  lessons: [
-    {
-      name: {
-        type: String,
-        required: true
-      },
-      video: {
-        type: String,
-        required: true
-      },
-      description: {
-        type: String,
-        required: true
-      },
-      duration: {
-        type: Number,
-        required: true
-
-      },
-      createdAt: {
-        type: Date,
-        default: Date.now
-      },
-      updatedAt: {
-        type: Date,
-        default: Date.now
-      },
-      _id: {
-        type: String,
-      },
-      status: {
-        type: String,
-        enum: ["completed", "incomplete"],
-        default: "incomplete"
-      }
-
-    }
-  ],
-  reviews: [
-    {
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      _id: {
-        type: String
-      },
-      rating: Number,
-      comment: String,
-      createdAt: {
-        type: Date,
-        default: Date.now
-      },
-      updatedAt: {
-        type: Date,
-        default: Date.now
-      }
-    }
-  ],
+  totalReviews: {
+    type: Number,
+    default: 0
+  },
+  ratingDistribution: {
+    1: Number,
+    2: Number,
+    3: Number,
+    4: Number,
+    5: Number
+  },
+  totalLessons: {
+    type: Number,
+    default: 0
+  },
   coverImage: {
     type: String,
     required: true
@@ -119,7 +59,7 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
   tags: [
     {
       type: String,
-      index: true 
+      index: true
     }
   ],
   status: {
@@ -127,15 +67,11 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
     enum: ['draft', 'published'],
     default: 'draft'
   },
-  isPaid: {
-    type: Boolean,
-    default: false
-  },
   discount: {
     type: Number,
     default: 0
   },
-  duration: {
+  totalDurationInSeconds: {
     type: Number,
 
   },
@@ -148,9 +84,9 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
     enum: ['beginner', 'intermediate', 'expert'],
     default: 'beginner'
   },
-  certificate: {
-    type: Boolean,
-    default: false
+  totalEnrolledCount: {
+    type: Number,
+    default: 0
   },
   faq: [
     {
@@ -177,25 +113,47 @@ const courseSchema: Schema<ICourse> = new mongoose.Schema({
 
   },
   category: {
-    name: {
-      type: String,
-      required: true,
-      index: true 
-    },
-    subCategories: [
-      {
-        type: String,
-        required: true
-      }
-    ]
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    required: true,
+    index: true
   },
- 
+  dripType: {
+    type: String,
+    enum: ['free', 'sequential', 'drip-by-date'],
+    default: 'free'
+  }
 
 
-}, { 
+
+}, {
   timestamps: true,
-  strictPopulate: false 
+  toJSON: {
+    virtuals: true
+  },
+  toObject: {
+    virtuals: true
+  }
 });
-
+courseSchema.virtual("durationInHours").get(function (this: ICourse) {
+  return Number(((this.totalDurationInSeconds ?? 0) / 3600).toFixed(2));
+});
+courseSchema.virtual("finalPrice").get(function (this: ICourse) {
+  return Number(Math.round(this.price - (this.price * this.discount / 100)));
+});
+courseSchema.pre("findOneAndDelete", async function (next) {
+  const course = await this.model.findOne(this.getQuery);
+  if (course) {
+    await Promise.all([
+      Lesson.deleteMany({ courseId: course._id }),
+      Section.deleteMany({ courseId: course._id })
+    ]);
+  }
+  next()
+})
+courseSchema.index({ instructorId: 1, status: 1 });
+courseSchema.index({ category: 1, status: 1, price: 1 });
+courseSchema.index({ status: 1, averageRating: -1 });
+courseSchema.index({ status: 1, totalEnrolledCount: -1 });
 const Course: Model<ICourse> = mongoose.models.Course || mongoose.model<ICourse>('Course', courseSchema);
 export default Course;

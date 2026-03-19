@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import connectDB from "../config/db"; // adjust path if needed
-import Course from "../models/course/courseModel";
-import Enrollment from "../models/course/enrollmentModel";
+import connectDB from "../config/mongoDB/db"; // adjust path if needed
+import Course from "../models/Course/courseModel";
+import Enrollment from "../models/Course/enrollmentModel";
+import { logger } from "@/utils/logger/logger";
 
 async function migrateEnrollments() {
   await connectDB();
@@ -23,7 +24,7 @@ async function migrateEnrollments() {
     }
   }
 
-  console.log("Migration completed!");
+  logger.info("Migration completed!");
   process.exit();
 }
 

@@ -1,12 +1,19 @@
 
 import { IEnrollment } from "@/types/model";
-import mongoose ,{Schema,Model} from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 
-const enrollmentSchema : Schema<IEnrollment> = new mongoose.Schema({
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+const enrollmentSchema = new mongoose.Schema<IEnrollment>({
+    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
+    pricePaid: { type: Number, required: true },
     enrolledAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-const Enrollment : Model<IEnrollment> = mongoose.models.Enrollment || mongoose.model<IEnrollment>('Enrollment', enrollmentSchema);
+enrollmentSchema.index({ courseId: 1, userId: 1 }, { unique: true });
+
+// indexing for the admin queries to get the latest enrolled students for a course
+enrollmentSchema.index({ courseId: 1, enrolledAt: -1 });
+const Enrollment: Model<IEnrollment> = mongoose.models.Enrollment || mongoose.model<IEnrollment>('Enrollment', enrollmentSchema);
+ 
 export default Enrollment;

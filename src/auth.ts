@@ -2,11 +2,16 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
-import User, { IUser } from "./models/userModel";
-import { AuthUser } from "./types/client";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
-import { connectDB } from "./config/db";
+import { connectDB } from "./config/mongoDB/db";
+import { JWT } from "next-auth/jwt";
+import type { User as NextAuthUser, Account, Profile, Session } from "@auth/core/types";
+import type { AdapterUser } from "@auth/core/adapters";
+import User from "./models/User/userModel";
+import { IUser } from "./types/model";
 
+type DBUser = IUser;
+type AuthUser = NextAuthUser | AdapterUser;
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -16,7 +21,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
-      
+
     }),
 
     Credentials({
@@ -25,21 +30,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { type: "password" },
       },
       async authorize(credentials) {
-        const user = await authenticateUser({ 
-          email: credentials.email as string, 
-          password: credentials.password as string 
+        const user = await authenticateUser({
+          email: credentials.email as string,
+          password: credentials.password as string
         });
-        
+
         if (!user) return null;
-        
+
         return {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
-          phoneNumber: user.phoneNumber || "",
-          profileImage: user.profileImage || ""
-        };
+        } as any;
       },
     }),
   ],
@@ -50,44 +52,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signOut: "/",
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account }: { user: NextAuthUser | AdapterUser; account?: Account | null; profile?: Profile | null; }): Promise<boolean> {
       if (account?.provider === "github" || account?.provider === "google") {
         try {
           await connectDB();
           let existingUser = await User.findOne({ email: user.email });
-          
+
           if (!existingUser) {
             const newUser = new User({
               email: user.email,
               name: user.name,
-              role: "user",
-              profile: user.image || "",
+              role: "student",
+              profile: user.profileImage || "",
               phoneNumber: user.phoneNumber || "",
-              
+
             });
             existingUser = await newUser.save();
           }
-          
+
           // Add user data to the user object for JWT
-          user.id = existingUser._id.toString() as string;
+          user.id = existingUser?._id?.toString() as string;
           user.role = existingUser.role;
           user.phoneNumber = existingUser.phoneNumber;
           user.profileImage = existingUser.profileImage;
           user.name = existingUser.name;
           user.email = existingUser.email;
-          
 
-          
+
+
           return true;
-        } catch (error) {
+        } catch (error: any) {
           // console.error("OAuth sign in error:", error);
           return true; // Allow sign in even if DB fails
         }
       }
       return true;
     },
-    
-    async jwt({ token, user }) {
+
+    async jwt({ token, user }: { token: any; user?: NextAuthUser }): Promise<JWT> {
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -95,18 +97,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.phoneNumber = user.phoneNumber;
         token.role = user.role;
         token.profileImage = user.profileImage;
-        
+
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: JWT }) {
       session.user.id = token.id as string;
       session.user.name = token.name as string;
       session.user.email = token.email as string;
       session.user.phoneNumber = token.phoneNumber as string;
       session.user.role = token.role as string;
       session.user.profileImage = token.profileImage as string;
-      
+      session.user.cartId = token.cartId as string;
+
 
       return session;
     },

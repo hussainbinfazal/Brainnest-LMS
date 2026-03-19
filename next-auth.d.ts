@@ -14,14 +14,12 @@ declare module "next-auth" {
   }
 
   interface User extends DefaultUser {
-    phoneNumber: string;
-    role: string;
-    profileImage?: string;
+    id: string;
+    name: string;
+    email: string;
     phoneNumber?: string;
-
-
-
-     
+    role: "student" | "instructor" | "admin";
+    profileImage?: string;
   }
 }
 

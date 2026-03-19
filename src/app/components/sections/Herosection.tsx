@@ -2,15 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle, ArrowRight, Star, Users, BookOpen } from "lucide-react";
+import { PlayCircle, ArrowRight, Star, Users, BookOpen, LucideIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { L } from "@upstash/redis/zmscore-Cq_Bzgy4";
 
+export interface CStats {
+  icon: LucideIcon; label: string; value: string
+}[]
 export default function HeroSection() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const stats = [
+  const stats: CStats[] = [
     { icon: Users, label: "Active Learners", value: "10K+" },
     { icon: BookOpen, label: "Courses", value: "500+" },
     { icon: Star, label: "Rating", value: "4.9" },
@@ -26,7 +30,7 @@ export default function HeroSection() {
       <div className="relative container mx-auto px-4 py-20 lg:py-32 max-w-7xl">
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
-          <Badge variant="" className="mb-6 bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200">
+          <Badge className="mb-6 bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200">
             🚀 Join 10,000+ learners worldwide
           </Badge>
 
@@ -58,17 +62,17 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button 
-            variant=""
-              size="lg" 
+            <Button
+
+              size="lg"
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               onClick={() => router.push('/courses')}
             >
               Explore Courses
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
               className="px-8 py-4 text-lg font-semibold rounded-xl border-2 hover:bg-gray-50 transition-all duration-300"
             >
@@ -79,7 +83,7 @@ export default function HeroSection() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
-            {stats.map((stat, index) => (
+            {stats.map((stat: CStats, index: number) => (
               <div key={index} className="flex flex-col items-center space-y-2">
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
                   <stat.icon className="w-6 h-6 text-blue-600" />

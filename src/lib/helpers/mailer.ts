@@ -1,7 +1,8 @@
 import nodemailer, { SentMessageInfo } from 'nodemailer';
-import User from "@/models/userModel";
+import User from "@/models/User/userModel";
 import bcryptjs from 'bcryptjs';
-import { connectDB } from '@/config/db';
+import { connectDB } from '@/config/mongoDB/db';
+import { logger } from "@/utils/logger/logger";
 
 export type EmailType = "RESET" | "VERIFY";
 
@@ -10,7 +11,7 @@ export const sendEmail = async (email: string, emailType: EmailType = "RESET", u
         await connectDB();
 
         const hashedToken = await bcryptjs.hash(userId.toString(), 10);
-        console.log("This is the hashed token:",hashedToken);
+        logger.info({ hashedToken }, "Generated email token");
         await User.findByIdAndUpdate(userId,
             { resetPasswordToken: hashedToken, resetPasswordTokenExpires: Date.now() + 3600000 })
 

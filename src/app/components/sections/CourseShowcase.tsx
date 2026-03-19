@@ -9,7 +9,7 @@ import { Star, Clock, Users, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CourseShowcaseProps } from "@/types/client";
+import { CCarouselOptions, CCourseShowcaseProps } from "@/types/client";
 
 
 
@@ -21,7 +21,7 @@ export default function CourseShowcase({
   showViewAll = true,
   formatRatingNumber,
   convertToTotalHours 
-}: CourseShowcaseProps) {
+}: CCourseShowcaseProps) {
   const router = useRouter();
 
   if (isLoading) {
@@ -44,8 +44,7 @@ export default function CourseShowcase({
           </div>
           {showViewAll && (
             <Button 
-            size=""
-            vatiant=""
+            
               variant="outline" 
               className="hidden md:flex items-center hover:bg-blue-50 hover:border-blue-200 transition-colors"
               onClick={() => router.push('/courses')}
@@ -57,11 +56,7 @@ export default function CourseShowcase({
         </div>
 
         <Carousel
-          opts={{
-            align: "start",
-            loop: false,
-            dragFree: true,
-          }}
+          opts={CCarouselOptions}
           plugins={[]}
           setApi={() => {}}
 
@@ -94,7 +89,7 @@ export default function CourseShowcase({
                             </div>
                           )}
                           <div className="absolute top-4 left-4">
-                            <Badge variant="" className="bg-white/90 text-gray-800 hover:bg-white">
+                            <Badge  className="bg-white/90 text-gray-800 hover:bg-white">
                               {course?.category?.name}
                             </Badge>
                           </div>
@@ -131,7 +126,7 @@ export default function CourseShowcase({
                             <div className="text-2xl font-bold text-gray-900">
                               ₹{course?.price ? parseInt(course.price.toString()) : "Free"}
                             </div>
-                            <Button size="sm" variant="" className="bg-blue-600 hover:bg-blue-700 rounded-lg">
+                            <Button size="sm"  className="bg-blue-600 hover:bg-blue-700 rounded-lg">
                               Enroll Now
                             </Button>
                           </div>
@@ -150,8 +145,7 @@ export default function CourseShowcase({
         {showViewAll && (
           <div className="text-center mt-8">
             <Button
-              size=""
-              variant="" 
+              
               className="md:hidden bg-blue-600 hover:bg-blue-700"
               onClick={() => router.push('/courses')}
             >
