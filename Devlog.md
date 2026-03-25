@@ -169,10 +169,38 @@ Pending:
 ## March 19
 Changes
 --Refractored like course Route.
+--Refractored get user progress  Route.
 
 
 Completed
-Refractored the like course route.
+--Refractored the like course route.
+--Refractored get user progress  Route.
+
+Pending:
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+
+
+
+-chat
+-message
+-cart routes
+
+## March 19
+Changes
+
+--Refractored get and create user progress  Route.
+
+
 
 
 Pending:
@@ -186,7 +214,62 @@ Pending:
 -rate limiting and helpful score calculation
 -Calculate spam score and userBehaviour
 - calculate helpful reviews on with score
--
+- update progress and delete progress
+
+
+
+-chat
+-message
+-cart routes
+## March 22
+Changes
+
+--Refractored post user progress  Route.
+-Refractored & added background worker with service and the queue for progress management in the background
+
+
+
+
+Pending:
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+
+
+
+-chat
+-message
+-cart routes
+## March 24
+Changes
+
+--Refractored post user progress  Route.
+-Refractored & added background worker with service and the queue for progress management in the background
+
+Completed
+-Refractored & added background worker with service and the queue for progress management in the background
+
+
+Pending:
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
 
 
 

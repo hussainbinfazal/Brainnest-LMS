@@ -47,7 +47,7 @@ const progressSchema = new mongoose.Schema<IProgress>(
       default: Date.now,
     },
 
-  },
+  }, 
   { timestamps: true }
 );
 

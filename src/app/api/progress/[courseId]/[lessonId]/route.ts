@@ -1,5 +1,6 @@
 import { connectDB } from "@/config/mongoDB/db";
 import Progress from "@/models/Course/progressModel";
+import { generateProgress, updateProgress } from "@/services/progressService";
 import { IProgress } from "@/types/model";
 import { ISessionUser } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
     await connectDB();
 
     try {
-        const { courseId, lessonId } = context.params;
+        const { courseId } = context.params;
+
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || !user.id) {
             logger.info("Unauthorized access");
@@ -75,17 +77,18 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
             logger.info("Invalid user id");
             return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
         }
-        if (!courseId || !lessonId) {
+        if (!courseId) {
             logger.info("Course and lesson IDs are required");
             return NextResponse.json({ message: "Course and lesson IDs are required" }, { status: 400 });
         }
-        if (!mongoose.Types.ObjectId.isValid(courseId) || !mongoose.Types.ObjectId.isValid(lessonId)) {
+        if (!mongoose.Types.ObjectId.isValid(courseId)) {
+            logger.info("Invalid course or Lesson ID")
             return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
         };
-        let progress: IProgress | null = await Progress.findOne({ userId, courseId }).populate("completedLessons");
-        if (!progress) { return NextResponse.json({ message: "Progress not found" }, { status: 400 }); }
-
-        return NextResponse.json({ message: "Lesson marked as completed", progress });
+        
+        await generateProgress(userId, courseId);
+        logger.info("Progress of the Lesson created in worker");
+        return NextResponse.json({ message: "Progress updated" }, { status: 200 });
     } catch (error: any) {
         console.error("Error marking lesson complete:", error);
         const message = error instanceof Error ? error.message : 'Unknown error';
@@ -97,18 +100,14 @@ export async function PUT(request: NextRequest, context: { params: { courseId: s
 
     try {
         const { courseId, lessonId } = context.params;
+        const { progressValue } = await request.json();
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user) { return NextResponse.json({ message: "Unauthorized" }, { status: 401 }) }
         const userId: string = user.id;
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) { return NextResponse.json({ message: "Invalid user id" }, { status: 400 }) }
-        if (!courseId || !lessonId) {
-            return NextResponse.json({ message: "Course and lesson IDs are required" }, { status: 400 });
-        }
-
-        let progress: IProgress | null = await Progress.findOne({ userId, courseId }).populate("completedLessons");
-        if (!progress) { return NextResponse.json({ message: "Progress not found" }, { status: 400 }); }
-
-        return NextResponse.json({ message: "Lesson marked as completed", progress });
+        await updateProgress(userId, courseId, lessonId, progressValue);
+        logger.info("Progress of the Lesson updated in worker");
+        return NextResponse.json({ message: "Progress updated" }, { status: 200 });
     } catch (error: any) {
         console.error("Error marking lesson complete:", error);
         const message = error instanceof Error ? error.message : 'Unknown error';
