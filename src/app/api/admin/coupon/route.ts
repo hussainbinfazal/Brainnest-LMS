@@ -7,16 +7,20 @@ import { getSession } from "next-auth/react";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger";
+import { CustomNextRequest } from "../../../../types/server";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB();
     try {
 
         const user: ISessionUser | null = await getDataFromToken(request);
-        const userId = user?.id || "";
+        if (!user) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+
+        const userId: string = user?.id;
         const { code, discountValue, discountType, expiresAt, maxUses, } = await request.json();
         const existingCoupon = await Coupon.findOne({ code: code });
-        if (!userId) return NextResponse.json({ message: "User id is required" }, { status: 400 });
+        if (!userId || !validateMongooseId({userId})) return NextResponse.json({ message: "User id is required" }, { status: 400 });
         if (existingCoupon) {
             return NextResponse.json({ message: "This Coupon is already exists" }, { status: 400 });
         }
@@ -33,7 +37,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB();
     try {
         const coupons: ICoupon[] | null = await Coupon.find().populate("createdBy", "name email");
@@ -47,14 +51,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 
-export async function DELETE(request: NextRequest): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest): Promise<NextResponse> {
     try {
         await connectDB();
         const user: ISessionUser | null = await getDataFromToken(request);
-        const userId: string | null = user?.id || "";
+        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const userId: string = user?.id;
         const { couponId, } = await request.json();
-        if (!couponId) return NextResponse.json({ message: "Coupon id is required" }, { status: 400 });
-        if (!userId) return NextResponse.json({ message: "User id is required" }, { status: 400 });
+        if (!couponId || !validateMongooseId(couponId)) return NextResponse.json({ message: "Coupon id is required" }, { status: 400 });
+
         const coupon: ICoupon | null = await Coupon.findByIdAndDelete(couponId);
         logger.info("Coupon deleted successfully");
         return NextResponse.json({ message: "Coupon deleted successfully", coupon }, { status: 200 });
@@ -67,7 +72,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
     }
 }
 
-export async function PUT(request: NextRequest): Promise<NextResponse> {
+export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB();
     try {
         const { couponId, editForm } = await request.json();

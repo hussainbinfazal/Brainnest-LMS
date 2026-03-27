@@ -4,12 +4,13 @@ import User from "@/models/User/userModel";
 import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger";
 import mongoose from "mongoose";
 import Review from "@/models/Course/reviewModel";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
-export async function POST(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -17,12 +18,11 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
         const { courseId } = context.params;
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || !user.id) {
-            logger.error("User is not logged in");
+            logger.error("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "You are not logged in" }, { status: 401 })
         };
         const userId: string = user.id;
-        if (!mongoose.Types.ObjectId.isValid(courseId)) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
-        if (!mongoose.Types.ObjectId.isValid(userId)) return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
+        if (!validateMongooseId({ userId, courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
         const { rating, comment } = await request.json();
         if (!rating || !comment) {
             logger.warn("rating & comment are required", { rating, comment });
@@ -41,11 +41,11 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
         //     await session.abortTransaction();
         //     return NextResponse.json({ message: "Too many reviews" }, { status: 400 });
         // } 
-        if(comment.length < 10){
+        if (comment.length < 10) {
             await session.abortTransaction();
             return NextResponse.json({ message: "Comment must be at least 10 characters" }, { status: 400 });
         }
-        if(comment.length > 2000){
+        if (comment.length > 2000) {
             await session.abortTransaction();
             return NextResponse.json({ message: "Comment must be less than 2000 characters" }, { status: 400 });
         }
@@ -97,34 +97,30 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
 }
 
 
-export async function PUT(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const authenticatedUser: ISessionUser | null = await getDataFromToken(request);
         if (!authenticatedUser || !authenticatedUser.id) {
-            logger.info("User is not logged in");
+            logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         const userId: string = authenticatedUser.id;
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            logger.error("Invalid user id");
-            return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
-        };
         const { courseId } = context.params;
         if (!courseId) {
             logger.info("Course id is required");
             return NextResponse.json({ message: "Course id is required" }, { status: 400 })
         };
-        if (!mongoose.Types.ObjectId.isValid(courseId)) {
-            logger.error("Invalid course id");
+        if (!validateMongooseId({ userId, courseId })) {
+            logger.info("Invalid course & userId", { userId, courseId });
             return NextResponse.json({ message: "Invalid course id" }, { status: 400 })
         };
         const { reviewId, rating, comment } = await request.json();
 
         if (
-            !mongoose.Types.ObjectId.isValid(reviewId) ||
+            !validateMongooseId({ reviewId }) ||
             !rating ||
             !comment ||
             rating < 1 ||
@@ -179,7 +175,7 @@ export async function PUT(request: NextRequest, context: { params: { courseId: s
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.info("Error in updating review", { message });
         return NextResponse.json({ message: `Error in Updating Review : ${message}` }, { status: 500 });
-    }finally{
-        session.endSession(); 
+    } finally {
+        session.endSession();
     }
 }

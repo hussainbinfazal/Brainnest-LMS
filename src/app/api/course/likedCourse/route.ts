@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import UserCourse from "@/models/User/userCourse";
 import mongoose from "mongoose";
 import { logger } from "@/utils/logger/logger";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB();
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || !user.id) {
-            logger.info("User not authenticated");
+            logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "unauthorized" }, { status: 401 });
         }
-        const userId: string | null = user?.id ?? "";
+        if (!validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
+        const userId: string | null = user?.id
         if (mongoose.Types.ObjectId.isValid(userId)) {
             return NextResponse.json({
                 message: "Invalid user id"
@@ -99,14 +101,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         ])
 
         if (result.length === 0) {
-            return NextResponse.json({ message: "No liked courses found" },{ status: 200 });
+            return NextResponse.json({ message: "No liked courses found" }, { status: 200 });
         }
-        
-        return NextResponse.json({ message: "Liked courses fetched successfully", userLikedCourses:result },{status:200});
+
+        return NextResponse.json({ message: "Liked courses fetched successfully", userLikedCourses: result }, { status: 200 });
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in getting liked courses", { error: message });
-        return NextResponse.json({ message: `Error Fetching courses :${message}` },{ status: 500 });
+        return NextResponse.json({ message: `Error Fetching courses :${message}` }, { status: 500 });
 
     }
 };

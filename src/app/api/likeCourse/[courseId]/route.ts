@@ -4,13 +4,14 @@ import { connectDB } from "@/config/mongoDB/db";
 import Course from "@/models/Course/courseModel";
 import User from "@/models/User/userModel";
 import UserCourse from "@/models/User/userCourse";
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { IUser } from "@/types/model";
 import mongoose from "mongoose";
 import { logger } from "@/utils/logger/logger";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 
-export async function POST(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
 
     try {
@@ -18,20 +19,21 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
         const { courseId } = context.params;
 
         if (!user) {
-            logger.info("Unauthorized access");
+            logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
 
         const userId: string = user.id;
 
-        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        if (!userId || !validateMongooseId({ userId })) {
             logger.info("Invalid user id");
             return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
         }
 
-        if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+        if (!courseId || !validateMongooseId({ courseId })) {
             logger.info("Invalid course id");
-            return NextResponse.json({ message: "Invalid user id" }, { status: 400 }) }
+            return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
+        }
         const [userDB, courseDB, userCourseDB] = await Promise.all([
             User.exists({ _id: userId }),
             Course.exists({ _id: courseId }).select("title").lean(),

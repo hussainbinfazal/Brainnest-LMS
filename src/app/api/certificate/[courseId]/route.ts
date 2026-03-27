@@ -5,19 +5,24 @@ import Course from "@/models/Course/courseModel";
 import User from "@/models/User/userModel";
 import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { ISessionUser } from "../../../../types/server";
+import { CustomNextRequest, ISessionUser } from "../../../../types/server";
 import { ICertificate, ICourse, IProgress, IUser } from "@/types/model";
 import { logger } from "@/utils/logger/logger";
 import Progress from "@/models/Course/progressModel";
 import Certificate from "@/models/Course/certificateModel";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
-export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse | Response> {
+export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse | Response> {
   try {
     await connectDB();
     const user: ISessionUser | null = await getDataFromToken(request);
     const { courseId } = context.params;
-
-    const userId: string = !user ? "" : user?.id;
+    if (!user || !user.id) {
+      logger.info("Unauthorized access", { ip: request.ip });
+      return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 })
+    }
+    const userId: string = user.id;
+    if (!courseId || !validateMongooseId({userId, courseId})) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
 
     const [courseDB, userDB,] = await Promise.all([
       Course.findById(courseId)

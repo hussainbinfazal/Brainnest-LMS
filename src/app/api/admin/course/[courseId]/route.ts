@@ -3,15 +3,16 @@ import Course from "@/models/Course/courseModel";
 import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { ICourse, ILesson, ISection, IUser } from "@/types/model";
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger";
 import mongoose from "mongoose";
 import Lesson from "@/models/Course/lessonModel";
 import Section from "@/models/Course/sectionModel";
 import Category from "@/models/Course/categoryModel";
 import { diffDocuments } from "@/lib/helpers/genericDiff";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
-export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     try {
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
         if (!user || user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         const { courseId } = context.params;
         logger.info("This is the courseId for the admin in the edit route", { courseId: courseId })
-        if (!courseId) {
+        if (!courseId || !validateMongooseId({  courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
         const course: ICourse | null = await Course.findById(courseId).lean();
@@ -121,13 +122,13 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
 }
 
 
-export async function DELETE(request: NextRequest, { params }: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, { params }: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     try {
         const { courseId } = params;
         const user: ISessionUser | null = await getDataFromToken(request);
         if (user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
-        if (!courseId) {
+        if (!courseId || !validateMongooseId({ courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
         const course: ICourse | null = await Course.findByIdAndDelete(courseId);
@@ -145,7 +146,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { cours
 }
 
 
-export async function PUT(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     const session = await mongoose.startSession()
     try {
@@ -166,7 +167,7 @@ export async function PUT(request: NextRequest, context: { params: { courseId: s
             logger.warn("Unauthorized access attempt in admin course update route");
             return NextResponse.json({ message: "You are not authorized" }, { status: 401 });
         }
-        if (!courseId) {
+        if (!courseId || !validateMongooseId({ courseId: courseId })) {
             logger.warn("Course id is required in admin course update route");
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
@@ -238,7 +239,7 @@ export async function PUT(request: NextRequest, context: { params: { courseId: s
                     { $set: coursePayload },
                     { session }
                 );
-            }  
+            }
         })
 
         logger.info("Course updated successfully");

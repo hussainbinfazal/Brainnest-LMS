@@ -4,6 +4,9 @@ import path from 'path';
 import os from 'os';
 import cloudinary from '@/lib/cloudinary';
 import { File } from 'buffer';
+import { CustomNextRequest, ISessionUser } from '@/types/server';
+import { logger } from '@/utils/logger/logger';
+import { getDataFromToken } from '@/utils/getDataFromToken';
 
 export const config = {
   api: {
@@ -11,8 +14,14 @@ export const config = {
   },
 };
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   try {
+
+    const user: ISessionUser | null = await getDataFromToken(request);
+    if (!user || !user.id) {
+      logger.error("Unautorized access", { ip: request.ip });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    }
     const formData = await request.formData();
     const maybeFile = formData.get('file');
     const file = maybeFile instanceof File ? maybeFile : null;
@@ -32,16 +41,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       folder: 'nextjs_uploads', // optional
     });
 
-    await unlink(tempPath).catch(() => {});
+    await unlink(tempPath).catch(() => { });
 
     return NextResponse.json({
       success: true,
       filePath: result.secure_url,
       public_id: result.public_id,
-    });
+    },{ status: 200 });
   } catch (error: any) {
-    console.error('Cloudinary upload error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Cloudinary upload error:', { error: message });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

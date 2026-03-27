@@ -1,11 +1,26 @@
 import { Worker } from "bullmq";
-import { generateProgress } from "@/services/progressService";
+import { generateProgress, updateProgress } from "@/services/progressService";
 import { logger } from "@/utils/logger/logger";
 
 new Worker("progressQueue", async (job) => {
-    const { userId, courseId, progress, lessonId } = job.data;
-    await generateProgress({ userId: userId, courseId: courseId, progress: progress, lessonId: lessonId });
-    logger.info(`Progress generated for user ${userId} and course ${courseId}`);
+    try {
+        if(job.name === "generate-progress") {
+            const { userId, courseId } = job.data;
+            await generateProgress(userId, courseId);
+            logger.info(`Progress generate Worker called for user ${userId} and course ${courseId}`);
+        }
+        if(job.name === "update-progress") {
+            const { userId, courseId, lessonId, progressValue } = job.data;
+            await updateProgress(userId, courseId, lessonId, progressValue);
+            logger.info(`Progress update Worker called for user ${userId} and course ${courseId}`);
+        }
+    }
+    catch (error: any) {
+
+
+        logger.error("Worker failed", { jobId: job.id, error });
+        throw error;
+    }
 }, {
     connection: {
         url: process.env.UPSTASH_REDIS_URL,

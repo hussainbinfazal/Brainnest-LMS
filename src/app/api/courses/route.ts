@@ -3,8 +3,9 @@ import Course from "@/models/Course/courseModel";
 import User from "@/models/User/userModel";
 import { connectDB } from "@/config/mongoDB/db";
 import { ICourse } from "@/types/model";
+import { CustomNextRequest } from "@/types/server";
 
-export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
 
     const { searchParams } = new URL(request.url);

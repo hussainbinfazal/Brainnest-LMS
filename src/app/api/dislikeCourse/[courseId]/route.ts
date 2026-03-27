@@ -3,24 +3,24 @@ import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB } from "@/config/mongoDB/db";
 import UserCourse from "@/models/User/userCourse";
 import mongoose from "mongoose";
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 
 
-export async function DELETE(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
         const { courseId } = context.params;
         if (!user || !user.id) {
-            logger.info("Unauthorized access");
+            logger.info("Unauthorized access",{ ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         const userId: string = user.id;
         if (
-            !mongoose.Types.ObjectId.isValid(user.id) ||
-            !mongoose.Types.ObjectId.isValid(courseId)
+            !validateMongooseId({ userId, courseId })
         ) {
             logger.info("Invalid IDs", { userId, courseId });
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });

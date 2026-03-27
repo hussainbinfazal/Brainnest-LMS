@@ -3,24 +3,27 @@ import User from "@/models/User/userModel";  // Ensure the path is correct
 import { connectDB } from "@/config/mongoDB/db";
 import bcrypt from "bcryptjs";
 import { IUser } from "@/types/model";
+import { logger } from "@/utils/logger/logger";
+import { CustomNextRequest } from "@/types/server";
 
 // GET handler to fetch a user by ID from URL params
-export async function GET(request: NextRequest, context: { params: { id: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: { id: string } }): Promise<NextResponse> {
   try {
     await connectDB();
-    const { id } = await context.params;
+    const { id } = context.params;
     if (!id) {
+      logger.info("User Id is required", { id });
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
     }
     const user: IUser | null = await User.findById(id).lean();
     if (!user) {
+      logger.info("User not found");
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json(user);
+    return NextResponse.json({user}, {status: 200});
   } catch (error: any) {
-    // Handle any potential errors
-    console.error(error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    logger.error(`Error in getting user: ${message}`);
     return NextResponse.json({ message: `Error in getting user: ${message}` }, { status: 500 });
   }
 }

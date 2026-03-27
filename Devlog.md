@@ -276,3 +276,68 @@ Pending:
 -chat
 -message
 -cart routes
+## March 25
+Changes
+
+-Added custom next Request type that extends existing nextrequest so we can log ip of unauthorized access
+--Refractored email verfication Route and moved this logic to the worker.
+--Refractored post user progress  Route.
+-Refractored & added background worker with service and the queue for progress management in the background
+
+Completed
+-Refractored & added background worker with service and the queue for progress management in the background
+
+
+Pending:
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+
+
+
+-chat
+-message
+-cart routes
+## March 26
+Changes
+--Refractored File upload Route
+--Refractored email verfication Route and moved this logic to the worker.
+--Refractored post user progress  Route.
+
+
+Completed
+--Refractored File upload Route
+--Refractored email verfication Route and moved this logic to the worker.
+-Added custom next Request type that extends existing nextrequest so we can log ip of unauthorized access
+
+
+
+Pending:
+-Complete The file upload route with optimisation
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+
+
+
+-chat
+-message
+-cart routes

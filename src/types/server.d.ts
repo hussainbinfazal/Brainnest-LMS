@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { IOrder } from "./model";
 
 export interface ISessionUser {
@@ -36,4 +37,8 @@ interface OtpEntry {
 }
 declare global {
   var otpStore: Record<string, OtpEntry> | undefined;
+}
+
+export interface CustomNextRequest extends NextRequest {
+  ip: string;
 }

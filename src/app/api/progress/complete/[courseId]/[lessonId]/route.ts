@@ -5,19 +5,24 @@ import User from "@/models/User/userModel"
 import UserCourse from "@/models/User/userCourse";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { ILesson, IProgress, IUser } from "@/types/model";
 import mongoose from "mongoose";
 import Lesson from "@/models/Course/lessonModel";
 import { logger } from "@/utils/logger/logger";
 import { certificateQueue } from "@/lib/queue/certificateQueue";
-export async function POST(request: NextRequest, context: { params: { courseId: string, lessonId: string } }) {
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+export async function POST(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }) {
     await connectDB();
 
     try {
         const { courseId, lessonId } = context.params;
         const user: ISessionUser | null = await getDataFromToken(request);
-        const userId: string | null = user?.id || "";
+        if (!user) {
+            logger.info("Unauthorized access", { ip: request.ip });
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        }
+        const userId: string = user?.id;
         if (!courseId || !lessonId) {
             return NextResponse.json({ message: "Course and lesson IDs are required" }, { status: 400 });
         }
@@ -45,15 +50,21 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
                 .lean()
         ])
         if (!lessonDB) {
+            logger.info("Lesson not found", { lessonId });
             return NextResponse.json({ message: "Lesson not found" }, { status: 404 });
         }
         if (!userDB) {
-            logger.error("No user found with this id", { userId });
+            logger.info("User not found", { userId });
             return NextResponse.json({ message: "User not found" }, { status: 404 });
         }
         if (!courseDB) {
-            logger.error("No course found with this id", { courseId });
+            logger.info("Course not found", { courseId });
             return NextResponse.json({ message: "Course not found" }, { status: 404 });
+        }
+
+        if (!validateMongooseId({ userId, courseId, lessonId })) {
+            logger.info("Invalid IDs", { userId, courseId, lessonId });
+            return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         }
 
 

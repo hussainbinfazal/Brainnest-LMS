@@ -5,6 +5,7 @@ import { logger } from "@/utils/logger/logger";
 import mongoose from "mongoose";
 import { ICourse, IReview } from "@/types/model";
 import { CourseAggregationResult } from "@/types/aggregation/aggregation";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
     try {
         const { courseId } = context.params;
         const page = parseInt(request.nextUrl.searchParams.get("page") || "0", 10);
-        if (!courseId) {
+        if (!courseId || !validateMongooseId({ courseId: courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
         if (!mongoose.Types.ObjectId.isValid(courseId)) {
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
                                 ],
                                 as: "count"
                             }
-                        }
+                        }                    
                     ],
 
                     ///instructor stats

@@ -4,6 +4,9 @@ import mongoose from "mongoose";
 import Review from "@/models/Course/reviewModel";
 import { connectDB } from "@/config/mongoDB/db";
 import Course from "@/models/Course/courseModel";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { getDataFromToken } from "@/utils/getDataFromToken";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
@@ -14,7 +17,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
             logger.warn("Course Id is required");
             return NextResponse.json({ message: "Course Id is required" }, { status: 400 });
         }
-        if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        if (!validateMongooseId({ courseId })) {
             logger.error("Invalid course id");
             return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
         }
@@ -87,7 +90,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
 }
 
 
-export async function DELETE(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -98,23 +101,28 @@ export async function DELETE(request: NextRequest, context: { params: { courseId
             logger.warn("Course Id is required");
             return NextResponse.json({ message: "Course Id is required" }, { status: 400 });
         }
-        if (!mongoose.Types.ObjectId.isValid(courseId)) {
-            logger.error("Invalid course id");
-            return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+        const user: ISessionUser | null = await getDataFromToken(request);
+        if (!user || !user.id) {
+            logger.error("Unauthorized access", { ip: request.ip });
+            session.endSession();
+            return NextResponse.json({
+                message: "Unauthorized",
+            }, { status: 401 });
         }
         const reviewId = searchParams.get('reviewId');
         if (!reviewId) {
             logger.warn("Review Id is required");
             return NextResponse.json({ message: "Review Id is required" }, { status: 400 });
         }
-        if (!mongoose.Types.ObjectId.isValid(reviewId)) {
-            logger.error("Invalid review id");
-            return NextResponse.json({ message: "Invalid review id" }, { status: 400 });
-        }
+
         const deletedReview = await Review.findByIdAndDelete(reviewId).select("rating").session(session);
         if (!deletedReview) {
             await session.abortTransaction();
             return NextResponse.json({ message: "Review not found" }, { status: 404 });
+        }
+        if (!validateMongooseId({ courseId, reviewId })) {
+            logger.error("Invalid course id or review id", { courseId, reviewId });
+            return NextResponse.json({ message: "Invalid course id or review id" }, { status: 400 });
         }
         const rating = deletedReview.rating;
         await Course.updateOne(

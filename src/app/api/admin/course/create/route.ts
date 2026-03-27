@@ -4,13 +4,14 @@ import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { v4 as uuidv4 } from 'uuid';
 import { ICategory, ICourse, ILesson, ISection, ITopic } from "@/types/model";
-import { ISessionUser } from "@/types/server";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger";
 import Category from "@/models/Course/categoryModel";
 import Topic from "@/models/Course/topicModel";
 import Section from "@/models/Course/sectionModel";
 import Lesson from "@/models/Course/lessonModel";
 import mongoose, { ObjectId, Types } from "mongoose";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 interface CreateCourseBody {
     title: string;
@@ -37,7 +38,7 @@ interface CreateCourseBody {
 
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB();
     const session = await mongoose.startSession();
     session.startTransaction()
@@ -51,8 +52,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             return NextResponse.json({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, { status: 400 });
         }
         const userInSession: ISessionUser | null = await getDataFromToken(request);
-        if (!userInSession) {
-            logger.warn("Unauthorized access attempt to create course");
+        if (!userInSession || !validateMongooseId({ userId: userInSession.id })) {
+            logger.warn("Unauthorized access attempt to create course", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         logger.info("This is the user is attempting to create course ", { name: userInSession.name, id: userInSession.id });
