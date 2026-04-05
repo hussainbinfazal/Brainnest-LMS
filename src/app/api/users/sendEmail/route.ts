@@ -6,6 +6,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const { email, userId, emailType } = await request.json();
 
     const emailResponse = await sendEmail(email, emailType, userId);
+    
     return NextResponse.json({ success: true, message: "Email sent", emailResponse }, { status: 200 });
   } catch (error: any) {
     console.error("Email error:", error);

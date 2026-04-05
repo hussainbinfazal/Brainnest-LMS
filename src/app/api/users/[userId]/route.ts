@@ -5,22 +5,29 @@ import bcrypt from "bcryptjs";
 import { IUser } from "@/types/model";
 import { logger } from "@/utils/logger/logger";
 import { CustomNextRequest } from "@/types/server";
+import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 // GET handler to fetch a user by ID from URL params
 export async function GET(request: CustomNextRequest, context: { params: { id: string } }): Promise<NextResponse> {
   try {
     await connectDB();
+
     const { id } = context.params;
     if (!id) {
       logger.info("User Id is required", { id });
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    }
+    if (!validateMongooseId({ userId: id })) {
+      logger.info("Invalid User ID", { id });
+      return NextResponse.json({ error: "Invalid User ID" }, { status: 400 });
     }
     const user: IUser | null = await User.findById(id).lean();
     if (!user) {
       logger.info("User not found");
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json({user}, {status: 200});
+    logger.info("User fetched successfully", { userId: id });
+    return NextResponse.json({ user }, { status: 200 });
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     logger.error(`Error in getting user: ${message}`);
@@ -49,10 +56,9 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
     user.name = name || user.name;
     await user.save();
     // console.log("This is the updated User in the backend:",user)
-
+    logger.info("User Updated Successfully")
     return NextResponse.json({ message: "User updated successfully", user }, { status: 200 });
   } catch (error: any) {
-    console.error(error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ message: message }, { status: 500 });
   }

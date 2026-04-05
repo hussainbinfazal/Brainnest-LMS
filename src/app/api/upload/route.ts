@@ -42,12 +42,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     });
 
     await unlink(tempPath).catch(() => { });
-
+    logger.info('File uploaded successfully', { filePath: result.secure_url, public_id: result.public_id });
     return NextResponse.json({
       success: true,
       filePath: result.secure_url,
       public_id: result.public_id,
-    },{ status: 200 });
+    }, { status: 200 });
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Cloudinary upload error:', { error: message });

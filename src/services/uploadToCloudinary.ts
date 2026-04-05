@@ -4,11 +4,16 @@ import { writeFile, unlink } from "fs/promises";
 import os from "os";
 import path from "path";
 
+interface uploadToCloudinaryParams {
+    fileBuffer: Buffer;
+    filename: string;
+}
 
-export async function uploadToCloudinary(buffer: Buffer, filename: string) {
+
+export async function uploadToCloudinary({ fileBuffer, filename }: uploadToCloudinaryParams) {
     try {
         const tempPath = path.join(os.tmpdir(), `${Date.now()}-${filename}`);
-        await writeFile(tempPath, buffer);
+        await writeFile(tempPath, fileBuffer);
         const result = await cloudinary.uploader.upload(tempPath, {
             resource_type: "auto",
             folder: "nextjs_uploads",
