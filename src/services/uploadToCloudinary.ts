@@ -7,10 +7,11 @@ import path from "path";
 interface uploadToCloudinaryParams {
     fileBuffer: Buffer;
     filename: string;
+    userId: string;
 }
 
 
-export async function uploadToCloudinary({ fileBuffer, filename }: uploadToCloudinaryParams) {
+export async function uploadToCloudinary({ fileBuffer, filename, userId }: uploadToCloudinaryParams) {
     try {
         const tempPath = path.join(os.tmpdir(), `${Date.now()}-${filename}`);
         await writeFile(tempPath, fileBuffer);

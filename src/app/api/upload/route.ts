@@ -13,7 +13,8 @@ export const config = {
     bodyParser: false,
   },
 };
-
+// Design upload function to handle file uploads to Cloudinary individually for both images and the videos and return the secure URL of the uploaded file in the response. Ensure that the function can handle large files efficiently and includes error handling for potential upload failures.///
+const MAX_SYNC_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   try {
 
