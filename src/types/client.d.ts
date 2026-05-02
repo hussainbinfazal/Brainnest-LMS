@@ -595,3 +595,4 @@ export interface CuploadResult {
     duration:number
 
 }
+export type CuploadType = "image" | "video";

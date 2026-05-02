@@ -450,3 +450,8 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## May 2
+Changes
+--Refractored file upload functions and added size based file upload processes 
+--Added size based client side router so file can uplaod hassle free on the basis of the file size
