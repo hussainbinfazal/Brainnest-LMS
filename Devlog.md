@@ -381,3 +381,72 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## April 28
+Changes
+--Refractored File upload Route
+--Refractored & moved the upload architecture to hybrid uplaod with signature generated on backend & direct upload on cloudinary sdk 
+
+
+Completed
+
+--Refractored generate signature route 
+-Added custom next Request type that extends existing nextrequest so we can log ip of unauthorized access
+
+
+
+Pending:
+-Complete The file upload route with optimisation
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+## April 29
+Changes
+--Refractored & optimised File upload Route with dynamic file type
+--Refractored & moved the upload architecture to hybrid uplaod with signature generated on backend & direct upload on cloudinary sdk 
+
+
+
+
+Pending:
+-Complete The file upload route with optimisation
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes

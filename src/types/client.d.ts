@@ -587,3 +587,11 @@ export interface COrder {
 export interface CFeatureSection {
   icon: LucideIcon, title: string, description: string, color: string
 }
+export interface CuploadResult {
+    url: string;
+    public_id: string,
+    width?:number,
+    height?:number,
+    duration:number
+
+}
