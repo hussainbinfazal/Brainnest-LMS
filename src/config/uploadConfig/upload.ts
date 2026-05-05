@@ -6,14 +6,14 @@ export const UPLOAD_LIMITS = {
 interface IgetUploadStrategy {
     "direct": "direct",
     "chunked": "chunked",
-    "backend": "backend"
+
 }
 export function getUploadStrategy(fileSize: number): keyof IgetUploadStrategy {
     if (fileSize <= UPLOAD_LIMITS.SMALL) {
         return "direct"
     }
-    if (fileSize <= UPLOAD_LIMITS.LARGE) {
+    if (fileSize >= UPLOAD_LIMITS.LARGE) {
         return "chunked"
     }
-    return "backend"
+    return "direct"
 }

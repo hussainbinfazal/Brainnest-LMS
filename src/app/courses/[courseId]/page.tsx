@@ -14,10 +14,10 @@ import { logger } from "@/utils/logger/logger";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {
   await connectDB();
-  logger.debug({ params }, "Params received"); // 👈 debug
+  // logger.debug({ params }, "Params received"); // 👈 debug
   const awaitedParams = await params;
   const { courseId } = awaitedParams;
-  logger.debug({ awaitedParams }, "Params awaited");
+  // logger.debug({ awaitedParams }, "Params awaited");
   const cacheCourseKey: string = `course:${courseId}`;
   const cachedCourse: CCourse | null = await redisClient.get(cacheCourseKey);
   let course: CCourse | null = null;
@@ -34,20 +34,17 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
       await redisClient.set(cacheCourseKey, JSON.stringify(course) as string, { ex: 600 }); // 10 min
     }
   }
-  // const course = await Course.findById(courseId)
-  //   .select("title description coverImage rating price category lessons.name lessons.duration instructor reviews")
-  //   .populate("instructor", "name profileImage")
-  //   .lean();
+
   let reviewCacheKey = `reviews:course:${courseId}`;
   const cachedReviewsRaw = await redisClient.get(reviewCacheKey);
 
   let cachedReviews: CReview[] | null = null;
-  logger.debug({ cachedReviewsRaw }, "Cached Reviews Raw");
+  // logger.debug({ cachedReviewsRaw }, "Cached Reviews Raw");
   if (cachedReviewsRaw) {
     try {
       cachedReviews = JSON.parse(JSON.stringify(cachedReviewsRaw)) as CReview[]
     } catch (e: any) {
-      logger.error(e, "Error parsing cached reviews");
+      // logger.error(e, "Error parsing cached reviews");
     }
   }
 
@@ -65,7 +62,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
 
 
     } catch (err: any) {
-      logger.error(err, "Error fetching reviews");
+      // logger.error(err, "Error fetching reviews");
     }
   } else {
     initialReviews = cachedReviews;
