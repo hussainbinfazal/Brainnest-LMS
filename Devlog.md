@@ -455,3 +455,27 @@ Frontend → Backend (save metadata)
 Changes
 --Refractored file upload functions and added size based file upload processes 
 --Added size based client side router so file can uplaod hassle free on the basis of the file size
+
+Pending:
+-Complete The file upload route with optimisation and backend route for very large files
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes

@@ -4,7 +4,7 @@ import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
-
+        
 export async function uploadChunkedToCloudinary(file: File, type: CuploadType): Promise<CuploadResult> {
     try {
         function createChunk(file: File): Blob[] | null {
