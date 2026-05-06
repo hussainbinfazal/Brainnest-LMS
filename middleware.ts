@@ -43,26 +43,26 @@ export async function middleware(req: NextRequest) {
   if (isPublicRoute) {
     // But redirect authenticated users away from login/register pages
     if ((pathname === "/login" || pathname === "/register") && token) {
-      logger.info('Redirecting authenticated user away from auth pages');
+      log('Redirecting authenticated user away from auth pages');
       return NextResponse.redirect(new URL("/", req.url))
     }
-    logger.info('Allowing access to public route')
+    log('Allowing access to public route')
     return NextResponse.next()
   }
 
   // Require authentication for protected routes
   if (!token) {
-    logger.warn('No token, redirecting to login')
+    log('No token, redirecting to login')
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
   // Check admin access for admin routes
   if (pathname.startsWith("/admin") && token.role !== "instructor") {
-    logger.warn('Non-admin trying to access admin route')
+    log('Non-admin trying to access admin route')
     return NextResponse.redirect(new URL("/", req.url))
   }
 
-  logger.info('Allowing access to protected route')
+  log('Allowing access to protected route')
   const res: NextResponse = NextResponse.next()
   res.headers.set("X-Request-ID", requestId);
   res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
