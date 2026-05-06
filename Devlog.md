@@ -479,3 +479,35 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## May 6
+Changes
+--Refractored client side components and added large file handling with chunk based upload 
+--Refractored chunk based upload logic and integrated redis to store uplaod releated data on backend to tackle situation in case of partial succes and can resume with only missing chunks  
+--Refractored file upload functions and added size based file upload processes 
+
+
+
+Pending:
+-Complete The file upload route with optimisation and backend route for very large files
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes

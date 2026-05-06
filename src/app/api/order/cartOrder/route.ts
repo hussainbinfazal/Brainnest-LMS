@@ -4,7 +4,7 @@ import Order from "@/models/Cart/orderModel";
 import { connectDB } from "@/config/mongoDB/db";
 import User from "@/models/User/userModel";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import Razorpay from 'razorpay';
 import Course from '@/models/Course/courseModel';
 import { ISessionUser, RazorpayCreateOrderRequest, MyRazorpayOrder } from "@/types/server";

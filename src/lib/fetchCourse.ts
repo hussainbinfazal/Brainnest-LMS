@@ -1,7 +1,7 @@
 import axios from "axios";
 import { CCourse, CReview } from "@/types/client";
 import { ICourse } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 interface fetchSampleCoursesProps {

@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { sendEmail } from "@/services/emailOtpService";
 
 

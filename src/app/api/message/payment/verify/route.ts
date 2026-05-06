@@ -7,7 +7,7 @@ import Course from '@/models/Course/courseModel';
 import Message from '@/models/Chat/messageModel';
 import Chat from '@/models/Chat/chatModel';
 import { IChat } from '@/types/model';
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 export async function PUT(request: NextRequest): Promise<NextResponse> {
   try {
     await connectDB();

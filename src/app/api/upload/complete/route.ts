@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { redisClient } from "@/config/redis/redis";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
 
 

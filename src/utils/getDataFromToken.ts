@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import type { Session } from "next-auth";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export const getDataFromToken = async (request: Request): Promise<Session["user"] | null> => {
     try {

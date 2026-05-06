@@ -5,7 +5,7 @@ import { getDataFromToken } from "@/utils/getDataFromToken";
 import { v4 as uuidv4 } from 'uuid';
 import { ICategory, ICourse, ILesson, ISection, ITopic } from "@/types/model";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import Category from "@/models/Course/categoryModel";
 import Topic from "@/models/Course/topicModel";
 import Section from "@/models/Course/sectionModel";

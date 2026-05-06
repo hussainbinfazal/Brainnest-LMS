@@ -2,7 +2,7 @@ import nodemailer, { SentMessageInfo } from 'nodemailer';
 import User from "@/models/User/userModel";
 import bcryptjs from 'bcryptjs';
 import { connectDB } from '@/config/mongoDB/db';
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export type EmailType = "RESET" | "VERIFY";
 

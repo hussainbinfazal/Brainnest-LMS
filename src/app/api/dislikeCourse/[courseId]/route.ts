@@ -4,7 +4,7 @@ import { connectDB } from "@/config/mongoDB/db";
 import UserCourse from "@/models/User/userCourse";
 import mongoose from "mongoose";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 
@@ -15,7 +15,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         const user: ISessionUser | null = await getDataFromToken(request);
         const { courseId } = context.params;
         if (!user || !user.id) {
-            logger.info("Unauthorized access",{ ip: request.ip });
+            logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         const userId: string = user.id;

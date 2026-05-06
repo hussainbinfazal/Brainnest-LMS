@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
@@ -35,10 +35,10 @@ export const connectDB = async () => {
     }
     cached!.conn = await cached!.promise
 
-    logger.info({host:cached.conn.connection.host},"MongoDB Connected");
+    logger.info({ host: cached.conn.connection.host }, "MongoDB Connected");
     return cached!.conn;
   } catch (error: any) {
-    logger.error(error,"Database connection failed")
+    logger.error(error, "Database connection failed")
     throw error
   }
 };

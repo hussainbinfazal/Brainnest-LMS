@@ -5,7 +5,7 @@ import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 import Review from "@/models/Course/reviewModel";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";

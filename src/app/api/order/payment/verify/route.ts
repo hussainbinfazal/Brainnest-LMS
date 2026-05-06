@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/config/mongoDB/db';
-import { logger } from '@/utils/logger/logger';
+import { logger } from '@/utils/logger/logger.node';
 import User from '@/models/User/userModel';
 import UserCourse from '@/models/User/userCourse';
 import Order from '@/models/Cart/orderModel';

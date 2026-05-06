@@ -10,7 +10,7 @@ import Message from '@/models/Chat/messageModel';
 import Payment from "@/models/Payment/paymentModel"
 import { RazorpayCreateOrderRequest } from '@/types/server';
 import { IPaymentsByUser } from '@/types/model';
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID!,
     key_secret: process.env.RAZORPAY_KEY_SECRET!,

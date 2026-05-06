@@ -4,7 +4,7 @@ import { redisClient } from "@/config/redis/redis";
 import { fetchServerCourses } from "@/lib/fetchCourse";
 import { CCourse } from "@/types/client";
 import { serializeCourses } from "@/utils/serializer/course.serializer";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { ICourse } from "@/types/model";
 
 

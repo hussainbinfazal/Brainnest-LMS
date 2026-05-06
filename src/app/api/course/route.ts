@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Course from "@/models/Course/courseModel";
 import { connectDB } from "@/config/mongoDB/db";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { ICourse } from "@/types/model";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

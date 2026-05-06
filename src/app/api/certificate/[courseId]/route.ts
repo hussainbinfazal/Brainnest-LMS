@@ -7,7 +7,7 @@ import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "../../../../types/server";
 import { ICertificate, ICourse, IProgress, IUser } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import Progress from "@/models/Course/progressModel";
 import Certificate from "@/models/Course/certificateModel";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
@@ -22,7 +22,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
       return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 })
     }
     const userId: string = user.id;
-    if (!courseId || !validateMongooseId({userId, courseId})) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+    if (!courseId || !validateMongooseId({ userId, courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
 
     const [courseDB, userDB,] = await Promise.all([
       Course.findById(courseId)

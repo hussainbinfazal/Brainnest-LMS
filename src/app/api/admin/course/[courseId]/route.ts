@@ -4,7 +4,7 @@ import { connectDB } from "@/config/mongoDB/db";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { ICourse, ILesson, ISection, IUser } from "@/types/model";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 import Lesson from "@/models/Course/lessonModel";
 import Section from "@/models/Course/sectionModel";
@@ -21,7 +21,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         if (!user || user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         const { courseId } = context.params;
         logger.info("This is the courseId for the admin in the edit route", { courseId: courseId })
-        if (!courseId || !validateMongooseId({  courseId })) {
+        if (!courseId || !validateMongooseId({ courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
         const course: ICourse | null = await Course.findById(courseId).lean();

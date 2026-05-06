@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Course from "@/models/Course/courseModel";
 import { connectDB } from "@/config/mongoDB/db";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 import { ICourse, IReview } from "@/types/model";
 import { CourseAggregationResult } from "@/types/aggregation/aggregation";
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
                                 ],
                                 as: "count"
                             }
-                        }                    
+                        }
                     ],
 
                     ///instructor stats

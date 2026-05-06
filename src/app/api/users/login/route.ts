@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from "next/server";
 import User from "@/models/User/userModel";
 import bcrypt from "bcryptjs";
 import { IUser } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 export async function POST(request: NextRequest): Promise<NextResponse> {
     await connectDB();
     try {

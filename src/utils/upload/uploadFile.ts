@@ -1,4 +1,7 @@
+import { getUploadStrategy } from "@/config/uploadConfig/upload";
 import { clientLogger } from "../logger/clientLogger";
+import { uploadChunkedToCloudinary } from "./uploadStrategy/uploadChunkedToCloudinary";
+import { uploadDirectToCloudinary } from "./uploadStrategy/uploadDirectToCloudinary";
 
 type uploadType = "image" | "video";
 
@@ -11,19 +14,19 @@ export async function uploadFileClient(file: File, type: uploadType) {
     if (type === "video" && !file.type.startsWith("video/")) {
         throw new Error("Invalid video file.");
     }
-    if (file.size > 50 * 1024 * 1024) {
+    if (file.size <= 100 * 1024 * 1024) {
         clientLogger.warn(`Large file, upload may take time`);
         const strategy = getUploadStrategy(file.size)
         switch (strategy) {
             case "direct":
-                return uploadDirectlyToCloudinary(file, type);
+                return uploadDirectToCloudinary(file);
 
             case "chunked":
                 return uploadChunkedToCloudinary(file, type);
 
-            case "backend":
-                return uploadViaBackend(file, type)
-
+            default:
+                throw new Error("No valid upload strategy found.");
         }
-
     }
+
+}

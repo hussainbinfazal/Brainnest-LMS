@@ -9,7 +9,7 @@ import Payment from '@/models/Payment/paymentModel';
 import Cart from '@/models/Cart/cartModel';
 import { ICourse, IOrder, IUser } from '@/types/model';
 import mongoose from 'mongoose';
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 export async function POST(request: NextRequest): Promise<NextResponse> {
 
 

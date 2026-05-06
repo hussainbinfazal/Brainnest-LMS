@@ -3,7 +3,7 @@ import otpGenerator from 'otp-generator';
 import { sendEmail } from '@/services/emailOtpService';
 import { ISessionUser } from '@/types/server';
 import { getDataFromToken } from '@/utils/getDataFromToken';
-import { logger } from '@/utils/logger/logger';
+import { logger } from '@/utils/logger/logger.node';
 import { validateMongooseId } from '@/utils/schemaValidation/idValidator/idValidator';
 import { emailOtpQueue } from '@/lib/queue/emailQueue';
 interface CustomNextRequest extends NextRequest {
@@ -15,11 +15,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const body = await request.json().catch(() => null);
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || !user.id) {
-            logger.info("Unauthorized access", { route: "send-otp", ip: request.ip  });
+            logger.info("Unauthorized access", { route: "send-otp", ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const email = user.email;
-        if (!validateMongooseId({userId: user.id})) {
+        if (!validateMongooseId({ userId: user.id })) {
             logger.info("Invalid user id");
             return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
         }

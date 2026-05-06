@@ -6,7 +6,7 @@ import { ICoupon } from "@/types/model";
 import { getSession } from "next-auth/react";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "../../../../types/server";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
@@ -20,7 +20,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const userId: string = user?.id;
         const { code, discountValue, discountType, expiresAt, maxUses, } = await request.json();
         const existingCoupon = await Coupon.findOne({ code: code });
-        if (!userId || !validateMongooseId({userId})) return NextResponse.json({ message: "User id is required" }, { status: 400 });
+        if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required" }, { status: 400 });
         if (existingCoupon) {
             return NextResponse.json({ message: "This Coupon is already exists" }, { status: 400 });
         }

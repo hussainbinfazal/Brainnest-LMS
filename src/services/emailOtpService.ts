@@ -1,5 +1,5 @@
 import userToken from "@/models/User/userToken";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 

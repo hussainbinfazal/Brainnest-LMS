@@ -2,25 +2,24 @@ import { CuploadResult, CuploadType } from "@/types/client";
 import { getSignatureFromBackend } from "../getSignatureFromBackend/getSignatureFromBackend";
 import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
-// import { redisClient } from "@/config/redis/redis";
 import { uploadWithRetry } from "@/lib/helpers/retryHelper";
-const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+
+const CHUNK_SIZE:number = 5 * 1024 * 1024; // 5MB
 
 export async function uploadChunkedToCloudinary(file: File, type: CuploadType): Promise<CuploadResult> {
     try {
-        const key = `upload-${file.name}--${file.size}`;
+        const key :string = `upload-${file.name}--${file.size}`;
         const saved = JSON.parse(localStorage.getItem(key) as string,) || {};
-        let uploadedBytes = saved.uploadedBytes || 0;
-        let uploadId = saved.uploadId
-        let startIndex = saved.index || 0;
+        let uploadedBytes : number = saved.uploadedBytes || 0;
+        let uploadId : string = saved.uploadId
+        let startIndex : number = saved.index || 0;
         let finalResponse: any = null;
 
         if (!uploadId) {
             const res = await axios.post("/api/upload/init", {
-                body: JSON.stringify({
-                    fileName: file.name,
-                    fileSize: file.size,
-                }),
+                fileName: file.name,
+                fileSize: file.size,
+
             }, {
                 headers: {
                     "Content-Type": "application/json",
@@ -40,7 +39,7 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType): 
         } catch (error: any) {
             clientLogger.error("Error fetching upload progress status, starting from the beginning", { error: error instanceof Error ? error.message : "Unknown error" });
         }
-        for (let i = startIndex, start = startIndex * CHUNK_SIZE ; startIndex < CHUNK_SIZE; start += CHUNK_SIZE, i++) {
+        for (let i = startIndex, start = startIndex * CHUNK_SIZE; startIndex < CHUNK_SIZE; start += CHUNK_SIZE, i++) {
             const end = Math.min(start + CHUNK_SIZE, file.size);
             const chunk = file.slice(start, end);
             const formData = new FormData();

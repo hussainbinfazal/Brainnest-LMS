@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { CEmailOtpSenderProps, CEmailOtpVerifierProps, COtpSenderProps, CResendOtpResponse, CSendOtpResponse, CVerifyOtpResponse } from "@/types/client";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent }: COtpSenderProps) => {
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {

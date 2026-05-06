@@ -5,7 +5,7 @@ import { generateProgress, updateProgress } from "@/services/progressService";
 import { IProgress } from "@/types/model";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
@@ -21,11 +21,11 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const userId: string = user.id;
-        if (!validateMongooseId({userId, courseId, lessonId})) {
+        if (!validateMongooseId({ userId, courseId, lessonId })) {
             logger.info("Invalid course or lesson ID");
             return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
         }
-        if (!validateMongooseId({userId, courseId, lessonId})) {
+        if (!validateMongooseId({ userId, courseId, lessonId })) {
             logger.info("Invalid course or lesson ID");
             return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
         };
@@ -71,7 +71,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const userId: string = user.id;
-        if (!validateMongooseId({userId, courseId})) {
+        if (!validateMongooseId({ userId, courseId })) {
             logger.info("Invalid IDs", { userId, courseId });
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         }
@@ -97,7 +97,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const userId: string = user.id;
-        if (!validateMongooseId({userId, courseId, lessonId})) {
+        if (!validateMongooseId({ userId, courseId, lessonId })) {
             logger.info("Invalid IDs", { userId, courseId, lessonId });
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         }

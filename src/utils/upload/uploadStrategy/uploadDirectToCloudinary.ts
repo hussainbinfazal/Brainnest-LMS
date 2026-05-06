@@ -38,6 +38,7 @@ export async function uploadDirectToCloudinary(file: File): Promise<CuploadResul
             clientLogger.error("Cloudinary upload failed", { status: response.status, response: data });
             throw new Error(data.error?.message || "Cloudinary upload failed");
         }
+        clientLogger.info("File uploaded successfully to Cloudinary", { url: data.secure_url, public_id: data.public_id });
         return {
             url: data.secure_url,
             public_id: data.public_id,

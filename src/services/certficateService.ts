@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import Course from "@/models/Course/courseModel";
 import Certificate from "@/models/Course/certificateModel";
 import { uploadToCloudinary } from "./uploadToCloudinary";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 export async function generateCertificate(userName: string, courseId: string, userId: string, instructorName: string, courseTitle: string) {

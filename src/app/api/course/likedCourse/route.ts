@@ -4,7 +4,7 @@ import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import UserCourse from "@/models/User/userCourse";
 import mongoose from "mongoose";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {

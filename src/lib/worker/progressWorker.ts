@@ -1,15 +1,15 @@
 import { Worker } from "bullmq";
 import { generateProgress, updateProgress } from "@/services/progressService";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 new Worker("progressQueue", async (job) => {
     try {
-        if(job.name === "generate-progress") {
+        if (job.name === "generate-progress") {
             const { userId, courseId } = job.data;
             await generateProgress(userId, courseId);
             logger.info(`Progress generate Worker called for user ${userId} and course ${courseId}`);
         }
-        if(job.name === "update-progress") {
+        if (job.name === "update-progress") {
             const { userId, courseId, lessonId, progressValue } = job.data;
             await updateProgress(userId, courseId, lessonId, progressValue);
             logger.info(`Progress update Worker called for user ${userId} and course ${courseId}`);

@@ -3,7 +3,7 @@ import User from "@/models/User/userModel";  // Ensure the path is correct
 import { connectDB } from "@/config/mongoDB/db";
 import bcrypt from "bcryptjs";
 import { IUser } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 

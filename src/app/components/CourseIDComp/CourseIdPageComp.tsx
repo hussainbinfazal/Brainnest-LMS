@@ -16,7 +16,7 @@ import StarRating from "@/app/components/shared/StarRating";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 import Link from "next/link";
 import { ImQuotesLeft } from "react-icons/im";

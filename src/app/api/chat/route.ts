@@ -7,7 +7,7 @@ import { auth } from '@/auth';
 import Chat from "@/models/Chat/chatModel";
 import Message from "@/models/Chat/messageModel";
 import { IChat } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
     await connectDB();

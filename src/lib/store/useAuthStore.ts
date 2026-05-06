@@ -4,7 +4,7 @@ import { create, StateCreator } from "zustand";
 import { persist, PersistOptions } from "zustand/middleware";
 import axios from "axios";
 import { AuthStore, AuthUser } from "@/types/client";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 

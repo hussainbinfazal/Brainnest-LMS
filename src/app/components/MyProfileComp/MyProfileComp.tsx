@@ -19,7 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import axios from "axios";
 import { toast } from "sonner";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { validateEmail, validatePhoneNumber } from "@/utils/validators";
 import {
     Card,

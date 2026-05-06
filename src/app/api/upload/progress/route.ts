@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { redisClient } from "@/config/redis/redis";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
 
 
@@ -41,7 +41,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         };
         await redisClient.set(key, JSON.stringify(updatedData) as string, { ex: 3600 }) // 1 hour expiration
         logger.info(`Upload progress updated for uploadId: ${uploadId}`, { uploadedBytes, lastChunkIndex: index });
-        return NextResponse.json({ message: "Progress updated" ,"status": "success"}, { status: 200 })
+        return NextResponse.json({ message: "Progress updated", "status": "success" }, { status: 200 })
 
     } catch (error: any) {
         const message = error instanceof Error ? error.message : "An unknown error occurred";

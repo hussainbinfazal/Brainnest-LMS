@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {

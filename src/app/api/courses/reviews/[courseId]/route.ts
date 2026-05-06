@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 import Review from "@/models/Course/reviewModel";
 import { connectDB } from "@/config/mongoDB/db";

@@ -4,7 +4,7 @@ import { redisClient } from "@/config/redis/redis";
 import { CCourse, CReview } from "@/types/client";
 import { JSX } from "react/jsx-runtime";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 // import HomePage2 from "./components/Homepage2";

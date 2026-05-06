@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User/userModel";
 import { connectDB } from "@/config/mongoDB/db";
 import { AuthenticatedUser, Credentials } from "@/types/auth";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 

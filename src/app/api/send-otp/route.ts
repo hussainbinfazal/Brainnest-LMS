@@ -4,7 +4,7 @@ import otpStore from '@/lib/otpStore';
 import twilio from 'twilio';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import { CustomNextRequest } from '@/types/server';
-import { logger } from '@/utils/logger/logger';
+import { logger } from '@/utils/logger/logger.node';
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
 
@@ -65,7 +65,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         });
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        logger.error('Twilio error:', {message: message, error: error});
+        logger.error('Twilio error:', { message: message, error: error });
         return NextResponse.json({ message: message }, { status: 500 });
     }
 }

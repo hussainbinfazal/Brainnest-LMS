@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import User from "@/models/User/userModel";
 import { connectDB } from "@/config/mongoDB/db";
 import { IUser } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     await connectDB();

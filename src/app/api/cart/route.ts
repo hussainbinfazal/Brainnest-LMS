@@ -4,7 +4,7 @@ import { connectDB } from "@/config/mongoDB/db";
 import User from '@/models/User/userModel';
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
     await connectDB();

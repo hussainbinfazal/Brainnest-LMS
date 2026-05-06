@@ -4,7 +4,7 @@ import { create } from "zustand";
 import axios from "axios";
 import { toast } from "sonner"
 import { CartStore } from "@/types/client";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 export const useCartStore = create<CartStore>((set) => ({

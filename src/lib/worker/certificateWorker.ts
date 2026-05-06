@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { ioRedis } from "@/config/redis/redis";
 import { generateCertificate } from "@/services/certficateService";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 new Worker("certificateQueue", async (job) => {
     const { userId, courseId, instructorName, courseTitle, userName } = job.data;

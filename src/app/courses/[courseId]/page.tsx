@@ -10,7 +10,7 @@ import { ICourse } from "@/types/model";
 import Course from "@/models/Course/courseModel";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { serializeCourse } from "@/utils/serializer/course.Serializer";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {
   await connectDB();

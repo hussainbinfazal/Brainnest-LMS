@@ -6,7 +6,7 @@ import Chat from "@/models/Chat/chatModel";
 import { CChat } from "@/types/client";
 import { serializeChats } from "@/utils/serializer/chat.Serializer";
 import { auth } from "@/auth";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 export default async function ChatPage(): Promise<JSX.Element> {
 

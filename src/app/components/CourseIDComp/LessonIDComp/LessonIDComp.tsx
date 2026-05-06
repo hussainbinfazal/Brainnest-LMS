@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CCourse, CLesson } from "@/types/client";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 // Render a YouTube video player
 export const LeesonIdPageComp = (): React.JSX.Element => {

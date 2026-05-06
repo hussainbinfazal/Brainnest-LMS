@@ -1,7 +1,7 @@
 import Progress from "@/models/Course/progressModel";
 import UserCourse from "@/models/User/userCourse";
 import { IProgress } from "@/types/model";
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 
 

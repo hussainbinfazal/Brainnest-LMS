@@ -1,6 +1,6 @@
 import { ClientToServerEvents, ServerToClientEvents } from '@/types/client';
 import { io, Socket } from 'socket.io-client';
-import { logger } from "@/utils/logger/logger";
+import { logger } from "@/utils/logger/logger.node";
 
 
 
