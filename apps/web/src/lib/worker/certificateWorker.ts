@@ -1,5 +1,4 @@
 import { Worker } from "bullmq";
-import { ioRedis } from "@/config/redis/redis";
 import { generateCertificate } from "@/services/certficateService";
 import { logger } from "@/utils/logger/logger.node";
 

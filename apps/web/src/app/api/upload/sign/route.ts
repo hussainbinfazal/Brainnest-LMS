@@ -58,4 +58,3 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         logger.error("Signature generation failed:", { error: message });
         return NextResponse.json({ error: message }, { status: 500 })
     }
-}

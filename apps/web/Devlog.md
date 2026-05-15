@@ -511,3 +511,104 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## May 7
+Changes
+--Refractored middleware to track the request with request so we can track the in the pipeline and added duration to track the latency request call
+--Debugged chunk based upload logic and debugged redis config   
+--Refractored &debugged file upload functions and added size based file upload processes with try catch to catch & log error early. 
+
+
+
+Pending:
+-setup workers and the chat in different node server
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+
+## May 7
+Changes
+--Refractored middleware to track the request with request so we can track the in the pipeline and added duration to track the latency request call
+--Configured worker on new server to reduce latency   
+
+
+
+
+Pending:
+-setup workers and the chat in different node server
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+## May 12
+Changes
+--Refractored & added workers on the new express server 
+--Refractored middleware to track the request with request so we can track the in the pipeline and added duration to track the latency request call
+--Configured worker on new server to reduce latency   
+
+
+
+
+Pending:
+-setup workers and the chat in different node server and services, models
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes

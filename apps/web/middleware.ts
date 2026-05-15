@@ -16,7 +16,7 @@ export async function middleware(req: NextRequest) {
       : 'authjs.session-token'
   }) as JWT | null
   const log = (message: string, data?: any) => {
-    logger.info({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
+    logger.info ({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
   }
 
   // Define public routes that don't require authentication

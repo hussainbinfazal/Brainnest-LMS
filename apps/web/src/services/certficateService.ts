@@ -69,3 +69,4 @@ export async function generateCertificate(userName: string, courseId: string, us
 
     }
 }
+import { logger } from "@/utils/logger/logger.node";

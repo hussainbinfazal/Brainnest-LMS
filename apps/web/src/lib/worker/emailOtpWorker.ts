@@ -5,7 +5,7 @@ import { sendEmail } from "@/services/emailOtpService";
 
 
 
-new Worker("emailOtpQueue", async (job) => {
+export const emailOtpWorker = new Worker("emailOtpQueue", async (job) => {
 
     try {
         if (job.name === "send-otp") {

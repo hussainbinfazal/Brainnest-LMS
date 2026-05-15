@@ -24,9 +24,9 @@ ioredis Client
 Used for BullMQ queues
 ----------------------------------
 */
-const ioRedis = new IORedis(process.env.UPSTASH_REDIS_URL!, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false
-});
-export { redisClient, ioRedis }
+// const ioRedis = new IORedis(process.env.UPSTASH_REDIS_URL!, {
+//     maxRetriesPerRequest: null,
+//     enableReadyCheck: false
+// });
+// export { redisClient, ioRedis }
 

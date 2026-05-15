@@ -2,7 +2,7 @@ import { Worker } from "bullmq";
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { logger } from "@/utils/logger/logger.node";
 
-new Worker("progressQueue", async (job) => {
+export const progressWorker = new Worker("progressQueue", async (job) => {
     try {
         if (job.name === "generate-progress") {
             const { userId, courseId } = job.data;
