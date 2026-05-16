@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "lib":["ES2022"],
+        "module":"ESNext",
+        "moduleResolution":"Node",
+        "strict" : true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "ignoreDeprecations": "6.0",
+        "forceConsistentCasingInFileNames": true,
+        "rootDir": "./src",
+        "types":["node"],
+        "outDir": "dist"
+    },
+    "include": ["src", "../../apps/Worker/src/helpers"],
+    "exclude": ["node_modules", "dist"]
+}

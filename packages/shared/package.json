@@ -1,5 +1,5 @@
 {
-  "name": "Brainnest Turborepo",
+  "name": "shared",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,15 +9,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.1.2",
-      "onFail": "download"
-    }
-  },
   "type": "module",
+  "dependencies": {
+    "pino": "^10.3.1"
+  },
   "devDependencies": {
-    "@types/node": "^25.8.0"
+    "pino-pretty": "^13.1.3"
   }
 }
