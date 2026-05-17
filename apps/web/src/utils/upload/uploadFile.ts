@@ -1,7 +1,7 @@
 import { getUploadStrategy } from "@/config/uploadConfig/upload";
 import { clientLogger } from "../logger/clientLogger";
-import { uploadChunkedToCloudinary } from "./uploadStrategy/uploadChunkedToCloudinary";
-import { uploadDirectToCloudinary } from "./uploadStrategy/uploadDirectToCloudinary";
+import { uploadChunkedToCloudinary } from "./uploadStrategyHybrid/uploadChunkedToCloudinary";
+import { uploadDirectToCloudinary } from "./uploadStrategyHybrid/uploadDirectToCloudinary";
 
 type uploadType = "image" | "video";
 

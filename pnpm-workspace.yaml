@@ -2,4 +2,11 @@ packages:
   - "apps/*"
   - "packages/*"
 allowBuilds:
+  '@prisma/client': set this to true or false
+  '@prisma/engines': set this to true or false
+  canvas: set this to true or false
+  core-js: set this to true or false
+  msgpackr-extract: set this to true or false
+  prisma: set this to true or false
   sharp: true
+  unrs-resolver: set this to true or false

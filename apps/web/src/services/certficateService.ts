@@ -1,8 +1,5 @@
 import jsPDF from "jspdf";
-import Course from "@/models/Course/courseModel";
-import Certificate from "@/models/Course/certificateModel";
-import { uploadToCloudinary } from "./uploadToCloudinary";
-import { logger } from "@/utils/logger/logger.node";
+
 
 
 export async function generateCertificate(userName: string, courseId: string, userId: string, instructorName: string, courseTitle: string) {
@@ -46,7 +43,7 @@ export async function generateCertificate(userName: string, courseId: string, us
 
 
         const pdfBuffer = Buffer.from(doc.output("arraybuffer"));
-        const url = await uploadToCloudinary(pdfBuffer, "certificate.pdf");
+        const url = await uploadDirectToCloudinaryFromServer(pdfBuffer, "certificate.pdf");
         const previewUrl = url.replace(".pdf", ".jpg");
         await Certificate.updateOne({
             userId, courseId
@@ -69,4 +66,5 @@ export async function generateCertificate(userName: string, courseId: string, us
 
     }
 }
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@/utils/logger/logger.node";import { uploadDirectToCloudinary } from "@/utils/upload/uploadStrategyHybrid/uploadDirectToCloudinary";
+
