@@ -1,5 +1,5 @@
 
-import { IEnrollment } from "@/types/model";
+import type { IEnrollment } from "@repo/shared";
 import mongoose, { Schema, Model } from "mongoose";
 
 const enrollmentSchema = new mongoose.Schema<IEnrollment>({

@@ -6,7 +6,7 @@
     "module": "ESNext",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,    // 👈 prevents Prisma/Next typedef errors
+    "skipLibCheck": true,                         // 👈 prevents Prisma/Next typedef errors
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "rootDir":"./src",

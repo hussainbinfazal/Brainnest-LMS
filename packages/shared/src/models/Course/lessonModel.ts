@@ -1,5 +1,5 @@
 
-import { ILesson } from "@/types/model";
+import { ILesson } from "@repo/shared";
 import mongoose, { Model } from "mongoose";
 
 const lessonSchema = new mongoose.Schema<ILesson>({
