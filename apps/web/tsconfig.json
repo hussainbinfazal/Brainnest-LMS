@@ -37,7 +37,7 @@
     "src",
     "src/types/**/*",
     ".next/types/**/*.ts"
-  ],
+, "../../packages/shared/src/config/cloudinary/cloudinary.ts"  ],
   "exclude": [
     "node_modules"
   ]

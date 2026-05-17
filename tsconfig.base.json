@@ -1,0 +1,10 @@
+{
+    "compilerOptions":{
+        "baseUrl":".",
+        "paths": {
+            "@repo/shared/*": ["packages/shared/src/*"],
+            "@worker/*": ["apps/Worker/src/*"]
+        }
+
+    }
+}

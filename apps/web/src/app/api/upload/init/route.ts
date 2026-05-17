@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
+import cloudinary from "../../../../../../../packages/shared/src/config/cloudinary/cloudinary";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { logger } from "@/utils/logger/logger.node";
