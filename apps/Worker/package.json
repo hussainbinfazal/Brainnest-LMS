@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@repo/shared": "workspace:*",
     "@prisma/client": "^6.14.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/next": "^8.0.7",
