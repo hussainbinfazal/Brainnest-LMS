@@ -1234,3 +1234,39 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+
+## May 17
+Changes
+--Refractored and added the index.ts for export as barrel export for better import statements throughout the workspaces
+--Refractored certificate Service to upload data in stream with streamifier on on the worker server
+
+--Refractored the types and added them in the root index.ts for better export throughout the workspaces
+
+
+
+
+Pending:
+-setup workers and the chat in different node server and services, models
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes

@@ -7,9 +7,9 @@
       "DOM",
       "ESNext"
     ],
-    "allowJs": true, // ✅ allow importing .js/.jsx
-    "checkJs": false, // optional: skip JS type checking
-    "jsx": "preserve", // ✅ enable JSX parsing
+    "allowJs": true, // 
+    "checkJs": false, //
+    "jsx": "preserve", //
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": true,

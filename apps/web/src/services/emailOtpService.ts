@@ -2,6 +2,7 @@ import userToken from "@/models/User/userToken";
 import { logger } from "@/utils/logger/logger.node";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import { validateEmail } from "@/utils/validators";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -12,8 +13,8 @@ const transporter = nodemailer.createTransport({
 });
 export async function sendEmail(userId: string, email: string, otp: string): Promise<void> {
     await userToken.deleteMany({ userId: userId, type: "reset" });
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        logger.error("Invalid email format");
+    if(!validateEmail(email)){
+        logger.error("Invalid email format",{ email});
         throw new Error("Invalid email format");
     }
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
