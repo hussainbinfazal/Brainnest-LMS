@@ -1,4 +1,4 @@
-import { IUser } from "@/types/model";
+import { IUser } from "@repo/shared";
 import mongoose, { Schema, Model } from "mongoose";
 
 export const userSchema: Schema<IUser> = new mongoose.Schema({

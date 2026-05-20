@@ -1,14 +1,15 @@
-import Progress from "@/models/Course/progressModel";
-import UserCourse from "@/models/User/userCourse";
+import {Progress} from "@repo/shared";
+import {userCourse} from "@repo/shared";
 import { IProgress } from "@/types/model";
 import { logger } from "@/utils/logger/logger.node";
+import { validateMongooseId } from "@repo/shared";
 import mongoose from "mongoose";
 
 
 export async function generateProgress(userId: string, courseId: string,) {
     try {
 
-        if (!userId || !isValid(userId)) {
+        if (!userId || !validateMongooseId({userId:userId})) {
             logger.info("Invalid user id");
             return
         }
@@ -16,7 +17,7 @@ export async function generateProgress(userId: string, courseId: string,) {
             logger.info("Course and lesson IDs are required");
             return
         }
-        if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        if (!validateMongooseId({courseId:courseId})) {
             logger.info("Invalid course or Lesson ID")
             return
         };
@@ -153,7 +154,7 @@ export async function updateProgress(userId: string, courseId: string, lessonId:
             }
 
         ], { upsert: true, new: true });
-        await UserCourse.findOneAndUpdate({ userId, courseId }, { $set: { progress: update.percentageCompleted } }, { upsert: true });
+        await userCourse.findOneAndUpdate({ userId, courseId }, { $set: { progress: update.percentageCompleted } }, { upsert: true });
 
         let percentageCompleted = update?.percentageCompleted
         logger.info("Progress Updated (pipeline)", {

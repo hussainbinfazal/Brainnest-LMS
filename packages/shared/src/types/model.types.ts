@@ -1,6 +1,6 @@
-import { Document, Types } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
-export interface ICourse extends Document {
+export interface ICourse {
   _id: Types.ObjectId;
   title: string;
   topic: Types.ObjectId | ITopic;
@@ -36,14 +36,14 @@ export interface ICourse extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-export interface ICategory extends Document {
+export interface ICategory {
   _id: Types.ObjectId;
   name: string;
   slug: string;
   parent: Types.ObjectId;
 
 }
-export interface IEnrollment extends Document {
+export interface IEnrollment {
   _id: Types.ObjectId;
   courseId: Types.ObjectId;
   userId: Types.ObjectId;
@@ -51,7 +51,7 @@ export interface IEnrollment extends Document {
   pricePaid: number;
   enrolledAt: Date;
 }
-export interface ILesson extends Document {
+export interface ILesson  {
   _id: Types.ObjectId;
   courseId: Types.ObjectId;
   name: string;
@@ -63,8 +63,8 @@ export interface ILesson extends Document {
   isPreviewVideo?: string;
   order: number;
 }
-export interface IReview extends Document {
-  _id: string;
+export interface IReview  {
+  _id: Types.ObjectId;
   course: Types.ObjectId;
   user?: Types.ObjectId | IUser;
   rating: number;
@@ -76,16 +76,16 @@ export interface IReview extends Document {
   createdAt: Date | string;
   updatedAt?: Date | string;
 }
-export interface ITopic extends Document {
+export interface ITopic  {
   _id: Types.ObjectId;
   name: string;
   description: string;
   slug: string;
-  isActive: booelan
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
-export interface ICart extends Document {
+export interface ICart  {
   _id: Types.ObjectId
   user: Types.ObjectId;
   courses: (Types.ObjectId | ICourse)[];
@@ -94,7 +94,7 @@ export interface ICart extends Document {
   tax: number;
   total: number;
 }
-export interface IChat extends Document {
+export interface IChat  {
   _id: Types.ObjectId;
   isPaid: boolean;
   isLimitExceeded: boolean;
@@ -127,7 +127,7 @@ export interface IChat extends Document {
   studentUnreadCount: number;
 }
 
-export interface IPaymentsByUser extends Document {
+export interface IPaymentsByUser  {
   _id: Types.ObjectId;
   amount: number;
   paymentId: Types.ObjectId;
@@ -137,7 +137,7 @@ export interface IPaymentsByUser extends Document {
   paymentOnModel: 'Course' | 'Chat';
   paymentStatus: 'pending' | 'completed' | 'failed';
 }
-interface ICoupon extends Document {
+interface ICoupon  {
   _id: Types.ObjectId;
   code: string;
   discountValue: number;
@@ -149,14 +149,14 @@ interface ICoupon extends Document {
   createdBy: Types.ObjectId;
 
 }
-interface ICouponUsage extends Document {
+interface ICouponUsage  {
   _id: Types.ObjectId;
   coupon: Types.ObjectId;
   user: Types.ObjectId;
   order: Types.ObjectId;
   usedAt: Date;
 }
-interface IMessage extends Document {
+interface IMessage  {
   _id: Types.ObjectId;
   sender: Types.ObjectId;
   receiver: Types.ObjectId;
@@ -169,7 +169,7 @@ interface IMessage extends Document {
   isDeletedByReceiver: boolean;
   isDeletedBySender: boolean;
 }
-interface IOrder extends Document {
+interface IOrder  {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   orderItems: {
@@ -190,7 +190,7 @@ interface IOrder extends Document {
   paidAt: Date;
 }
 
-export interface IPayments extends Document {
+export interface IPayments {
   _id: Types.ObjectId;
   amount: number;
   paymentId: string;
@@ -201,8 +201,8 @@ export interface IPayments extends Document {
   paymentStatus: 'pending' | 'completed' | 'failed';
 
 }
-export interface IProgress extends Document {
-  _id: string;
+export interface IProgress  {
+  _id: Types.ObjectId;
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   completedLessons: [{
@@ -215,7 +215,7 @@ export interface IProgress extends Document {
   lastAccessedAt: Date;
 }
 
-export interface IUser extends Document {
+export interface IUser  {
   _id: Types.ObjectId;
   name: string;
   email: string;
@@ -229,7 +229,7 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-export interface ICertificate extends Document {
+export interface ICertificate  {
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   courseName: string;
@@ -243,7 +243,7 @@ export interface ICertificate extends Document {
 
 
 }
-export interface IUserToken extends Document {
+export interface IUserToken  {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   type: 'reset ' | 'verification' | 'refresh';
@@ -252,7 +252,7 @@ export interface IUserToken extends Document {
   isVerified: boolean;
   isUsed: boolean
 }
-export interface IUserCourse extends Document {
+export interface IUserCourse  {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
@@ -266,7 +266,7 @@ export interface IUserCourse extends Document {
 
 }
 
-export interface ICategory extends Document {
+export interface ICategory  {
   _id: Types.ObjectId;
   name: string;
   slug: string;
