@@ -1,4 +1,4 @@
-import userToken from "@/models/User/userToken";
+import {userToken} from "@repo/shared";
 import { logger } from "@/utils/logger/logger.node";
 import nodemailer from "nodemailer";
 import crypto from "crypto";

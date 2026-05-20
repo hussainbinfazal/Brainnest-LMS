@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 export async function generateProgress(userId: string, courseId: string,) {
     try {
 
-        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        if (!userId || !isValid(userId)) {
             logger.info("Invalid user id");
             return
         }

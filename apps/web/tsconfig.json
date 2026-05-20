@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.base.json",  
   "compilerOptions": {
     "noEmit": true,
     "target": "ESNext",
@@ -19,7 +20,14 @@
     "paths": {
       "@/*": [
         "*"
+      ],
+      "@repo/shared": [
+        "../../../packages/shared/src/index.ts"
+      ],
+      "@repo/shared/*": [
+        "../../../packages/shared/src/*"
       ]
+      
     },
     "ignoreDeprecations": "6.0",
     "incremental": true,
