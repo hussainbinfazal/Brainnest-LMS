@@ -1,4 +1,4 @@
-import mongoose, { Document, Types } from "mongoose";
+import mongoose, { Document, HydratedDocument, Types } from "mongoose";
 
 export interface ICourse {
   _id: Types.ObjectId;
@@ -36,6 +36,7 @@ export interface ICourse {
   createdAt: Date;
   updatedAt: Date;
 }
+
 export interface ICategory {
   _id: Types.ObjectId;
   name: string;
@@ -280,3 +281,25 @@ export interface ISection {
   description?: string;
   order: number;
 }
+
+
+export type CourseDocument = HydratedDocument<ICourse>;
+export type CategoryDocument = HydratedDocument<ICategory>;
+export type EnrollmentDocument = HydratedDocument<IEnrollment>;
+export type LessonDocument = HydratedDocument<ILesson>;
+export type ReviewDocument = HydratedDocument<IReview>;
+export type TopicDocument = HydratedDocument<ITopic>;
+export type CartDocument = HydratedDocument<ICart>;
+export type ChatDocument = HydratedDocument<IChat>;
+export type PaymentsByUserDocument = HydratedDocument<IPaymentsByUser>;
+export type CouponDocument = HydratedDocument<ICoupon>;
+export type CouponUsageDocument = HydratedDocument<ICouponUsage>;
+export type MessageDocument = HydratedDocument<IMessage>;
+export type OrderDocument = HydratedDocument<IOrder>;
+export type PaymentsDocument = HydratedDocument<IPayments>;
+export type ProgressDocument = HydratedDocument<IProgress>;
+export type UserDocument = HydratedDocument<IUser>;
+export type CertificateDocument = HydratedDocument<ICertificate>;
+export type UserTokenDocument = HydratedDocument<IUserToken>;
+export type UserCourseDocument = HydratedDocument<IUserCourse>;
+export type SectionDocument = HydratedDocument<ISection>;

@@ -1,4 +1,4 @@
-import { IProgress } from "@/types/model";
+import { IProgress } from "@repo/shared"
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 
@@ -32,12 +32,12 @@ const progressSchema = new mongoose.Schema<IProgress>(
         }
       },
     ],
-    completedLessonsCount: [
+    completedLessonsCount: 
       {
         type: Number,
         default: 0,
       },
-    ],
+    
     percentageCompleted: {
       type: Number,
       default: 0,

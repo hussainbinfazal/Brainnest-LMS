@@ -71,13 +71,19 @@ export async function updateProgress(userId: string, courseId: string, lessonId:
                 $set: {
                     completedLessons: {
                         $map: {
-                            input: "$completedLesssons",
+                            input: "$completedLessons",
                             as: "l",
                             in: {
                                 $cond: [
-                                    { $eq: "$$l.lessonId" },
-                                    { lessonId, progress: progressValue },
-                                    "$$l"
+                                    { $eq: ["$$l.lessonId", lessonId ]},
+                                    {
+                                        $mergeObjects:[
+                                            "$$1",
+                                            {
+                                                progress: progressValue
+                                            }
+                                        ]
+                                    }
                                 ]
                             }
                         }
@@ -108,6 +114,24 @@ export async function updateProgress(userId: string, courseId: string, lessonId:
                 }
             },
             {
+                $set:{
+                    completedLessonsCount:{
+                        $size:{
+                            $filter:{
+                                input:"$completedLessons",
+                                as: "l",
+                                cond:{
+                                    $eq:[
+                                        "$$l.progress",
+                                        100
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
                 $lookup: {
                     from: "lessons",
                     localfield: "courseId",
@@ -126,22 +150,13 @@ export async function updateProgress(userId: string, courseId: string, lessonId:
                 $set: {
                     percentageCompleted: {
                         $cond: [
-                            { $eq: ["totalLessons", 0] },
-                            {
+                            { $eq: ["$totalLessons", 0] },
+                            0,
+                             {
                                 $multiply: [
                                     {
                                         $divide: [
-                                            {
-                                                $size: {
-                                                    $filter: {
-                                                        input: "$completedLessons",
-                                                        as: "l",
-                                                        cond: {
-                                                            $eq: ["$$l.progress", 100]
-                                                        }
-                                                    }
-                                                }
-                                            },
+                                           "$completedLessonsCount",
                                             "$totalLessons"
                                         ]
                                     },
