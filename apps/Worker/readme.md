@@ -1,232 +1,139 @@
-# 🚀 Express Starter Kit with Prisma 
+# 🚀 Worker Service
 
-A production-ready Node.js/Express backend starter kit with PostgreSQL, Prisma ORM. Designed to kickstart your next project with multiple frontend framework support (React, Next.js static, Next.js SSR).
+A background worker service for the Brainnest Turborepo.
+This Express-based worker app handles queued jobs, Redis-backed queue connections, and shared repository utilities.
 
 ## ✨ Features
 
-- 🌐 Express.js API server
-- 🐘 PostgreSQL database with Prisma ORM
-- 🔐 CORS enabled
-- 🍪 Cookie-based authentication support
-- ⚡ Multiple frontend deployment options
-- 🔧 Environment-based configuration
+- 🚀 Express.js status endpoint for health checks
+- 🧠 BullMQ-based job processing
+- 🔌 Redis connection via `ioredis`
+- 📦 Shared utilities from `@repo/shared`
+- 📁 Modular folder structure for jobs, queues, middleware, and helpers
+- 🌐 CORS enabled with environment-controlled origin
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
-- 📦 Node.js (v16 or higher)
-- 📥 npm or yarn
-- 🗄️ PostgreSQL database
+- 📦 Node.js 20 or higher
+- 📥 `pnpm`
+- 🧠 Redis instance available and reachable via `REDIS_URL`
+- 🔧 Repository dependencies installed from the workspace root
 
 ## 🚀 Quick Start
 
-### 1. 📁 Clone the Repository
+### 1. 📁 Navigate to the Worker package
 
 ```bash
-git clone <repository-url>
-cd <repository-name>
+cd apps/Worker
 ```
 
-### 2. 📦 Install Dependencies
+### 2. 📦 Install dependencies
+
+From the workspace root:
 
 ```bash
-npm install
+pnpm install
 ```
 
-### 3. ⚙️ Environment Setup
+### 3. ⚡ Start development server
 
-Create a `.env` file in the root directory:
+```bash
+pnpm dev
+```
+
+The service will start using `src/index.ts` and expose a health endpoint at `/`.
+
+## 🔧 Available scripts
+
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start Worker service in development with `ts-node-dev` |
+| `pnpm build` | Compile TypeScript to `dist/` |
+| `pnpm start` | Run the compiled production build from `dist/index.js` |
+
+## ⚙️ Environment Setup
+
+Create a `.env` file in `apps/Worker` or use workspace environment settings:
 
 ```env
-PORT=8000
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+PORT=5000
 CLIENT_URL=http://localhost:3000
-NODE_ENV=development
-FRONTEND=react
+REDIS_URL=redis://localhost:6379
 ```
 
-### 4. 🗄️ Database Setup
+### Recommended variables
 
-Generate Prisma client and run migrations:
-
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Run database migrations
-npx prisma db push
-
-# Optional: Seed the database
-npx prisma db seed
-```
-
-### 5. 🔥 Start Development Server
-
-```bash
-npm run dev
-```
-
-The server will start on `http://localhost:8000`
-
-## 🔧 Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `PORT` | 🚪 Server port number | 8000 | ✅ |
-| `DATABASE_URL` | 🐘 PostgreSQL connection string | - | ✅ |
-| `CLIENT_URL` | 🌐 Frontend application URL for CORS | http://localhost:3000 | ✅ |
-| `NODE_ENV` | 🔧 Environment (development/production) | development | ✅ |
-| `FRONTEND` | ⚡ Frontend type (react/next-static/next-ssr) | react | ❌ |
-
-## 📊 Database Schema
-
-### 👤 User Model
-- `id`: Auto-increment primary key
-- `email`: Unique user email
-- `is_verified`: Email verification status
-- `created_at`: Account creation timestamp
-
-### 📧 EmailVerification Model
-- `id`: Auto-increment primary key
-- `user_id`: Foreign key to User
-- `verification_code`: 6-character verification code
-- `expires_at`: Code expiration timestamp
-- `is_used`: Usage status
-- `created_at`: Creation timestamp
-
-## 🛠️ API Endpoints
-
-### 💚 Health Check
-```
-GET /
-```
-Returns API status and developer information.
-
-## 🎨 Frontend Integration
-
-This backend supports three frontend deployment modes:
-
-### ⚛️ React (Static)
-```env
-FRONTEND=react
-```
-Serves static files from `frontend/dist`
-
-### 📄 Next.js Static Export
-```env
-FRONTEND=next-static
-```
-Serves static files from `frontend/out`
-
-### 🔄 Next.js SSR
-```env
-FRONTEND=next-ssr
-```
-Runs Next.js server-side rendering
-
-## 💻 Development
-
-### 🗄️ Database Operations
-
-```bash
-# View database in Prisma Studio
-npx prisma studio
-
-# Reset database
-npx prisma db push --force-reset
-
-# Generate Prisma client after schema changes
-npx prisma generate
-```
-
-### 📜 Common Scripts
-
-```bash
-# Start development server
-npm run dev
-
-# Start production server
-npm start
-
-# Run database migrations
-npm run migrate
-
-# Reset database
-npm run db:reset
-```
-
-## 🚢 Production Deployment
-
-1. Set environment variables:
-   ```env
-   NODE_ENV=production
-   DATABASE_URL=<production-database-url>
-   PORT=<production-port>
-   ```
-
-2. Build and start:
-   ```bash
-   npm install --production
-   npx prisma generate
-   npx prisma db push
-   npm start
-   ```
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | HTTP port for the Worker health endpoint | ✅ |
+| `CLIENT_URL` | Frontend URL allowed by CORS | ✅ |
+| `REDIS_URL` | Redis connection string for BullMQ | ✅ |
+| `NODE_ENV` | Environment mode | ❌ |
 
 ## 📁 Project Structure
 
 ```
-backend/
-├── 📊 prisma/
-│   └── schema.prisma          # Database schema
-├── 🎨 frontend/               # Frontend build files (production)
-├── ⚙️ generated/
-│   └── prisma/               # Generated Prisma client
-├── 🔐 .env                   # Environment variables
-├── 🚀 server.js              # Main server file
-└── 📦 package.json           # Dependencies and scripts
+apps/Worker/
+├── src/
+│   ├── index.ts              # Main entrypoint and Express setup
+│   ├── middleware/
+│   │   └── logger.middleware.ts  # Request logging middleware
+│   ├── jobs/                 # Job definitions and processing logic
+│   ├── queue/                # Queue configuration and Redis connection
+│   │   ├── redis.ts
+│   │   ├── certificate.queue.ts
+│   │   ├── email.queue.ts
+│   │   ├── progress.queue.ts
+│   │   └── worker/           # Worker processors
+│   ├── helpers/              # Reusable helper modules
+│   ├── services/             # Service integrations and utilities
+│   ├── utils/                # General utility helpers
+│   └── ts-types/             # Custom TypeScript definitions
+├── package.json
+└── readme.md
 ```
 
-## 🛠️ Technologies Used
+## 🛠️ Development
 
-- **Runtime**: 🟢 Node.js
-- **Framework**: 🌐 Express.js
-- **Database**: 🐘 PostgreSQL
-- **ORM**: 🔷 Prisma
-- **Authentication**: 🍪 Cookie-based
-- **CORS**: ✅ Enabled for cross-origin requests
+- Run `pnpm dev` to start the worker service locally.
+- Use `pnpm build` then `pnpm start` for production-style execution.
+- Ensure Redis is running and `REDIS_URL` is reachable.
+
+## 📦 Deployment
+
+1. Set environment variables in production:
+
+```env
+NODE_ENV=production
+PORT=5000
+CLIENT_URL=<frontend-url>
+REDIS_URL=<redis-url>
+```
+
+2. Build and start:
+
+```bash
+pnpm install --production
+pnpm build
+pnpm start
+```
+
+## 🔍 Health Check Endpoint
+
+```
+GET /
+```
+
+Returns a plain success message when the worker service is running.
 
 ## 🤝 Contributing
 
 1. 🍴 Fork the repository
 2. 🌿 Create a feature branch
-3. ✨ Make your changes
-4. 🧪 Test thoroughly
+3. ✨ Implement your changes
+4. 🧪 Test locally
 5. 📥 Submit a pull request
-
-## 🔧 Troubleshooting
-
-### ⚠️ Common Issues
-
-1. **🚫 Database Connection Error**
-   - Verify DATABASE_URL is correct
-   - Ensure PostgreSQL is running
-   - Check database credentials
-
-2. **❓ Prisma Client Not Found**
-   ```bash
-   npx prisma generate
-   ```
-
-3. **🚪 Port Already in Use**
-   - Change PORT in .env file
-   - Kill process using the port: `lsof -ti:8000 | xargs kill -9`
-
-### 🆘 Getting Help
-
-- 📋 Check the logs for detailed error messages
-- ⚙️ Ensure all environment variables are set correctly
-- 🔗 Verify database connectivity
-- 📊 Review Prisma schema for any conflicts
 
 ## 📄 License
 
@@ -235,5 +142,3 @@ backend/
 ---
 
 **👨‍💻 Developer**: [hussainbinfazal](https://github.com/hussainbinfazal)
-
-Found this useful? Give it a ⭐️!
