@@ -1,4 +1,4 @@
-import {Progress} from "@repo/shared";
+import {Progress, ProgressDocument} from "@repo/shared";
 import {userCourse} from "@repo/shared";
 import { IProgress } from "@/types/model";
 import { logger } from "@/utils/logger/logger.node";
@@ -21,16 +21,17 @@ export async function generateProgress(userId: string, courseId: string,) {
             logger.info("Invalid course or Lesson ID")
             return
         };
-        let progress: IProgress | null = await Progress.findOne({ userId, courseId })
+        let progress: ProgressDocument | null = await Progress.findOne({ userId, courseId })
         if (!progress) {
-            progress = new Progress({ userId, courseId })
-            await progress.save();
+           
+            progress = new Progress({ userId, courseId });
+            await progress?.save();
         }
         logger.info("Progress of the Lesson created in worker", { progress });
     }
-    catch (err: any) {
+    catch (error: any) {
         logger.error("Error in generating certificate");
-        throw new Error(err)
+        throw new Error(error)
     }
 }
 
