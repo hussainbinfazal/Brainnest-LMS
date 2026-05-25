@@ -1,7 +1,6 @@
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared";
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
 
 declare global {
   var mongooseCache: {
@@ -10,9 +9,7 @@ declare global {
   } | undefined;
 }
 
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable in environment variables");
-}
+
 
 let cached = global.mongooseCache;
 if (!cached) {
@@ -22,23 +19,28 @@ if (!cached) {
 
   }
 }
-export const connectDB = async () => {
+export const connectDB = async (mongoDbUrl?: string) => {
+  if (!mongoDbUrl) {
+  throw new Error("Please define the MONGODB_URI environment variable in environment variables");
+}
   try {
-    if (cached!.conn) {
+    if (cached!.conn &&
+      mongoose.connection.readyState === 1) {
       return cached!.conn
     }
     if (!cached!.promise) {
-      cached!.promise = mongoose.connect(MONGODB_URI, {
+      cached!.promise = mongoose.connect(mongoDbUrl, {
         bufferCommands: false,
         maxPoolSize: 10,
       });
     }
     cached!.conn = await cached!.promise
 
-    logger.info({ host: cached.conn.connection.host }, "MongoDB Connected");
+    logger.info( "MongoDB Connected",{ host: cached.conn.connection.host });
     return cached!.conn;
-  } catch (error: any) {
-    logger.error(error, "Database connection failed")
+  } catch (error: unknown) {
+    cached!.promise = null
+    logger.error("Database connection failed",{error})
     throw error
   }
 };
