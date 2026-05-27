@@ -45,3 +45,6 @@ prisma/
 # OS
 .DS_Store
 Thumbs.db
+
+node_modules/
+.ignored_node_modules/

@@ -3,6 +3,9 @@ import cors from 'cors';
 import { configDotenv } from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { loggerMiddleware } from './middleware/logger.middleware';
+import { authMiddleware } from './middleware/middleware';
+import chatRoutes from './routes/chat/chat.route';
+import { chatRateLimiter, globalRateLimiter, messageRateLimiter } from './middleware/rate.middleware';
 
 
 configDotenv({ path: "./.env" });
@@ -18,7 +21,19 @@ app.use(cors({
 app.use(express.json());
 app.use(loggerMiddleware);
 app.use(cookieParser());
-
+app.use(globalRateLimiter)
+app.use(
+  "/api/chat",
+  authMiddleware,
+  chatRateLimiter,
+  chatRoutes
+);
+app.use(
+  "/api/message",
+  authMiddleware,
+  messageRateLimiter,
+  chatRoutes
+);
 app.get('/', (req:Request, res:Response) => {
     res.send('Workers are running Successfully');
 });
