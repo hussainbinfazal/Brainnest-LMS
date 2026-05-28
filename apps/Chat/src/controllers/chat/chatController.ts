@@ -20,6 +20,9 @@ export async function getChat(request: ExpressRequest, response: Response): Prom
     try {
         const { id: userId } = request.params as { id: string };
         // console.log("This is the user Id", userId);
+        if(!idValidator({userId})){
+            return response.json({ message: "Invalid user id", status: 400 });
+        }
         const chat: IChat | null = await Chat.findOne({ sender: userId }).lean();
         if (!chat) return response.json({ message: "Chat not found" , status: 404});
         return response.json({
