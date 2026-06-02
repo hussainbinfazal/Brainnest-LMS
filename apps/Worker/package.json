@@ -13,7 +13,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.14.0",
     "@repo/shared": "workspace:*",
     "@types/cookie-parser": "^1.4.9",
     "@types/next": "^8.0.7",
@@ -28,7 +27,6 @@
     "ioredis": "^5.10.1",
     "jspdf": "^4.2.1",
     "mongoose": "^9.6.2",
-    "next": "^15.5.2",
     "nodemailer": "^7.0.13",
     "nodemon": "^3.1.10",
     "pino": "^10.3.1",
@@ -43,7 +41,7 @@
     "@types/node": "^24.12.3",
     "@types/nodemailer": "^7.0.11",
     "@types/streamifier": "^0.1.2",
-    "prisma": "^6.14.0",
+
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.3"
   }

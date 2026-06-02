@@ -1,6 +1,6 @@
-const BASE_URL = "https://brainnest-lms-fzqv.vercel.app";
+import { MetadataRoute } from "next";
 
-export default function robots() {
+export default function robots():MetadataRoute.Robots {
   return {
     rules: [
       {
@@ -9,7 +9,7 @@ export default function robots() {
         allow: "/",
         disallow: [
           "/api/*",
-          "/(admin)/*",
+          "/admin/*",
           "/course/manage*",
           "/course/create*",
           "/course/edit*",
@@ -24,6 +24,6 @@ export default function robots() {
         allow: "/",
       },
     ],
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    sitemap: `${process.env.NEXT_PUBLIC_BASE_URL}/sitemap.xml`,
   };
 }

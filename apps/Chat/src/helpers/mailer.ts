@@ -1,22 +1,20 @@
 import nodemailer, { SentMessageInfo } from 'nodemailer';
-
 import bcryptjs from 'bcryptjs';
-
-import User from '../../../../packages/shared/src/models/User/userModel';
-import { connectDB } from '../../../../packages/shared/src/config/mongoDB/db';
-import { logger } from '../../../../packages/shared/src/logger/logger';
+import {User} from '@repo/shared'
+import { connectDB } from '@repo/shared';
+import { logger } from '@repo/shared';
 export type EmailType = "RESET" | "VERIFY";
 
 export const sendEmail = async (email: string, emailType: EmailType = "RESET", userId: string): Promise<SentMessageInfo> => {
     try {
-        await connectDB();
+        await connectDB(process.env.MONGODB_URI);
 
         const hashedToken = await bcryptjs.hash(userId.toString(), 10);
         logger.info("Generated email token",{ hashedToken });
         await User.findByIdAndUpdate(userId,
             { resetPasswordToken: hashedToken, resetPasswordTokenExpires: Date.now() + 3600000 })
 
-        const transporter = nodemailer.createTransport({
+        const transporter: nodemailer.Transporter = nodemailer.createTransport({
             host: process.env.MAILTRAP_HOST,
             port: Number(process.env.MAILTRAP_PORT),
             secure: false, // true for 465, false for other ports
@@ -26,7 +24,7 @@ export const sendEmail = async (email: string, emailType: EmailType = "RESET", u
             },
         });
 
-        const mailOptions = {
+        const mailOptions: nodemailer.SendMailOptions = {
             from: 'Brainnest@gmail.com',
             to: email,
             subject: emailType === "RESET" ? "Reset your password" : "Verify your email",
@@ -36,8 +34,10 @@ export const sendEmail = async (email: string, emailType: EmailType = "RESET", u
         }
 
         const mailResponse = await transporter.sendMail(mailOptions);
+        logger.info("Email sent successfully to " + email, { mailResponse });
         return mailResponse
-    } catch (error: any) {
+
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         logger.error("Error sending email to " + email + ": " + message);
         throw error

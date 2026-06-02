@@ -1407,3 +1407,39 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+## May 27
+Changes
+--Added sitemap file
+--Added robots file for indexing
+--Refractored admin controllers
+
+
+
+Pending:
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-setup workers and the chat in different node server and services, models
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+
+node@latest --save-dev @types/typescript --save-dev @types/node next@latest react@latest react-dom@latest --save-dev @types/next

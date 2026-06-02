@@ -152,10 +152,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     //     });
     //   });
     // }
-  } catch (error) {
-    console.error("Error fetching dynamic routes for sitemap:", error);
+  } catch (error : unknown) {
+    console.error("Error fetching dynamic routes for sitemap:", {error:error});
   }
-
   // Combine all sitemap entries
   return [...staticPages, ...userPages, ...dynamicPages];
 }

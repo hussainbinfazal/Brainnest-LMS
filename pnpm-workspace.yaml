@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+
 allowBuilds:
   '@prisma/client': set this to true or false
   '@prisma/engines': set this to true or false
@@ -8,5 +9,8 @@ allowBuilds:
   core-js: set this to true or false
   msgpackr-extract: set this to true or false
   prisma: set this to true or false
-  sharp: true
+  sharp: set this to true or false
   unrs-resolver: set this to true or false
+
+onlyBuiltDependencies:
+  - sharp
