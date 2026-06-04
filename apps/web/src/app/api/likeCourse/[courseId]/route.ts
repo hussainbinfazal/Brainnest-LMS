@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB } from "@/config/mongoDB/db";
-import Course from "@/models/Course/courseModel";
-import User from "@/models/User/userModel";
-import UserCourse from "@/models/User/userCourse";
+import {Course, User, userCourse,IUser, validateMongooseId} from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { IUser } from "@/types/model";
-import mongoose from "mongoose";
 import { logger } from "@/utils/logger/logger.node";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {

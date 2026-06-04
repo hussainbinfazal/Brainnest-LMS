@@ -138,7 +138,7 @@ export interface IPaymentsByUser  {
   paymentOnModel: 'Course' | 'Chat';
   paymentStatus: 'pending' | 'completed' | 'failed';
 }
-interface ICoupon  {
+export interface ICoupon  {
   _id: Types.ObjectId;
   code: string;
   discountValue: number;
@@ -150,14 +150,14 @@ interface ICoupon  {
   createdBy: Types.ObjectId;
 
 }
-interface ICouponUsage  {
+export interface ICouponUsage  {
   _id: Types.ObjectId;
   coupon: Types.ObjectId;
   user: Types.ObjectId;
   order: Types.ObjectId;
   usedAt: Date;
 }
-interface IMessage  {
+export interface IMessage  {
   _id: Types.ObjectId;
   sender: Types.ObjectId;
   receiver: Types.ObjectId;
@@ -170,7 +170,7 @@ interface IMessage  {
   isDeletedByReceiver: boolean;
   isDeletedBySender: boolean;
 }
-interface IOrder  {
+export interface IOrder  {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   orderItems: {

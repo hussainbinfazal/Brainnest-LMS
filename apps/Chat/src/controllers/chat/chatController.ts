@@ -1,9 +1,8 @@
 import { Request as ExpressRequest, Response } from "express";
-import Razorpay from 'razorpay';
 import { connectDB } from '@repo/shared';
 import {User,Course, logger ,Chat,IChat,Message} from '@repo/shared';
 import mongoose from "mongoose";
-
+import { validateMongooseId } from "@repo/shared";
 interface AuthRequest extends ExpressRequest {
     user?: {
         id: string;
@@ -18,9 +17,9 @@ interface AuthRequest extends ExpressRequest {
 export async function getChat(request: ExpressRequest, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const { id: userId } = request.params as { id: string };
+        const { Id: userId } = request.params as { Id: string };
         // console.log("This is the user Id", userId);
-        if(!idValidator({userId})){
+        if(!validateMongooseId({ userId })) {
             return response.json({ message: "Invalid user id", status: 400 });
         }
         const chat: IChat | null = await Chat.findOne({ sender: userId }).lean();
@@ -59,7 +58,7 @@ export async function getAllChat(request: AuthRequest, response: Response): Prom
             chat,status: 200
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         logger.error("Error in finding chat ",{error});
         const message = error instanceof Error ? error.message : 'Unknown error';
         return response.json({ error: `Failed to find chat: ${message}`,status: 400 });
@@ -134,7 +133,7 @@ export async function deleteChat(request: ExpressRequest, response: Response): P
     }
 
   
-    if (!mongoose.Types.ObjectId.isValid(chatId)) {
+    if (!validateMongooseId({ chatId })) {
         logger.warn("Invalid chat ID");
       return response.status(400).json({
         success: false,
