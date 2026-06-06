@@ -94,32 +94,32 @@ export async function createChat(request: ExpressRequest, response: Response): P
 }
 
 
-export async function updateChat(request: ExpressRequest, response: Response): Promise<Response> {
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const { sender, receiver, message, chatId } = await request.body;
-        const chat = await Chat.findById(chatId);
-        if (!chat) {
-            logger.error("Chat not found");
-            return response.json({ message: "Chat not found",status: 404 })};
-        chat.allMessages.push(message);
-        chat.messageCount += 1;
-        chat.messageRemaining -= 1;
-        if (chat.messageRemaining === 0) {
-            logger.error("Message limit reached");
-            return response.json({ message: "Message limit reached",status: 400  })};
-        await chat.save();
-        return response.json({
-            message: "Message sent successfully",
-            chat,
-            status: 200
-        });
-    } catch (error: unknown) {
-        logger.error("Error in sending message", {error});
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return response.json({ error: `Failed to send message:${message}`,status: 400 });
-    }
-}
+// export async function updateChat(request: ExpressRequest, response: Response): Promise<Response> {
+//     await connectDB(process.env.MONGODB_URI!);
+//     try {
+//         const { sender, receiver, message, chatId } = await request.body;
+//         const chat = await Chat.findById(chatId);
+//         if (!chat) {
+//             logger.error("Chat not found");
+//             return response.json({ message: "Chat not found",status: 404 })};
+//         chat.allMessages.push(message);
+//         chat.messageCount += 1;
+//         chat.messageRemaining -= 1;
+//         if (chat.messageRemaining === 0) {
+//             logger.error("Message limit reached");
+//             return response.json({ message: "Message limit reached",status: 400  })};
+//         await chat.save();
+//         return response.json({
+//             message: "Message sent successfully",
+//             chat,
+//             status: 200
+//         });
+//     } catch (error: unknown) {
+//         logger.error("Error in sending message", {error});
+//         const message = error instanceof Error ? error.message : 'Unknown error';
+//         return response.json({ error: `Failed to send message:${message}`,status: 400 });
+//     }
+// }
 export async function deleteChat(request: ExpressRequest, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
     try {

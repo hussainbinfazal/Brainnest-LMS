@@ -1,4 +1,4 @@
-import { IChat, IPayments } from '@/types/model';
+import { IChat, IPayments } from '@repo/shared';
 import mongoose,{Schema,Model} from 'mongoose';
 
 
@@ -19,6 +19,7 @@ export const paymentsSchema = new mongoose.Schema({
         ref:'User'
     }
 },{timestamps:true})
+
 export const chatSchema: Schema<IChat> = new mongoose.Schema({
 
     isPaid: {

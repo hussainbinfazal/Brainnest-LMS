@@ -1,4 +1,4 @@
-import { IMessage } from '@/types/model';
+import { IMessage } from '@repo/shared';
 import mongoose, {Schema,Model} from 'mongoose';
 
 

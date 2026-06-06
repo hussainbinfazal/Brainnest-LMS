@@ -1,4 +1,4 @@
-import { IPayments } from '@/types/model';
+import { IPayments } from '@repo/shared';
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
 

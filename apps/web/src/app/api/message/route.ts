@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, context: { params: { userId: st
         chatByMessage.messageCount += 1;
         chatByMessage.messageRemaining -= 1;
         chatByMessage.allMessages.push(newMessage);
-        await newMessage.save();
+        await newMessage?.save();
 
 
         await chatByMessage.save();
@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
             return NextResponse.json({ error: "Message not found" }, { status: 404 });
         }
         return NextResponse.json({ message: "Message updated successfully", updatedMessage }, { status: 200 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ error: `Internal Server Error : ${message}` }, { status: 500 });
     }

@@ -6,6 +6,7 @@ import { loggerMiddleware } from './middleware/logger.middleware';
 import { authMiddleware } from './middleware/middleware';
 import chatRoutes from './routes/chat/chat.route';
 import { chatRateLimiter, globalRateLimiter, messageRateLimiter } from './middleware/rate.middleware';
+import paymentRoutes from './routes/payment/payment.routes';
 
 
 configDotenv({ path: "./.env" });
@@ -33,6 +34,12 @@ app.use(
   authMiddleware,
   messageRateLimiter,
   chatRoutes
+);
+app.use(
+  "/api/chat/payemnt",
+  authMiddleware,
+  messageRateLimiter,
+  paymentRoutes
 );
 app.get('/', (req:Request, res:Response) => {
     res.send('Workers are running Successfully');
