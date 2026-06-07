@@ -41,10 +41,10 @@ app.use(
   messageRateLimiter,
   paymentRoutes
 );
-app.get('/', (req:Request, res:Response) => {
+app.get('/', (res:Response) => {
     res.send('Workers are running Successfully');
 });
-app.get('/health', (req:Request, res:Response) => {
+app.get('/health', (res:Response) => {
     res.send('Workers are healthy & running');
 });
 app.listen(process.env.PORT, () => {

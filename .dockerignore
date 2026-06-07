@@ -1,0 +1,43 @@
+# Source Control
+.git
+.gitignore
+
+# Dependencies (Let Docker install these inside the container)
+node_modules/
+jspm_packages/
+web_modules/
+.venv/
+env/
+venv/
+ENV/
+
+# Development secrets and configs
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE and Editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Build outputs, logs, and diagnostics
+dist/
+build/
+out/
+.npm
+LOGS/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db

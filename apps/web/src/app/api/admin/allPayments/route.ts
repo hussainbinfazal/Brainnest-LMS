@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/config/mongoDB/db';
-import Payment from '@/models/Payment/paymentModel';
-import { IPayments } from '@/types/model';
+import {Payment, IPayments} from '@repo/shared';
 import { logger } from '@/utils/logger/logger.node';
 
 export async function GET(): Promise<NextResponse> {

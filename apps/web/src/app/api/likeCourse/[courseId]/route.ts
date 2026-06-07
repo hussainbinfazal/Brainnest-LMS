@@ -4,6 +4,7 @@ import { connectDB } from "@/config/mongoDB/db";
 import {Course, User, userCourse,IUser, validateMongooseId} from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
+import UserCourse from "@repo/shared/models/User/userCourse";
 
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {

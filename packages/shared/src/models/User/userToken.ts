@@ -1,4 +1,4 @@
-import { IUserToken } from '@/types/model';
+import { IUserToken } from '@repo/shared';
 import mongoose, { Schema, Model } from 'mongoose';
 
 

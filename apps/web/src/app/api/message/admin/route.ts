@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/mongoDB/db";
-import Chat from "@/models/Chat/chatModel";
-import Message from "@/models/Chat/messageModel";
+import { Chat, Message } from "@repo/shared";
 
 import { IChat, IMessage } from "@/types/model";
 import mongoose from "mongoose";
