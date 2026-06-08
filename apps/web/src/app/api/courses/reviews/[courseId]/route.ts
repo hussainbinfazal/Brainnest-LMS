@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
-import Review from "@/models/Course/reviewModel";
-import { connectDB } from "@/config/mongoDB/db";
-import Course from "@/models/Course/courseModel";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import {Review} from "@repo/shared";
+import { connectDB, Course } from "@repo/shared";
+import { validateMongooseId } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGDB_URI!);
     try {
         const { courseId } = context.params;
         const { searchParams } = new URL(request.url);
@@ -82,16 +81,16 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
                 totalPages: Math.ceil(totalCount / limit)
             }
         }, { status: 200 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error fetching reviews:", { error: message });
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json({ message: message }, { status: 500 });
     }
 }
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI);
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -139,10 +138,10 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         await session.commitTransaction();
         logger.info("Review deleted successfully", { reviewId });
         return NextResponse.json({ message: "Review deleted successfully" }, { status: 200 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error deleting review:", { error: message });
-        return NextResponse.json({ message: error.message }, { status: 500 });
+        return NextResponse.json({ message: message }, { status: 500 });
     } finally {
         session.endSession();
 

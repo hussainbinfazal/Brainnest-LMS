@@ -1,20 +1,12 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/config/mongoDB/db';
-import User from '@/models/User/userModel';
-import UserCourse from '@/models/User/userCourse';
-import Order from '@/models/Cart/orderModel';
-import Course from '@/models/Course/courseModel';
-import Payment from '@/models/Payment/paymentModel';
-import Cart from '@/models/Cart/cartModel';
+import { connectDB, User, userCourse, Order, Course, Payment, Cart } from '@repo/shared';
 import { ICourse, IOrder, IUser } from '@/types/model';
 import mongoose from 'mongoose';
 import { logger } from "@/utils/logger/logger.node";
 export async function POST(request: NextRequest): Promise<NextResponse> {
-
-
     try {
-        await connectDB();
+        await connectDB(process.env.MONGODB_URI!);
 
         const { orderId, paymentId, signature, cartId, userId, amount } = await request.json();
 
@@ -69,7 +61,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }, { status: 404 });
 
         // Check if any course already purchased using UserCourse model
-        const enrolledCoursesList = await UserCourse.find({
+        const enrolledCoursesList = await userCourse.find({
             userId: new mongoose.Types.ObjectId(userId),
             isEnrolled: true
         });

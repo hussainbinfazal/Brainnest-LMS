@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Course from "@/models/Course/courseModel";
-import User from "@/models/User/userModel";
-import { connectDB } from "@/config/mongoDB/db";
+import { Course, User, connectDB, logger, Review,validateMongooseId } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
-import Review from "@/models/Course/reviewModel";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -28,15 +22,19 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             logger.warn("rating & comment are required", { rating, comment });
             return NextResponse.json({ message: "rating & comment are required" }, { status: 400 })
         };
-        const course = await Course.findById(courseId).session(session);
-        if (!course) {
+        const [courseDB, isReviewed] = await Promise.all([
+            Course.findById(courseId).session(session),
+            Review.exists({ user: userId, course: courseId }).session(session)
+        ]);
+        if (!courseDB) {
             await session.abortTransaction();
             return NextResponse.json({ message: "Course not found" }, { status: 404 });
-        }
-        const alreadyReviewed = await Review.exists({
-            user: userId,
-            course: courseId,
-        }).session(session);
+        };
+        if (isReviewed) {
+            await session.abortTransaction();
+            return NextResponse.json({ message: "Already reviewed" }, { status: 400 });
+        };
+        
         // if(user.reviewCountInLastHour > 5){ //// maintain this with the redis
         //     await session.abortTransaction();
         //     return NextResponse.json({ message: "Too many reviews" }, { status: 400 });
@@ -49,37 +47,36 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             await session.abortTransaction();
             return NextResponse.json({ message: "Comment must be less than 2000 characters" }, { status: 400 });
         }
-        if (alreadyReviewed) {
-            await session.abortTransaction();
-            return NextResponse.json(
-                { message: "Already reviewed" },
-                { status: 400 }
-            );
-        }
-        const [newReview] = await Review.create(
-            [
+        const [newReview, updatedCourse] = await Promise.all([
+            Review.create(
+                [
+                    {
+                        user: userId,
+                        course: courseId,
+                        rating,
+                        comment,
+                    },
+                ],
+                { session }
+            ),
+            Course.updateOne(
+                { _id: courseId },
                 {
-                    user: userId,
-                    course: courseId,
-                    rating,
-                    comment,
+                    $inc: {
+                        totalReviews: 1,
+                        totalRatingSum: rating,
+                        [`ratingDistribution.${rating - 1}`]: 1,
+                    },
                 },
-            ],
-            { session }
-        );
+                { session }
+            )
+        ]);
 
-        // update course 
-        await Course.updateOne(
-            { _id: courseId },
-            {
-                $inc: {
-                    totalReviews: 1,
-                    totalRatingSum: rating,
-                    [`ratingDistribution.${rating - 1}`]: 1,
-                },
-            },
-            { session }
-        );
+        if (!newReview || !updatedCourse) {
+            await session.abortTransaction();
+            return NextResponse.json({ message: "Error in adding review" }, { status: 500 });
+        }
+        
 
         await session.commitTransaction();
         session.endSession();
@@ -87,7 +84,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         logger.info("Review added successfully");
         return NextResponse.json({ review: newReview, message: "Review added successfully" }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error in adding review: ${message}`);
         return NextResponse.json({ message: `Error in Adding Review : ${message}` }, { status: 500 });
@@ -98,7 +95,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
 
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
@@ -146,32 +143,38 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
         }
 
         const ratingDiff = rating - oldReview.rating;
+        const [updatedReview, updatedCourse] = await Promise.all([
+            Review.findByIdAndUpdate(
+                reviewId,
+                { rating, comment },
+                { new: true, session }
+            ),
+            Course.updateOne(
+                { _id: courseId },
+                {
+                    $inc: {
+                        totalRatingSum: ratingDiff,
+                        [`ratingDistribution.${oldReview.rating - 1}`]: -1,
+                        [`ratingDistribution.${rating - 1}`]: 1,
+                    },
+                },
+                { session }
+            )
+        ]);
+
+        if (!updatedReview || !updatedCourse) {
+            await session.abortTransaction();
+            return NextResponse.json({ message: "Error in updating review" }, { status: 500 });
+        }
 
         // update review
-        const updatedReview = await Review.findByIdAndUpdate(
-            reviewId,
-            { rating, comment },
-            { new: true, session }
-        );
-
-        // update course stats
-        await Course.updateOne(
-            { _id: courseId },
-            {
-                $inc: {
-                    totalRatingSum: ratingDiff,
-                    [`ratingDistribution.${oldReview.rating - 1}`]: -1,
-                    [`ratingDistribution.${rating - 1}`]: 1,
-                },
-            },
-            { session }
-        );
-
+        
         await session.commitTransaction();
         session.endSession();
         logger.info("Review updated successfully");
         return NextResponse.json({ message: "Review updated successfully", review: updatedReview }, { status: 200 });
     } catch (error: any) {
+        await session.abortTransaction();
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.info("Error in updating review", { message });
         return NextResponse.json({ message: `Error in Updating Review : ${message}` }, { status: 500 });

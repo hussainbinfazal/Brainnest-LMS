@@ -1,18 +1,19 @@
 
 import { Request, Response } from "express";
 import Razorpay from 'razorpay';
-import { connectDB } from '@repo/shared';
+import { connectDB, validateMongooseId } from '@repo/shared';
 import { User, Chat, Course, Message, Payment } from "@repo/shared";
 import { RazorpayCreateOrderRequest } from '@repo/shared';
 import { IPaymentsByUser } from '@repo/shared';
 import { logger } from "@repo/shared";
 import mongoose from 'mongoose';
+import {
+    RazorpayService,
+    PaymentService
+} from "@repo/payment";
+const razorpayService = new RazorpayService();
 
-const razorpay: Razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
+const paymentService = new PaymentService();
 
 export async function createChatPaymentOrder(request: Request, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
@@ -24,6 +25,9 @@ export async function createChatPaymentOrder(request: Request, response: Respons
             logger.warn("Missing required fields", { amount, chatId, userId, messageLimit });
             return response.status(400).json({ message: "User not found, Payment failed" });;
         }
+        if (validateMongooseId({ userId: userId })) return response.status(400).json({ message: "User not found, Payment failed" });
+        if (validateMongooseId({ chatId: chatId })) return response.status(400).json({ message: "Chat not found, Payment failed" });
+
         if (amount <= 0) {
             logger.warn("Invalid amount", { amount });
             return response.status(400).json({
@@ -56,32 +60,33 @@ export async function createChatPaymentOrder(request: Request, response: Respons
                 { amount, chatId, userId },
             );
 
-            const shortReceipt = `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-            const razorpayOptions: RazorpayCreateOrderRequest = {
-                amount: amount * 100, // Convert to paisa
-                currency: 'INR',
-                receipt: shortReceipt
-            };
-            const razorpayOrder =
-                await razorpay.orders.create(razorpayOptions);
-
-            chat.paymentsByUser.push({
+            const receipt = paymentService.generateReceipt();
+            const razorpayOrder = await razorpayService.createOrder({
                 amount,
-                paymentAt: new Date(),
-                paymentBy: user._id,
-                paymentOf: chat._id
-            } as IPaymentsByUser);
+                receipt
+            })
 
-            await chat.save({ session });
+            chat.razorpayChatId = razorpayOrder.id;
+            const [, , payment] = await Promise.all([
+                chat.paymentsByUser.push({
+                    amount,
+                    paymentAt: new Date(),
+                    paymentBy: user._id,
+                    paymentOf: chat._id
+                } as IPaymentsByUser),
+                chat.save({ session }),
+                new Payment({
+                    paymentBy: user._id,
+                    paymentOf: chat._id,
+                    paymentOnModel: 'Chat',
+                    paymentStatus: "pending",
+                    amount,
+                    razorpayOrderId:
+                        razorpayOrder.id
+                },{ session }).save()
 
-            const payment = new Payment({
-                paymentBy: user._id,
-                paymentOf: chat._id,
-                paymentOnModel: 'Chat',
-                paymentStatus: "pending"
-            });
 
-            await payment.save({ session });
+            ])
 
             response.locals.paymentResult = {
                 success: true,

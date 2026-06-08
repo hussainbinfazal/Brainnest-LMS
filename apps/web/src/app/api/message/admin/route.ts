@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/config/mongoDB/db";
+import { connectDB, validateMongooseId } from "@repo/shared";
 import { Chat, Message } from "@repo/shared";
-
 import { IChat, IMessage } from "@/types/model";
 import mongoose from "mongoose";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
-        await connectDB();
+        await connectDB(process.env.MONGODB_URI!);
         const { messageData } = await request.json();
         const { chatId, message, sender, receiver } = messageData;
+        if(validateMongooseId({ chatId:chatId }) === false) return NextResponse.json({ message: "Invalid ids" }, { status: 400 });
         if (!message || !sender || !receiver) return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+        const [newMessage, chatByMessage] = await Promise.all([
+            new Message({ sender, receiver, message, senderType: "admin" }).save(),
+            Chat.findById(chatId)       
+        ]);
         const newMessage: IMessage | null = new Message({ sender, receiver, message, senderType: "admin" });
         const chatByMessage: IChat | null = await Chat.findById(chatId);
         if (!chatByMessage) return NextResponse.json({ message: "Chat not found" }, { status: 400 });
@@ -19,7 +23,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await chatByMessage.save();
         return NextResponse.json({ message: "Message sent successfully" }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error in Creating Message :${message}`);
         return NextResponse.json({ message: "Something went wrong" }, { status: 500 })

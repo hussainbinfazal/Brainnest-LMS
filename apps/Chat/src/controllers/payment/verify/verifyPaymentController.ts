@@ -4,6 +4,10 @@ import { connectDB, Payment } from '@repo/shared';
 import { User, Course, Message, Chat, IChat } from '@repo/shared';
 import { logger } from "@repo/shared";
 import mongoose from 'mongoose';
+import { markPaymentCompleted, PaymentService } from '@repo/payment';
+
+const paymentService = new PaymentService();
+
 export async function verifyChatPayment(request: Request, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
@@ -12,13 +16,7 @@ export async function verifyChatPayment(request: Request, response: Response): P
         const { chatId, paymentId, signature, orderId, messageLimit } = request.body;
 
         // Verify Razorpay signature
-        const body: string = orderId + '|' + paymentId;
-        const expectedSignature: string = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-            .update(body.toString())
-            .digest('hex');
-
-        const isAuthentic: boolean = expectedSignature === signature;
+        const isAuthentic = paymentService.verifyPayment(orderId, paymentId, signature);
 
         if (!isAuthentic) {
             return response.status(400).json({
@@ -29,7 +27,7 @@ export async function verifyChatPayment(request: Request, response: Response): P
         await session.withTransaction(async () => {
             const [payment, chat] = await Promise.all([
                 Payment.findOne({
-                    paymentId,
+                    razorpayOrderId: orderId,
                     paymentStatus: "pending"
                 }).session(session),
                 Chat.findById(chatId).session(session)
@@ -44,14 +42,13 @@ export async function verifyChatPayment(request: Request, response: Response): P
                 throw new Error("Chat not found");
                 ;
             }
-            
+
             if (!messageLimit || messageLimit <= 0) {
                 logger.warn("Invalid message limit", { messageLimit });
                 throw new Error("Invalid message limit");
             }
 
-            payment.paymentStatus = "completed";
-            payment.paymentId = paymentId;
+
             chat.isPaid = true;
             chat.paidAt = new Date();
             chat.paymentResult = {
@@ -67,7 +64,11 @@ export async function verifyChatPayment(request: Request, response: Response): P
             chat.messageLimit = messageLimit;
             chat.messageCount = 0;
             await Promise.all([
-                payment.save({ session }),
+                markPaymentCompleted({
+                    payment,
+                    paymentId,
+                    session
+                }),
                 chat.save({ session })
             ]);
 

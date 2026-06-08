@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Course from "@/models/Course/courseModel";
-import { connectDB } from "@/config/mongoDB/db";
+import {Topic,Section,Lesson, connectDB,Course, Category} from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { v4 as uuidv4 } from 'uuid';
-import { ICategory, ICourse, ILesson, ISection, ITopic } from "@/types/model";
+import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
-import Category from "@/models/Course/categoryModel";
-import Topic from "@/models/Course/topicModel";
-import Section from "@/models/Course/sectionModel";
-import Lesson from "@/models/Course/lessonModel";
 import mongoose, { ObjectId, Types } from "mongoose";
 import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
@@ -39,7 +34,7 @@ interface CreateCourseBody {
 }
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction()
     try {
@@ -88,7 +83,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         topicIds = allTopics.map(t => t._id as Types.ObjectId);
 
 
-        let createdCourse: ICourse = await new Course({
+        let createdCourse: CourseDocument = await new Course({
             title,
             description,
             price,
@@ -141,12 +136,13 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         return NextResponse.json({ message: "Course created successfully", course: createdCourse }, { status: 201 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         await session.abortTransaction()
-        session.endSession()
         logger.error("Error in creating course", { error: error instanceof Error ? error.message : 'Unknown error' });
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ message: `Error in creating course: ${message}` }, { status: 500 });
+    }finally{
+        await session.endSession();
     }
 
 }

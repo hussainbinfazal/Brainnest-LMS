@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { connectDB } from "@/config/mongoDB/db";
+import { connectDB, logger } from "@repo/shared";
 import {Course, User, userCourse,IUser, validateMongooseId} from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
-import UserCourse from "@repo/shared/models/User/userCourse";
+
 
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
 
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
@@ -28,12 +27,12 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
         if (!courseId || !validateMongooseId({ courseId })) {
             logger.info("Invalid course id");
-            return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
+            return NextResponse.json({ message: "Invalid course id" }, { status: 400 })
         }
         const [userDB, courseDB, userCourseDB] = await Promise.all([
             User.exists({ _id: userId }),
             Course.exists({ _id: courseId }).select("title").lean(),
-            UserCourse.findOne({ userId: userId, courseId: courseId })
+            userCourse.findOne({ userId: userId, courseId: courseId })
         ])
         if (!userDB) {
             logger.info("User not found");
@@ -52,7 +51,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         }
 
         // Create or update UserCourse record
-        await UserCourse.findOneAndUpdate(
+        await userCourse.findOneAndUpdate(
             {
                 userId: userId,
                 courseId: courseId
@@ -67,10 +66,10 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         logger.info("Course liked successfully", { courseName: courseDB.title });
         return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error liking course:", { error: message });
-        return NextResponse.json({ message: `Error liking course: ${message}` }, { status: 500 });
+        return NextResponse.json({ message: `Error liking course` }, { status: 500 });
     }
 }
 

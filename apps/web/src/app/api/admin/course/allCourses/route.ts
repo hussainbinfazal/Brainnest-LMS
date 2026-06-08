@@ -1,16 +1,14 @@
 
 
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/config/mongoDB/db";
-import Course from "@/models/Course/courseModel";
+import { connectDB } from "@repo/shared";
+import { Course, ICourse, validateMongooseId } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { ICourse } from "@/types/model";
 import { ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const userFromSession: ISessionUser | null = await getDataFromToken(request);
         if (!userFromSession || !validateMongooseId({ userId: userFromSession.id })) {
@@ -23,9 +21,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const courses: ICourse[] = await Course.find({ instructor: userIdOfInstructor }).populate("instructorId", "name email").lean();
         logger.info("Successfully retrieved courses for instructor", { instructorId: userIdOfInstructor, courseCount: courses.length });
         return NextResponse.json({ courses }, { status: 200 })
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in getting all courses for instructor", { error: message });
-        return NextResponse.json({ message: `Error in getting all courses: ${message}` }, { status: 500 })
+        return NextResponse.json({ message: `Error in getting all courses` }, { status: 500 })
     }
 }

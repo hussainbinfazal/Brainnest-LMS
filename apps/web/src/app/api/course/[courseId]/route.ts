@@ -1,22 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import Course from "@/models/Course/courseModel";
-import { connectDB } from "@/config/mongoDB/db";
-import { logger } from "@/utils/logger/logger.node";
+import { Course, connectDB, logger } from "@repo/shared";
 import mongoose from "mongoose";
 import { ICourse, IReview } from "@/types/model";
 import { CourseAggregationResult } from "@/types/aggregation/aggregation";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { validateMongooseId } from "@repo/shared";
 
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const { courseId } = context.params;
         const page = parseInt(request.nextUrl.searchParams.get("page") || "0", 10);
         if (!courseId || !validateMongooseId({ courseId: courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
-        if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        if (!validateMongooseId({ courseId })) {
             return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
         }
         const result = await Course.aggregate<CourseAggregationResult>([
@@ -113,7 +111,7 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
         const totalRatings: number = instructorStats?.totalRatings || 0
         logger.info("Course fetched successfully", { courseId });
         return NextResponse.json({ course, reviews, totalEnrolled, totalReviews, totalRatings }, { status: 200 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in Fetching Course", { error: message });
         return NextResponse.json({ message: `Error in Fetching Course: ${message}` }, { status: 500 });

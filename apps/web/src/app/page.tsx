@@ -4,7 +4,7 @@ import { redisClient } from "@/config/redis/redis";
 import { CCourse, CReview } from "@/types/client";
 import { JSX } from "react/jsx-runtime";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
-import { logger } from "@/utils/logger/logger.node";
+
 
 
 // import HomePage2 from "./components/Homepage2";
@@ -18,12 +18,10 @@ export default async function Home(): Promise<JSX.Element> {
   const cachedReviewsRaw: string | null = await redisClient.get(reviewCacheKey);
   // await redisClient.del("reviews:courses:all");
   let cachedReviews: CReview[] | null = null;
-  logger.debug({ cachedReviewsRaw }, "Cached Reviews Raw on Homepage");
   if (cachedReviewsRaw) {
     try {
       cachedReviews = JSON.parse(JSON.stringify(cachedReviewsRaw)) as CReview[]
     } catch (e: any) {
-      logger.error(e, "Error parsing cached reviews");
     }
   }
 
@@ -41,7 +39,6 @@ export default async function Home(): Promise<JSX.Element> {
 
 
     } catch (err: any) {
-      logger.error(err, "Error fetching reviews");
     }
   } else {
     initialReviews = cachedReviews;

@@ -1,5 +1,5 @@
 import { Redis as UpstashRedis } from '@upstash/redis'
-import IORedis from "ioredis";
+
 
 
 
@@ -12,7 +12,7 @@ Upstash SDK Client
 Used for caching / KV operations
 ----------------------------------
 */
-const redisClient = new UpstashRedis({
+export const redisClient = new UpstashRedis({
     url: process.env.UPSTASH_REDIS_URL!,
     token: process.env.UPSTASH_REDIS_TOKEN!,
 })

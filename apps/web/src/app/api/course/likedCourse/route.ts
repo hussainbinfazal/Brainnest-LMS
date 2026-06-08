@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/config/mongoDB/db";
+import { connectDB } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import UserCourse from "@/models/User/userCourse";
+import {userCourse} from "@repo/shared";
 import mongoose from "mongoose";
-import { logger } from "@/utils/logger/logger.node";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { logger } from "@repo/shared";
+import { validateMongooseId } from "@repo/shared";
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || !user.id) {
@@ -24,7 +24,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
                 status: 400
             })
         }
-        const result = await UserCourse.aggregate([
+        const result = await userCourse.aggregate([
             {
                 $match: {
                     userId: new mongoose.Types.ObjectId(userId),
@@ -103,9 +103,9 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
         if (result.length === 0) {
             return NextResponse.json({ message: "No liked courses found" }, { status: 200 });
         }
-
+        logger.info("Liked courses fetched successfully", { userId, likedCourseCount: result.length });
         return NextResponse.json({ message: "Liked courses fetched successfully", userLikedCourses: result }, { status: 200 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in getting liked courses", { error: message });
         return NextResponse.json({ message: `Error Fetching courses :${message}` }, { status: 500 });

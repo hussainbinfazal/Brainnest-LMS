@@ -6,7 +6,8 @@ export function validateMongooseId({
     lessonId,
     reviewId,
     chatId,
-    messageId
+    messageId,
+    couponId
 
 }: {
     userId?: string,
@@ -14,15 +15,18 @@ export function validateMongooseId({
     lessonId?: string,
     reviewId?: string,
     chatId?: string,
-    messageId?: string
+    messageId?: string,
+    couponId?: string
+
 
 }): boolean {
-    if (userId && !mongoose.Types.ObjectId.isValid(userId)) throw new Error("Invalid user id")
-    if (courseId && !mongoose.Types.ObjectId.isValid(courseId)) throw new Error("Invalid course id")
-    if (lessonId && !mongoose.Types.ObjectId.isValid(lessonId)) throw new Error("Invalid lesson id")
-    if (reviewId && !mongoose.Types.ObjectId.isValid(reviewId)) throw new Error("Invalid review id")
-    if (chatId && !mongoose.Types.ObjectId.isValid(chatId)) throw new Error("Invalid chat id")
-    if (messageId && !mongoose.Types.ObjectId.isValid(messageId)) throw new Error("Invalid message id")
+    if (userId && !mongoose.Types.ObjectId.isValid(userId)) throw new Error("Invalid user id");
+    if (courseId && !mongoose.Types.ObjectId.isValid(courseId)) throw new Error("Invalid course id");
+    if (lessonId && !mongoose.Types.ObjectId.isValid(lessonId)) throw new Error("Invalid lesson id");
+    if (reviewId && !mongoose.Types.ObjectId.isValid(reviewId)) throw new Error("Invalid review id");
+    if (chatId && !mongoose.Types.ObjectId.isValid(chatId)) throw new Error("Invalid chat id");
+    if (messageId && !mongoose.Types.ObjectId.isValid(messageId)) throw new Error("Invalid message id");
+    if (couponId && !mongoose.Types.ObjectId.isValid(couponId)) throw new Error("Invalid coupon id");
     return true
 
 }

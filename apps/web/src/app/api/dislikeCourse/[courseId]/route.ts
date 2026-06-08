@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { connectDB } from "@/config/mongoDB/db";
-import UserCourse from "@/models/User/userCourse";
+import { connectDB, userCourse, validateMongooseId, logger } from "@repo/shared";
 import mongoose from "mongoose";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
-
-
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
         const { courseId } = context.params;
@@ -27,7 +22,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         }
 
         // Update UserCourse record to mark as not liked
-        const updated = await UserCourse.findOneAndUpdate(
+        const updated = await userCourse.findOneAndUpdate(
             {
                 userId: userId,
                 courseId: courseId,
@@ -50,7 +45,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         logger.info("Course unliked successfully", { userId: userId, courseId });
         return NextResponse.json({ message: "Course unliked successfully" }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in unliking course", { error: message });
         return NextResponse.json({ message }, { status: 500 });

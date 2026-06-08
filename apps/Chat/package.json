@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^6.14.0",
     "@repo/shared": "workspace:*",
+    "@repo/payment": "workspace:*",
     "@types/cookie-parser": "^1.4.9",
     "@types/next": "^8.0.7",
     "bullmq": "^5.76.7",

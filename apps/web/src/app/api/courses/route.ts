@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import Course from "@/models/Course/courseModel";
-import User from "@/models/User/userModel";
-import { connectDB } from "@/config/mongoDB/db";
+import {Course, User, connectDB, logger} from "@repo/shared";
 import { ICourse } from "@/types/model";
 import { CustomNextRequest } from "@/types/server";
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams?.get('page') || '1') || 1;
@@ -14,22 +12,26 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     const skip = Number((page - 1)) * limit;
 
     try {
-        const totalCourses: number = await Course.countDocuments();
-        const courses: ICourse[] = await Course.find().skip(skip).limit(limit);
+        const [totalCourseDoc, coursesInDB] = await Promise.all([
+            Course.countDocuments(),
+            Course.find().skip(skip).limit(limit)
+        ]);
+        const totalCourses: number = totalCourseDoc;
+        const courses: ICourse[] = coursesInDB;
 
         if (!courses || courses.length === 0) {
             return NextResponse.json({ message: "No Courses Found" }, { status: 404 });
         }
-
+        logger.info("Courses fetched successfully", { totalCourses, page, limit });
         return NextResponse.json({
             data: courses,
             currentPage: page,
             totalPages: Math.ceil(totalCourses / limit),
             totalCourses
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        console.error("Error fetching courses:", error);
+        logger.error("Error fetching courses:", { error: message });
         return NextResponse.json({ message: ` Error fetching courses: ${message}` }, { status: 500 });
     }
 }
