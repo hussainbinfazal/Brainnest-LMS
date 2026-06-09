@@ -10,6 +10,12 @@
         "skipLibCheck": true,
         "ignoreDeprecations": "6.0",
         "forceConsistentCasingInFileNames": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"],
+            "@repo/shared": ["src/index.ts"],
+            "@repo/shared/*": ["src/*"]
+        },
         "rootDir": "./src",
         "types":["node"],
         "outDir": "dist",

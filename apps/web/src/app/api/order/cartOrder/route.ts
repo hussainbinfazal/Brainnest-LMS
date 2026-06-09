@@ -1,60 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
-import Cart from "@/models/Cart/cartModel";
-import Order from "@/models/Cart/orderModel";
-import { connectDB } from "@/config/mongoDB/db";
-import User from "@/models/User/userModel";
+import { Cart, Order, connectDB, User, logger, Course, validateMongooseId } from "@repo/shared";
+import {
+    RazorpayService,
+    PaymentService
+} from "@repo/payment";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { logger } from "@/utils/logger/logger.node";
-import Razorpay from 'razorpay';
-import Course from '@/models/Course/courseModel';
 import { ISessionUser, RazorpayCreateOrderRequest, MyRazorpayOrder } from "@/types/server";
-
 import { ICart, IOrder } from "@/types/model";
+import mongoose from "mongoose";
+const razorpayService = new RazorpayService();
+const paymentService = new PaymentService()
 
-const razorpay = new (Razorpay as any)({
-    key_id: process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
+    await connectDB(process.env.MONGDB_URI!);
+    const session = await mongoose.startSession();
     try {
-        await connectDB();
         const user: ISessionUser | null = await getDataFromToken(request);
         const userId: string | null = user?.id || "";
-        const cartInDB: ICart | null = await Cart.findOne({ user: userId });
+        if (!user || !validateMongooseId({ userId })) return NextResponse.json({ message: "User not found" }, { status: 403 });
+        const cartInDB = await Cart.findOne({ user: userId })
+            .lean()
+            .session(session);
         if (!cartInDB) return NextResponse.json({ message: "Cart not found" }, { status: 404 });
 
-        const shortReceipt: string = `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        const shortReceipt: string = paymentService.generateReceipt();
+        const amount: number = Math.round(cartInDB.total * 100);
+        if(amount <= 0) return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
+        const razorpayOrder = await razorpayService.createOrder({ amount, receipt: shortReceipt });
+        await session.startTransaction();
 
-        const amount: number = Math.round(cartInDB.total);
-        const razorpayOptions: RazorpayCreateOrderRequest = {
-            amount: amount * 100, // Convert to paisa
-            currency: 'INR',
-            receipt: shortReceipt
-        };
-
-        const razorpayOrder: Awaited<ReturnType<typeof razorpay.orders.create>> = await razorpay.orders.create(razorpayOptions);
-
-        const order: IOrder | null = new Order({
+        const order: IOrder | null = await Order.findOneAndUpdate({
+            user: userId,
+            status: 'pending'
+        }, {
             user: userId,
             orderItems: cartInDB.courses.map(courseId => ({
-                course: courseId._id || courseId  // In case course is a populated object or just ID
+                course: courseId._id || courseId
             })),
             totalPrice: amount,
             paymentMethod: 'Razorpay',
             razorpayOrderId: razorpayOrder.id,
             status: 'pending'
-        });
-        await order.save();
+        }, {
+            upsert: true,
+            new: true
+
+        }).session(session);
+        if (!order) {
+            await session.abortTransaction();
+            logger.error("Error in payment", { error: "Order not found" });
+            return NextResponse.json({ message: "Order not found" }, { status: 404 });
+        }
+        await session.commitTransaction();
         return NextResponse.json({
             message: "Course purchased successfully", razorpayOrder, orderId: order._id,
             razorpayOrderId: razorpayOrder.id,
             amount: amount, order
         }, { status: 200 });
 
-    } catch (error: any) {
-        logger.error(error);
+    } catch (error: unknown) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ message: `Internal Server Error: ${message}` }, { status: 500 });
+        logger.error("Error in creating order", { message });
+        return NextResponse.json({ message: `Internal Server Error` }, { status: 500 });
+    } finally {
+        await session.endSession();
     }
 }

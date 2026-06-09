@@ -50,6 +50,7 @@ export interface IEnrollment {
   userId: Types.ObjectId;
   paymentId?: Types.ObjectId;
   pricePaid: number;
+  status: string;
   enrolledAt: Date;
 }
 export interface ILesson  {

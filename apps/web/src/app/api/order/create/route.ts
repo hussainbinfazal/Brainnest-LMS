@@ -1,55 +1,60 @@
-import Razorpay from 'razorpay';
-import { connectDB } from '@/config/mongoDB/db';
-import User from '@/models/User/userModel';
-import Order from '@/models/Cart/orderModel';
-import Course from '@/models/Course/courseModel';
+import { User, Order, Course, connectDB, validateMongooseId, logger } from '@repo/shared';
 import { getDataFromToken } from '@/utils/getDataFromToken';
 import { NextRequest, NextResponse } from 'next/server';
-import { ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
+import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
 import { ICourse, IOrder, IUser } from '@/types/model';
+import { PaymentService, RazorpayService } from '@repo/payment';
+import mongoose from 'mongoose';
 
-const razorpay = new (Razorpay as any)({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const razorpayService = new RazorpayService()
+const paymentService = new PaymentService()
 
-export async function POST(req: NextRequest) {
-  await connectDB();
+export async function POST(req: CustomNextRequest): Promise<NextResponse> {
+  await connectDB(process.env.MONGDB_URI!);
+  const session = await mongoose.startSession();
 
   try {
     const { courseId, amount } = await req.json();
 
     const user: ISessionUser | null = await getDataFromToken(req);
     const userId: string | null = user?.id || '';
+    if (!user || !validateMongooseId({ userId })) {
+      logger.warn(`Unauthorized access attempt from IP: ${req.ip}`);
+      return NextResponse.json({ message: "User not found" }, { status: 403 })
+    };
+    if(!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+    if(!amount || amount < 1) return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
+    const [courseDB, userDB, existingOrder] = await Promise.all([
+      Course.findById(courseId),
+      User.findById(userId),
+      Order.findOne({
+        user: userId,
+        'orderItems.course': courseId,
+        isPaid: true
+      })
+    ])
 
-    const course: ICourse | null = await Course.findById(courseId);
-    const dbUser: IUser | null = await User.findById(userId);
 
-    if (!course || !dbUser) {
+
+    if (!courseDB || !userDB) {
+      logger.error('Course or user not found in create order route');
       return NextResponse.json({ message: 'Course or user not found' }, { status: 404 });
     }
 
-    const existingOrder: IOrder | null = await Order.findOne({
-      user: userId,
-      'orderItems.course': courseId,
-      isPaid: true
-    });
 
     if (existingOrder) {
       return NextResponse.json({ message: 'Course already purchased' }, { status: 400 });
     }
 
-    const shortReceipt: string = `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const shortReceipt: string = paymentService.generateReceipt();
 
-    const razorpayOptions: RazorpayCreateOrderRequest = {
-      amount: amount * 100, // Convert to paisa
-      currency: 'INR',
-      receipt: shortReceipt
-    };
+    const razorpayOrder = await razorpayService.createOrder({ amount, receipt: shortReceipt });
 
-    const razorpayOrder: Awaited<ReturnType<typeof razorpay.orders.create>> = await razorpay.orders.create(razorpayOptions);
-
-    const order: IOrder | null = new Order({
+    await session.startTransaction();
+    const order: IOrder | null = await Order.findOneAndUpdate({
+      user: userId,
+      status: 'pending'
+    }, {
       user: userId,
       orderItems: [{
         course: courseId,
@@ -59,10 +64,17 @@ export async function POST(req: NextRequest) {
       paymentMethod: 'Razorpay',
       razorpayOrderId: razorpayOrder.id,
       status: 'pending'
-    });
+    }, {
+      upsert: true,
+      new: true
+    }).session(session);
 
-    await order.save();
-
+    if (!order) {
+      logger.error('Order not found in create order route');
+      await session.abortTransaction();
+      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+    }
+    await session.commitTransaction();
     return NextResponse.json({
       success: true,
       orderId: order._id,
@@ -70,13 +82,13 @@ export async function POST(req: NextRequest) {
       amount: amount
     }, { status: 200 });
 
-  } catch (error: any) {
-    console.error('Error creating order:', error);
+  } catch (error: unknown) {
+    if (session.inTransaction()) await session.abortTransaction();
     const message = error instanceof Error ? error.message : 'Unknown error';
+    logger.error(message);
     return NextResponse.json({
       success: false,
-      message: `Failed to create order: ${message}`,
-      error: error.message
+      message: `Failed to create order`,
     }, { status: 500 });
   }
 }

@@ -1,36 +1,25 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/config/mongoDB/db';
-import { logger } from '@/utils/logger/logger.node';
-import User from '@/models/User/userModel';
-import UserCourse from '@/models/User/userCourse';
-import Order from '@/models/Cart/orderModel';
-import Course from '@/models/Course/courseModel';
-import Payment from '@/models/Payment/paymentModel';
+import { Payment, User, Course, userCourse, Order, logger, connectDB } from '@repo/shared';
 import { ICourse, IOrder, IPayments, IUser } from '@/types/model';
 import mongoose from 'mongoose';
+import { PaymentService } from '@repo/payment';
+const paymentService = new PaymentService();
 export async function POST(request: NextRequest) {
-
-
+  await connectDB(process.env.MONGODB_URI!);
+  const session = await mongoose.startSession();
   try {
-    await connectDB();
 
     const { orderId, paymentId, signature, courseId, userId, amount } = await request.json();
-
-    logger.debug({ orderId, paymentId, courseId, userId, amount }, 'Payment verification request data');
+    if (!orderId || !paymentId || !signature || !courseId || !userId || !amount) {
+      logger.warn('Invalid data');
+      return NextResponse.json({ message: "Invalid data" }, { status: 400 })
+    };
+    logger.info('Payment verification request data', { orderId, paymentId, courseId, userId, amount },);
 
     // Verify Razorpay signature
-    const body: string = orderId + '|' + paymentId;
-    const expectedSignature: string = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-      .update(body.toString())
-      .digest('hex');
-
-    const isAuthentic: boolean = expectedSignature === signature;
-
-    // Update order in database
+    const isAuthentic = paymentService.verifyPayment(orderId, paymentId, signature);
     const order: IOrder | null = await Order.findOne({ razorpayOrderId: orderId });
-
     if (!order) {
       return NextResponse.json({
         success: false,
@@ -39,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isAuthentic) {
-      // Mark order as failed for invalid signature
+      logger.error('Invalid payment signature');
       order.status = 'failed';
 
       order.paymentResult = {
@@ -48,6 +37,18 @@ export async function POST(request: NextRequest) {
         update_time: new Date().toISOString(),
         failure_reason: 'Invalid payment signature'
       };
+      return NextResponse.json({
+        success: false,
+        message: 'Invalid payment signature'
+      }, { status: 400 });
+    }
+
+    // Update order in database
+
+
+    if (!isAuthentic) {
+      // Mark order as failed for invalid signature
+
       await order.save();
 
       return NextResponse.json({
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     await order.save();
 
     // Add course to user's enrolled courses using UserCourse model
-    logger.debug({ userId, userIdType: typeof userId }, 'Looking for user for payment verification');
+    logger.info('Looking for user for payment verification', { userId, userIdType: typeof userId });
 
     const user: IUser | null = await User.findById(userId);
     logger.debug({ foundUser: !!user }, 'Found user for payment verification');
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
       orderId: order._id
     }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(error, 'Error verifying payment');
 
     // Try to mark order as failed if possible

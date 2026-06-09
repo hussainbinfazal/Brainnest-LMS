@@ -26,6 +26,12 @@
       ],
       "@repo/shared/*": [
         "../../../packages/shared/src/*"
+      ],
+      "@repo/payment": [
+        "../../../packages/payment/src/index.ts"
+      ],
+      "@repo/payment/*": [
+        "../../../packages/payment/src/*"
       ]
       
     },
