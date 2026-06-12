@@ -12,7 +12,7 @@ export async function markPaymentCompleted({
   session: ClientSession;
 
 }) {
-  payment.paymentStatus = "completed";
+  payment.paymentStatus = "Completed";
   payment.paymentId = paymentId;
   payment.paymentAt = new Date();
 

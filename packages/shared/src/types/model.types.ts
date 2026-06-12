@@ -49,7 +49,7 @@ export interface IEnrollment {
   courseId: Types.ObjectId;
   userId: Types.ObjectId;
   paymentId?: Types.ObjectId;
-  pricePaid: number;
+  price: number;
   status: string;
   enrolledAt: Date;
 }
@@ -199,8 +199,8 @@ export interface IPayments {
   paymentAt: Date;
   paymentBy: Types.ObjectId;
   paymentOf: Types.ObjectId;
-  paymentOnModel: 'Course' | 'Chat';
-  paymentStatus: 'pending' | 'completed' | 'failed';
+  paymentOnModel: 'Course' | 'Chat' | 'Order';
+  paymentStatus: 'Pending' | 'Completed' | 'Failed';
 
 }
 export interface IProgress  {

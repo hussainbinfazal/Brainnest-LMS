@@ -1,4 +1,4 @@
-import { User, Order, Course, connectDB, validateMongooseId, logger } from '@repo/shared';
+import { User, Order, Course, connectDB, validateMongooseId, logger, Enrollment, Payment } from '@repo/shared';
 import { getDataFromToken } from '@/utils/getDataFromToken';
 import { NextRequest, NextResponse } from 'next/server';
 import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
@@ -22,8 +22,8 @@ export async function POST(req: CustomNextRequest): Promise<NextResponse> {
       logger.warn(`Unauthorized access attempt from IP: ${req.ip}`);
       return NextResponse.json({ message: "User not found" }, { status: 403 })
     };
-    if(!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
-    if(!amount || amount < 1) return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
+    if (!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+    if (!amount || amount < 1) return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
     const [courseDB, userDB, existingOrder] = await Promise.all([
       Course.findById(courseId),
       User.findById(userId),
@@ -51,33 +51,68 @@ export async function POST(req: CustomNextRequest): Promise<NextResponse> {
     const razorpayOrder = await razorpayService.createOrder({ amount, receipt: shortReceipt });
 
     await session.startTransaction();
-    const order: IOrder | null = await Order.findOneAndUpdate({
-      user: userId,
-      status: 'pending'
-    }, {
-      user: userId,
-      orderItems: [{
+    const [pendingPayment, newOrder, pendingEnrollment] = await Promise.all([
+      Payment.findOneAndUpdate({
+        paymentBy: userId,
+        paymentStatus: 'Pending'
+      },{
+        amount,
+        paymentBy: userId,
+        paymentId: razorpayOrder.id,
+        paymentOnModel: 'Course',
+        paymentStatus: 'Pending'
+      
+      },{
+        upsert:true,
+        new:true
+      }).session(session),
+      
+      Order.findOneAndUpdate({
+        user: userId,
+        status: 'pending'
+      }, {
+        user: userId,
+        orderItems: [{
+          course: courseId,
+          price: amount
+        }],
+        totalPrice: amount,
+        paymentMethod: 'Razorpay',
+        razorpayOrderId: razorpayOrder.id,
+        status: 'pending'
+      }, {
+        upsert: true,
+        new: true
+      }).session(session),
+      Enrollment.findOneAndUpdate({
+        user: userId,
         course: courseId,
-        price: amount
-      }],
-      totalPrice: amount,
-      paymentMethod: 'Razorpay',
-      razorpayOrderId: razorpayOrder.id,
-      status: 'pending'
-    }, {
-      upsert: true,
-      new: true
-    }).session(session);
+        status: 'Pending'
+      }, {
+        user: userId,
+        course: courseId,
+        price: amount,
+        paymentId: razorpayOrder.id,
+        status: 'Pending'
+      }, {
+        upsert: true,
+        new: true
+      }).session(session)
+    ])
+    pendingPayment.paymentOf = newOrder._id
+    await pendingPayment.save({session})
 
-    if (!order) {
-      logger.error('Order not found in create order route');
+
+
+    if (!newOrder) {
+      logger.error('Error in creating order');
       await session.abortTransaction();
-      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Internal server error, Try again' }, { status: 404 });
     }
     await session.commitTransaction();
     return NextResponse.json({
       success: true,
-      orderId: order._id,
+      orderId: newOrder._id,
       razorpayOrderId: razorpayOrder.id,
       amount: amount
     }, { status: 200 });

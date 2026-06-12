@@ -28,7 +28,7 @@ export async function verifyChatPayment(request: Request, response: Response): P
             const [payment, chat] = await Promise.all([
                 Payment.findOne({
                     razorpayOrderId: orderId,
-                    paymentStatus: "pending"
+                    paymentStatus: "Pending"
                 }).session(session),
                 Chat.findById(chatId).session(session)
             ]);

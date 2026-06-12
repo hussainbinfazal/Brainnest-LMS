@@ -1,156 +1,187 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Payment, User, Course, userCourse, Order, logger, connectDB } from '@repo/shared';
+import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument } from '@repo/shared';
 import { ICourse, IOrder, IPayments, IUser } from '@/types/model';
 import mongoose from 'mongoose';
-import { PaymentService } from '@repo/payment';
-const paymentService = new PaymentService();
-export async function POST(request: NextRequest) {
+import { markPaymentCompleted, PaymentService } from '@repo/payment';
+const paymentService: PaymentService = new PaymentService();
+export async function POST(request: NextRequest): Promise<NextResponse> {
   await connectDB(process.env.MONGODB_URI!);
-  const session = await mongoose.startSession();
+  const session : mongoose.ClientSession = await mongoose.startSession();
   try {
 
-    const { orderId, paymentId, signature, courseId, userId, amount } = await request.json();
-    if (!orderId || !paymentId || !signature || !courseId || !userId || !amount) {
+    const { orderId, paymentId, signature, userId, amount } = await request.json();
+    if (!orderId || !paymentId || !signature || !userId || !amount) {
       logger.warn('Invalid data');
       return NextResponse.json({ message: "Invalid data" }, { status: 400 })
     };
-    logger.info('Payment verification request data', { orderId, paymentId, courseId, userId, amount },);
+    if (!validateMongooseId({ orderId: orderId })) {
+      logger.error("Invalid Order Id", { orderId });
+      return NextResponse.json({ message: "Invalid Data" }, { status: 400 })
+    };
 
+    if (!validateMongooseId({ userId: userId })) {
+      logger.error("Invalid User Id in payment", { userId });
+      return NextResponse.json({ message: "Invalid Data" }, { status: 400 })
+    };
+    logger.info('Payment verification request data', { orderId, paymentId, userId, amount },)
+    await session.startTransaction();;
+    const [pendingOrder, pendingPayment] = await Promise.all([
+      Order.findOne({ _id: orderId, status: 'Pending' }).session(session).exec(),
+      Payment.findOne({ paymentId, paymentStatus: 'Pending' }).session(session).exec()
+    ]);
     // Verify Razorpay signature
-    const isAuthentic = paymentService.verifyPayment(orderId, paymentId, signature);
-    const order: IOrder | null = await Order.findOne({ razorpayOrderId: orderId });
-    if (!order) {
+
+    if (!pendingPayment) {
+      logger.error('Payment not found');
       return NextResponse.json({
         success: false,
-        message: 'Order not found'
+        message: 'Payment not found'
       }, { status: 404 });
     }
+    if (!pendingOrder) {
+      await session.abortTransaction();
+      logger.error('Order not found', { orderId });
+      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+    }
+
+    const isAuthentic : boolean = paymentService.verifyPayment(pendingPayment.paymentId, paymentId, signature);
 
     if (!isAuthentic) {
-      logger.error('Invalid payment signature');
-      order.status = 'failed';
+      
+      await Promise.all([
+        Order.findOneAndUpdate(
+          { _id: orderId, status: 'Pending' },
+          {
+            status: 'Failed',
+            paymentResult: {
+              id: paymentId,
+              status: 'Failed',
+              update_time: new Date().toISOString(),
+              failure_reason: 'Invalid payment signature'
+            }
+          }
+          
+        ).session(session).exec(),
 
-      order.paymentResult = {
-        id: paymentId,
-        status: 'failed',
-        update_time: new Date().toISOString(),
-        failure_reason: 'Invalid payment signature'
-      };
+        Payment.findOneAndUpdate(
+          { paymentId, paymentStatus: 'Pending' },
+          { paymentStatus: 'Failed' }
+        ).session(session).exec()
+      ]);
+      await session.commitTransaction();
+      logger.error('Invalid payment signature', { orderId, paymentId });
       return NextResponse.json({
         success: false,
         message: 'Invalid payment signature'
       }, { status: 400 });
+
+
+    }
+    if (!pendingPayment) {
+      await session.abortTransaction();
+      logger.error('Payment not found', { paymentId });
+      return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
     }
 
-    // Update order in database
+    const courseIds: mongoose.Types.ObjectId[] = pendingOrder.orderItems.map(item => item.course);
 
+    if (!courseIds.length) {
+      await session.abortTransaction();
+      logger.error('Order has no courses', { orderId });
+      return NextResponse.json({ message: 'Invalid order' }, { status: 400 });
+    }
+    const completedOrder : OrderDocument | null = await Order.findOneAndUpdate(
+      { _id: orderId, status: 'Pending' },
+      {
+        status: 'Completed',
+        isPaid: true,
+        paidAt: new Date(),
+        paymentResult: {
+          id: paymentId,
+          status: 'Completed',
+          update_time: new Date().toISOString()
+        }
+      },
+      { new: true } 
+    ).session(session).exec();
 
-    if (!isAuthentic) {
-      // Mark order as failed for invalid signature
-
-      await order.save();
-
-      return NextResponse.json({
-        success: false,
-        message: 'Invalid payment signature'
-      }, { status: 400 });
+    if (!completedOrder) {
+      throw new Error('Order completion failed — may have already been processed');
     }
 
-    const payment: IPayments | null = new Payment({
-      amount,
-      paymentAt: new Date(),
-      paymentBy: userId,
-      paymentId: paymentId,
-      paymentOf: order._id,
-      paymentOnModel: 'Course',
+    
+    pendingPayment.paymentStatus = 'Completed';
+    pendingPayment.amount = amount;
+    pendingPayment.paymentAt = new Date();
+    pendingPayment.paymentBy = userId;
+    pendingPayment.paymentOnModel = 'Order';
+    pendingPayment.paymentOf = completedOrder._id;
+
+    const [, enrollmentResult, userCourseResult] = await Promise.all([
+
+      pendingPayment.save({ session }),
+
+      Enrollment.bulkWrite(
+        courseIds.map(courseId => ({
+          updateOne: {
+            filter: { paymentId, courseId, status: 'Pending' },
+            update: {
+              $set: {
+                status: 'Completed',
+                enrolledAt: new Date()
+              }
+            }
+          }
+        })),
+        { session }
+      ),
+
+      userCourse.bulkWrite(
+        courseIds.map(courseId => ({
+          updateOne: {
+            filter: { userId, courseId },
+            update: {
+              $set: { isEnrolled: true, enrolledAt: new Date() }
+            },
+            upsert: true
+          }
+        })),
+        { session }
+      )
+    ]);
+
+    if (enrollmentResult.modifiedCount !== courseIds.length) {
+      logger.warn('Some enrollments may have failed', {
+        expected: courseIds.length,
+        modified: enrollmentResult.modifiedCount
+      });
+    }
+
+    await session.commitTransaction();
+
+    logger.info('Payment verified successfully', {
+      orderId,
+      paymentId,
+      userId,
+      coursesEnrolled: courseIds.length
     });
 
-    order.isPaid = true;
-    order.paidAt = new Date();
-    order.paymentResult = {
-      id: orderId,
-      status: 'completed',
-      update_time: new Date().toISOString()
-    };
-    order.status = 'completed';
-
-    await payment.save();
-    await order.save();
-
-    // Add course to user's enrolled courses using UserCourse model
-    logger.info('Looking for user for payment verification', { userId, userIdType: typeof userId });
-
-    const user: IUser | null = await User.findById(userId);
-    logger.debug({ foundUser: !!user }, 'Found user for payment verification');
-
-    if (!user) {
-      logger.warn({ userId }, 'User not found in database for payment enrollment');
-      return NextResponse.json({
-        success: false,
-        message: `User not found for ID: ${userId}`
-      }, { status: 404 });
-    }
-
-    // Create or update UserCourse record
-    await UserCourse.findOneAndUpdate(
-      {
-        userId: new mongoose.Types.ObjectId(userId),
-        courseId: new mongoose.Types.ObjectId(courseId)
-      },
-      {
-        isEnrolled: true,
-        enrolledAt: new Date()
-      },
-      { upsert: true }
-    );
-
-    // Increment course enrollment count
-    const boughtCourse: ICourse | null = await Course.findById(courseId);
-
-    if (!boughtCourse) {
-      return NextResponse.json({
-        success: false,
-        message: 'Course not found'
-      }, { status: 404 });
-    }
-
-    if (!boughtCourse.enrolledStudents?.some(s => s.user.toString() === userId.toString())) {
-      boughtCourse.enrolledStudents = boughtCourse.enrolledStudents || [];
-      boughtCourse.enrolledStudents.push({ user: userId });
-      await boughtCourse.save();
-    }
     return NextResponse.json({
       success: true,
-      message: 'Payment verified successfully',
-      orderId: order._id
+      message: 'Payment verified successfully, Order Generated Successfully',
     }, { status: 200 });
 
   } catch (error: unknown) {
-    logger.error(error, 'Error verifying payment');
-
+    if (session.inTransaction()) await session.abortTransaction();
     // Try to mark order as failed if possible
-    try {
-      const { orderId } = await request.json();
-      const order = await Order.findOne({ razorpayOrderId: orderId });
-      if (order) {
-        order.status = 'failed';
-        order.paymentResult = {
-          id: orderId,
-          status: 'failed',
-          update_time: new Date().toISOString(),
-          failure_reason: error.message
-        };
-        await order.save();
-      }
-    } catch (updateError: any) {
-      logger.error(updateError, 'Failed to update order status');
-    }
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message : string = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error verifying payment', { message });
     return NextResponse.json({
       success: false,
-      message: `Payment verification failed: ${message}`,
-      error: error.message
+      message: `Payment verification failed`,
     }, { status: 500 });
+  } finally {
+    await session.endSession();
   }
 }

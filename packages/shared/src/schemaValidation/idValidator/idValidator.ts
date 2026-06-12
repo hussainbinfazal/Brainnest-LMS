@@ -7,7 +7,8 @@ export function validateMongooseId({
     reviewId,
     chatId,
     messageId,
-    couponId
+    couponId,
+    orderId
 
 }: {
     userId?: string,
@@ -16,7 +17,8 @@ export function validateMongooseId({
     reviewId?: string,
     chatId?: string,
     messageId?: string,
-    couponId?: string
+    couponId?: string,
+    orderId?: string
 
 
 }): boolean {
@@ -27,6 +29,7 @@ export function validateMongooseId({
     if (chatId && !mongoose.Types.ObjectId.isValid(chatId)) throw new Error("Invalid chat id");
     if (messageId && !mongoose.Types.ObjectId.isValid(messageId)) throw new Error("Invalid message id");
     if (couponId && !mongoose.Types.ObjectId.isValid(couponId)) throw new Error("Invalid coupon id");
+    if (orderId && !mongoose.Types.ObjectId.isValid(orderId)) throw new Error("Invalid order id");
     return true
 
 }

@@ -1,4 +1,4 @@
-import { IOrder } from '@/types/model';
+import { IOrder } from '@repo/shared';
 import mongoose,{Schema,Model, Types} from 'mongoose';
 
 

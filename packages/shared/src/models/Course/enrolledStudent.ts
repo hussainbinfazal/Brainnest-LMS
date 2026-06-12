@@ -9,9 +9,9 @@ const enrollmentSchema = new mongoose.Schema<IEnrollment>({
     courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
-    pricePaid: { type: Number, required: true },
+    price: { type: Number, required: true },
     status: { type: String, enum: Object.values(EnrollmentStatus), default: EnrollmentStatus.Unenrolled },
-    enrolledAt: { type: Date, default: Date.now }
+    enrolledAt: { type: Date, }
 }, { timestamps: true });
 
 enrollmentSchema.index({ courseId: 1, userId: 1 }, { unique: true });

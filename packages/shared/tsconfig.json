@@ -16,9 +16,9 @@
             "@repo/shared": ["src/index.ts"],
             "@repo/shared/*": ["src/*"]
         },
-        "rootDir": "./src",
+        "rootDir": "../..",
         "types":["node"],
-        "outDir": "dist",
+        "outDir": "./dist",
         "declaration": true,
         "declarationMap": true
     },
