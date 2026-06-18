@@ -22,4 +22,7 @@ export class RazorpayService {
       receipt,
     });
   }
+  async fetchPayment(paymentId: string) {
+    return this.razorpay.payments.fetch(paymentId);
+  }
 }

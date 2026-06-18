@@ -15,6 +15,7 @@
   "dependencies": {
     "@repo/shared": "workspace:*",
     "@repo/payment": "workspace:*",
+    "@repo/app" : "workspace:*",
     "@types/cookie-parser": "^1.4.9",
     "@types/next": "^8.0.7",
     "bullmq": "^5.76.7",
@@ -41,9 +42,9 @@
     "@types/express": "^5.0.3",
     "@types/node": "^24.12.3",
     "@types/nodemailer": "^7.0.11",
-    "@types/streamifier": "^0.1.2",
+    "@types/streamifier": "^0.1.2"
 
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^6.0.3"
+    
+   
   }
 }

@@ -71,15 +71,15 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         let topicIds: Types.ObjectId[] = [];
 
-        const topicNames = topics.map((t: ITopic) => t.name.trim().toLowerCase())
+        const topicNames : string[] = topics.map((t: ITopic) => t.name.trim().toLowerCase())
         let existingTopics = await Topic.find({ name: { $in: topicNames } });
-        const existingTopicNames = new Map(existingTopics.map((t: ITopic) => [t.name, t]));
-        const newTopics = topics.filter((t: ITopic) => !existingTopicNames.has(t.name.trim().toLowerCase()))
+        const existingTopicNames : Map<string, ITopic> = new Map(existingTopics.map((t: ITopic) => [t.name, t]));
+        const newTopics : ITopic[] = topics.filter((t: ITopic) => !existingTopicNames.has(t.name.trim().toLowerCase()))
             .map((t: ITopic) => ({ name: t.name.trim().toLowerCase(), description: t.description, slug: t.name.trim().toLowerCase().replace(/\s+/g, '-'), isActive: true }));
 
 
-        const createdTopics = await Topic.insertMany(newTopics, { session });
-        const allTopics = [...existingTopics, ...createdTopics];
+        const createdTopics : ITopic[] = await Topic.insertMany(newTopics, { session });
+        const allTopics : ITopic[] = [...existingTopics, ...createdTopics];
         topicIds = allTopics.map(t => t._id as Types.ObjectId);
 
 
@@ -107,14 +107,14 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         },).save({ session });
 
 
-        const sectionDocs = sections.map((section: ISection) => ({
+        const sectionDocs : ISection[] = sections.map((section: ISection) => ({
             courseId: createdCourse._id,
             title: section.title,
             description: section.description,
             order: section.order
         }));
-        const createdSections = await Section.insertMany(sectionDocs, { session });
-        const lessonDocs = lessons.map((lesson: ILesson, index: number) => ({
+        const createdSections : ISection[] = await Section.insertMany(sectionDocs, { session });
+        const lessonDocs : ILesson[] = lessons.map((lesson: ILesson, index: number) => ({
             courseId: createdCourse._id,
             name: lesson.name,
             videoUrl: lesson.videoUrl,
@@ -126,7 +126,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             order: lesson.order
         }));
         await Lesson.insertMany(lessonDocs, { session });
-        const totalLessons = lessonDocs.length
+        const totalLessons : number = lessonDocs.length
         createdCourse.totalLessons = totalLessons;
         await createdCourse.save({ session });
 
