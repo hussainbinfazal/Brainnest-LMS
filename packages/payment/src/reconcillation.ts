@@ -2,14 +2,14 @@ import { Enrollment, logger, Order, OrderDocument, Payment, PaymentsDocument, us
 import mongoose from "mongoose";
 
 // lib/reconcilePayment.ts
-export async function reconcilePayment(razorpayPaymentId: string) {
+export async function reconcilePendingOrderPayment(razorpayPaymentId: string) {
     const session = await mongoose.startSession();
 
     try {
         session.startTransaction();
 
         // Find payment that's still pending
-        const payment : PaymentsDocument | null = await Payment.findOne({
+        const payment: PaymentsDocument | null = await Payment.findOne({
             paymentId: razorpayPaymentId,
             paymentStatus: 'Pending'
         }).session(session);
@@ -20,7 +20,43 @@ export async function reconcilePayment(razorpayPaymentId: string) {
             return;
         }
 
-        const order : OrderDocument | null = await Order.findOne({
+        const { paymentOnModel, paymentOf } = payment;
+
+        if (paymentOnModel === 'Course') {
+            await reconcileCoursePayment({ payment, session });
+        } else if (paymentOnModel === 'Chat') {
+            await reconcileChatPayment({ payment, session });
+        }
+        await session.commitTransaction();
+        logger.info('Reconciliation successful', { razorpayPaymentId });
+
+    } catch (err: unknown) {
+        if (session.inTransaction()) await session.abortTransaction();
+        logger.error('Reconciliation failed', { razorpayPaymentId, err });
+    } finally {
+        await session.endSession();
+    }
+}
+
+export async function reconcilePendingOrder(razorpayPaymentId: string) {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        // Find payment that's still pending
+        const payment: PaymentsDocument | null = await Payment.findOne({
+            paymentId: razorpayPaymentId,
+            paymentStatus: 'Pending'
+        }).session(session);
+
+        if (!payment) {
+            // Already reconciled or doesn't exist — safe to skip
+            await session.abortTransaction();
+            return;
+        }
+
+        const chat: Document | null = await Order.findOne({
             _id: payment.paymentOf,
             status: 'pending'
         }).session(session);
@@ -69,7 +105,7 @@ export async function reconcilePayment(razorpayPaymentId: string) {
         await session.commitTransaction();
         logger.info('Reconciliation successful', { razorpayPaymentId });
 
-    } catch (err : unknown ) {
+    } catch (err: unknown) {
         if (session.inTransaction()) await session.abortTransaction();
         logger.error('Reconciliation failed', { razorpayPaymentId, err });
     } finally {
