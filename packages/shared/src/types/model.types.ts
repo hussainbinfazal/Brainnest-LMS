@@ -248,7 +248,7 @@ export interface ICertificate  {
 export interface IUserToken  {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
-  type: 'reset ' | 'verification' | 'refresh';
+  type: 'reset' | 'verification' | 'refresh';
   token: string;
   expiresAt: Date;
   isVerified: boolean;

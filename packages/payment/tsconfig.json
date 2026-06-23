@@ -12,8 +12,7 @@
     "forceConsistentCasingInFileNames": true,
 
     "types": ["node"],
-    "rootDir": "../..",
-    // "rootDir": "./src",
+    "rootDir": "./src",
     "outDir": "./dist",
 
     "declaration": true,

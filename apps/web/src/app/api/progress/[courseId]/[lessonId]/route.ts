@@ -1,6 +1,6 @@
 import { connectDB } from "@/config/mongoDB/db";
 import { progressQueue } from "@/lib/queue/progressQueue";
-import Progress from "@/models/Course/progressModel";
+import {Progress} from "@repo/shared";
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { IProgress } from "@/types/model";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -54,8 +54,8 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         ])
         logger.info("This is the progress of the Lesson", { progress, lessonId });
         return NextResponse.json({ message: "This is the progress of the lesson", progress: progress[0] }, { status: 200 });
-    } catch (error: any) {
-        logger.error("Error marking lesson complete:", error);
+    } catch (error:unknown) {
+        logger.error("Error marking lesson complete:",{ error});
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ message: `Failed to fetch progress :${message}` }, { status: 500 });
     }
@@ -78,7 +78,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         await progressQueue.add("generate-progress", { userId, courseId });
         logger.info("Progress of the Lesson created in worker");
         return NextResponse.json({ message: "Progress updated" }, { status: 202 });
-    } catch (error: any) {
+    } catch (error:unknown) {
 
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Progress Generation Failed", { message });
@@ -108,8 +108,8 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
         await progressQueue.add("update-progress", { userId, courseId, lessonId, progressValue });
         logger.info("Progress of the Lesson updated in worker");
         return NextResponse.json({ message: "Progress updated" }, { status: 202 });
-    } catch (error: any) {
-        logger.error("Error updating progress:", error);
+    } catch (error:unknown) {
+        logger.error("Error updating progress:",{ error});
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ message: `Failed to complete lesson :${message}` }, { status: 500 });
     }

@@ -7,9 +7,8 @@ const ManageCouponPage: React.FC = (): React.ReactElement => {
 
   // /api/admin/course/allCourses"
 
-  const fetchedCourses = [];
-  function fetchCourses() {
-  }
+  // const fetchedCourses = [];
+  
 
   return <ManageCouponComp />;
 };

@@ -2,17 +2,22 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES2022"],
     "module": "ESNext",
+    "moduleResolution": "Node",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "ignoreDeprecations": "6.0",                      // 👈 prevents Prisma/Next typedef errors
     "forceConsistentCasingInFileNames": true,
-    "outDir": "dist",
-    "noEmit": true
 
+    "types": ["node"],
+    "outDir": "./dist",
+    "rootDir": "../..",
+
+    "declaration": true,
+    "declarationMap": true
   },
-  "include": ["src/**/*.ts"],              // 👈 compile all .ts files in backend root
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

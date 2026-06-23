@@ -11,13 +11,9 @@
         "ignoreDeprecations": "6.0",
         "forceConsistentCasingInFileNames": true,
         "baseUrl": ".",
-        "paths": {
-            "@/*": ["src/*"],
-            "@repo/shared": ["src/index.ts"],
-            "@repo/shared/*": ["src/*"]
-        },
-        "rootDir": "../..",
-        "types":["node"],
+        // "rootDir": "./src",
+            "rootDir": "../..",
+
         "outDir": "./dist",
         "declaration": true,
         "declarationMap": true

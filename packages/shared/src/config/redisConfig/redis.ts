@@ -8,7 +8,7 @@ if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
 }
 /*
 ----------------------------------
-Upstash SDK Client
+Upstash SDK Client Serverless
 Used for caching / KV operations
 ----------------------------------
 */
@@ -20,13 +20,15 @@ const redisClient = new UpstashRedis({
 
 /*
 ----------------------------------
-ioredis Client
+ioredis Client Serverfull
 Used for BullMQ queues
 ----------------------------------
 */
-// const ioRedis = new IORedis(process.env.UPSTASH_REDIS_URL!, {
-//     maxRetriesPerRequest: null,
-//     enableReadyCheck: false
-// });
-// export { redisClient, ioRedis }
 
+
+export const  connection = new IORedis(
+    process.env.REDIS_URL!,{
+        maxRetriesPerRequest:null
+
+    }
+);

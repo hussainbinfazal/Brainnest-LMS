@@ -6,19 +6,21 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@repo/shared": "workspace:*",
     "@repo/payment": "workspace:*",
-    "@repo/app" : "workspace:*",
+    "@repo/shared": "workspace:*",
+    "@repo/web": "workspace:*",
     "@types/cookie-parser": "^1.4.9",
     "@types/next": "^8.0.7",
-    "bullmq": "^5.76.7",
+    "bullmq": "^5.79.0",
     "cloudinary": "^2.10.0",
     "concurrently": "^9.2.1",
     "cookie-parser": "^1.4.7",
@@ -40,11 +42,8 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/node": "^24.12.3",
+    "@types/node": "^24.13.2",
     "@types/nodemailer": "^7.0.11",
     "@types/streamifier": "^0.1.2"
-
-    
-   
   }
 }

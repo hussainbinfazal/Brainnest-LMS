@@ -1643,4 +1643,69 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+## June 17
+Changes
+
+-Adding payment reconcillation logic with webhook 
+
+Pending:
+-complete payment reconcillation logic
+-refractor course purchase logic, and also refractor payment verify route with new normalized models.
+-Complete the message and admin controller logic and optimised them
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+## June 20
+Changes
+
+-Adding payment reconcillation logic with webhook 
+-Added job in the verify function to process reconcillation
+Pending:
+-complete payment reconcillation logic add job in try catch block and also update the webhook
+-refractor course purchase logic, and also refractor payment verify route with new normalized models.
+-Complete the message and admin controller logic and optimised them
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
 

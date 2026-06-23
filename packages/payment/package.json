@@ -4,19 +4,22 @@
   "description": "Payment utilities and Razorpay integration",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-   
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["payment", "razorpay"],
+  "keywords": [
+    "payment",
+    "razorpay"
+  ],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
     "@repo/shared": "workspace:*",
-    "razorpay": "^2.9.2"
+    "ioredis": "5.10.1",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "@types/node": "^25.9.2",

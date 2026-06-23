@@ -1,15 +1,15 @@
 import crypto from 'crypto';
 import { Request, Response } from 'express';
-import { connectDB, Payment } from '@repo/shared';
+import { connectDB, Payment, reconcileQueue } from '@repo/shared';
 import { User, Course, Message, Chat, IChat } from '@repo/shared';
 import { logger } from "@repo/shared";
 import mongoose from 'mongoose';
 import { markPaymentCompleted, PaymentService } from '@repo/payment';
-
 const paymentService = new PaymentService();
 
 export async function verifyChatPayment(request: Request, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
+    let razorpayPaymentId;
     const session = await mongoose.startSession();
     try {
 
@@ -17,7 +17,7 @@ export async function verifyChatPayment(request: Request, response: Response): P
 
         // Verify Razorpay signature
         const isAuthentic = paymentService.verifyPayment(orderId, paymentId, signature);
-
+        razorpayPaymentId = paymentId
         if (!isAuthentic) {
             return response.status(400).json({
                 success: false,
@@ -40,15 +40,13 @@ export async function verifyChatPayment(request: Request, response: Response): P
             if (!chat) {
                 logger.warn("Chat not found", { chatId });
                 throw new Error("Chat not found");
-                ;
+
             }
 
             if (!messageLimit || messageLimit <= 0) {
                 logger.warn("Invalid message limit", { messageLimit });
                 throw new Error("Invalid message limit");
             }
-
-
             chat.isPaid = true;
             chat.paidAt = new Date();
             chat.paymentResult = {
@@ -83,6 +81,9 @@ export async function verifyChatPayment(request: Request, response: Response): P
 
     } catch (error: unknown) {
         logger.error("Error in verifying payment", { error })
+        await reconcileQueue.add('reconcile-single', {
+            razorpayPaymentId: razorpayPaymentId // ✅ matches job.data.razorpayPaymentId
+        });
         const message = error instanceof Error ? error.message : 'Unknown error';
         return response.status(500).json({
             success: false,

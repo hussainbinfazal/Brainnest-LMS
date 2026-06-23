@@ -1,13 +1,14 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument } from '@repo/shared';
+import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument, reconcileQueue } from '@repo/shared';
 import { ICourse, IOrder, IPayments, IUser } from '@/types/model';
 import mongoose from 'mongoose';
 import { markPaymentCompleted, PaymentService } from '@repo/payment';
 const paymentService: PaymentService = new PaymentService();
 export async function POST(request: NextRequest): Promise<NextResponse> {
   await connectDB(process.env.MONGODB_URI!);
-  const session : mongoose.ClientSession = await mongoose.startSession();
+  const session: mongoose.ClientSession = await mongoose.startSession();
+  let razorpayPaymentID: string | undefined = "";
   try {
 
     const { orderId, paymentId, signature, userId, amount } = await request.json();
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       Order.findOne({ _id: orderId, status: 'Pending' }).session(session).exec(),
       Payment.findOne({ paymentId, paymentStatus: 'Pending' }).session(session).exec()
     ]);
+    razorpayPaymentID = paymentId
     // Verify Razorpay signature
 
     if (!pendingPayment) {
@@ -45,10 +47,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ message: 'Order not found' }, { status: 404 });
     }
 
-    const isAuthentic : boolean = paymentService.verifyPayment(pendingPayment.paymentId, paymentId, signature);
+    const isAuthentic: boolean = paymentService.verifyPayment(pendingPayment.paymentId, paymentId, signature);
 
     if (!isAuthentic) {
-      
+
       await Promise.all([
         Order.findOneAndUpdate(
           { _id: orderId, status: 'Pending' },
@@ -61,7 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
               failure_reason: 'Invalid payment signature'
             }
           }
-          
+
         ).session(session).exec(),
 
         Payment.findOneAndUpdate(
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       logger.error('Order has no courses', { orderId });
       return NextResponse.json({ message: 'Invalid order' }, { status: 400 });
     }
-    const completedOrder : OrderDocument | null = await Order.findOneAndUpdate(
+    const completedOrder: OrderDocument | null = await Order.findOneAndUpdate(
       { _id: orderId, status: 'Pending' },
       {
         status: 'Completed',
@@ -103,14 +105,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           update_time: new Date().toISOString()
         }
       },
-      { new: true } 
+      { new: true }
     ).session(session).exec();
 
     if (!completedOrder) {
       throw new Error('Order completion failed — may have already been processed');
     }
 
-    
+
     pendingPayment.paymentStatus = 'Completed';
     pendingPayment.amount = amount;
     pendingPayment.paymentAt = new Date();
@@ -174,8 +176,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error: unknown) {
     if (session.inTransaction()) await session.abortTransaction();
+    
+    await reconcileQueue.add('reconcile-single', {
+      razorpayPaymentId: razorpayPaymentID // ✅ matches job.data.razorpayPaymentId
+    });
     // Try to mark order as failed if possible
-    const message : string = error instanceof Error ? error.message : 'Unknown error';
+    const message: string = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Error verifying payment', { message });
     return NextResponse.json({
       success: false,

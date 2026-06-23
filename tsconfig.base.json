@@ -2,11 +2,13 @@
     "compilerOptions":{
         "baseUrl":".",
         "paths": {
+            // Add only reusable packages
             "@repo/shared": ["packages/shared/src/index.ts"],
             "@repo/shared/*": ["packages/shared/src/*"],
-            // "@repo/payment": ["packages/payment/src/index.ts"],
-            // "@repo/payment/*": ["packages/payment/src/*"],
-            "@worker/*": ["apps/Worker/src/*"]
+            "@repo/payment": ["packages/payment/src/index.ts"],
+            "@repo/payment/*": ["packages/payment/src/*"],
+            // "@repo/worker": ["apps/Worker/src/index.ts"],
+            // "@repo/worker/*": ["apps/Worker/src/*"]
         }
 
     }

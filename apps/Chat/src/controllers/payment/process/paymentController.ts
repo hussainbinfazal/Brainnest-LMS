@@ -1,6 +1,5 @@
 
 import { Request, Response } from "express";
-import Razorpay from 'razorpay';
 import { connectDB, validateMongooseId } from '@repo/shared';
 import { User, Chat, Course, Message, Payment } from "@repo/shared";
 import { RazorpayCreateOrderRequest } from '@repo/shared';
