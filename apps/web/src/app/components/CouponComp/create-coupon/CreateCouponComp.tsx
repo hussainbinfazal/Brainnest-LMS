@@ -3,8 +3,9 @@
 import React from "react";
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+
 import {
   Card,
   CardContent,
@@ -40,14 +41,15 @@ const CreateCouponComp: React.FC = (): React.JSX.Element => {
       const data = response?.data;
       toast.success("Coupon created successfully");
       router.push("/course/coupon");
-    } catch (error: any) {
-      throw error;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Something went wrong";
+      throw new Error(message);
     }
   };
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
       <div className="w-[70%] h-full flex items-center justify-center">
-        <Card className="w-[550px] space-y-4">
+        <Card className="w-137.5 space-y-4">
           <CardHeader className="">
             <CardTitle className="">Create a Coupon</CardTitle>
             <CardDescription className="">

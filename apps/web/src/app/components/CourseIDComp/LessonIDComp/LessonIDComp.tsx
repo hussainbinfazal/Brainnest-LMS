@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CCourse, CLesson } from "@/types/client";
 import { logger } from "@/utils/logger/logger.node";
+import { clientLogger } from "@/utils/logger/clientLogger";
 
 // Render a YouTube video player
 export const LeesonIdPageComp = (): React.JSX.Element => {
@@ -44,8 +45,10 @@ export const LeesonIdPageComp = (): React.JSX.Element => {
         "This is the course that was fetched from the database",
         data
       );
-      logger.info({ course }, "This is the course in the course");
+      clientLogger.info("This is the course that was fetched from the database", data);
       setIsLoading(false);
+    }catch(error:unknown){
+      throw new Error(error as string);
     }
   }, [courseId, lessonId]);
   const handleCompleteLesson = async (lessonId: string): Promise<void> => {
@@ -89,7 +92,7 @@ export const LeesonIdPageComp = (): React.JSX.Element => {
     }
   };
 
-  logger.info({ progressPercent }, `Progress`);
+  // logger.info({ progressPercent }, `Progress`);
   useEffect(() => {
     if (courseId && typeof courseId === 'string') {
       const timer = setTimeout(() => {
@@ -103,16 +106,17 @@ export const LeesonIdPageComp = (): React.JSX.Element => {
     console.log("Course in the course State", course);
   }, [course]);
 
-  logger.info({ course }, "Course in the course State");
+  // logger.info({ course }, "Course in the course State");
   console.log("video :", video);
-}, [video]);
+
 if (isLoading) {
-  logger.info({ video }, "video");
+  // logger.info({ video }, "video");
   <div className="h-screen flex items-center justify-center bg-gray-900">
     <div className="text-white text-xl">Loading lesson...</div>
   </div>
-    );
+    
 }
+
 
 return (
   <div className="min-h-screen bg-gray-900 py-8">
@@ -168,7 +172,7 @@ return (
           <h3 className="text-white font-semibold mb-2">Watch Progress</h3>
           <div className="bg-gray-700 rounded-full h-2 mb-2">
             <div
-              className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+              className="bg-linear-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${progress || 0}%` }}
             ></div>
           </div>
@@ -206,4 +210,5 @@ return (
     </div>
   </div>
 );
+
 };

@@ -3,15 +3,15 @@
 import { create } from "zustand";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner"
-import { Course, CourseStore } from "@/types/client";
+import { CCourse, CCourseStore } from "@/types/client";
 
 
 
 
 
-export const useCourseStore = create<CourseStore>((set) => ({
+export const useCourseStore = create<CCourseStore>((set) => ({
     courses: [],
-    fetchCourses: async () : Promise<Course[]> => {
+    fetchCourses: async () : Promise<CCourse[]> => {
         try {
             const response = await axios.get("/api/course")
             set({ courses: response.data });

@@ -3,11 +3,11 @@
 import { create } from "zustand";
 import axios from "axios";
 import { toast } from "sonner"
-import { CartStore } from "@/types/client";
-import { logger } from "@/utils/logger/logger.node";
+import { CCartStore } from "@/types/client";
+import { clientLogger } from "@/utils/logger/clientLogger";
 
 
-export const useCartStore = create<CartStore>((set) => ({
+export const useCartStore = create<CCartStore>((set) => ({
     cart: {},
 
 
@@ -19,10 +19,11 @@ export const useCartStore = create<CartStore>((set) => ({
             // logger.debug("Response", response.data);
             return response.data
 
-        } catch (error: any) {
-            logger.error(error);
-            const errorMessage = error?.response?.data?.message || error || "Something went wrong";
-            toast.error(errorMessage);
+        } catch (error: unknown) {
+            const message= error instanceof Error ? error.message : 'Something went wrong';
+            clientLogger.error(message);
+            
+            toast.error(message);
 
         }
     },
