@@ -5,13 +5,13 @@ import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
 import { connectDB } from "./config/mongoDB/db";
 import { JWT } from "next-auth/jwt";
-import type { User as NextAuthUser, Account, Profile, Session } from "@auth/core/types";
-import type { AdapterUser } from "@auth/core/adapters";
-import User from "./models/User/userModel";
+// import type { User as NextAuthUser, Account, Profile, Session } from "@auth/core/types";
+import type { User as NextAuthUser, Account, Profile } from "next-auth";
+import {User} from "@repo/shared";
 import { IUser } from "./types/model";
 
 type DBUser = IUser;
-type AuthUser = NextAuthUser | AdapterUser;
+type AuthUser = NextAuthUser;
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -52,7 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signOut: "/",
   },
   callbacks: {
-    async signIn({ user, account }: { user: NextAuthUser | AdapterUser; account?: Account | null; profile?: Profile | null; }): Promise<boolean> {
+    async signIn({ user, account }: { user: NextAuthUser; account?: Account | null; profile?: Profile | null; }): Promise<boolean> {
       if (account?.provider === "github" || account?.provider === "google") {
         try {
           await connectDB();
