@@ -1,21 +1,17 @@
 import nodemailer, { SentMessageInfo } from 'nodemailer';
-import User from "@/models/User/userModel";
+import {User} from "@repo/shared";
 import bcryptjs from 'bcryptjs';
-import { connectDB } from '@/config/mongoDB/db';
+import { connectDB } from '@repo/shared';
 import { logger } from "@/utils/logger/logger.node";
 
-export type EmailType = "RESET" | "VERIFY";
+export type EmailType = "RESET";
 
-export const sendEmail = async (email: string, emailType: EmailType = "RESET", userId: string): Promise<SentMessageInfo> => {
+// complete the logic of reset Password
+
+export const sendEmail = async (email: string, emailType: EmailType = "RESET", userId: string, token: string): Promise<SentMessageInfo> => {
     try {
-        await connectDB();
-
-        const hashedToken = await bcryptjs.hash(userId.toString(), 10);
-        logger.info({ hashedToken }, "Generated email token");
-        await User.findByIdAndUpdate(userId,
-            { resetPasswordToken: hashedToken, resetPasswordTokenExpires: Date.now() + 3600000 })
-
-        const transporter = nodemailer.createTransport({
+        await connectDB(process.env.MONGODB_URI!);        
+        const transporter : nodemailer.Transporter = nodemailer.createTransport({
             host: process.env.MAILTRAP_HOST,
             port: Number(process.env.MAILTRAP_PORT),
             secure: false, // true for 465, false for other ports
@@ -25,18 +21,20 @@ export const sendEmail = async (email: string, emailType: EmailType = "RESET", u
             },
         });
 
-        const mailOptions = {
+        const mailOptions: nodemailer.SendMailOptions = {
             from: 'Brainnest@gmail.com',
             to: email,
-            subject: emailType === "RESET" ? "Reset your password" : "Verify your email",
-            html: `<p>Click <a href="${process.env.DOMAIN}/verifyemail?token=${hashedToken}">here</a> to ${emailType === "RESET" ? "reset your password" : "verify your email"}
-            or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/verifyemail?token=${hashedToken}
+            subject: "Reset your password",
+            html: `<p>Click <a href="${process.env.DOMAIN}/verifyemail?token=${token}">here</a> to ${emailType}
+            or copy and paste the link below in your browser. <br> ${process.env.DOMAIN}/verifyemail?token=${token}
             </p>`
         }
 
-        const mailResponse = await transporter.sendMail(mailOptions);
+        const mailResponse: SentMessageInfo = await transporter.sendMail(mailOptions);
+        logger.info("Email sent successfully to " + email, { mailResponse });                      
         return mailResponse
-    } catch (error) {
+    } catch (error:unknown) {
+        logger.error("Error sending email", { error });
         throw error
     }
 }

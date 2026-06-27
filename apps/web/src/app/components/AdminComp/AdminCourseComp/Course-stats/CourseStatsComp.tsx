@@ -19,7 +19,7 @@ import { CiEdit } from "react-icons/ci";
 import axios from "axios";
 import { toast } from "sonner";
 import { IoMdSchool } from "react-icons/io";
-import { validateEmail, validatePhoneNumber } from "@/utils/validators";
+import { validateEmail, validatePhoneNumber } from "@/utils/phoneValidators";
 import { GiMoneyStack } from "react-icons/gi";
 import { PiStudentFill } from "react-icons/pi";
 import { MdCalendarMonth } from "react-icons/md";

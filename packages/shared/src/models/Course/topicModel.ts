@@ -1,6 +1,6 @@
 
-import { ITopic } from "@/types/model";
 import mongoose, { Schema, Model } from "mongoose";
+import { ITopic } from "src/types";
 
 
 const topicSchema= new mongoose.Schema<ITopic>({

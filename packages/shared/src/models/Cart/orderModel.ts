@@ -1,5 +1,5 @@
-import { IOrder } from '@repo/shared';
 import mongoose,{Schema,Model, Types} from 'mongoose';
+import { IOrder } from 'src/types';
 
 
 
@@ -21,7 +21,7 @@ const paymentResultSchema = new Schema(
   { _id: false }
 );
    
-export const orderSchema= new mongoose.Schema({
+export const orderSchema= new mongoose.Schema<IOrder>({
         user: {
             type:Schema.Types.ObjectId,
             ref: 'User',

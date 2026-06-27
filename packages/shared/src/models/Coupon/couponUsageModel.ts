@@ -1,6 +1,5 @@
-import { ICouponUsage } from '@/types/model';
 import mongoose, { Schema, Model } from 'mongoose';
-import { use } from 'react';
+import { ICouponUsage } from 'src/types';
 
 
 export const couponUsageSchema: Schema<ICouponUsage> = new mongoose.Schema({

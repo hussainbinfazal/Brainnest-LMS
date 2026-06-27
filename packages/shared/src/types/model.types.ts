@@ -53,7 +53,7 @@ export interface IEnrollment {
   status: string;
   enrolledAt: Date;
 }
-export interface ILesson  {
+export interface ILesson {
   _id: Types.ObjectId;
   courseId: Types.ObjectId;
   name: string;
@@ -65,7 +65,7 @@ export interface ILesson  {
   isPreviewVideo?: string;
   order: number;
 }
-export interface IReview  {
+export interface IReview {
   _id: Types.ObjectId;
   course: Types.ObjectId;
   user?: Types.ObjectId | IUser;
@@ -78,7 +78,7 @@ export interface IReview  {
   createdAt: Date | string;
   updatedAt?: Date | string;
 }
-export interface ITopic  {
+export interface ITopic {
   _id: Types.ObjectId;
   name: string;
   description: string;
@@ -87,7 +87,7 @@ export interface ITopic  {
   createdAt: Date;
   updatedAt: Date;
 }
-export interface ICart  {
+export interface ICart {
   _id: Types.ObjectId
   user: Types.ObjectId;
   courses: (Types.ObjectId | ICourse)[];
@@ -96,7 +96,7 @@ export interface ICart  {
   tax: number;
   total: number;
 }
-export interface IChat  {
+export interface IChat {
   _id: Types.ObjectId;
   isPaid: boolean;
   isLimitExceeded: boolean;
@@ -129,7 +129,7 @@ export interface IChat  {
   studentUnreadCount: number;
 }
 
-export interface IPaymentsByUser  {
+export interface IPaymentsByUser {
   _id: Types.ObjectId;
   amount: number;
   paymentId: Types.ObjectId;
@@ -139,7 +139,7 @@ export interface IPaymentsByUser  {
   paymentOnModel: 'Course' | 'Chat';
   paymentStatus: 'pending' | 'completed' | 'failed';
 }
-export interface ICoupon  {
+export interface ICoupon {
   _id: Types.ObjectId;
   code: string;
   discountValue: number;
@@ -151,14 +151,14 @@ export interface ICoupon  {
   createdBy: Types.ObjectId;
 
 }
-export interface ICouponUsage  {
+export interface ICouponUsage {
   _id: Types.ObjectId;
   coupon: Types.ObjectId;
   user: Types.ObjectId;
   order: Types.ObjectId;
   usedAt: Date;
 }
-export interface IMessage  {
+export interface IMessage {
   _id: Types.ObjectId;
   sender: Types.ObjectId;
   receiver: Types.ObjectId;
@@ -171,7 +171,7 @@ export interface IMessage  {
   isDeletedByReceiver: boolean;
   isDeletedBySender: boolean;
 }
-export interface IOrder  {
+export interface IOrder {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   orderItems: {
@@ -203,7 +203,7 @@ export interface IPayments {
   paymentStatus: 'Pending' | 'Completed' | 'Failed';
 
 }
-export interface IProgress  {
+export interface IProgress {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
@@ -217,7 +217,7 @@ export interface IProgress  {
   lastAccessedAt: Date;
 }
 
-export interface IUser  {
+export interface IUser {
   _id: Types.ObjectId;
   name: string;
   email: string;
@@ -231,7 +231,7 @@ export interface IUser  {
   updatedAt: Date;
 }
 
-export interface ICertificate  {
+export interface ICertificate {
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   courseName: string;
@@ -245,8 +245,7 @@ export interface ICertificate  {
 
 
 }
-export interface IUserToken  {
-  _id: Types.ObjectId;
+export interface IUserToken {
   userId: Types.ObjectId;
   type: 'reset' | 'verification' | 'refresh';
   token: string;
@@ -254,8 +253,8 @@ export interface IUserToken  {
   isVerified: boolean;
   isUsed: boolean
 }
-export interface IUserCourse  {
-  _id: Types.ObjectId;
+
+export interface IUserCourse {
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   isLiked: boolean;
@@ -268,15 +267,13 @@ export interface IUserCourse  {
 
 }
 
-export interface ICategory  {
-  _id: Types.ObjectId;
+export interface ICategory {
   name: string;
   slug: string;
   parent: Types.ObjectId;
 }
 
 export interface ISection {
-  _id: Types.ObjectId;
   courseId: mongoose.Types.ObjectId;
   title: string;
   description?: string;

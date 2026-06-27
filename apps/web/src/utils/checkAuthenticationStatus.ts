@@ -1,28 +1,29 @@
 import bcrypt from "bcryptjs";
-import User from "../models/User/userModel";
-import { connectDB } from "@/config/mongoDB/db";
 import { AuthenticatedUser, Credentials } from "@/types/auth";
 import { logger } from "@/utils/logger/logger.node";
+import { connectDB, IUser, User } from "@repo/shared";
 
 
 
 
 export async function authenticateUser(credentials: Credentials): Promise<AuthenticatedUser | null> {
   try {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
 
-    const user = await (User).findOne({ email: credentials.email }).select(
+    const user: IUser | null = await User.findOne({ email: credentials.email }).select(
       "+password"
     );
-    logger.info({ found: !!user }, "User found");
-
     if (!user) {
       logger.warn("No user found with this email");
       return null;
     }
+    logger.info("User found", {
+      user: user.id
+    });
+
 
     const isValid = await bcrypt.compare(credentials.password, user.password);
-    logger.info({ valid: isValid }, "Password valid");
+    logger.info("Password valid", { valid: isValid },);
 
     if (!isValid) return null;
 

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {Topic,Section,Lesson, connectDB,Course, Category} from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { v4 as uuidv4 } from 'uuid';
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose, { ObjectId, Types } from "mongoose";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 
 interface CreateCourseBody {
     title: string;
@@ -126,7 +125,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             order: lesson.order
         }));
         await Lesson.insertMany(lessonDocs, { session });
-        const totalLessons : number = lessonDocs.length
+        const totalLessons : number  = lessonDocs.length
         createdCourse.totalLessons = totalLessons;
         await createdCourse.save({ session });
 

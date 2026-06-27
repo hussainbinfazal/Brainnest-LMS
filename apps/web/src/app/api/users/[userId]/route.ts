@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { IUser } from "@/types/model";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 
 // GET handler to fetch a user by ID from URL params
 export async function GET(request: CustomNextRequest, context: { params: { id: string } }): Promise<NextResponse> {

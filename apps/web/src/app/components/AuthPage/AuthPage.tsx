@@ -28,7 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import axios from "axios";
 import { JSX } from "react/jsx-runtime";
-import { loginSchema, signUpSchema } from "@/utils/schemaValidation/Auth/ZodAuthSchema";
+import { loginSchema, signUpSchema } from "@/utils/fieldsValidation/Auth/ZodAuthSchema";
 import ProfileImageUpload from "../ProfileImageUpload";
 import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
 

@@ -12,7 +12,7 @@ export { default as Coupon } from "./Coupon/couponModel";
 export { default as CouponUsage } from "./Coupon/couponUsageModel";
 export { default as Payment } from "./Payment/paymentModel";
 export {default as userCourse} from "./User/userCourse"
-export {default as userToken} from "./User/userToken"
+export {default as UserToken} from "./User/userToken"
 export {default as Cart} from "./Cart/cartModel"
 export {default as Message} from "./Chat/messageModel"
 export {default as Chat} from "./Chat/chatModel"

@@ -20,7 +20,7 @@ import Image from "next/image";
 import axios from "axios";
 import { toast } from "sonner";
 import { logger } from "@/utils/logger/logger.node";
-import { validateEmail, validatePhoneNumber } from "@/utils/validators";
+import { validateEmail, validatePhoneNumber } from "@/utils/phoneValidators";
 import {
     Card,
     CardContent,
@@ -92,7 +92,7 @@ export const MyProfilePageComp = (): JSX.Element => {
                 if (!isEnrolled) return false;
 
                 const title: string = course.title?.toLowerCase() || "";
-                const instructorName: string = course.instructor?.name?.toLowerCase() || "";
+                const instructorName: string = course.instructorId?.name?.toLowerCase() || "";
                 const term = searchTerm?.toLowerCase() || null;
 
                 return title.includes(term ?? "") || instructorName.includes(term ?? '');
@@ -138,8 +138,8 @@ export const MyProfilePageComp = (): JSX.Element => {
                 emailType: "RESET",
             });
             toast.success("Email sent successfully!");
-        } catch (error: any) {
-            logger.error(error?.response?.data?.message);
+        } catch (error: unknown) {
+            // logger.error(error?.response?.data?.message);
             throw error;
         }
     };

@@ -4,7 +4,7 @@ import { sendEmail } from '@/services/emailOtpService';
 import { ISessionUser } from '@/types/server';
 import { getDataFromToken } from '@/utils/getDataFromToken';
 import { logger } from '@/utils/logger/logger.node';
-import { validateMongooseId } from '@/utils/schemaValidation/idValidator/idValidator';
+import { validateMongooseId } from '@/utils/fieldsValidation/idValidator/idValidator';
 import { emailOtpQueue } from '@/lib/queue/emailQueue';
 interface CustomNextRequest extends NextRequest {
     ip: string;

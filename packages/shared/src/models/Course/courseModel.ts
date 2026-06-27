@@ -1,7 +1,7 @@
-import { ICourse } from "@/types/model";
 import mongoose, { Model } from "mongoose";
 import Lesson from "./lessonModel";
 import Section from "./sectionModel";
+import { ICourse } from "src/types";
 
 
 const courseSchema = new mongoose.Schema<ICourse>({
@@ -142,14 +142,14 @@ courseSchema.virtual("finalPrice").get(function (this: ICourse) {
   return Number(Math.round(this.price - (this.price * this.discount / 100)));
 });
 courseSchema.pre("findOneAndDelete", async function (next) {
-  const course = await this.model.findOne(this.getQuery);
+  const course = await this.model.findOne(this.getQuery());
   if (course) {
     await Promise.all([
       Lesson.deleteMany({ courseId: course._id }),
       Section.deleteMany({ courseId: course._id })
     ]);
   }
-  next()
+ 
 })
 courseSchema.index({ instructorId: 1, status: 1 });
 courseSchema.index({ category: 1, status: 1, price: 1 });

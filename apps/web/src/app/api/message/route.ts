@@ -8,7 +8,7 @@ import { IChat, IMessage } from "@/types/model";
 
 export async function POST(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
     try {
-        await connectDB();
+        await connectDB(process);
         const { messageData } = await request.json()
         const { chatId, message, sender, receiver } = messageData;
         if (!message || !sender || !receiver) {

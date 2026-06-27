@@ -1,17 +1,16 @@
-import { connectDB } from "@/config/mongoDB/db";
 import { progressQueue } from "@/lib/queue/progressQueue";
-import {Progress} from "@repo/shared";
+import {connectDB, Progress} from "@repo/shared";
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { IProgress } from "@/types/model";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { logger } from "@/utils/logger/logger.node";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
 
     try {
         const { courseId, lessonId } = context.params;
@@ -61,7 +60,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     }
 }
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const { courseId } = context.params;
 
@@ -86,7 +85,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     }
 }
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
 
     try {
         const { courseId, lessonId } = context.params;

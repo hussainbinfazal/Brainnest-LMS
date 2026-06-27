@@ -1,5 +1,5 @@
-import { IUserCourse } from "@repo/shared";
 import mongoose, { Schema, Model } from "mongoose";
+import { IUserCourse } from "src/types";
 
 const userCourseSchema: Schema<IUserCourse> = new mongoose.Schema({
     userId: {

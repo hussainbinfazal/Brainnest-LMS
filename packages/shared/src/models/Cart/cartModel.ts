@@ -1,5 +1,5 @@
-import { ICart } from "@/types/model";
 import mongoose, { Schema, Model} from "mongoose";
+import { ICart } from "src/types";
 
 
 

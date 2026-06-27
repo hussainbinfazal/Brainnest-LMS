@@ -378,28 +378,30 @@ export interface CCreateCouponResponse {
 }
 
 export interface CCoupon {
-  _id: string;
+  _id?: string;
   code: string;
-  discount: number | string;
+  discountValue: number | string;
+  discountType: 'percentage' | 'fixed';
   expiresAt: string | Date | number;
-  usageLimit: number | string;
+  maxUses: number | string;
+  isActive?: boolean;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
 
 
 export interface CUpdateCouponResponse {
-  updatedCoupon: Coupon;
+  updatedCoupon: CCoupon;
 }
 export interface CDeleteCouponResponse {
   message: string;
 }
 export interface CfetchCouponsProps {
-  coupons: Coupon[];
+  coupons: CCoupon[];
 }
 
 export interface CfetchCouponsResponse {
-  coupons: Coupon[];
+  coupons: CCoupon[];
   total: number;
 }
 
@@ -481,7 +483,6 @@ export interface CLesson {
   order: number;
   createdAt?: string;
   updatedAt?: string;
-  order: number;
   status?: 'completed' | 'incomplete';
 };
 
@@ -495,13 +496,13 @@ export interface CSections {
 }
 
 export interface PaymentsResponse {
-  payments: Payment[];
+  payments: CPayment[];
 }
 
 export interface EnrolledStudent {
   _id: string;
-  user: User;
-  instructor?: Instructor;
+  user: CUser;
+  instructor?: CInstructor;
   enrolledAt: string;
 }
 
@@ -533,8 +534,8 @@ export interface CRazorpayVerifyRequest {
   courseId?: string;
   chatId?: string;
   userId: string;
-  sender?: any;
-  receiver?: any;
+  sender?: string;
+  receiver?: string;
 }
 
 export interface CRazorpayCreateOrderRequest {

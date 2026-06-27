@@ -1,5 +1,5 @@
-import { connectDB, IUserCourse, logger, User, userCourse, UserCourseDocument, UserDocument } from "@repo/shared";
-import { NextRequest, NextResponse } from "next/server";
+import { connectDB, IUserCourse, logger, User, userCourse, } from "@repo/shared";
+import {  NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { IUser } from "@/types/model";
@@ -19,7 +19,6 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     // Get user basic info
     const userDB: IUser | null = await User.findById(meUser?.id)
       .select('-password')
-      .lean()
       .exec();
 
     if (!userDB) return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -52,8 +51,9 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     return NextResponse.json({ user: responseUser, message: "User fetched successfully" }, { status: 200 });
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ message: `Error in getting user: ${message}` }, { status: 500 });
+    logger.error(`Error in getting user`, { error: message });
+    return NextResponse.json({ message: `Error in getting` }, { status: 500 });
   }
-
+ 
 
 }

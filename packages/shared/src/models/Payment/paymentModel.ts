@@ -1,5 +1,5 @@
-import { IPayments } from '@repo/shared';
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+import { IPayments } from 'src/types';
 
 
 

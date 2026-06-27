@@ -1,5 +1,5 @@
-import { ICoupon } from '@/types/model';
 import mongoose, { Schema, Model } from 'mongoose';
+import { ICoupon } from 'src/types';
 
 
 export const couponSchema: Schema<ICoupon> = new mongoose.Schema({

@@ -33,7 +33,7 @@ import { CUpdateCourseForm } from "@/types/forms/formValidators";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { useVideoParsing } from "@/utils/hooks/Video/useVideoParsing";
 import { clientLogger } from "@/utils/logger/clientLogger";
-import { createCourseSchema } from "@/utils/schemaValidation/Course/courseSchemaValidation";
+import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
 

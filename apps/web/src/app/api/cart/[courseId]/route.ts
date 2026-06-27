@@ -4,7 +4,7 @@ import { Course, Cart, ISessionUser, ICart, ICourse } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 
 export async function POST(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const sessionUser: ISessionUser | null = await getDataFromToken(request);
         if (!sessionUser) return NextResponse.json({ message: "User not found" }, { status: 403 });

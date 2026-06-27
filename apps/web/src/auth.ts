@@ -3,11 +3,10 @@ import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
-import { connectDB } from "./config/mongoDB/db";
 import { JWT } from "next-auth/jwt";
 // import type { User as NextAuthUser, Account, Profile, Session } from "@auth/core/types";
 import type { User as NextAuthUser, Account, Profile } from "next-auth";
-import {User} from "@repo/shared";
+import {connectDB, User} from "@repo/shared";
 import { IUser } from "./types/model";
 
 type DBUser = IUser;
@@ -55,7 +54,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }: { user: NextAuthUser; account?: Account | null; profile?: Profile | null; }): Promise<boolean> {
       if (account?.provider === "github" || account?.provider === "google") {
         try {
-          await connectDB();
+          await connectDB(process.env.MONGODB_URI!);
           let existingUser = await User.findOne({ email: user.email });
 
           if (!existingUser) {

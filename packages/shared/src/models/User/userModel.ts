@@ -1,5 +1,6 @@
-import { IUser } from "@repo/shared";
+
 import mongoose, { Schema, Model } from "mongoose";
+import { IUser } from "src/types";
 
 export const userSchema: Schema<IUser> = new mongoose.Schema({
     name: {

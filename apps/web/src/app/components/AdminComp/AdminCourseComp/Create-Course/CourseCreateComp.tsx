@@ -30,7 +30,7 @@ import { CCreateCourseForm } from "@/types/forms/formValidators";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { useVideoParsing } from "@/utils/hooks/Video/useVideoParsing";
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
-import { createCourseSchema } from "@/utils/schemaValidation/Course/courseSchemaValidation";
+import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 
 
 

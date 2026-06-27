@@ -1,5 +1,5 @@
-import { ISection } from "@/types/model";
 import mongoose, { Schema, Model } from "mongoose";
+import { ISection } from "src/types";
 
 
 

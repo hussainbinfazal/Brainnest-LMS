@@ -1,5 +1,5 @@
-import { IProgress } from "@repo/shared"
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
+import { IProgress } from "src/types";
 
 
 

@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 import Lesson from "@/models/Course/lessonModel";
 import { logger } from "@/utils/logger/logger.node";
 import { certificateQueue } from "@/lib/queue/certificateQueue";
-import { validateMongooseId } from "@/utils/schemaValidation/idValidator/idValidator";
+import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }) {
     await connectDB();
 

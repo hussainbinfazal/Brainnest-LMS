@@ -1,6 +1,6 @@
 // models/Review.js
-import { IReview } from "@/types/model";
 import mongoose, { Model, Schema } from "mongoose";
+import { IReview } from "src/types";
 
 
 

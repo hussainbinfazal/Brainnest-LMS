@@ -1,6 +1,6 @@
 
-import { ILesson } from "@repo/shared";
 import mongoose, { Model } from "mongoose";
+import { ILesson } from "src/types";
 
 const lessonSchema = new mongoose.Schema<ILesson>({
   courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },

@@ -1,7 +1,7 @@
 
-import type { IEnrollment } from "@repo/shared";
 import mongoose, { Schema, Model } from "mongoose";
 import { EnrollmentStatus } from "./Enums";
+import { IEnrollment } from "src/types";
 
 
 

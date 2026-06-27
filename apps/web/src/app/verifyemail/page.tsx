@@ -23,10 +23,10 @@ const page = (): JSX.Element => {
     setLoading(true);
     try {
       const response = await axios.post("/api/users/verifyemail", { token, userId });
-      logger.info({ data: response.data }, "verifyEmail response");
+      // logger.info({ data: response.data }, "verifyEmail response");
       setEmailVerified(true);
     } catch (error) {
-      logger.error(error);
+      // logger.error(error);
       setEmailVerified(false);
       throw error;
     } finally {
@@ -42,7 +42,7 @@ const page = (): JSX.Element => {
     if (token && token.length > 0) {
       verifyEmail();
     }
-    logger.info({ token }, "Token in the verify email page");
+    // logger.info({ token }, "Token in the verify email page");
   }, [token]);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">

@@ -18,7 +18,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         if (existingCoupon) {
             return NextResponse.json({ message: "This Coupon is already exists" }, { status: 400 });
         }
-        const newCoupon = new Coupon({ code, discountValue, discountType, expiresAt, maxUses, createdBy: userId });
+        const newCoupon = new Coupon({ code, discountValue, discountType, expiresAt, maxUses, createdBy: userId }).exec();
         await newCoupon.save();
         logger.info("Coupon created successfully");
         return NextResponse.json({ message: "Coupon created successfully", newCoupon }, { status: 201 });

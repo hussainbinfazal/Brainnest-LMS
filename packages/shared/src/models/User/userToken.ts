@@ -1,9 +1,9 @@
-import { IUserToken } from '@repo/shared';
 import mongoose, { Schema, Model } from 'mongoose';
+import { IUserToken } from '../../types/model.types';
 
 
 
-export const userTokenSchema: Schema<IUserToken> = new mongoose.Schema({
+export const UserTokenSchema: Schema<IUserToken> = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -26,6 +26,10 @@ export const userTokenSchema: Schema<IUserToken> = new mongoose.Schema({
     isVerified: {
         type: Boolean,
         default: false
+    },
+    isUsed: {
+        type: Boolean,
+        default: false
     }
 
 },
@@ -34,5 +38,5 @@ export const userTokenSchema: Schema<IUserToken> = new mongoose.Schema({
 
 
 
-const userToken: Model<IUserToken> = mongoose.models.userToken || mongoose.model<IUserToken>('userToken', userTokenSchema);
-export default userToken;
+const UserToken: Model<IUserToken> = mongoose.models.UserToken || mongoose.model<IUserToken>('UserToken', UserTokenSchema);
+export default UserToken;

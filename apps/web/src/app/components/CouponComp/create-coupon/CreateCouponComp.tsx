@@ -2,7 +2,6 @@
 
 import React from "react";
 import axios from "axios";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
@@ -18,31 +17,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CCreateCouponResponse } from "@/types/client";
-
+import { useSession } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { zodCouponSchema, CreateCoupon } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
 
 const CreateCouponComp: React.FC = (): React.JSX.Element => {
-  const [code, setCode] = useState<string>("");
-  const [discount, setDiscount] = useState<string | number>("");
-  const [usageLimit, setUsageLimit] = useState<number>(0);
-  const [expiresAt, setExpiresAt] = useState<string>("");
-  const router = useRouter();
-  console.log("Page rendered");
 
-  const handleCreateCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<CreateCoupon>({
+    resolver: zodResolver(zodCouponSchema),
+    defaultValues: {
+      code: "",
+      discountValue: 0,
+      discountType: "percentage",
+      maxUses: 0,
+      expiresAt: "",
+    },
+
+  })
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
+
+  const router = useRouter();
+  const handleCreateCoupon = async (data:
+    CreateCoupon): Promise<void> => {
 
     try {
-      const response = await axios.post<CCreateCouponResponse>("/api/admin/coupon", {
-        code: code,
-        discount: discount,
-        expiresAt: expiresAt,
-        usageLimit: usageLimit,
-      });
-      const data = response?.data;
+      const response = await axios.post<CCreateCouponResponse>("/api/admin/coupon", data);
+      // const data = response?.data;
       toast.success("Coupon created successfully");
       router.push("/course/coupon");
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Something went wrong";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong";
+
+      toast.error(message);
+
       throw new Error(message);
     }
   };
@@ -57,44 +72,72 @@ const CreateCouponComp: React.FC = (): React.JSX.Element => {
             </CardDescription>
           </CardHeader>
           <CardContent className="">
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit(handleCreateCoupon)}>
               <div className="space-y-2">
                 <Label className="">Coupon</Label>
                 <Input
                   className=""
-                  value={code}
                   type="text"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value)}
+                  {...register("code")}
                   placeholder="e.g. JAVASCRIPT100"
                 />
-              </div>
+                {errors.code && (
+                  <p className="text-sm text-red-500">
+                    {errors.code.message}
+                  </p>
+                )}              </div>
               <div className="space-y-2">
-                <Label className="">Discount</Label>
+                <Label className="">Discount Value</Label>
                 <Input
                   className=""
-                  value={discount}
+                  {...register("discountValue", {
+                    valueAsNumber: true
+                  })}
                   type="number"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDiscount(e.target.value)}
                   placeholder="e.g. 10"
                 />
+               {errors.discountValue && (
+                  <p className="text-sm text-red-500">
+                    {errors.discountValue.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="">Discount Type</Label>
+                <select
+                  className=""
+                  {...register("discountType")}
+                  defaultValue="percentage"
+                >
+                  <option value="percentage">Percentage</option>
+                  <option value="fixed">Fixed</option>
+                </select>
+                {errors.discountType && (
+                  <p className="text-sm text-red-500">
+                    {errors.discountType.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="">Coupon Limit</Label>
                 <Input
                   className=""
-                  value={usageLimit}
                   type="number"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsageLimit(Number(e.target.value))}
                   placeholder="e.g. 75"
+                  {...register("maxUses", { valueAsNumber: true })}
                 />
+               {errors.maxUses && (
+                  <p className="text-sm text-red-500">
+                    {errors.maxUses.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="">Coupon Duration</Label>
                 <Input
                   className=""
-                  value={expiresAt}
                   type="date"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setExpiresAt(e.target.value)}
+                  {...register("expiresAt")}
                   placeholder="e.g. 03/01/2025"
                 />
               </div>
@@ -102,8 +145,7 @@ const CreateCouponComp: React.FC = (): React.JSX.Element => {
               <Button
                 size="default"
                 className=""
-                type="button"
-                onClick={handleCreateCoupon}
+                type="submit"
                 variant="outline"
               >
                 + Add Coupon
