@@ -18,7 +18,7 @@ export default async function ChatPage(): Promise<JSX.Element> {
       const chatsSSR: IChat[] | null = await Chat.find({ sender: userId }).populate('sender', '_id name profileImage').populate('receiver', '_id name profileImage').populate('allMessages').lean();
 
       logger.info("fetchChats (before serializing)",{ fetchChats.length });
-      if (chatsSSR.length > 0) {
+      if (chatsSSR?.length > 0) {
         fetchChats = await serializeChats(chatsSSR) as CChat[];
       }
       return fetchChats;

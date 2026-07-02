@@ -1,0 +1,47 @@
+import { z } from "zod";
+
+export const createCourseSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    description: z.string().min(3, "Description must be at least 3 characters"),
+    price: z.number().min(1, "Price must be at least 1"),
+    discount: z.number().min(0, "Discount must be at least 0"),
+    instructorId: z.string().min(3, "Instructor Id must be at least 3 characters"),
+    category: z.string().min(3, "Category must be at least 3 characters"),
+    subCategory: z.string().min(3, "SubCategory must be at least 3 characters"),
+    level: z.string().min(3, "Level must be at least 3 characters"),
+    language: z.string().min(3, "Language must be at least 3 characters"),
+    tags: z.array(z.string().min(3, "Tag must be at least 3 characters")),
+    requirements: z.string().min(3, "Requirements must be at least 3 characters"),
+    whatYouWillLearn: z.array(z.string().min(3, "What You Will Learn must be at least 3 characters")),
+    coverImage: z.string().min(3, "Cover Image must be at least 3 characters"),
+    durationInSeconds: z.number().min(1, "Duration must be at least 1"),
+    sections: z.array(
+        z.object({
+            title: z.string().min(3, "Section title must be at least 3 characters"),
+            description: z.string().min(3, "Section description must be at least 3 characters"),
+            videoUrl: z.string().min(3, "Section video must be at least 3 characters"),
+            durationInSeconds: z.number().min(1, "Section duration must be at least 1"),
+        })    
+    ),
+    faq: z.array(
+        z.object({
+            question: z.string().min(3, "Question must be at least 3 characters"),
+            answer: z.string().min(3, "Answer must be at least 3 characters"),
+        })    
+    ),  
+    topic: z.array(
+        z.object({
+            name: z.string().min(3, "Question must be at least 3 characters"),
+            description: z.string().min(3, "Answer must be at least 3 characters"),
+            slug: z.string().min(3, "Answer must be at least 3 characters"),
+            isActive: z.boolean(),
+
+        })    
+    ),  
+    status: z.string().min(3, "Status must be at least 3 characters"),
+    dripType: z.string().min(3, "Drip Type must be at least 3 characters"),
+    isPreview: z.boolean(),
+    previewVideo:z.string().min(3, "Preview Video must be at least 3 characters"),
+
+    
+});

@@ -18,7 +18,7 @@ export async function authenticateUser(credentials: Credentials): Promise<Authen
       return null;
     }
     logger.info("User found", {
-      user: user.id
+      user: user._id
     });
 
 
