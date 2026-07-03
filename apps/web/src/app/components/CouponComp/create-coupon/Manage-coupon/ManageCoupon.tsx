@@ -22,8 +22,7 @@ import { CCoupon, CDeleteCouponResponse, CfetchCouponsResponse, CUpdateCouponRes
 import { updateCoupon,  zodUpdateCouponSchema } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Switch } from "@/components/ui/switch";
-
+import { Switch } from "@/components/ui/switch"
 
 
 
