@@ -380,9 +380,13 @@ export interface CCreateCouponResponse {
 export interface CCoupon {
   _id: string;
   code: string;
-  discount: number | string;
-  expiresAt: string | Date | number;
-  usageLimit: number | string;
+  discountValue: number;
+  discountType: "percentage" | "fixed";
+  expiresAt: Date;
+  maxUses: number;
+  usedCount: number;
+  isActive: boolean;
+  createdBy: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }

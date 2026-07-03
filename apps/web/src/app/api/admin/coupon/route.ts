@@ -36,15 +36,13 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
-        const userId: string = user?.id;
-        const coupons: ICoupon[] | null = await Coupon.find().populate("createdBy", "name email");
+        const coupons: ICoupon[] | null = await Coupon.find().populate("createdBy", "name email").exec();
         logger.info("Coupons retrieved successfully");
-
         return NextResponse.json(coupons, { status: 200 });
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        logger.error(`Error in getting coupons: ${message}`);
-        return NextResponse.json({ message: `Error in getting coupons:${message}` }, { status: 500 });
+        const message: string = error instanceof Error ? error.message : 'Unknown error';
+        logger.error("Error in getting coupons: ", { message });
+        return NextResponse.json({ message }, { status: 500 });
     }
 }
 
@@ -64,25 +62,25 @@ export async function DELETE(request: CustomNextRequest): Promise<NextResponse> 
         if (!userId || !isUserValid) return NextResponse.json({ message: "User id is required" }, { status: 400 });
         const coupon: ICoupon | null = await Coupon.findByIdAndDelete(couponId);
         logger.info("Coupon deleted successfully");
-        return NextResponse.json({ message: "Coupon deleted successfully", coupon }, { status: 200 });
+        return NextResponse.json({ message: "Coupon deleted successfully" }, { status: 200 });
 
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        logger.error(`Error in deleting coupon: ${message}`);
-        return NextResponse.json({ message: `There is a error on the server side:${message}` }, { status: 500 });
+        const message: string = error instanceof Error ? error.message : 'Unknown error';
+        logger.error("Error in deleting coupon:", { message });
+        return NextResponse.json({ message }, { status: 500 });
     }
 }
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const { couponId, editForm } = await request.json();
-        if(!couponId || !validateMongooseId({ couponId })) return NextResponse.json({ message: "Coupon id is required and should be valid" }, { status: 400 });
-         const user: ISessionUser | null = await getDataFromToken(request);
+        const { couponId, data } = await request.json();
+        if (!couponId || !validateMongooseId({ couponId })) return NextResponse.json({ message: "Coupon id is required and should be valid" }, { status: 400 });
+        const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
         const userId: string = user?.id;
         if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required and should be valid" }, { status: 400 });
-        const { code, discountValue, discountType, expiresAt, maxUses } = editForm;
+        const { code, discountValue, discountType, expiresAt,isActive, maxUses } = data;
         if (!code || !discountValue || !discountType || !expiresAt || !maxUses) {
             return NextResponse.json({ message: "All fields are required" }, { status: 400 });
         }

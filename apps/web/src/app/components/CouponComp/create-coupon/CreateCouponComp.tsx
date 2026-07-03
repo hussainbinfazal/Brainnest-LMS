@@ -47,7 +47,6 @@ const CreateCouponComp: React.FC = (): React.JSX.Element => {
 
     try {
       const response = await axios.post<CCreateCouponResponse>("/api/admin/coupon", data);
-      // const data = response?.data;
       toast.success("Coupon created successfully");
       router.push("/course/coupon");
     } catch (error: unknown) {

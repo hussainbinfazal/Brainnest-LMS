@@ -19,6 +19,12 @@ import { MdCancel } from "react-icons/md";
 import { MdDeleteForever } from "react-icons/md";
 import { IoSearch } from "react-icons/io5";
 import { CCoupon, CDeleteCouponResponse, CfetchCouponsResponse, CUpdateCouponResponse } from "@/types/client";
+import { updateCoupon,  zodUpdateCouponSchema } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Switch } from "@/components/ui/switch";
+
+
 
 
 
@@ -28,65 +34,84 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
   const [coupons, setCoupons] = useState<CCoupon[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  console.log("Page rendered");
-  const [editForm, setEditForm] = useState<Partial<CCoupon>>({
-    code: "",
-    discount: "",
-    usageLimit: "",
-    expiresAt: "",
+  const form = useForm<updateCoupon>({
+    resolver: zodResolver(zodUpdateCouponSchema),
+    defaultValues: {
+      code: "",
+      discountValue: 0,
+      discountType: "percentage",
+      maxUses: 0,
+      isActive: true,
+      createdBy: "",
+      expiresAt: "",
+    }
   });
-  const [editingCouponId, setEditingCouponId] = useState< string | null>(null);
-  const handleUpdateCoupon = async (couponId: string) => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control, 
+    formState: { errors },
+  } = form;
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const handleUpdateCoupon = async (couponId: string, data: updateCoupon) => {
     setIsEditing(true);
     setLoading(true);
     try {
       const response = await axios.put<CUpdateCouponResponse>(`/api/admin/coupon`, {
         couponId,
-        editForm,
+        ...data,
+
       });
       const updatedCoupon = response.data.updatedCoupon;
 
       toast.success("Coupon updated successfully");
-      setCoupons((prevCoupons : CCoupon[]) =>
-        prevCoupons.map((coupon:CCoupon) =>
+      setCoupons((prevCoupons: CCoupon[]) =>
+        prevCoupons.map((coupon: CCoupon) =>
           coupon._id === couponId ? updatedCoupon : coupon
         )
       );
       setEditingCouponId(null);
-    } catch (error) {
+    } catch (error: unknown) {
+      const message : string = error instanceof Error ? error.message : "Something went wrong";
+      toast.error(message);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteCoupon = async (couponId : string) => {
+  const handleDeleteCoupon = async (couponId: string) => {
     setIsEditing(false);
     setLoading(true);
     try {
       const response = await axios.delete<CDeleteCouponResponse>(`/api/admin/coupon`, {
         data: { couponId },
       });
-      const data = response?.data;
+      const data : CDeleteCouponResponse = response?.data;
       toast.success("Coupon deleted successfully");
-      setCoupons((prevCoupons) =>
-        prevCoupons.filter((coupon) => coupon._id !== couponId)
+      setCoupons((prevCoupons: CCoupon[]) =>
+        prevCoupons.filter((coupon: CCoupon) => coupon._id !== couponId)
       );
       setEditingCouponId(null);
-    } catch (error) {
+    } catch (error: unknown) {
+      const message : string = error instanceof Error ? error.message : "Something went wrong";
+      toast.error(message);
       throw error;
     } finally {
       setLoading(false);
     }
   };
-  const fetchCoupons = useCallback(async () => {
+  const fetchCoupons = useCallback(async (): Promise<void> => {
     setLoading(true);
     try {
       const response = await axios.get<CfetchCouponsResponse>(`/api/admin/coupon`);
       const data = response.data;
       setCoupons(data.coupons);
       setLoading(false);
-    } catch (error) {
+    } catch (error: unknown) {
+      const message : string = error instanceof Error ? error.message : "Something went wrong";
+      toast.error(message);
       throw error;
     }
   }, []);
@@ -94,16 +119,16 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
   const filteredCoupons =
     searchTerm.trim() === ""
       ? coupons
-      : coupons.filter((coupon) => {
-          const code = coupon?.code?.toLowerCase() || "";
+      : coupons.filter((coupon: CCoupon) => {
+        const code : string = coupon?.code?.toLowerCase() || "";
 
-          const term = searchTerm.toLowerCase();
+        const term : string = searchTerm.toLowerCase();
 
-          return code.includes(term);
-        });
+        return code.includes(term);
+      });
 
   useEffect(() => {
-    const timer = setTimeout(() => {fetchCoupons()}, 1000);
+    const timer = setTimeout(() => { fetchCoupons() }, 500);
 
     return () => clearTimeout(timer);
   }, [coupons?.length]);
@@ -151,99 +176,91 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
             </div>
           ) : coupons.length === 0 ? (
             <>
-              <Skeleton className="w-[300px]" />
-              <Skeleton className="w-[300px]" />
-              <Skeleton className="w-[300px]" />
-              <Skeleton className="w-[300px]" />
+              <Skeleton className="w-75" />
+              <Skeleton className="w-75" />
+              <Skeleton className="w-75" />
+              <Skeleton className="w-75" />
             </>
           ) : (
-            <div className="w-full min-h-[290px] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 justify-items-start gap-4">
+            <div className="w-full min-h-72.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 justify-items-start gap-4">
               {(filteredCoupons || []).map((coupon) => (
-                <Card key={coupon._id} className="w-[290px] space-y-4 bg-black">
+                <Card key={coupon._id} className="w-72.5 space-y-4 bg-black">
                   <CardHeader className={"bg-black"}>
                     <CardTitle className="">Coupon</CardTitle>
                   </CardHeader>
                   <CardContent className={"bg-black"}>
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={handleSubmit((data) => handleUpdateCoupon(coupon._id, data))}>
                       <div className="space-y-2">
                         <Label className="">Code</Label>
                         <Input
                           type="text"
                           className=""
-                          value={
-                            editingCouponId === coupon._id
-                              ? editForm.code
-                              : coupon.code
-                          }
+                          {...register("code")}
                           placeholder="e.g. JavaScript Course"
                           disabled={editingCouponId !== coupon._id}
-                          onChange={(e : React.ChangeEvent<HTMLInputElement>) =>
-                            setEditForm({ ...editForm, code: e.target.value })
-                          }
+
                         />
+                        {editingCouponId === coupon._id && errors.code && (
+                          <span className="text-red-500">{errors.code.message}</span>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <Label className="">Discount</Label>
+                        <Label className="">Discount Type</Label>
                         <Input
                           className=""
-                          type="number"
-                          value={
-                            editingCouponId === coupon._id
-                              ? editForm.discount
-                              : coupon.discount
-                          }
+                          type="text"
+                          {...register("discountType")}
+                          placeholder="e.g. Percentage"
                           disabled={editingCouponId !== coupon._id}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setEditForm({
-                              ...editForm,
-                              discount: e.target.value,
-                            })
-                          }
+
                           max={100}
                           min={0}
                         />
+                        {editingCouponId === coupon._id && errors.discountType && (
+                          <span className="text-red-500">{errors.discountType.message}</span>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <Label className="">Usage Limit</Label>
+                        <Label className="">Discount Value</Label>
+                        <Input
+                          className=""
+                          type="number"
+                          {...register("discountValue")}
+                          placeholder="e.g. 20"
+                          disabled={editingCouponId !== coupon._id}
+
+                          max={100}
+                          min={0}
+                        />
+                        {editingCouponId === coupon._id && errors.discountValue && (
+                          <span className="text-red-500">{errors.discountValue.message}</span>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="">Usage Limit / Used Count</Label>
                         <Input
                           type="number"
                           className=""
-                          value={
-                            editingCouponId === coupon._id
-                              ? editForm.usageLimit
-                              : coupon.usageLimit
-                          }
+                          {...register("maxUses")}
                           disabled={editingCouponId !== coupon._id}
-                          onChange={(e : React.ChangeEvent<HTMLInputElement>) =>
-                            setEditForm({
-                              ...editForm,
-                              usageLimit: e.target.value,
-                            })
-                          }
+
                         />
+                        {editingCouponId === coupon._id && errors.maxUses && (
+                          <span className="text-red-500">{errors.maxUses.message}</span>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label className="">Expired At</Label>
                         <Input
                           type="date"
                           className=""
-                           value={
-                            editingCouponId === coupon._id
-                               ? typeof editForm.expiresAt === 'number'
-                                 ? new Date(editForm.expiresAt).toISOString().slice(0, 10)
-                                 : ""
-                               : coupon.expiresAt
-                              ? new Date(coupon.expiresAt).toISOString().slice(0, 10)
-                              : ""
-  }
+                          {...register("expiresAt")}
                           disabled={editingCouponId !== coupon._id}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setEditForm({
-                              ...editForm,
-                              expiresAt: new Date(e.target.value).getTime(),
-                            })
-                          }
+
                         />
+                        {editingCouponId === coupon._id && errors.expiresAt && (
+                          <span className="text-red-500">{errors.expiresAt.message}</span>
+                        )}
                       </div>
 
                       {isEditing && editingCouponId === coupon._id ? (
@@ -265,7 +282,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
                           <Button
                             size="default"
                             type="button"
-                            onClick={() => handleDeleteCoupon(coupon._id)}
+                            onClick={() => handleDeleteCoupon(editingCouponId)}
                             variant="outline"
                             className="px-7"
                           >
@@ -276,10 +293,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
                           <Button
                             className=""
                             size="default"
-                            type="button"
-                            onClick={() => {
-                              handleUpdateCoupon(coupon._id);
-                            }}
+                            type="submit"
                             variant="outline"
                           >
                             Update
@@ -293,14 +307,18 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
                           onClick={() => {
                             setIsEditing(!isEditing);
                             setEditingCouponId(coupon._id);
-                            setEditForm({
+                            reset({
                               code: coupon.code,
-                              discount: coupon.discount,
-                              usageLimit: coupon.usageLimit,
-                              expiresAt: new Date(coupon.expiresAt)
-                                .toISOString()
-                                .slice(0, 10), // format for input type="date"
-                            });
+                              discountType: coupon.discountType,
+                              discountValue: coupon.discountValue,
+                              maxUses: coupon.maxUses,
+                              expiresAt: coupon.expiresAt
+                                ? new Date(coupon.expiresAt).toISOString().slice(0, 10)
+                                : "",
+                              isActive: coupon.isActive,
+
+                            })
+
                           }}
                           variant="outline"
                         >
