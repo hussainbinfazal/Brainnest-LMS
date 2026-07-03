@@ -19,7 +19,7 @@ import { MdCancel } from "react-icons/md";
 import { MdDeleteForever } from "react-icons/md";
 import { IoSearch } from "react-icons/io5";
 import { CCoupon, CDeleteCouponResponse, CfetchCouponsResponse, CUpdateCouponResponse } from "@/types/client";
-import { updateCoupon,  zodUpdateCouponSchema } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
+import { updateCoupon, zodUpdateCouponSchema } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Switch } from "@/components/ui/switch"
@@ -49,7 +49,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
     register,
     handleSubmit,
     reset,
-    control, 
+    control,
     formState: { errors },
   } = form;
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
       );
       setEditingCouponId(null);
     } catch (error: unknown) {
-      const message : string = error instanceof Error ? error.message : "Something went wrong";
+      const message: string = error instanceof Error ? error.message : "Something went wrong";
       toast.error(message);
       throw error;
     } finally {
@@ -87,14 +87,14 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
       const response = await axios.delete<CDeleteCouponResponse>(`/api/admin/coupon`, {
         data: { couponId },
       });
-      const data : CDeleteCouponResponse = response?.data;
+      const data: CDeleteCouponResponse = response?.data;
       toast.success("Coupon deleted successfully");
       setCoupons((prevCoupons: CCoupon[]) =>
         prevCoupons.filter((coupon: CCoupon) => coupon._id !== couponId)
       );
       setEditingCouponId(null);
     } catch (error: unknown) {
-      const message : string = error instanceof Error ? error.message : "Something went wrong";
+      const message: string = error instanceof Error ? error.message : "Something went wrong";
       toast.error(message);
       throw error;
     } finally {
@@ -109,7 +109,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
       setCoupons(data.coupons);
       setLoading(false);
     } catch (error: unknown) {
-      const message : string = error instanceof Error ? error.message : "Something went wrong";
+      const message: string = error instanceof Error ? error.message : "Something went wrong";
       toast.error(message);
       throw error;
     }
@@ -119,9 +119,9 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
     searchTerm.trim() === ""
       ? coupons
       : coupons.filter((coupon: CCoupon) => {
-        const code : string = coupon?.code?.toLowerCase() || "";
+        const code: string = coupon?.code?.toLowerCase() || "";
 
-        const term : string = searchTerm.toLowerCase();
+        const term: string = searchTerm.toLowerCase();
 
         return code.includes(term);
       });
@@ -235,6 +235,23 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
                           <span className="text-red-500">{errors.discountValue.message}</span>
                         )}
                       </div>
+                      <div className="flex items-center justify-between space-y-2">
+                        <Label>Active</Label>
+                        <Controller
+                          name="isActive"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              disabled={editingCouponId !== coupon._id}
+                            />
+                          )}
+                        />
+                      </div>
+                      {editingCouponId === coupon._id && errors.isActive && (
+                        <span className="text-red-500">{errors.isActive.message}</span>
+                      )}
                       <div className="space-y-2">
                         <Label className="">Usage Limit / Used Count</Label>
                         <Input
