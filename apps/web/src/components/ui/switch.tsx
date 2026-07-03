@@ -9,7 +9,7 @@ function Switch({
   className,
   size = "default",
   ...props
-}: React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>) {
+}: React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root> & { size?: "default" | "sm" }) {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
