@@ -57,7 +57,7 @@ export interface HomeProps {
 export default function HomePage({ initialCourses, fetchedReviews, allCategories }: HomeProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { fetchCourses, courses, setCourses } = useCourseStore();
+  const { fetchCourses, courses, setCourses,reviews,categories } = useCourseStore();
 const saveUserGeography = useAuthStore((state) => state.saveUserGeography);
 const authUser = useAuthStore((state) => state.authUser);
 const setAuthUser = useAuthStore((state) => state.setAuthUser);
@@ -69,18 +69,16 @@ const userLocation = useAuthStore((state) => state.userLocation);
   const [allCourses, setAllCourses] = useState<CCourse[]>(initialCourses || []);
   const [totalCategories, setTotalCategories] = useState<CCategoryWithChildren[]>(allCategories || []);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
-  const [reviews, setReviews] = useState<CReview[]>(fetchedReviews || []);
+  const [allReviews, setAllReviews] = useState<CReview[]>(fetchedReviews || []);
   const [sortBy, setSortBy] = useState<ReviewSortOption>("helpful");
   const [randomReviews, setRandomReviews] = useState<CReview[]>([]);
   const [shuffledCourses, setShuffledCourses] = useState<CCourse[]>([]);
   // Filter the course on behalf of the selected categories //
-  console.log("This is the courses on browser", allCourses)
-  console.log("This is the reviews on browser", reviews)
-  console.log("This is the allCategories on browser", totalCategories)
+  
   //Fetch user geographical location to show popular categories
   useEffect(() => { 
     if (reviews.length > 0) {
-      const sorted = sortedReviews(reviews, sortBy);
+      const sorted = sortedReviews(allReviews, sortBy);
       setRandomReviews(sorted);
     }
     
@@ -92,23 +90,20 @@ useEffect(() => {
   setAllCourses(initialCourses)
 },[initialCourses])
   useEffect(() => { 
-    if (reviews.length > 0 && allCourses.length > 0 && allCategories.length > 0 ) {
-      console.log("Calling Fetch Courses of store");
-      console.log("This is the courses state of Store", courses
-      )
-      fetchCourses({ fetchedCategories: allCategories, fetchedReviews: reviews, fetchedCourses: allCourses });
+
+    if (allReviews.length > 0 && allCourses.length > 0 && allCategories.length > 0 ) {
+      
+      fetchCourses({ fetchedCategories: allCategories, fetchedReviews: allReviews, fetchedCourses: allCourses });
     }
     
-}, [reviews, allCourses, allCategories])
+}, [allReviews, allCourses, allCategories])
 
   // Effect for fetching user location (if it's independent)
 useEffect(() => {
   async function loadLocation(): Promise<void> {
     await saveUserGeography();
-    setUserGeography(userLocation);
-    
+    setUserGeography(userLocation); 
   }
-
   loadLocation();
 }, []);
 
@@ -140,7 +135,6 @@ useEffect(() => {
                   <CarouselItem className="" key={course._id}>
                     <div className="relative">
                       <source srcSet="https://img-c.udemycdn.com/notices/web_carousel_slide/image_responsive/e69a9ca9-bb56-4fda-954a-5ccbec2ac33e.png" width="1304" height="400" media="(max-width: 43.75rem)"></source>
-                      {/* <Image src="https://img-c.udemycdn.com/notices/web_carousel_slide/image/d4a1717d-1ad2-4570-adf9-e0ab20b3ab75.png" width={1350} height={500} alt={course?.title} priority={true} /> */}
                       <Image src="/assets/banner/banner-1.png" width={1350} height={500} alt={course?.title} priority={true} />
                       
                     </div>
@@ -197,14 +191,14 @@ useEffect(() => {
                             </CardContent>
                             <CardFooter className="flex-1 p-4">
                               <div className="w-full flex flex-col gap-1">
-                                <p className="text-lg font-semibold wrap-break leading-tight line-clamp-2">{course.title}</p>
+                                <p className="text-lg max-w-lg font-semibold wrap-break leading-tight line-clamp-2 min-h-15 ">{course.title}</p>
                                 <p className="text-xs text-muted-foreground truncate">
                                   {course?.instructorId?.name}
                                 </p>
                                 <div className="flex gap-1 flex-wrap">
-                                  <Badge variant="outline" className="text-xs ">{course.averageRating || 0}</Badge>
+                                  <Badge variant="outline" className="text-xs ">{course.averageRating || 0} ⭐</Badge>
                                   <Badge variant="outline" className="text-xs">
-                                    {course?.totalDurationInSeconds && convertToTotalHours(course.totalDurationInSeconds)} h
+                                    {course?.totalDurationInSeconds && `⏱️ ${convertToTotalHours(course.totalDurationInSeconds)}`} h
                                   </Badge>
                                 </div>
                               </div>
@@ -223,18 +217,18 @@ useEffect(() => {
         </div>
 
         {/* skill section */}
-        {isLoadingPage ? (<Skeleton className="w-175 h-137.5 rounded-md" />) : (<div className=" w-full flex items-center justify-center gap-4 bg-[#F6F7F9] dark:bg-black ">
+        {isLoadingPage ? (<Skeleton className="w-175 h-137.5 rounded-md" />) : (<div className=" w-full flex items-center justify-center gap-4 bg-brand-white dark:bg-black ">
           {isLoadingPage ? (<Skeleton className="min-w-125 h-137.5 rounded-md" />) : (<div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-137.5 p-4 gap-8">
             <div className="mb-4 flex flex-col gap-2">
               <h2 className="text-3xl font-bold ">All the skills you need in one place</h2>
               <p className="text-gray-600">Form critical skills to technical topics,Brainnest supports you every step of the way</p>
             </div>
             <div className="flex w-full h-125 ">
-              {totalCategories.length > 0 && (
-                <Tabs defaultValue={totalCategories[0].name} className={"w-full h-full"}>
+              {categories.length > 0 && (
+                <Tabs defaultValue={categories[0].name} className={"w-full h-full"}>
                   <Carousel plugins={[]} className="w-full ">
                     <CarouselContent className="flex w-full px-2 border-b-2 border-b-gray-300 dark:border-b-gray-500   z-0">
-                      {totalCategories.map((category:CCategory) => (
+                      {categories.map((category:CCategory) => (
                         <CarouselItem key={category._id} className="flex-none w-auto px-2 -mb-0.5 z-50 relative">
                           <TabsList className={"m-0 border-0 shadow-none ring-0 bg-transparent p-0 w-auto"}>
                             <TabsTrigger value={category.name} className="capitalize w-full h-full border-r-0 border-t-0 border-l-0 border-b-2 rounded -none shadow-none ring-0 bg-transparent  p-0 pl-0 dark:data-[state=active]:border-b-gray-300 data-[state=active]:border-b-black data-[state=active]:shadow-none data-[state=active]:ring-0 data-[state=active]:bg-transparent! data-[state=active]:p-0 data-[state=active]:rounded-none ">{category.name}</TabsTrigger>
@@ -249,7 +243,7 @@ useEffect(() => {
 
 
                   {/* Tabs Content */}
-                  {totalCategories.map((category: CCategoryWithChildren) => (
+                  {categories.map((category: CCategoryWithChildren) => (
                     <TabsContent key={category._id} value={category.name} className={"bg-transparent py-4 px-2 pt-8"}>
                       {/* Nested Tabs for subcategories */}
                       {category && category.children.length > 0 && <Tabs defaultValue={category.children[0].name || ""} className={"w-full "}>
@@ -258,7 +252,7 @@ useEffect(() => {
                             <CarouselContent className="" >
                               {(category.children || []).map((sub:CCategory) => (
                                 <CarouselItem key={sub._id} className={"px-4 "}>
-                                  <TabsTrigger value={sub.name} className={"border-0 shadow-none ring-0 bg-transparent px-4 py-4 rounded-full data-[state=active]:bg-[#F6F7F9]! dark:bg-black dark:data-[state=active]:bg-white! dark:data-[state=active]:border-white!dark:data-[state=active]:!border-1  dark:text-black dark:data-[state=active]:text-black! "}>{sub.name}</TabsTrigger>
+                                  <TabsTrigger value={sub.name} className={"border-0 shadow-none ring-0 bg-transparent px-4 py-4 rounded-full data-[state=active]:bg-brand-white! dark:bg-black dark:data-[state=active]:bg-white! dark:data-[state=active]:border-white!dark:data-[state=active]:!border-1  dark:text-black dark:data-[state=active]:text-black! "}>{sub.name}</TabsTrigger>
                                 </CarouselItem>
                               ))}
 
@@ -273,7 +267,7 @@ useEffect(() => {
                           <TabsContent key={sub._id} value={sub.name} className={"flex justify-center "}>
                             <Carousel  className="mt-4 w-full">
                               <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
-                                {getCategoryCourses(category._id, sub._id, allCourses).map((course:CCourse) => (
+                                {getCategoryCourses(sub._id, category._id,courses).map((course:CCourse) => (
                                   <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                                     <Link href={`/courses/${course._id}`} className="inline-block">
                                       <Card className="w-75 h-87.5 relative">
@@ -300,12 +294,11 @@ useEffect(() => {
                                             <div className="flex gap-2">
                                               <Badge
                                                 className=""
-                                                variant="outline">{course?.averageRating ? formatRatingNumber(course.averageRating) : "0"}</Badge>
+                                                variant="outline">{course?.averageRating ? `${formatRatingNumber(course.averageRating)} ⭐` : "0"}</Badge>
                                               <Badge
                                                 className=""
-                                              
                                                 variant="outline">
-                                                {course?.totalDurationInSeconds ? convertToTotalHours(course.totalDurationInSeconds) : "0"} hours
+                                                {course?.totalDurationInSeconds ? `⏱️ ${convertToTotalHours(course.totalDurationInSeconds)} ` : "0"} hours
                                               </Badge>
                                             </div>
                                           </div>
@@ -352,7 +345,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 xl:basis-1/4  gap
                         <Skeleton className="min-w-50 h-50 rounded-md" />
                       </CarouselItem>
                     ) : (
-                      getPopularCategories(totalCategories || []).map((category: CCategoryWithChildren, index) => (
+                      getPopularCategories(categories || []).map((category: CCategoryWithChildren, index) => (
                         <CarouselItem key={index} className="w-full px-2 -ml-2 md:-ml-4
 pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                           <div className="w-62.5 h-70 my-2 relative">
@@ -392,16 +385,16 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                   <CarouselNext className={"ml-4"} /> */}
                 </Carousel>
               </div>
-              <div className="w-full bg-[#F6F7F9] dark:bg-black  flex flex-col justify-center items-center gap-4 py-3 mt-4">
+              <div className="w-full bg-brand-white dark:bg-black  flex flex-col justify-center items-center gap-4 py-3 mt-4">
                 {isLoadingPage ? (<Skeleton className="w-full h-12.5 rounded-md" />) : (<>
                   <p className="text-sm">Trusted by over 1000+ Companies Over and lakhs of Students around the world</p>
-                  <div className="w-full max-h-25 flex justify-center items-center border-none outline-none">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-25 h-25 p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-[#F6F7F9] border-0! shadow-none! ring-0 outline-none! border-none! ">
+                  <div className="w-full max-h-25 flex justify-center items-center border-none outline-none">{["https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals", "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals"].map((item, index) => <div key={index} className="relative w-25 h-25 p-1 md:p-4 rounded-none overflow-hidden flex items-center justify-center bg-brand-white border-0! shadow-none! ring-0 outline-none! border-none! ">
                     <div className="w-full h-full relative flex justify-center items-center border-0!  border-none! outline-none! shadow-none">
                       <Image
                         src={item}
                         alt={item}
                         fill
-                        className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out border-0! border-none! outline-none! shadow-none"
+                        className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out border-0 border-none! outline-none! shadow-none"
                       />
                     </div>
                   </div>)}</div></>
@@ -479,9 +472,9 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                     ₹{parseInt(String(course?.price || 0))}
                                   </p>
                                   <div className="flex gap-2">
-                                    <Badge className="text-xs" variant="outline">{course?.averageRating && formatRatingNumber(course.averageRating)}</Badge>
+                                  <Badge className="text-xs" variant="outline">{course?.averageRating && `${formatRatingNumber(course.averageRating)} ⭐`}</Badge>
                                     <Badge className="flex gap-2 text-xs" variant="outline">
-                                      {course?.totalDurationInSeconds && convertToTotalHours(course.totalDurationInSeconds)} hours
+                                      {course?.totalDurationInSeconds && `⏱️ ${convertToTotalHours(course.totalDurationInSeconds)}`} hours
                                     </Badge>
                                   </div>
                                 </div>

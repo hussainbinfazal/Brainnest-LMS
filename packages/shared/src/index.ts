@@ -5,7 +5,7 @@ export * from "./validators";
 export * from "./timeFormat"
 export * from "./date";
 export * from "./schemaValidation/schema.validator.export";
-
+export * from "./config/index.export";
 // Configuration
 
 

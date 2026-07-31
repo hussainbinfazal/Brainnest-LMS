@@ -22,8 +22,8 @@ export const useCourseStore = create<CCourseStore>((set) => ({
                 ...(fetchedReviews && { reviews: fetchedReviews }),
                 ...(fetchedCategories && { categories: fetchedCategories }),
             })
-            console.log("There are the courses in the store", fetchedCourses)
-            console.log("There are the categories in the store", fetchedCategories)
+            // console.log("There are the courses in the store", fetchedCourses)
+            // console.log("There are the categories in the store", fetchedCategories)
             return fetchedCourses
         }
         try {

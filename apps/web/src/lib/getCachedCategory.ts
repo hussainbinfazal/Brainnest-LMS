@@ -35,7 +35,7 @@ export async function getCategoriesWithCache(): Promise<CCategory[]> {
     return serialized;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Error in fetching categories";
-    logger.error("Error fetching Categories", { message, error });
+    logger.error("Error fetching Categories", { message, error, cached });
     return [];
   }
 }

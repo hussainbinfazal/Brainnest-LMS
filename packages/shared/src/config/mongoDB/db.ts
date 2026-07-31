@@ -34,11 +34,11 @@ export const connectDB = async (mongoDbUrl?: string) => {
   if (!mongoDbUrl) {
     throw new Error("Please define the MONGODB_URI environment variable in environment variables");
   }
-  console.log("URI:", process.env.MONGODB_URI);
-  console.log("Host:", mongoose.connection.host);
-  console.log("Port:", mongoose.connection.port);
-  console.log("Database:", mongoose.connection.db?.databaseName);
-  console.log("ReadyState:", mongoose.connection.readyState);
+  // console.log("URI:", process.env.MONGODB_URI);
+  // console.log("Host:", mongoose.connection.host);
+  // console.log("Port:", mongoose.connection.port);
+  // console.log("Database:", mongoose.connection.db?.databaseName);
+  // console.log("ReadyState:", mongoose.connection.readyState);
   try {
     if (cached!.conn &&
       mongoose.connection.readyState === 1) {

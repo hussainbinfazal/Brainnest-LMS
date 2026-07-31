@@ -1,5 +1,6 @@
 import { fetchServerCourses } from "@/lib/fetchCourse";
 import HomePage from "./components/home/Homepage";
+import "@/config/redis/redis";
 import { CCategory, CCourse, CReview } from "@/types/client";
 import { JSX } from "react/jsx-runtime";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
@@ -10,7 +11,6 @@ import { serializeCategories, serializeReviews } from "@/utils/serializer/review
 import { getCoursesWithCache } from "@/lib/getCachedCourse";
 import { getReviewsWithCache } from "@/lib/getCachedReviews";
 import { buildCategoryTree, getCategoriesWithCache } from "@/lib/getCachedCategory";
-
 
 
 

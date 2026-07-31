@@ -1,3 +1,4 @@
+import { logger, initializeRedis } from '@repo/shared'
 import { Redis as UpstashRedis } from '@upstash/redis'
 
 
@@ -16,7 +17,9 @@ export const redisClient = new UpstashRedis({
     url: process.env.UPSTASH_REDIS_URL!,
     token: process.env.UPSTASH_REDIS_TOKEN!,
 })
-
+initializeRedis(redisClient);
+logger.info("This is the redis Client on the ")
+export default redisClient
 
 /*
 ----------------------------------

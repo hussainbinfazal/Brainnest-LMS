@@ -477,7 +477,9 @@ export interface CChatStore {
   clearChat?: () => void;
 }
 export interface CCourseStore {
-  courses: Course[];
+  courses: CCourse[];
+  categories:CCategoriesWithChildren[]
+  reviews: CReview[];
   fetchCourses: ({fetchedCourses, fetchedReviews, fetchedCategories} : {fetchedCourses?: Course[], fetchedReviews?: CReview[], fetchedCategories?: CCategoryWithChildren[]}) => Promise<CCourse[]>;
   setCourses?: (courses: CCourse[]) => void;
 

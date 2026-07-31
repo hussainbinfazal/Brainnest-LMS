@@ -1,4 +1,4 @@
-import { redisClient } from "./cache";
+import { getRedisClient } from "./cache";
 import { logger } from "../../logger/logger";
 
 export const CACHE_TTL = {
@@ -17,9 +17,13 @@ export async function getCached<T>(
   namespace: string,
   id: string | number
 ): Promise<T | null> {
+  const redisClient = getRedisClient()
   const key: string = buildKey(namespace, id)
   try {
+    const response = await redisClient.ping();
     const value = await redisClient.get<T>(key)
+
+    logger.info(`[cache] getCached for key:`, { key: key, namespace: namespace })
     return value ?? null
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err
@@ -36,10 +40,13 @@ export async function setCached<T>(
 ): Promise<void> {
   const key = buildKey(namespace, id)
   try {
+    const redisClient = getRedisClient()
+    const response = await redisClient.ping();
+    logger.info("Redis ping successful", { response });
     await redisClient.set(key, value, { ex: ttlSeconds })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err
-    logger.error(`[cache] setCached failed for key :`, { key, err:message, namespace: namespace })
+    logger.error(`[cache] setCached failed for key :`, { key, err: message, namespace: namespace })
     // fail silently — a cache write failure shouldn't break the request
   }
 }
@@ -48,6 +55,7 @@ export async function invalidateCached(
   namespace: string,
   id?: string | number
 ): Promise<void> {
+  const redisClient = getRedisClient()
   try {
     if (id !== undefined) {
       await redisClient.del(buildKey(namespace, id))
@@ -69,7 +77,7 @@ export async function invalidateCached(
     } while (cursor !== 0)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err
-    logger.error(`[cache] invalidateCached failed for namespace:`, {err: message, namespace: namespace })
+    logger.error(`[cache] invalidateCached failed for namespace:`, { err: message, namespace: namespace })
   }
 }
 

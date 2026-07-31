@@ -6,3 +6,4 @@ import { CCategoryWithChildren } from "../getCachedCategory";
     const sortedCategories = categories.sort((a, b) => b.children.length - a.children.length);
     return sortedCategories.slice(0, 3);
   }
+  

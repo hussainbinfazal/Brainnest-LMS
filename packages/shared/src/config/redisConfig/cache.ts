@@ -1,13 +1,23 @@
-import {Redis as UpstashRedis} from "@upstash/redis";
+import { Redis as UpstashRedis } from "@upstash/redis";
 import { logger } from "../../logger/logger";
 
-if(!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN){
-    logger.error("Missing upstash Redis environment variables")
-    throw new Error("Missing upstash Redis environment variables")
+let redisClient: UpstashRedis | null = null;
+export function initializeRedis(client: UpstashRedis) {
+    redisClient = client;
 }
 
+export function getRedisClient() {
+    if (!redisClient) {
+        logger.error("Error in redis GetClient Function", {redisClient});
+        throw new Error("Redis client has not been initialized.");
+    }
 
-export const redisClient = new UpstashRedis({
-    url:process.env.UPSTASH_REDIS_URL,
-    token:process.env.UPSTASH_REDIS_TOKEN
-})
+    return redisClient;
+}
+
+// export const redisClient = new UpstashRedis({
+//     url: process.env.UPSTASH_REDIS_URL,
+//     token: process.env.UPSTASH_REDIS_TOKEN
+// })
+
+// logger.info("Upstash Redis connected")

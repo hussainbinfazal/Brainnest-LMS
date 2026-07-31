@@ -9,6 +9,7 @@ import { serializeReviews } from "@/utils/serializer/review.Serializer";
  * logic never drift apart across call sites.
  */
 export async function getReviewsWithCache(): Promise<CReview[]> {
+  logger.info("")
   const cached = await getCached<CReview[]>("reviews:courses", "all");
   if (cached) {
     logger.info("Reviews fetched from cache", { reviewCount: cached.length });
@@ -18,7 +19,7 @@ export async function getReviewsWithCache(): Promise<CReview[]> {
   await connectDB(process.env.MONGODB_URI!);
 
   try {
-    const rawReviews : IReview[] = await Review.find({ status: "clean" })
+    const rawReviews: IReview[] = await Review.find({ status: "clean" })
       .populate("user", "name profileImage")
       .limit(50)
       .lean()
@@ -30,7 +31,8 @@ export async function getReviewsWithCache(): Promise<CReview[]> {
     logger.info("Reviews fetched successfully", { reviewCount: serialized.length });
     return serialized;
   } catch (err: unknown) {
-    logger.error("Error fetching reviews", { err });
+    const message = err instanceof Error ? err.message : "Something went wrong"
+    logger.error("Error fetching reviews", { err, cached, message });
     return [];
   }
 }

@@ -1,6 +1,7 @@
 :root {
 
   /* Brand Colors */
+  --brand-0: oklch(0.98 0.02 260);
   --brand-50: oklch(0.98 0.02 260);
   --brand-100: oklch(0.95 0.04 260);
   --brand-200: oklch(0.90 0.08 260);

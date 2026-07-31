@@ -43,7 +43,7 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
         return serialized
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching courses", {message, cachedCourses:cached });
+        logger.error("Error fetching courses", {message, cachedCourses:cached,error });
         return [];
     }
 }

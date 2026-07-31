@@ -8,7 +8,7 @@ export interface Ilogger {
     debug(message: string, meta?: Record<string, unknown>): void;
 
 }
-export const logger: Ilogger = pino(
+const pinoInstance = pino(
     {
         level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
     },
@@ -16,7 +16,14 @@ export const logger: Ilogger = pino(
         target: 'pino-pretty',
         options: {
             colorize: true,
-            translateTime: "HH:MM;ss",
+            translateTime: "HH:MM:ss", // also fixed below
             ignore: 'pid,hostname'
         }
-    }))
+    })
+);
+export const logger: Ilogger = {
+    info: (message, meta) => pinoInstance.info(meta || {}, message),
+    warn: (message, meta) => pinoInstance.warn(meta || {}, message),
+    error: (message, meta) => pinoInstance.error(meta || {}, message),
+    debug: (message, meta) => pinoInstance.debug(meta || {}, message),
+}
