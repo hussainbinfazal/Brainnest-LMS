@@ -6,7 +6,10 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -84,6 +87,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.9.1",
     "@types/nodemailer": "^7.0.2",

@@ -8,6 +8,7 @@
       "DOM",
       "ESNext"
     ],
+    "types": ["jest", "@testing-library/jest-dom","node"],
     "allowJs": true, // 
     "checkJs": false, //
     "jsx": "preserve", //

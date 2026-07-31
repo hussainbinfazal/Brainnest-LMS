@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image";
+
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { useCourseStore } from "@/lib/store/useCourseStore";
 import axios from 'axios'
