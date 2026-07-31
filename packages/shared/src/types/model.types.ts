@@ -268,6 +268,7 @@ export interface IUserCourse {
 }
 
 export interface ICategory {
+  _id: mongoose.Types.ObjectId;
   name: string;
   slug: string;
   parent: Types.ObjectId;

@@ -35,7 +35,7 @@ export const metadata = {
 export default function RootLayout({ children } : { children: React.ReactNode }) {
 
   return (
-    <html lang="en">
+    <html lang="en"  suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
@@ -46,7 +46,7 @@ export default function RootLayout({ children } : { children: React.ReactNode })
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-          > <SidebarProvider open="" onOpenChange="" className="" style={{}}>
+          > <SidebarProvider  className="" style={{}}>
               <div className="w-full">
                 <div className="block md:hidden">
                   <AppSidebar />
@@ -57,7 +57,7 @@ export default function RootLayout({ children } : { children: React.ReactNode })
                   {/* <LoadingBarLoader /> */}
                   <main className="flex-1">
                     <div className="block md:hidden text-2xl">
-                      <SidebarTrigger className="" onClick="" />
+                      <SidebarTrigger className="" />
 
                     </div>
                     {children}

@@ -15,17 +15,27 @@ export function formatDuration(seconds: number): string {
   }
 }
 
-export function convertToTotalHours(timeStr : string | number) {
-    const parts = timeStr.toString().split(":").map(Number);
+export function convertToTotalHours(timeStr: string | number) {
+  const parts = timeStr.toString().split(":").map(Number);
 
-    let hours = 0;
-    if (parts.length === 3) {
-      hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
-    } else if (parts.length === 2) {
-      hours = parts[0] / 60 + parts[1] / 3600;
-    } else if (parts.length === 1) {
-      hours = parts[0] / 3600;
-    }
-
-    return parseFloat(hours.toFixed(2)); // rounded to 2 decimals
+  let hours = 0;
+  if (parts.length === 3) {
+    hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
+  } else if (parts.length === 2) {
+    hours = parts[0] / 60 + parts[1] / 3600;
+  } else if (parts.length === 1) {
+    hours = parts[0] / 3600;
   }
+
+  return parseFloat(hours.toFixed(2)); // rounded to 2 decimals
+}
+
+export function formatRatingNumber(num: number): string {
+  if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  } else if (num >= 1_000) {
+    return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  } else {
+    return num.toString();
+  }
+}

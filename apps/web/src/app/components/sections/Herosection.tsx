@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { PlayCircle, ArrowRight, Star, Users, BookOpen, LucideIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { L } from "@upstash/redis/zmscore-Cq_Bzgy4";
 
 export interface CStats {
   icon: LucideIcon; label: string; value: string
@@ -21,7 +20,7 @@ export default function HeroSection() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <section className="relative overflow-hidden bg-linear-to-br from-blue-50 via-white to-purple-50">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
       <div className="absolute top-20 left-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
@@ -39,7 +38,7 @@ export default function HeroSection() {
             {session ? (
               <>
                 Welcome back,{" "}
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   {session.user?.name?.split(" ")[0]}
                 </span>
                 <br />
@@ -48,7 +47,7 @@ export default function HeroSection() {
             ) : (
               <>
                 Transform your career with{" "}
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   world-class education
                 </span>
               </>

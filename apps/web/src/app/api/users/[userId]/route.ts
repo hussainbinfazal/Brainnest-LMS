@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import User from "@/models/User/userModel";  // Ensure the path is correct
-import { connectDB } from "@/config/mongoDB/db";
+import { User, connectDB, IUser, logger, validateMongooseId, UserDocument } from "@repo/shared";  // Ensure the path is correct
 import bcrypt from "bcryptjs";
-import { IUser } from "@/types/model";
-import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
-import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
+ 
 
 // GET handler to fetch a user by ID from URL params
 export async function GET(request: CustomNextRequest, context: { params: { id: string } }): Promise<NextResponse> {
   try {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
 
     const { id } = context.params;
     if (!id) {
@@ -39,9 +36,9 @@ export async function GET(request: CustomNextRequest, context: { params: { id: s
 export async function PUT(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
   try {
     // console.log("Put controller called")
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     const { userId } = await context.params;
-    const user: IUser | null = await User.findById(userId);
+    const user: UserDocument | null = await User.findById(userId);
     if (!user) return NextResponse.json({ message: "User not found" }, { status: 404 });
     if (!userId) return NextResponse.json({ message: "User id is required" }, { status: 400 });
     const { userData } = await request.json();
@@ -58,7 +55,7 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
     // console.log("This is the updated User in the backend:",user)
     logger.info("User Updated Successfully")
     return NextResponse.json({ message: "User updated successfully", user }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ message: message }, { status: 500 });
   }
@@ -67,12 +64,12 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
 
 export async function DELETE(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
   try {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     const { userId } = await context.params;
     if (!userId) return NextResponse.json({ message: "User id is required" }, { status: 400 });
     const user: IUser | null = await User.findByIdAndDelete(userId);
     return NextResponse.json({ message: "User deleted successfully", user }, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ message: `Error in deleting user:${message}` }, { status: 500 });
   }

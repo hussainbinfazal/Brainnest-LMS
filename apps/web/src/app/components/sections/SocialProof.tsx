@@ -3,7 +3,7 @@ import Image from "next/image";
 export interface CCompanies {
   name: string; logo: string;
 }
-export default function SocialProof() {
+export default function SocialProof() :React.JSX.Element {
   const companies: CCompanies[] = [
     { name: "Volkswagen", logo: "https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals" },
     { name: "Samsung", logo: "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals" },
@@ -26,12 +26,13 @@ export default function SocialProof() {
             {companies.map((company: CCompanies, index: number) => (
               <div
                 key={index}
-                className="relative w-20 h-12 opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0"
+                className="w-20 h-12 opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0"
               >
                 <Image
                   src={company.logo}
                   alt={company.name}
-                  fill
+                  width={80}
+                  height={48}
                   className="object-contain"
                 />
               </div>

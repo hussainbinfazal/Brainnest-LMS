@@ -7,7 +7,6 @@ import mongoose from 'mongoose';
 import { CustomNextRequest } from '@/types/server';
 
 export async function POST(request: CustomNextRequest) {
-  await connectDB(process.env.MONGODB_URI!);
 
   const body = await request.text(); // raw body for signature
   const signature = request.headers.get('x-razorpay-signature');

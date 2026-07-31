@@ -3,8 +3,9 @@
 import { create, StateCreator } from "zustand";
 import { persist, PersistOptions } from "zustand/middleware";
 import axios from "axios";
-import { CAuthStore, CAuthUser } from "@/types/client";
+import { CAuthStore, CAuthUser, CUserLocation } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
+import { fetchUserLocation } from "../helpers/getUserLocation";
 
 
 
@@ -23,6 +24,8 @@ export const useAuthStore = create<CAuthStore>(
       userLoggedInitialized: false,
       hasInitialized: false,
       isAuthLoading: true,
+      userLocation: null,
+      setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
       fetchUser: async () => {
         const { setAuthLoading } = get();
         setAuthLoading(true);
@@ -41,7 +44,17 @@ export const useAuthStore = create<CAuthStore>(
           clientLogger.info(`Error in fetching user: ${message}`);
           // console.log(error);
         }
-      }
+      },
+      saveUserGeography: async () => {
+        try { 
+          if(get().userLocation === null){
+            const location = await fetchUserLocation()
+            set({ userLocation: location });
+          }
+        } catch (error: unknown) {
+
+        }
+      },
     }),
     {
       name: 'auth-storage',
@@ -60,6 +73,7 @@ export const useAuthStore = create<CAuthStore>(
         }
         // console.log("Rehydrated state:", state);
       },
-    }
+    },
+
   ) as unknown as StateCreator<CAuthStore> & PersistOptions<CAuthStore, CAuthStore>
 );

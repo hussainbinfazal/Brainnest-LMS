@@ -1744,4 +1744,243 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+## July 3
+Changes
+-Refractored manageCoupon and createCoupon component, added zod validation and corrected the format of the data to match the server requirements
+-Added job in the verify function to process reconcillation
+-- Completed
+-complete payment reconcillation logic add job in try catch block and also update the webhook
+-refractor course purchase logic, and also refractor payment verify route with new normalized models.
+-Complete the message and admin controller logic and optimised them
+-Refractored Client side couponCreation logic added zod validation with react form handlers .
 
+--Pending
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+## July 4
+Changes
+-Refractored the create course component and integrate the logic of zod with form and also integrate the category and subcategory logic on the client side 
+-Added job in the verify function to process reconcillation
+-- Completed
+
+--Pending
+--zod resolver in the createCourseComponent and category logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+## July 9
+Changes
+-Refractored the create course component and integrate the logic of zod with form and also integrate the category and subcategory logic on the client side 
+-Added job in the verify function to process reconcillation
+-- Completed
+
+--Pending
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+## July 17
+Changes
+-Refractored the create course component and integrate the logic of zod with form and also integrate the lessons and sections logic on the client side 
+-Added job in the verify function to process reconcillation
+-- Completed
+
+--Pending
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+## July 19
+Changes
+-Refractored the homepage component, create course component and integrate the logic of zod with form and also integrate the lessons and sections logic on the client side 
+-Added job in the verify function to process reconcillation
+-- Completed
+
+--Pending
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+
+-chat
+-message
+-cart routes
+
+## July 26
+Changes
+-Refractored the homepage component, create course component and integrate the logic of zod with react form and also integrating the lessons video processing with cloudinary SDK and sections logic on the client side 
+
+-Added helpers to process api calls and cache them (single source of truth)
+
+-Added new types to match the updated object structure on client side
+-- Completed
+
+--Pending
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+-Add delete Cache logic course update function
+-chat
+-message
+-cart routes
+
+## July 27
+Changes
+-Themed Complete Css config, so i can work on UI with standard process.
+-Refractored the homepage component, create course component and updated zustand states so it can manage updated state and also integrating the lessons video processing with cloudinary SDK and sections logic on the client side 
+
+-Added sort helpers to process reviews and courses on the particular condition
+-Implemented caching in UserLocation service so api can fetch effectively without getting overLimit
+-Added new types to match the updated object structure on client side
+-- Completed
+
+--Pending
+-Homepage Component
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+-Intergrate Sentry form error monitoring at scale
+-Add delete Cache logic course update function
+-chat
+-message
+-cart routes

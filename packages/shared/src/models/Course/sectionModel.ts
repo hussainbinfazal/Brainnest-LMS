@@ -4,7 +4,7 @@ import { ISection } from "src/types";
 
 
 
-const sectionSchema = new mongoose.Schema<ISection>({
+const sectionSchema = new mongoose.Schema<ISection>({ ////Order of sections in course 
     courseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Course"

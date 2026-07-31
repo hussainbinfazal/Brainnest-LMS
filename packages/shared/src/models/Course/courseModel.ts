@@ -73,6 +73,7 @@ const courseSchema = new mongoose.Schema<ICourse>({
   },
   totalDurationInSeconds: {
     type: Number,
+    default: 0
 
   },
   language: {

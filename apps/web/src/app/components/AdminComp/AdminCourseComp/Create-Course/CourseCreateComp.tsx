@@ -25,40 +25,55 @@ import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap";
-import { CFaq, CLesson, CTopic } from "@/types/client";
+import { CCategory, CFaq, CLesson, CTopic } from "@/types/client";
 import { CCreateCourseForm } from "@/types/forms/formValidators";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { useVideoParsing } from "@/utils/hooks/Video/useVideoParsing";
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
-import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { CCreateCourse, zodCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 
 
 export const CreateCourseComp: React.FC = () => {
-  const [form, setForm] = useState<CCreateCourseForm>({
-    title: "",
-    description: "",
-    price: 0,
-    discount: 0,
-    coverImage: "",
-    category: "",
-    subCategory: "",
-    level: "",
-    language: "",
-    tags: [],
-    whatYouWillLearn: [],
-    requirements: [],
-    previewVideo: "",
-    sections: [],
-    lessons: [],
-    topics: [],
-    dripType: "",
-    status: "",
-    faq: [],
-    instructorId: "",
-    durationInSeconds: 0
-
-  });
+  const form = useForm<CCreateCourse>({
+    resolver: zodResolver(zodCourseSchema),
+    defaultValues: {
+      title: "",
+      topic: "",
+      instructorId: "",
+      price: 0,
+      totalLessons: 0,
+      description: "",
+      discount: 0,
+      coverImage: "",
+      category: "",
+      level: "",
+      language: "",
+      tags: [],
+      sections: [],
+      lessons: [],
+      topics: [],
+      whatYouWillLearn: [],
+      requirements: [],
+      previewVideo: "",
+      dripType: "",
+      status: "",
+      faq: [],
+      totalDurationInSeconds: 0,
+      totalEnrolledCount: 0
+    }
+  })
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
 
   const { uploadFile } = useUpload()
   const { getVideoDuration
@@ -71,8 +86,16 @@ export const CreateCourseComp: React.FC = () => {
   const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
   const [selectedVideoName, setSelectedVideoName] = useState<string>("");
   const [selectedImageName, setSelectedImageName] = useState<string>("");
+  const [selectedParentId, setSelectedParentId] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false);
-  const categories = [
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "topics",
+  });
+  const { fields: lessonsFields, append: appendLessons, remove: removeLessons } = useFieldArray({ control, name: "lessons" });
+  const { fields: sectionsFields, append: appendSections, remove: removeSections } = useFieldArray({ control, name: "sections" });
+  const { fields: faqFields, append: appendFaq, remove: removeFaq } = useFieldArray({ control, name: "faq" });
+  const categories: string[] = [
     "academics",
     "business",
     "design",
@@ -87,7 +110,8 @@ export const CreateCourseComp: React.FC = () => {
     "productivity",
     "technology",
   ];
-  const categoryToSubcategories = {
+
+  const categoryToSubcategories: Record<string, string[]> = {
     academics: ["math", "science", "history"],
     business: ["entrepreneurship", "management", "sales"],
     design: ["ui", "ux", "graphic-design"],
@@ -102,10 +126,110 @@ export const CreateCourseComp: React.FC = () => {
     productivity: ["time-management", "tools", "automation"],
     technology: ["ai", "cloud", "iot"],
   };
-  type CategoryKeys = keyof typeof categoryToSubcategories;
+  const languages: string[] = [
+    "English", "Spanish", "French", "German", "Hindi", "Chinese", "Japanese",
+    "Korean", "Portuguese", "Arabic", "Russian", "Bengali", "Urdu", "Tamil",
+    "Telugu", "Gujarati", "Marathi", "Punjabi", "Malayalam", "Dutch", "Italian",
+    "Swedish", "Turkish", "Vietnamese", "Thai", "Hebrew", "Polish", "Ukrainian",
+    "Czech", "Romanian", "Greek", "Hungarian", "Finnish", "Slovak", "Norwegian",
+    "Danish", "Croatian", "Serbian", "Bulgarian", "Estonian", "Latvian", "Lithuanian",
+  ];
+  const mockCategories: CCategory[] = [
+    // --- Parent categories ---
+    { _id: "cat-academics", name: "Academics", slug: "academics", parent: null },
+    { _id: "cat-business", name: "Business", slug: "business", parent: null },
+    { _id: "cat-design", name: "Design", slug: "design", parent: null },
+    { _id: "cat-development", name: "Development", slug: "development", parent: null },
+    { _id: "cat-finance", name: "Finance", slug: "finance", parent: null },
+    { _id: "cat-fitness", name: "Fitness", slug: "fitness", parent: null },
+    { _id: "cat-lifestyle", name: "Lifestyle", slug: "lifestyle", parent: null },
+    { _id: "cat-marketing", name: "Marketing", slug: "marketing", parent: null },
+    { _id: "cat-music", name: "Music", slug: "music", parent: null },
+    { _id: "cat-personal-development", name: "Personal Development", slug: "personal-development", parent: null },
+    { _id: "cat-photography", name: "Photography", slug: "photography", parent: null },
+    { _id: "cat-productivity", name: "Productivity", slug: "productivity", parent: null },
+    { _id: "cat-technology", name: "Technology", slug: "technology", parent: null },
+
+    // --- Academics ---
+    { _id: "sub-math", name: "Math", slug: "math", parent: "cat-academics" },
+    { _id: "sub-science", name: "Science", slug: "science", parent: "cat-academics" },
+    { _id: "sub-history", name: "History", slug: "history", parent: "cat-academics" },
+
+    // --- Business ---
+    { _id: "sub-entrepreneurship", name: "Entrepreneurship", slug: "entrepreneurship", parent: "cat-business" },
+    { _id: "sub-management", name: "Management", slug: "management", parent: "cat-business" },
+    { _id: "sub-sales", name: "Sales", slug: "sales", parent: "cat-business" },
+
+    // --- Design ---
+    { _id: "sub-ui", name: "UI", slug: "ui", parent: "cat-design" },
+    { _id: "sub-ux", name: "UX", slug: "ux", parent: "cat-design" },
+    { _id: "sub-graphic-design", name: "Graphic Design", slug: "graphic-design", parent: "cat-design" },
+
+    // --- Development ---
+    { _id: "sub-web", name: "Web", slug: "web", parent: "cat-development" },
+    { _id: "sub-mobile", name: "Mobile", slug: "mobile", parent: "cat-development" },
+    { _id: "sub-game", name: "Game", slug: "game", parent: "cat-development" },
+
+    // --- Finance ---
+    { _id: "sub-investing", name: "Investing", slug: "investing", parent: "cat-finance" },
+    { _id: "sub-accounting", name: "Accounting", slug: "accounting", parent: "cat-finance" },
+    { _id: "sub-crypto", name: "Crypto", slug: "crypto", parent: "cat-finance" },
+
+    // --- Fitness ---
+    { _id: "sub-yoga", name: "Yoga", slug: "yoga", parent: "cat-fitness" },
+    { _id: "sub-cardio", name: "Cardio", slug: "cardio", parent: "cat-fitness" },
+    { _id: "sub-strength", name: "Strength", slug: "strength", parent: "cat-fitness" },
+
+    // --- Lifestyle ---
+    { _id: "sub-travel", name: "Travel", slug: "travel", parent: "cat-lifestyle" },
+    { _id: "sub-food", name: "Food", slug: "food", parent: "cat-lifestyle" },
+    { _id: "sub-productivity-lifestyle", name: "Productivity", slug: "productivity-lifestyle", parent: "cat-lifestyle" },
+
+    // --- Marketing ---
+    { _id: "sub-seo", name: "SEO", slug: "seo", parent: "cat-marketing" },
+    { _id: "sub-content", name: "Content", slug: "content", parent: "cat-marketing" },
+    { _id: "sub-ads", name: "Ads", slug: "ads", parent: "cat-marketing" },
+
+    // --- Music ---
+    { _id: "sub-production", name: "Production", slug: "production", parent: "cat-music" },
+    { _id: "sub-instrument", name: "Instrument", slug: "instrument", parent: "cat-music" },
+    { _id: "sub-theory", name: "Theory", slug: "theory", parent: "cat-music" },
+
+    // --- Personal Development ---
+    { _id: "sub-mindfulness", name: "Mindfulness", slug: "mindfulness", parent: "cat-personal-development" },
+    { _id: "sub-habits", name: "Habits", slug: "habits", parent: "cat-personal-development" },
+    { _id: "sub-communication", name: "Communication", slug: "communication", parent: "cat-personal-development" },
+
+    // --- Photography ---
+    { _id: "sub-editing", name: "Editing", slug: "editing", parent: "cat-photography" },
+    { _id: "sub-gear", name: "Gear", slug: "gear", parent: "cat-photography" },
+    { _id: "sub-composition", name: "Composition", slug: "composition", parent: "cat-photography" },
+
+    // --- Productivity ---
+    { _id: "sub-time-management", name: "Time Management", slug: "time-management", parent: "cat-productivity" },
+    { _id: "sub-tools", name: "Tools", slug: "tools", parent: "cat-productivity" },
+    { _id: "sub-automation", name: "Automation", slug: "automation", parent: "cat-productivity" },
+
+    // --- Technology ---
+    { _id: "sub-ai", name: "AI", slug: "ai", parent: "cat-technology" },
+    { _id: "sub-cloud", name: "Cloud", slug: "cloud", parent: "cat-technology" },
+    { _id: "sub-iot", name: "IoT", slug: "iot", parent: "cat-technology" },
+  ];
+  const parentCategories = mockCategories
+    .filter((c: CCategory) => c.parent === null)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const subCategoryOptions = selectedParentId
+    ? mockCategories
+      .filter((c) => c.parent === selectedParentId)
+      .sort((a, b) => a.name.localeCompare(b.name))
+    : [];
+
+  type CategoryOption = { _id: string; name: string; slug: string; parent: string | null };
+
   const handleCategoryChange = (value: string): void => {
-    updateField("category", value);
-    updateField("subCategory", "") // reset subCategories on category change
+    setSelectedParentId(value);
+    updateField("category", "");
   };
   const updateField = <K extends keyof CCreateCourseForm>(key: K, value: CCreateCourseForm[K]) => {
     setForm((prev) => ({
@@ -179,12 +303,12 @@ export const CreateCourseComp: React.FC = () => {
   };
   const addFaq = (): void => {
     updateField("faq", ([...form.faq, { question: "", answer: "" }]));
-  };
-  const removeFaq = (index: number): void => {
+
+    // const removeFaq = (index: number): void => {
     const newFaq = [...form.faq];
     newFaq.splice(index, 1);
     updateField("faq", newFaq);
-  };
+  }
 
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
@@ -199,7 +323,7 @@ export const CreateCourseComp: React.FC = () => {
       const seconds: number = await getVideoDuration(file);
       updateField("durationInSeconds", Number(seconds));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message)
       return
     } finally {
@@ -223,11 +347,11 @@ export const CreateCourseComp: React.FC = () => {
     }
   };
 
-  const handleCreateCourse: React.FormEventHandler = async (): Promise<void | string | number> => {
+  const handleCreateCourse: React.FormEventHandler = async (data: CCreateCourse): Promise<void | string | number> => {
     setLoading(true);
     try {
-      const payload = buildCoursePayload(form);
-      const validation = createCourseSchema.safeParse(payload);
+      const payload = buildCoursePayload(data);
+      const validation = zodCourseSchema.safeParse(payload);
       if (!validation.success) {
         const errorMessage = validation.error.errors.map((error) => error.message).join("\n");
         toast.error(errorMessage);
@@ -302,21 +426,33 @@ export const CreateCourseComp: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="">
-          <form className="space-y-4">
+          <form id="create-course-form" className="space-y-4" onSubmit={handleSubmit(handleCreateCourse)}>
             <div className="space-y-2">
               <Label className="">Title</Label>
               <Input
                 type="text"
                 className=""
-                value={form.title}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("title", e.target.value)}
+                {...register("title")}
                 placeholder="e.g. JavaScript Course"
               />
+              {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
             </div>
             <div className="space-y-2">
               <Label className="">Description</Label>
               <div className="min-h-[150px]">
-                <Tiptap description={form.description} onChange={(val: string) => updateField("description", val)} />
+                <Controller
+                  name="description"
+                  control={control}
+                  render={({ field }) => (
+                    <Tiptap
+                      description={field.value}
+                      onChange={(val: string) => field.onChange(val)}
+                    />
+                  )}
+                />
+                {errors.description && (
+                  <p className="text-sm text-red-500">{errors.description.message}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -364,8 +500,8 @@ export const CreateCourseComp: React.FC = () => {
               <Input
                 className=""
                 type="text"
-                value={form.price}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("price", Number(e.target.value))}
+                {...register("price", { valueAsNumber: true })}
+
                 placeholder="e.g. ₹ 69.99"
               />
             </div>
@@ -374,23 +510,21 @@ export const CreateCourseComp: React.FC = () => {
               <Input
                 className=""
                 type="text"
-                value={form.discount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("discount", Number(e.target.value))}
+                {...register("discount", { valueAsNumber: true })}
                 placeholder="e.g. '%' 10,20,40 "
               />
             </div>
             <div className="space-y-2">
               <Label className="">Category</Label>
-              <Select value={form.category} onValueChange={handleCategoryChange}>
+              <Select value={selectedParentId} onValueChange={(val: string) => handleCategoryChange(val)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="">
-                  {categories.map((cat) => (
-                    <SelectItem className="" key={cat} value={cat}>
-                      {cat
-                        .replace(/-/g, " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  {parentCategories.map((cat: CCategory) => (
+                    <SelectItem className="" key={cat._id} value={cat._id}>
+                      {cat.name
+                      }
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -398,37 +532,56 @@ export const CreateCourseComp: React.FC = () => {
             </div>
             <div className="space-y-2">
               <Label className="">SubCategory</Label>
-              <Select
-                value={form.subCategory}
-                onValueChange={(val: string) => updateField("subCategory", val)}
-                disabled={!form.category}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a SubCategory" />
-                </SelectTrigger>
-                <SelectContent className="">
-                  {(categoryToSubcategories[form.category as keyof typeof categoryToSubcategories] || []).map((sub: string) => (
-                    <SelectItem className="" key={sub} value={sub}>
-                      {sub
-                        .replace(/-/g, " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={!selectedParentId}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a SubCategory" />
+                    </SelectTrigger>
+                    <SelectContent className="">
+                      {subCategoryOptions.map((sub: CCategory) => (
+                        <SelectItem className="" key={sub._id} value={sub._id}>
+                          {sub.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {form.formState.errors.category && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.category.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="">Tags</Label>
-              <Input
-                className=""
-                type="text"
-                value={form.tags.join(", ")}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  // setTags(e.target.value.toString().split(",").join(","))
-                  updateField("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))
-                }
-                placeholder="e.g. JavaScript Basics, React, Next.js"
+              <Controller
+                name="tags"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    className=""
+                    type="text"
+                    value={field.value.join(", ") ?? ""}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      // setTags(e.target.value.toString().split(",").join(","))
+                      field.onChange(
+                        e.target.value.split(",").map((t) => t.trim()).filter(Boolean)
+                      )
+                    }
+                    placeholder="e.g. JavaScript Basics, React, Next.js"
+                  />
+                )}
+
               />
+
             </div>
             <div className="space-y-2">
               <Label className="">Duration (in seconds)</Label>
@@ -441,112 +594,95 @@ export const CreateCourseComp: React.FC = () => {
             </div>
             <div className="space-y-2">
               <Label className="">Level</Label>
-              <Select value={form.level} onValueChange={(val: string) => updateField("level", val)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a level" />
-                </SelectTrigger>
-                <SelectContent className="">
-                  {["Beginner", "Intermediate", "Expert"].map((lvl) => (
-                    <SelectItem className="" key={lvl} value={lvl}>
-                      {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name="level"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a level" />
+                    </SelectTrigger>
+                    <SelectContent className="">
+                      {["Beginner", "Intermediate", "Expert"].map((lvl) => (
+                        <SelectItem className="" key={lvl} value={lvl}>
+                          {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+
+
             </div>
             <div className="space-y-2">
               <Label className="">What you will learn</Label>
-              <Input
-                type="text"
-                className=""
-                value={form.whatYouWillLearn.join(", ")}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  updateField("whatYouWillLearn",
-                    e.target.value.split(",").map((item: string) => item.trim())
-                  )
-                }
-                placeholder="e.g. Variables, loops, functions"
+              <Controller
+                name="whatYouWillLearn"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    type="text"
+                    className=""
+                    value={field.value?.join(", ") ?? ""}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      field.onChange(e.target.value.split(",").map((item) => item.trim()))
+                    }
+                    placeholder="e.g. Variables, loops, functions"
+                  />
+                )}
               />
+
             </div>
 
             <div className="space-y-2">
               <Label className="">Requirements</Label>
-              <Input
-                className=""
-                type="text"
-                value={form.requirements.join(", ")}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("requirements", e.target.value.split(",").map((item: string) => item.trim()))}
-                placeholder="e.g. Html, CSS, JavaScript"
+              <Controller
+                name="requirements"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    className=""
+                    type="text"
+                    value={field.value.join(", ") ?? ""}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.onChange(e.target.value.split(",").map((item) => item.trim()))}
+                    placeholder="e.g. Html, CSS, JavaScript"
+                  />
+                )}
               />
+
             </div>
             <div className="space-y-2">
               <Label className="">Language</Label>
-              <Select value={form.language} onValueChange={(val: string) => updateField("language", val)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a language" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] overflow-y-auto">
-                  {[
-                    "English",
-                    "Spanish",
-                    "French",
-                    "German",
-                    "Hindi",
-                    "Chinese",
-                    "Japanese",
-                    "Korean",
-                    "Portuguese",
-                    "Arabic",
-                    "Russian",
-                    "Bengali",
-                    "Urdu",
-                    "Tamil",
-                    "Telugu",
-                    "Gujarati",
-                    "Marathi",
-                    "Punjabi",
-                    "Malayalam",
-                    "Dutch",
-                    "Italian",
-                    "Swedish",
-                    "Turkish",
-                    "Vietnamese",
-                    "Thai",
-                    "Hebrew",
-                    "Polish",
-                    "Ukrainian",
-                    "Czech",
-                    "Romanian",
-                    "Greek",
-                    "Hungarian",
-                    "Finnish",
-                    "Slovak",
-                    "Norwegian",
-                    "Danish",
-                    "Croatian",
-                    "Serbian",
-                    "Bulgarian",
-                    "Estonian",
-                    "Latvian",
-                    "Lithuanian",
-                  ].map((lang: string) => (
-                    <SelectItem className="" key={lang} value={lang.toLowerCase()}>
-                      {lang}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Controller
+                name='language'
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a language" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px] overflow-y-auto">
+                      {languages.map((lang: string) => (
+                        <SelectItem className="" key={lang} value={lang.toLowerCase()}>
+                          {lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+
             </div>
 
             <Label className="my-4 mt-6">Topics to be covered</Label>
-
-            {form.topics.map((item, index: number) => (
-              <div key={index} className="mb-4 space-y-2 relative">
+            {fields.map((item, index: number) => (
+              <div key={item.id} className="mb-4 space-y-2 relative">
                 { }
-                {form.topics.length > 1 && index !== 0 && (
+                {fields.length > 1 && index !== 0 && (
                   <div
                     className="absolute right-2 -top-0 text-lg cursor-pointer flex items-center"
-                    onClick={() => removeTopic(index)}
+                    onClick={() => remove(index)}
                   >
                     <RxCross2 />
                   </div>
@@ -555,50 +691,59 @@ export const CreateCourseComp: React.FC = () => {
                   <Label className="">Topic</Label>
                   <Input
                     type="text"
-                    className=""
-                    value={item.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleTopicChange(index, "name", e.target.value)
-                    }
+                    {...form.register(`topics.${index}.name`)}
                     placeholder="e.g. JavaScript Basics"
                   />
+                  {form.formState.errors.topics?.[index]?.name && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.topics[index]?.name?.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="">Description</Label>
                   <Input
                     type="text"
                     className=""
-                    value={item.description}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleTopicChange(index, "description", e.target.value)
-                    }
+                    {...form.register(`topics.${index}.description`)}
                     placeholder="e.g. Variables, loops, functions"
                   />
+                  {form.formState.errors.topics?.[index]?.description && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.topics[index]?.description?.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="">IsActive</Label>
-                  <Select value={String(item.isActive)} onValueChange={(val) => handleTopicChange(index, "isActive", val === "true")}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">True</SelectItem>
-                      <SelectItem value="false">False</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={form.control}
+                    name={`topics.${index}.isActive`}
+                    render={({ field: controllerField }) => (
+                      <Select value={String(controllerField.value)} onValueChange={(val: string) => controllerField.onChange(val === "true")}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">True</SelectItem>
+                          <SelectItem value="false">False</SelectItem>
+                        </SelectContent>
+                      </Select>)}
+
+                  />
                 </div>
               </div>
             ))}
-            <Button size="default" className="" type="button" onClick={addTopic} variant="outline">
+            <Button size="default" variant="outline" type="button" onClick={() => append({ name: "", description: "", isActive: true })} >
               + Add Topics
             </Button>
             <Label className={"my-4"}>Lessons</Label>
-            {form.lessons.map((item, index) => (
+            {lessonsFields.map((item, index) => (
               <div key={index} className="mb-4 space-y-2 relative">
-                {form.lessons.length > 1 && index !== 0 && (
+                {lessonsFields.length > 1 && index !== 0 && (
                   <div
                     className="absolute right-2 -top-0 text-lg cursor-pointer flex items-center"
-                    onClick={() => removeLesson(index)}
+                    onClick={() => removeLessons(index)}
                   >
                     <RxCross2 />
                   </div>
@@ -607,26 +752,32 @@ export const CreateCourseComp: React.FC = () => {
                   <Label className="">Name</Label>
                   <Input
                     type="text"
-                    className=""
-                    value={item.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleLessonChange(index, "name", e.target.value)
-                    }
+                    {...form.register(`lessons.${index}.name`)}
                     placeholder="e.g. JavaScript Basics"
                   />
+                  {form.formState.errors.lessons?.[index]?.name && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.lessons[index]?.name?.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label className="">Description</Label>
                   <Input
                     type="text"
                     className=""
-                    value={item.description}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      handleLessonChange(index, "description", e.target.value)
-                    }
+                    {...form.register(`lessons.${index}.description`)}
                     placeholder="e.g. Variables, loops, functions"
                   />
+                  {
+                    form.formState.errors.lessons?.[index]?.description && (
+                      <p className="text-sm text-destructive">
+                        {form.formState.errors.lessons[index]?.description?.message}
+                      </p>
+                    )
+                  }
                 </div>
+
                 <div className="space-y-2">
                   <Label className="">video Url</Label>
                   {isLessonVideoUploading[index] === true ? (
@@ -654,31 +805,54 @@ export const CreateCourseComp: React.FC = () => {
                       )}
                     </>
                   )}
+                  {form.formState.errors.lessons?.[index]?.videoUrl && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.lessons[index]?.videoUrl?.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label className="">Duration</Label>
+                  <Label>Duration (seconds)</Label>
                   <Input
-                    type="text"
-                    className=""
-                    value={item.durationInSeconds}
+                    type="number"
+                    {...form.register(`lessons.${index}.durationInSeconds`, { valueAsNumber: true })}
+                    placeholder="300"
                     disabled
-                    // onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    //   handleLessonChange(index, "duration", e.target.value)
-                    // }
-                    placeholder="e.g. Variables, loops, functions"
+                  />
+                  {form.formState.errors.lessons?.[index]?.durationInSeconds && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.lessons[index]?.durationInSeconds?.message}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label>Order</Label>
+                  <Input
+                    type="number"
+                    {...form.register(`lessons.${index}.order`, { valueAsNumber: true })}
+                    placeholder="1"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label className="">IsPreview</Label>
-                  <Select value={String(item.isPreview)} onValueChange={(val: string) => handleLessonChange(index, "isPreview", val === "true")}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">True</SelectItem>
-                      <SelectItem value="false">False</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name={`lessons.${index}.isPreview`}
+                    control={form.control}
+                    render={({ field: controllerField }) => (
+                      <>
+                        <Select value={String(controllerField.value)} onValueChange={(val: string) => controllerField.onChange(val === "true")}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="true">True</SelectItem>
+                            <SelectItem value="false">False</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </>
+                    )}
+
+                  />
 
                 </div>
                 <div className="space-y-2">
@@ -708,11 +882,16 @@ export const CreateCourseComp: React.FC = () => {
                       )}
                     </>
                   )}
+                  {form.formState.errors.lessons?.[index]?.previewVideoUrl && (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.lessons[index]?.previewVideoUrl?.message}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
 
-            <Button size="default" className="" type="button" onClick={addLesson} variant="outline">
+            <Button size="default" className="" type="button" onClick={appendLesson} variant="outline">
               + Add Lessons
             </Button>
             <Label className={"my-4"}>Faqs</Label>

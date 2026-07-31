@@ -1,7 +1,11 @@
 packages:
   - "apps/*"
   - "packages/*"
-
+overrides:
+  "@langchain/mongodb>mongodb": "7.2.0"
+  "@langchain/community>mongodb": "7.2.0"
+  "mongoose": "^9.6.2"
+  "mongodb": "7.2.0"
 allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
@@ -9,6 +13,7 @@ allowBuilds:
   core-js: true
   msgpackr-extract: true
   prisma: true
+  protobufjs: true
 
   sharp: true
   unrs-resolver: true

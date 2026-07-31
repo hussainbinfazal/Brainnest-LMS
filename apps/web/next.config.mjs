@@ -1,14 +1,49 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 
-  // Optional: Add image domains for next/image optimization
   images: {
-    domains: ['res.cloudinary.com','img-c.udemycdn.com','img.clerk.com','cms-images.udemycdn.com','images.unsplash.com','plus.unsplash.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img-c.udemycdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cms-images.udemycdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cms-images.udemycdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
+      },
+    ],
     unoptimized: false,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+  // Optional: Add image domains for next/image optimization
+  // images: {
+  //   domains: ['res.cloudinary.com','img-c.udemycdn.com','img.clerk.com','cms-images.udemycdn.com','images.unsplash.com','plus.unsplash.com'],
+  //   unoptimized: false,
+  //   dangerouslyAllowSVG: true,
+  //   contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  // },
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Fix for react-pdf and canvas issues
     config.resolve.alias = {
       ...config.resolve.alias,

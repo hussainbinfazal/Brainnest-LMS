@@ -8,6 +8,13 @@ export async function middleware(req: NextRequest) {
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
 
+  const BYPASS_AUTH = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+  if (BYPASS_AUTH) {
+    const res = NextResponse.next();
+    res.headers.set("X-Request-ID", requestId);
+    res.headers.set("X-Dev-Bypass", "true");
+    return res;
+  }
   const token: JWT | null = await getToken({
     req,
     secret: process.env.AUTH_SECRET,
@@ -16,7 +23,7 @@ export async function middleware(req: NextRequest) {
       : 'authjs.session-token'
   }) as JWT | null
   const log = (message: string, data?: any) => {
-    logger.info ({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
+    logger.info({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
   }
 
   // Define public routes that don't require authentication

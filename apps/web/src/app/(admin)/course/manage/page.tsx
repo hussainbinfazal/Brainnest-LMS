@@ -1,12 +1,12 @@
 import React from "react";
 import ManageCoursePageComponent from "./components/ManageCoursePage/ManageCoursePage";
-import { connectDB } from "@/config/mongoDB/db";
+import { connectDB, logger } from "@repo/shared";
 import { JSX } from "react/jsx-runtime";
 import { auth } from "@/auth";
-import { ICourse } from "@/types/model";
+import { ICourse,Course } from "@repo/shared";
+import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
+
 import { CCourse, CReview } from "@/types/client";
-import { redisClient } from "@/config/redis/redis";
-import Course from "@/models/Course/courseModel";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
 
 
@@ -14,36 +14,34 @@ import { serializeCourses } from "@/utils/serializer/course.Serializer";
 async function ManagePage(): Promise<JSX.Element> {
 
   try {
-    await connectDB();
+    await connectDB(process.env.MONGODB_URI!);
     const usersSession = await auth();
-    const authenticatedUserId: string = usersSession?.user.id || "";
-    const cachedUsersCoursesKey: string = `courses:user:${authenticatedUserId}`;
-    const cachedUserCourses: string | null = await redisClient.get(cachedUsersCoursesKey);
-    let courses: CCourse[] = [];
+    
+     if (!usersSession?.user?.id) {
+      return <ManageCoursePageComponent fetchedCourses={[]} />;
+    }
+   const authenticatedUserId = usersSession.user.id;
+    const cacheNamespace = `courses:user:${authenticatedUserId}`;
+     let courses: CCourse[] = [];
+    const cachedUserCourses = await getCached<CCourse[]>(cacheNamespace, "all");
     if (cachedUserCourses) {
-      if (typeof cachedUserCourses === "string") {
-        courses = JSON.parse(cachedUserCourses) as CCourse[]
-      }
+      courses = cachedUserCourses;
     } else {
-      const rawCourse = (
-        await Course.find({ instructor: authenticatedUserId })
-          .populate("instructorId", "name email")
-          .populate("enrolledStudents.user", "_id name email profileImage role")
-          .lean()); // getters to include virtuals that converts the id types to string
-      if (rawCourse) {
-        courses = serializeCourses(rawCourse) as CCourse[]; //mapping objectId to string 
-        await redisClient.set(cachedUsersCoursesKey, JSON.stringify(courses) as string, { ex: 600 }); // 10 min
+      const rawCourses = await Course.find({ instructor: authenticatedUserId })
+        .populate("instructor", "name email")
+        .populate("enrolledStudents.user", "_id name email profileImage role")
+        .lean();
+
+      if (rawCourses.length > 0) {
+        courses = serializeCourses(rawCourses) as CCourse[];
+        await setCached(cacheNamespace, "all", courses, CACHE_TTL.MEDIUM);
       }
     }
-    // const course = await Course.findById(courseId)
-    //   .select("title description coverImage rating price category lessons.name lessons.duration instructor reviews")
-    //   .populate("instructor", "name profileImage")
-    //   .lean();
-
+   
     return <ManageCoursePageComponent fetchedCourses={courses} />;
 
-  } catch (error) {
-    console.error("Error in ManagePage:", error);
+  } catch (error:unknown) {
+    logger.error("Error in ManagePage:", {error});
     return <ManageCoursePageComponent fetchedCourses={[]} />;
   }
 };

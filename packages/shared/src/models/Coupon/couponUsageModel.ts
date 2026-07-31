@@ -26,5 +26,5 @@ export const couponUsageSchema: Schema<ICouponUsage> = new mongoose.Schema({
     { timestamps: true }
 )
 
-const CouponUsage: Model<ICouponUsage> = mongoose.models.Coupon || mongoose.model<ICouponUsage>('Coupon', couponUsageSchema);
+const CouponUsage: Model<ICouponUsage> = mongoose.models.CouponUsage || mongoose.model<ICouponUsage>('CouponUsage', couponUsageSchema);
 export default CouponUsage;

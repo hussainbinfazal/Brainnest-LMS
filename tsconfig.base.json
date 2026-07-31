@@ -7,6 +7,8 @@
             "@repo/shared/*": ["packages/shared/src/*"],
             "@repo/payment": ["packages/payment/src/index.ts"],
             "@repo/payment/*": ["packages/payment/src/*"],
+            "@repo/ai-service": ["packages/ai-service/src/index.ts"],
+            "@repo/ai-service/*": ["packages/ai-service/src/*"],
             // "@repo/worker": ["apps/Worker/src/index.ts"],
             // "@repo/worker/*": ["apps/Worker/src/*"]
         }

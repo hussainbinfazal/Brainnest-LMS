@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs and caches
+*.log
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+.cache/
+.tmp/
+.tmp*/
+tmp/
+temp/
+
+# Local AI/runtime artifacts
+models/
+downloads/
+data/
+vector-store/
+embeddings/
+*.bin
+*.onnx
+*.pt
+*.gguf
+
+# OS/editor files
+.DS_Store
+.vscode/

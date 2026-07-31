@@ -4,12 +4,11 @@ import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
 import { JWT } from "next-auth/jwt";
-// import type { User as NextAuthUser, Account, Profile, Session } from "@auth/core/types";
 import type { User as NextAuthUser, Account, Profile } from "next-auth";
-import {connectDB, User} from "@repo/shared";
-import { IUser } from "./types/model";
+import {connectDB, User, UserDocument} from "@repo/shared";
+import { IUser } from "@repo/shared";
 
-type DBUser = IUser;
+
 type AuthUser = NextAuthUser;
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -55,10 +54,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "github" || account?.provider === "google") {
         try {
           await connectDB(process.env.MONGODB_URI!);
-          let existingUser = await User.findOne({ email: user.email });
+          let existingUser : IUser|null = await User.findOne({ email: user.email });
 
           if (!existingUser) {
-            const newUser = new User({
+            const newUser: UserDocument = new User({
               email: user.email,
               name: user.name,
               role: "student",
@@ -80,7 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
 
           return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
           // console.error("OAuth sign in error:", error);
           return true; // Allow sign in even if DB fails
         }
@@ -88,7 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user }: { token: any; user?: NextAuthUser }): Promise<JWT> {
+    async jwt({ token, user }: { token: JWT; user?: NextAuthUser }): Promise<JWT> {
       if (user) {
         token.id = user.id;
         token.name = user.name;

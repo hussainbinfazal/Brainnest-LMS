@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// Your serializeDocument walks the object tree and converts those into plain strings
 export function serializeDocument<T>(value: T): T {
     if (value === null || value === undefined) {
         return value;

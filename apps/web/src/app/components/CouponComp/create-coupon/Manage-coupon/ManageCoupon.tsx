@@ -115,7 +115,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
     }
   }, []);
 
-  const filteredCoupons =
+  const filteredCoupons: CCoupon[] =
     searchTerm.trim() === ""
       ? coupons
       : coupons.filter((coupon: CCoupon) => {

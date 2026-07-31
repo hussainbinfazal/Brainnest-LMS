@@ -80,16 +80,16 @@ export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
         if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
         const userId: string = user?.id;
         if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required and should be valid" }, { status: 400 });
-        const { code, discountValue, discountType, expiresAt,isActive, maxUses } = data;
-        if (!code || !discountValue || !discountType || !expiresAt || !maxUses) {
+        const { code, discountValue, discountType, expiresAt, isActive, maxUses } = data;
+        if (!code || !discountValue || !discountType || !expiresAt || !maxUses || !isActive) {
             return NextResponse.json({ message: "All fields are required" }, { status: 400 });
         }
-        const updatedCoupon: ICoupon | null = await Coupon.findByIdAndUpdate(couponId, { code, discountValue, expiresAt, discountType, maxUses }, { new: true });
+        const updatedCoupon: ICoupon | null = await Coupon.findByIdAndUpdate(couponId, { code, discountValue, expiresAt, discountType, maxUses, isActive }, { new: true });
         logger.info("Coupon updated successfully");
         return NextResponse.json({ message: "Coupon updated successfully", updatedCoupon }, { status: 200 });
     } catch (error: unknown) {
 
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message: string = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error in updating coupon: ${message}`);
         return NextResponse.json({ message: `Error in updating coupon:${message}` }, { status: 500 });
     }

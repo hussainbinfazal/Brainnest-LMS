@@ -1,6 +1,8 @@
 import React, { ReactNode } from "react";
 import { ICourse, IUser } from "./model";
 import { LucideIcon } from "lucide-react";
+import mongoose from "mongoose";
+import { CCategoryWithChildren } from "@/lib/getCachedCategory";
 
 export interface CCertificate {
   _id: string;
@@ -9,8 +11,10 @@ export interface CCertificate {
   instructorName?: string;
   completionDate?: string;
   certificatePreview?: string;
-  pdfData?: string; // Base64 encoded PDF
+  pdfUrl?: string; // Base64 encoded PDF
   generatedAt?: Date;
+  verficationCode: string,
+  isRevoked: boolean
 }
 
 export interface CAuthUser {
@@ -20,13 +24,8 @@ export interface CAuthUser {
   password?: string;
   phoneNumber?: string;
   profileImage?: string;
-  imageUrl?: string;
-  firstName?: string;
   role: 'student' | 'admin' | 'instructor';
   isVerified: boolean;
-  likedCourses?: string[] | CCourse[];
-  enrolledCourses: string[] | CCourse[];
-  completedCourses?: string[] | CCourse[];
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -54,6 +53,7 @@ export interface CPayment {
   } | string;
   paymentOf: string;
   paymentOnModel: 'Course' | 'Chat';
+  paymentStatus: 'Pending' | 'Completed' | 'Failed';
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -87,8 +87,8 @@ export interface CChat {
   paymentMethod: string;
   razorpayChatId?: string;
   paymentResult?: {
-    id?: string;
     _id?: string;
+    id?: string;
     status?: string;
     update_time?: string;
     email_address?: string;
@@ -119,7 +119,7 @@ export interface CMessage {
   messageofTheLimit?: string;
   isReadByInstructor?: boolean;
   isReadByStudent?: boolean;
-  senderinterface?: 'user' | 'instructor' | string;
+  senderType?: 'user' | 'instructor' | string;
   isDeleted?: boolean;
   isDeletedByReceiver?: boolean;
   isDeletedBySender?: boolean;
@@ -224,32 +224,39 @@ const CCarouselOptions: EmblaOptionsinterface = {
   dragFree: true,
 };
 export interface CCategory {
+  _id: string
   name: string;
   slug: string;
-  isParent: string;
+  parent: null | {
+    _id: string,
+    name: string
+  }
 };
+
+
 
 export interface CCourse {
   _id: string;
   title: string;
+  topic: string;
   description?: string;
   coverImage?: string;
   instructorId?: {
     _id: string;
-    name?: string;
+    name: string;
     profileImage?: string;
   };
-  rating?: number;
-  duration?: number;
-  price?: number;
-  isPaid?: boolean;
-  discount?: number;
-  level?: 'beginner' | 'intermediate' | 'expert';
-  language?: string;
-  status?: 'draft' | 'published';
-  topics?: CTopic[];
-  lessons?: CLesson[];
-  reviews?: CReview[];
+  averageRating: number;
+  totalDurationInSeconds: number;
+  price: number;
+  isPaid: boolean;
+  discount: number;
+  level: 'beginner' | 'intermediate' | 'expert';
+  language: string;
+  status: 'draft' | 'published';
+  topics: CTopic[];
+  lessons: CLesson[];
+  reviews: CReview[];
   enrolledStudents?: EnrolledStudent[];
   faq?: CFaq[];
   requirements?: string[];
@@ -257,8 +264,9 @@ export interface CCourse {
   video?: string;
   previewVideo?: string;
   tags?: string[];
-  category?: CCategory;
-  published?: boolean;
+  category: CCategory;
+  totalDurationInSeconds: number;
+  published?: boolean
   purchased?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -282,13 +290,29 @@ export interface CReviewUser {
 
 
 export interface CReview {
-  _id?: string;
+  _id: string;
+  course?: string;
   rating: number;
   comment: string;
-  user?: CReviewUser;
-  text?: string;
+  spamScore: number;
+  status: "clean" | "suspicious" | "spam";
+  user: CReviewUser;
+  ipAdress: string;
+  score: number;
+  createdAt: string;
+  updatedAt: string;
+}
+interface CCart {
+  _id?: string;
+  user?: CAuthUser | string;
+  courses: (Course | string)[];
+  subTotal: number;
+  discount: number;
+  tax: number;
+  total: number;
   createdAt?: string;
   updatedAt?: string;
+  coupon?: Coupon | null;
 }
 
 export interface CTestimonialsSectionProps {
@@ -412,13 +436,16 @@ export interface CAuthStore {
   userLoggedInitialized: boolean;
   hasInitialized: boolean;
   isAuthLoading: boolean;
+  userLocation: CUserLocation | null;
 
   setAuthUser: (authUser: CAuthUser | null) => void;
   clearAuthUser: () => void;
   setAuthLoading: (loading: boolean) => void;
   setHasInitialized: (value: boolean) => void;
   setUserLoggedInitialized: (value: boolean) => void;
+  setUserLocation:(location: CUserLocation) => void;
   fetchUser: () => Promise<void>;
+  saveUserGeography: ()=>Promise<void>;
 }
 
 export interface CCartStore {
@@ -451,8 +478,8 @@ export interface CChatStore {
 }
 export interface CCourseStore {
   courses: Course[];
-  fetchCourses: () => Promise<Course[]>;
-  setCourses?: (courses: Course[]) => void;
+  fetchCourses: ({fetchedCourses, fetchedReviews, fetchedCategories} : {fetchedCourses?: Course[], fetchedReviews?: CReview[], fetchedCategories?: CCategoryWithChildren[]}) => Promise<CCourse[]>;
+  setCourses?: (courses: CCourse[]) => void;
 
 }
 
@@ -495,7 +522,7 @@ export interface CSections {
   description: string;
   order: number;
   createdAt: string;
-  updatedAt:string
+  updatedAt: string
 }
 
 export interface PaymentsResponse {
@@ -592,11 +619,11 @@ export interface CFeatureSection {
   icon: LucideIcon, title: string, description: string, color: string
 }
 export interface CuploadResult {
-    url: string;
-    public_id: string,
-    width?:number,
-    height?:number,
-    duration:number
+  url: string;
+  public_id: string,
+  width?: number,
+  height?: number,
+  duration: number
 
 }
 export type CuploadType = "image" | "video";
