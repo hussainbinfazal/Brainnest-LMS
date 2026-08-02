@@ -43,9 +43,13 @@ jest.mock("@/lib/store/useCourseStore", () => ({
 
 // embla-carousel-autoplay plugin — just needs to not crash
 jest.mock("embla-carousel-autoplay", () => {
-  return jest.fn(() => ({}));
+  return jest.fn(() => ({
+    name: "autoplay",
+    options: {},
+    init: jest.fn(),
+    destroy: jest.fn(),
+  }));
 });
-
 // Carousel/Tabs from shadcn are real components (usually fine to render as-is,
 // since they're mostly divs + context). If yours use ResizeObserver internally
 // (embla does), stub it globally — see below.

@@ -218,12 +218,13 @@ useEffect(() => {
         </div>
 
         {/* skill section */}
-        {isLoadingPage ? (<Skeleton className="w-175 h-137.5 rounded-md" />) : (<div className=" w-full flex items-center justify-center gap-4 bg-brand-white dark:bg-black ">
+        {isLoadingPage ? (<Skeleton className="min-w-175 min-h-137.5 rounded-md" />) : (<div className=" w-full flex items-center justify-center gap-4 bg-brand-white dark:bg-black ">
           {isLoadingPage ? (<Skeleton className="min-w-125 h-137.5 rounded-md" />) : (<div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-137.5 p-4 gap-8">
             <div className="mb-4 flex flex-col gap-2">
               <h2 className="text-3xl font-bold ">All the skills you need in one place</h2>
               <p className="text-gray-600">Form critical skills to technical topics,Brainnest supports you every step of the way</p>
             </div>
+            {isLoadingPage ? (<Skeleton className="w-full h-125 rounded-md" />) : (
             <div className="flex w-full h-125 ">
               {categories.length > 0 && (
                 <Tabs defaultValue={categories[0].name} className={"w-full h-full"}>
@@ -319,7 +320,7 @@ useEffect(() => {
                   ))}
                 </Tabs>
               )}
-            </div>
+            </div>)}
 
           </div>)}
         </div>)}

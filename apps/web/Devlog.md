@@ -1948,12 +1948,14 @@ Frontend → Backend (save metadata)
 
 ## July 27
 Changes
+-Refractored the logger Config and new values to match the updated structure 
 -Themed Complete Css config, so i can work on UI with standard process.
+-Added Redis to cache the operations, so the db dont get breach
+-Refractored the whole homepage component, refractored category logic to match the mapped categoryWithChildred in the components of homepage.
+-Added Jest Library, tested integration test and test has passed for all the test cases
+
 -Refractored the homepage component, create course component and updated zustand states so it can manage updated state and also integrating the lessons video processing with cloudinary SDK and sections logic on the client side 
 
--Added sort helpers to process reviews and courses on the particular condition
--Implemented caching in UserLocation service so api can fetch effectively without getting overLimit
--Added new types to match the updated object structure on client side
 -- Completed
 
 --Pending

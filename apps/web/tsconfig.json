@@ -53,7 +53,7 @@
     "src",
     "src/types/**/*",
     ".next/types/**/*.ts"
-, "../../packages/shared/src/config/cloudinary/cloudinary.ts"  ],
+, "../../packages/shared/src/config/cloudinary/cloudinary.ts", "jest.setup.ts"  ],
   "exclude": [
     "node_modules"
   ]
