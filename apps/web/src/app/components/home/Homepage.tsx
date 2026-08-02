@@ -38,6 +38,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
+import {HeroBannerSkeleton} from "../skeletons/HeroBanner-Skeleton"
+import {CourseCardSkeleton} from "../skeletons/HeroBanner-Skeleton"
+import {CategoryCardSkeleton} from "../skeletons/HeroBanner-Skeleton"
+import {ReviewCardSkeleton} from "../skeletons/HeroBanner-Skeleton"
+import {SectionCardSkeleton} from "../skeletons/HeroBanner-Skeleton"
+import {TabsSkeleton} from "../skeletons/HeroBanner-Skeleton"
+import {SubcategoryChipsSkeleton} from "../skeletons/HeroBanner-Skeleton"
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useSession } from "next-auth/react";
@@ -55,6 +62,7 @@ export interface HomeProps {
   fetchedReviews: CReview[];
   allCategories:CCategoryWithChildren[];
 }
+
 export default function HomePage({ initialCourses, fetchedReviews, allCategories }: HomeProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -74,11 +82,6 @@ const userLocation = useAuthStore((state) => state.userLocation);
   const [sortBy, setSortBy] = useState<ReviewSortOption>("helpful");
   const [randomReviews, setRandomReviews] = useState<CReview[]>([]);
   const [shuffledCourses, setShuffledCourses] = useState<CCourse[]>([]);
-  const [isBannerLoading, setIsBannerLoading] = useState<boolean>(true);
-  const[isCoursesLoading, setIsCoursesLoading] = useState<boolean>(true);
-  const[isReviewsLoading, setIsReviewsLoading] = useState<boolean>(true);
-  const[isCategoriesLoading, setIsCategoriesLoading] = useState<boolean>(true);
-  const [isPopularCategoriesLoading, setIsPopularCategoriesLoading] = useState<boolean>(true);
   // Filter the course on behalf of the selected categories //
   
   //Fetch user geographical location to show popular categories
@@ -133,6 +136,7 @@ useEffect(() => {
             : session?.user?.name.split(" ")[0]  // First name for 2 parts
             }, welcome to` : "Welcome to"}  Brainnest where education is a game</h1>
         </div>
+        {/* HeroSection */}
         <div className="w-4/5 max-w-4/5 flex items-center justify-center ">
           <div className="flex flex-col items-center justify-center w-full ">
             {isLoadingPage ? (<Skeleton className="w-full h-100 rounded-md" />) : (<Carousel plugins={[]} className="">
@@ -153,6 +157,7 @@ useEffect(() => {
             </Carousel>)}
           </div>
         </div>
+        {/* Courses Section */}
         <div className="w-full flex justify-center ">
           <div className="w-[90%] md:w-[70%]  min-h-137.5 p-4 gap-8">
             {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (<><div className="mb-4 flex flex-col gap-2">
