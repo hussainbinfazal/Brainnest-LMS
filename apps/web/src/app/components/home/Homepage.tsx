@@ -127,8 +127,8 @@ useEffect(() => {
 }, []);
 
   return (
-    <div className=" flex  items-center justify-center  min-h-screen  pb-20 gap-10 font-(family-name:--font-geist-sans) dark:bg-black bg-white">
-      <div className="w-[95%]  flex flex-col justify-center items-center gap-6">
+    <main className=" flex  items-center justify-center  min-h-screen  pb-20 gap-10 font-(family-name:--font-geist-sans) dark:bg-black bg-white">
+      <section className="w-[95%]  flex flex-col justify-center items-center gap-6">
         <div className="inline-block py-8 " >
 
           <h1 className="text-4xl font-bold text-center ">  {session ? `${session?.user?.name.split(" ").length === 3
@@ -137,9 +137,9 @@ useEffect(() => {
             }, welcome to` : "Welcome to"}  Brainnest where education is a game</h1>
         </div>
         {/* HeroSection */}
-        <div className="w-4/5 max-w-4/5 flex items-center justify-center ">
+        <section className="w-4/5 max-w-4/5 flex items-center justify-center ">
           <div className="flex flex-col items-center justify-center w-full ">
-            {isLoadingPage ? (<Skeleton className="w-full h-100 rounded-md" />) : (<Carousel plugins={[]} className="">
+            {isLoadingPage ? (<HeroBannerSkeleton />) : (<Carousel plugins={[]} className="">
               <CarouselContent className={"w-full"}>
                 {allCourses.length === 0 ? <Skeleton className="w-326 h-100"></Skeleton> : allCourses.map((course: CCourse) => (
                   <CarouselItem className="" key={course._id}>
@@ -156,9 +156,9 @@ useEffect(() => {
               <CarouselNext /> */}
             </Carousel>)}
           </div>
-        </div>
+        </section>
         {/* Courses Section */}
-        <div className="w-full flex justify-center ">
+        <section className="w-full flex justify-center ">
           <div className="w-[90%] md:w-[70%]  min-h-137.5 p-4 gap-8">
             {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (<><div className="mb-4 flex flex-col gap-2">
               <h2 className="text-3xl font-bold ">Ready to imagine your career?</h2>
@@ -225,10 +225,10 @@ useEffect(() => {
               </Carousel>
               <Button size="default" variant="default" className="rounded-none mt-4 mx-3" onClick={() => { router.push('courses') }}>All Career Accelerators</Button></>)}
           </div>
-        </div>
+        </section>
 
         {/* skill section */}
-        {isLoadingPage ? (<Skeleton className="min-w-175 min-h-137.5 rounded-md" />) : (<div className=" w-full flex items-center justify-center gap-4 bg-brand-white dark:bg-black ">
+        {isLoadingPage ? (<Skeleton className="min-w-175 min-h-137.5 rounded-md" />) : (<section className=" w-full flex items-center justify-center gap-4 bg-brand-white dark:bg-black ">
           {isLoadingPage ? (<Skeleton className="min-w-125 h-137.5 rounded-md" />) : (<div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-137.5 p-4 gap-8">
             <div className="mb-4 flex flex-col gap-2">
               <h2 className="text-3xl font-bold ">All the skills you need in one place</h2>
@@ -333,11 +333,11 @@ useEffect(() => {
             </div>)}
 
           </div>)}
-        </div>)}
+        </section>)}
 
 
         {/* Popular Categories */}
-        <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-137.5 p-4 gap-8">
+        <section className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-137.5 p-4 gap-8">
           {isLoadingPage ? (<Skeleton className="w-full h-full rounded-md" />) : (
             <div className="w-full"><div className="mb-4 flex flex-col gap-2 w-full h-full">
               <h2 className="text-3xl font-bold ">Popular categories </h2>
@@ -413,12 +413,12 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                 )}
               </div>
             </div>)}
-        </div>
+        </section>
 
 
 
         {/* // Random Courses // */}
-        <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  h-137.5 p-4 gap-8">
+        <section className="w-[90%] md:w-[70%] xl:max-w-[75%]  h-137.5 p-4 gap-8">
           {isLoadingPage ? (<div className="w-full h-full flex flex-row justify-center items-center gap-4">
             <Skeleton className="w-max-w-[280px]  h-full rounded-md" />
             <Skeleton className="w-full h-full rounded-md" />
@@ -503,11 +503,11 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                 </Carousel>
               </div>
             </div>)}
-        </div>
+        </section>
 
 
         {/* Reviews About the brainnest */}
-        <div className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-87.5  p-4 mt-15 sm:mt-1 gap-4 sm:gap-8 ">
+        <section className="w-[90%] md:w-[70%] xl:max-w-[75%]  min-h-87.5  p-4 mt-15 sm:mt-1 gap-4 sm:gap-8 ">
           {isLoadingPage ? (
             <Skeleton className="w-full h-full rounded-md" />
           ) : (
@@ -580,10 +580,10 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                 </Carousel>
               </div>
             </div>)}
-        </div>
-      </div>
+        </section>
+      </section>
 
 
-    </div >
+    </main>
   );
 }
