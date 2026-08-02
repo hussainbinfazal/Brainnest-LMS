@@ -74,6 +74,11 @@ const userLocation = useAuthStore((state) => state.userLocation);
   const [sortBy, setSortBy] = useState<ReviewSortOption>("helpful");
   const [randomReviews, setRandomReviews] = useState<CReview[]>([]);
   const [shuffledCourses, setShuffledCourses] = useState<CCourse[]>([]);
+  const [isBannerLoading, setIsBannerLoading] = useState<boolean>(true);
+  const[isCoursesLoading, setIsCoursesLoading] = useState<boolean>(true);
+  const[isReviewsLoading, setIsReviewsLoading] = useState<boolean>(true);
+  const[isCategoriesLoading, setIsCategoriesLoading] = useState<boolean>(true);
+  const [isPopularCategoriesLoading, setIsPopularCategoriesLoading] = useState<boolean>(true);
   // Filter the course on behalf of the selected categories //
   
   //Fetch user geographical location to show popular categories

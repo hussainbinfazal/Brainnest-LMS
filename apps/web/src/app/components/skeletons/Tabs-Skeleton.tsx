@@ -3,7 +3,7 @@ import React from 'react'
 
 const TabsSkeleton = (length:number=7): React.JSX.Element => {
   return (
-    <div className="flex gap-3 overflow-hidden">
+    <div className="flex gap-3 overflow-hidden skeleton-shimmer">
     {Array.from({ length }).map((_, i) => (
         <Skeleton
             key={i}
