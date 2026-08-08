@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CCart, CCourse } from "@/types/client";
 
-const CartPageComp: React.FC = (): React.JSX.Element => {
+const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JSX.Element => {
   const [cartCartCourses, setCartCourses] = useState<CCart[]>([]);
   const [cart, setCart] = useState<CCart | null>(null);
   const [cartItems, setCartItems] = useState<CCourse[]>([]);
@@ -266,7 +266,7 @@ const CartPageComp: React.FC = (): React.JSX.Element => {
     }
   }, [fetchCart, user]);
   return (
-    <div className="min-h-screen w-screen flex flex-col overflow-auto px-4">
+    <div className={cn("min-h-screen w-screen flex flex-col overflow-auto px-4", className)}>
       <div
         ref={containerRef}
         className="w-full min-h-screen py-8 flex flex-col gap-6 "

@@ -1,57 +1,55 @@
-
-
-
 import CourseIdPage from "@/app/components/CourseIDComp/CourseIdPageComp";
-import { connectDB } from "@repo/shared";
+import { connectDB, IUserCourse, logger } from "@repo/shared";
 import { JSX } from "react/jsx-runtime";
-import { CCourse, CReview } from "@/types/client";
-import { Course,ICourse } from "@repo/shared";
-import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
-
-import { serializeCourse } from "@/utils/serializer/course.Serializer";
-import { logger } from "@repo/shared";
+import { CCategory, CCourse, CReview } from "@/types/client";
 import { notFound } from "next/navigation";
+import { getCourseByIdWithCache, getInstructorOtherCoursesWithCache, getInstructorStatsWithCache, getReleatedCoursesWithCache, getUserCourseWithCache, IInstructorStats } from "@/lib/getCachedCourse";
+import { getCourseReviewsWithCache } from "@/lib/getCachedReviews";
+import { buildCategoryTree, buildCourseCategoryTree, CCategoryWithChildren, getCategoriesWithCache } from "@/lib/getCachedCategory";
+import { auth } from "@/auth";
+import { getUserCourseByIdWithCache } from "@/lib/getCachedUserCourse";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {
   await connectDB(process.env.MONGODB_URI!);
-  // logger.debug({ params }, "Params received"); // 👈 debug
-  const awaitedParams = await params;
+  const awaitedParams = params;
   const { courseId } = awaitedParams;
-  // logger.debug({ awaitedParams }, "Params awaited");
-  let course: CCourse | null  = await getCached<CCourse>("course", courseId);
-
-  if (!course) {
-    const rawCourse: ICourse = await Course.findById(courseId)
-      .select("title description coverImage rating price category lessons.name lessons.duration instructor reviews")
-      .populate("instructor", "name profileImage")
-      .lean()
-      .exec()
-    if (rawCourse) {
-      course = (serializeCourse(rawCourse)) as CCourse;
-      await setCached("course", courseId, course, CACHE_TTL.MEDIUM); // 10 min
-    }
+  if(!courseId || typeof courseId !== "string") {
+     return notFound();
   }
-
+  const userSession = await auth();
+  if (!userSession?.user?.id) {
+    logger.warn("User not authenticated", { courseId });
+  }
+  const [course, reviews, categories, relevantCategoryCourses, userCourse] = await Promise.all([
+    getCourseByIdWithCache(courseId),
+    getCourseReviewsWithCache(courseId),
+    getCategoriesWithCache(),
+    getReleatedCoursesWithCache(courseId),
+    userSession?.user?.id
+        ? getUserCourseByIdWithCache(userSession.user.id, courseId)
+        : Promise.resolve(null),
+  ]);
   if (!course) {
     notFound();
   }
-
-  let initialReviews: CReview[] = (await getCached<CReview[]>("reviews:course", courseId)) ?? [];
-  if (initialReviews.length === 0) {
-    try {
-      const res  : Response = await fetch(
-        `${process.env.NODE_ENV === "development"
-          ? process.env.NEXT_PUBLIC_API_URL_DEV
-          : process.env.NEXT_PUBLIC_API_URL}/reviews/reviews.json`
-      );
-      initialReviews = await res.json();
-      await setCached("reviews:course", courseId, initialReviews, CACHE_TTL.MEDIUM);
-    } catch (error: unknown) {
-      logger.error("Error fetching reviews", { error });
-
-    }
+  const categoriesWithChildren: CCategoryWithChildren[] = buildCategoryTree(categories);
+  const courseCategoryWithChildren: CCategoryWithChildren | null = buildCourseCategoryTree(categories, course?.category?._id!.toString() ?? "");
+  if(!course.instructorId) {
+    logger.warn("Course instructorId is null", { courseId: course._id });
+    throw new Error("Course instructorId is null");
   }
-  return <CourseIdPage initialCourse={course} initialReviews={initialReviews} />;
+  let courseInstructorId :string = course.instructorId._id.toString();
+  const [instructorStats, instructorOtherCourses] = await Promise.all([
+    getInstructorStatsWithCache(courseInstructorId),
+    getInstructorOtherCoursesWithCache(courseInstructorId),
+  ])
+
+  if(!instructorStats) {
+    logger.warn("Instructor stats is null", { courseId: course._id });
+    throw new Error("Instructor stats is null");
+  }
+
+  return <CourseIdPage initialCourse={course} initialReviews={reviews} allCategories={categoriesWithChildren} courseCategory={courseCategoryWithChildren} relevantCategoryCourses={relevantCategoryCourses} instructorStats={instructorStats} userCourse={userCourse} otherCoursesByInstructor={instructorOtherCourses}/>;
 }
 
 export default CoursePage;

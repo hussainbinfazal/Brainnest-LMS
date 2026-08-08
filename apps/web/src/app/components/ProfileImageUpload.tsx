@@ -1,10 +1,11 @@
 
+import { cn } from "@/lib/utils";
 import { CProfileImageUploadProps } from "@/types/client";
 import React, { useState, useRef, useEffect } from "react";
 
 
 
-const ProfileImageUpload = ({ control,setValue, trigger }: CProfileImageUploadProps) => {
+const ProfileImageUpload = ({ control,setValue, trigger,className }: CProfileImageUploadProps) => {
   const [image, setImage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -265,7 +266,7 @@ const ProfileImageUpload = ({ control,setValue, trigger }: CProfileImageUploadPr
   }, [isDragging]);
 
   return (
-    <div className="flex flex-col gap-4 items-center justify-start">
+    <div className={cn("flex flex-col gap-4 items-center justify-start", className)}>
       <input
         type="file"
         accept="image/*"

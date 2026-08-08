@@ -272,6 +272,21 @@ export interface CCourse {
   updatedAt?: Date;
 }
 
+export interface CUserCourse {
+  _id: string;
+  user: string;
+  courseId: string;
+  isLiked: boolean;
+  isEnrolled: boolean;
+  isCompleted: boolean;
+  progress: number;
+  likedAt: Date;
+  enrolledAt: Date;
+  completedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface CCourseShowcaseProps {
   courses: Course[];
   isLoading: boolean;
@@ -350,9 +365,11 @@ export interface COtpSenderProps {
   phoneNumber: string;
   setPhoneNumber: (number: string) => void;
   onOtpSent: () => void;
+  className?: string;
 }
 export interface CEmailOtpVerifierProps {
   email: string;
+  className?: string;
 
   phoneNumber: string;
   onVerified: () => void;
@@ -361,6 +378,7 @@ export interface CEmailOtpVerifierProps {
 }
 export interface CEmailOtpSenderProps {
   email: string;
+  className?: string;
   onOtpSent: () => void;
 }
 
@@ -384,11 +402,13 @@ export interface CProfileImageUploadProps {
   setValue?: (field: string, value: any) => void;
   trigger?: (field: string) => void;
   control?: any;
+  className?: string;
 }
 
 export interface CCourseRatingProps {
   courseId: string;
   userRating?: number;
+  className?: string;
 }
 export interface CCreateCouponResponse {
   code: string;
@@ -443,9 +463,9 @@ export interface CAuthStore {
   setAuthLoading: (loading: boolean) => void;
   setHasInitialized: (value: boolean) => void;
   setUserLoggedInitialized: (value: boolean) => void;
-  setUserLocation:(location: CUserLocation) => void;
+  setUserLocation: (location: CUserLocation) => void;
   fetchUser: () => Promise<void>;
-  saveUserGeography: ()=>Promise<void>;
+  saveUserGeography: () => Promise<void>;
 }
 
 export interface CCartStore {
@@ -478,9 +498,9 @@ export interface CChatStore {
 }
 export interface CCourseStore {
   courses: CCourse[];
-  categories:CCategoriesWithChildren[]
+  categories: CCategoriesWithChildren[]
   reviews: CReview[];
-  fetchCourses: ({fetchedCourses, fetchedReviews, fetchedCategories} : {fetchedCourses?: Course[], fetchedReviews?: CReview[], fetchedCategories?: CCategoryWithChildren[]}) => Promise<CCourse[]>;
+  fetchCourses: ({ fetchedCourses, fetchedReviews, fetchedCategories }: { fetchedCourses?: Course[], fetchedReviews?: CReview[], fetchedCategories?: CCategoryWithChildren[] }) => Promise<CCourse[]>;
   setCourses?: (courses: CCourse[]) => void;
 
 }

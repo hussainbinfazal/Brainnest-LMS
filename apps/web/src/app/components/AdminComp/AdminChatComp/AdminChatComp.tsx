@@ -26,6 +26,7 @@ import { RxDropdownMenu } from "react-icons/rx";
 import { MdCircle } from "react-icons/md";
 import { CAuthUser, CChat, CChatMessage, CClientToServerEvents, CMessage, CServerToClientEvents } from "@/types/client";
 import { Socket } from "socket.io-client";
+import { cn } from "@/lib/utils";
 
 type MinimalUser = {
   _id: string;
@@ -33,7 +34,7 @@ type MinimalUser = {
   profileImage: string;
 };
 
-export default function AdminChat(): React.JSX.Element {
+export default function AdminChat({className}: {className?: string}): React.JSX.Element {
   const router = useRouter();
   const user = useAuthStore((state) => state.authUser);
   const userId = useMemo(() => user?._id, [user]);
@@ -313,20 +314,20 @@ export default function AdminChat(): React.JSX.Element {
 
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ">
+    <div className={cn("w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ", className)}>
       <div className="w-full h-[95%] flex justify-between items-start overflow-none bg-black">
         <div
-          className={`flex flex-col  justify-start  h-full overflow-hidden ${isCollapsed ? "w-[80px] " : "w-[300px]"
+          className={`flex flex-col  justify-start  h-full overflow-hidden ${isCollapsed ? "w-20 " : "w-80"
             } bg-black dark:bg-black gap-2`}
         >
           {isLoading ? (
-            <Skeleton className="w-full !h-full py-3" />
+            <Skeleton className="w-full h-full! py-3" />
           ) : (
             <div className="w-full h-full  overflow-y-auto border-r bg-black  ">
               <div
 
                 // defaultOpen={isSidebarOpen}
-                className=" h-full w-full !bg-black"
+                className=" h-full w-full bg-black!"
               >
                 {/* <div className="w-full flex justify-end items-center px-2">
                   <SidebarTrigger>
@@ -334,12 +335,12 @@ export default function AdminChat(): React.JSX.Element {
                   </SidebarTrigger>
                 </div> */}
                 <div
-                  className={`transition-all duration-300 h-full !flex !flex-col relative bg-black gap-2${isCollapsed ? "w-[80px] pr-3" : "w-[300px]"
+                  className={`transition-all duration-300 h-full flex! flex-col! relative bg-black gap-2${isCollapsed ? "w-20 pr-3" : "w-80"
                     } `}
                 >
-                  <div className="pl-4 w-full !flex !border-none !outline-none items-center bg-black">
+                  <div className="pl-4 w-full flex! border-none! outline-none! items-center bg-black">
                     <div
-                      className={`w-full !flex items-center ${isCollapsed ? "justify-center" : "justify-between"
+                      className={`w-full flex! items-center ${isCollapsed ? "justify-center" : "justify-between"
                         } px-2 py-4 pb-2`}
                     >
                       {!isCollapsed && (
@@ -354,10 +355,10 @@ export default function AdminChat(): React.JSX.Element {
                       </button>
                     </div>
                   </div>
-                  <div className="flex justify-center !border-none !outline-none bg-black">
-                    <Separator className="!w-1/3 h-px bg-gray-200 !border-none !shadow-none !outline-none ml-2" />
+                  <div className="flex justify-center border-none! outline-none! bg-black">
+                    <Separator className="w-1/3! h-px bg-gray-200 border-none! shadow-none! outline-none! ml-2" />
                   </div>
-                  <div className="pl-2 h-full bg-black w-full !border-none !outline-none flex flex-col gap-3">
+                  <div className="pl-2 h-full bg-black w-full border-none! outline-none! flex flex-col gap-3">
                     {chats.length === 0 ? (
                       <div className="flex items-center justify-center h-full">
                         <p>No Chats Found</p>
@@ -395,7 +396,7 @@ export default function AdminChat(): React.JSX.Element {
                             )}{" "}
                             {!isCollapsed &&
                               (isComponentLoading ? (
-                                <Skeleton className={"w-[50px] h-[5px]"} />
+                                <Skeleton className={"w-12.5 h-4"} />
                               ) : (
                                 <p className="text-white truncate">
                                   {chat.sender?.name}
@@ -428,7 +429,7 @@ export default function AdminChat(): React.JSX.Element {
                   </div>
                 )}
                 {activeChat === null ? (
-                  <Skeleton className="w-[80px] h-[15px] rounded-lg" />
+                  <Skeleton className="w-20 h-3.75 rounded-lg" />
                 ) : (
                   <p>{activeChat?.receiver?.name}</p>
                 )}
@@ -456,7 +457,7 @@ export default function AdminChat(): React.JSX.Element {
                           } flex items-center gap-2 w-full  p-2`}
                       >
                         <div
-                          className={`min-w-1/3 px-2 py-4 relative bg-red-500 max-w-1/2 overflow-hidden break-words  ${isCurrentUserSender
+                          className={`min-w-1/3 px-2 py-4 relative bg-red-500 max-w-1/2 overflow-hidden wrap-break-word  ${isCurrentUserSender
                             ? "rounded-bl-lg rounded-tr-lg rounded-tl-lg"
                             : "rounded-br-lg rounded-tr-lg rounded-tl-lg"
                             }`}
@@ -478,14 +479,14 @@ export default function AdminChat(): React.JSX.Element {
                 </div>
               </div>
               {showInfo ? (
-                <div className="w-full h-[120px] flex items-center justify-between gap-4 py-2 z-0  px-6 relative">
+                <div className="w-full h-30 flex items-center justify-between gap-4 py-2 z-0  px-6 relative">
                   <div className="absolute top-1 -left-3">
                     <RxDropdownMenu
                       onClick={() => setShowInfo(false)}
                       className="text-2xl cursor-pointer dark:text-white text-black z-25"
                     />
                   </div>
-                  <Card className="w-[350px] h-full relative flex flex-col">
+                  <Card className="w-87.5 h-full relative flex flex-col">
                     <CardContent className={"flex flex-1"}>
                       <p>User's Message Count: {activeChat?.messageCount}</p>
                     </CardContent>
@@ -498,7 +499,7 @@ export default function AdminChat(): React.JSX.Element {
                         >
                           <CiCircleInfo className="text-xl cursor-pointer" />
                           {viewCountInfo && (
-                            <Card className="absolute -top-24 right-3 z-10 w-[350px] h-[100px] rounded-br-none">
+                            <Card className="absolute -top-24 right-3 z-10 w-87.5 h-25 rounded-br-none">
                               <CardContent className="">
                                 <p>
                                   This count shows the number of messages the
@@ -511,7 +512,7 @@ export default function AdminChat(): React.JSX.Element {
                       </div>
                     </CardFooter>
                   </Card>
-                  <Card className="w-[350px] h-full relative flex flex-col ">
+                  <Card className="w-87.5 h-full relative flex flex-col ">
                     <CardContent className={" flex flex-1"}>
                       <p>
                         User's Remaining Messages:{" "}
@@ -528,7 +529,7 @@ export default function AdminChat(): React.JSX.Element {
                         >
                           <CiCircleInfo className="text-xl cursor-pointer" />
                           {viewRemainingInfo && (
-                            <Card className="absolute -top-24 right-3 z-10 w-[350px] h-[100px] rounded-br-none">
+                            <Card className="absolute -top-24 right-3 z-10 w-87.5 h-25 rounded-br-none">
                               <CardContent className="">
                                 <p>
                                   This count shows the number of remaining
@@ -541,7 +542,7 @@ export default function AdminChat(): React.JSX.Element {
                       </div>
                     </CardFooter>
                   </Card>
-                  <Card className="w-[350px] h-full relative flex  flex-col">
+                  <Card className="w-87.5 h-full relative flex  flex-col">
                     <CardContent className={"flex flex-1"}>
                       <p>User's Message Limit: {activeChat?.messageLimit}</p>
                     </CardContent>
@@ -555,7 +556,7 @@ export default function AdminChat(): React.JSX.Element {
                         >
                           <CiCircleInfo className="text-xl cursor-pointer" />
                           {viewLimitInfo && (
-                            <Card className="absolute -top-24 right-3 z-10 w-[350px] h-[100px] rounded-br-none">
+                            <Card className="absolute -top-24 right-3 z-10 w-87.5 h-25 rounded-br-none">
                               <CardContent className="">
                                 <p>
                                   This count shows the total number of messages
@@ -570,7 +571,7 @@ export default function AdminChat(): React.JSX.Element {
                   </Card>
                 </div>
               ) : (
-                <div className="w-full h-[50px] flex items-center justify-center gap-4 py-2 z-0  px-6">
+                <div className="w-full h-25 flex items-center justify-center gap-4 py-2 z-0  px-6">
                   <TfiLayoutMenuSeparated
                     className="dark:text-white text-black text-4xl cursor-pointer  "
                     onClick={() => setShowInfo(true)}
@@ -578,7 +579,7 @@ export default function AdminChat(): React.JSX.Element {
                 </div>
               )}
 
-              <div className="w-full h-[20] flex items-center justify-start gap-4 py-2 z-0">
+              <div className="w-full h-25 flex items-center justify-start gap-4 py-2 z-0">
                 <div className="w-full flex justify-between gap-2 relative">
                   {activeChat === null || activeChat === null ? (
                     <Skeleton className="h-12 w-full" />

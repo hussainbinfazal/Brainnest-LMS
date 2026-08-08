@@ -1,13 +1,24 @@
 import { CarouselItem } from '@/components/ui/carousel'
 import React from 'react'
 import CategoryCardSkeleton from './Category-Card-Skeleton'
+import CousrseCardSkeleton from './Course-Card-Skeleton'
+import { cn } from '@/lib/utils';
 
-const CarouselSkeleton = (length:number=8): React.JSX.Element => {
+
+interface CousrseCardSkeletonProps {
+  length?: number;
+  className?: string;
+}
+interface CategoryCardSkeletonProps {
+  length?: number;
+  className?: string;
+}
+export const CategoryCarouselSkeleton = ({length=8,className}: CategoryCardSkeletonProps): React.JSX.Element => {
   return (
-    <div className="flex gap-4">{Array.from({ length }).map((_, i) => (
+    <div className={cn("flex gap-4", className)}>{Array.from({ length }).map((_, i) => (
     <CarouselItem
         key={i}
-        className="basis-full sm:basis-1/2 md:basis-1/3 xl:basis-1/4"
+        className="basis-full sm:basis-1/2 md:basis-1/3 xl:basis-1/5"
     >
         <CategoryCardSkeleton />
     </CarouselItem>
@@ -15,4 +26,17 @@ const CarouselSkeleton = (length:number=8): React.JSX.Element => {
   )
 }
 
-export default CarouselSkeleton
+export const CourseCarouselSkeleton = ({length=8,className}: CousrseCardSkeletonProps): React.JSX.Element => {
+    return (
+        <div className={cn("flex gap-2", className)}>{Array.from({ length }).map((_, i) => (
+            <CarouselItem
+            key={i}
+            className="basis-full sm:basis-1/2 md:basis-1/3 xl:basis-1/4"
+            >
+        <CousrseCardSkeleton />
+    </CarouselItem>
+))}</div>
+)
+}
+
+

@@ -33,10 +33,11 @@ import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { CCreateCourse, zodCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "@/lib/utils";
 
 
 
-export const CreateCourseComp: React.FC = () => {
+export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }) => {
   const form = useForm<CCreateCourse>({
     resolver: zodResolver(zodCourseSchema),
     defaultValues: {
@@ -417,8 +418,8 @@ export const CreateCourseComp: React.FC = () => {
 
 
   return (
-    <div className="flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8">
-      <Card className="w-[350px] md:w-[550px] space-y-4">
+    <div className={cn("flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8", className)}>
+      <Card className="w-87.5 md:w-137.5 space-y-4">
         <CardHeader className="">
           <CardTitle className="">Create project</CardTitle>
           <CardDescription className="">

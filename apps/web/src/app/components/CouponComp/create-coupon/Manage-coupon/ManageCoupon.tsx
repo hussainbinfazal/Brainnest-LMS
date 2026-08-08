@@ -27,7 +27,7 @@ import { Switch } from "@/components/ui/switch"
 
 
 
-export const ManageCouponComp: React.FC = (): React.ReactElement => {
+export const ManageCouponComp: React.FC<{ className?: string }> = ({ className }): React.ReactElement => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [coupons, setCoupons] = useState<CCoupon[]>([]);
@@ -132,7 +132,7 @@ export const ManageCouponComp: React.FC = (): React.ReactElement => {
     return () => clearTimeout(timer);
   }, [coupons?.length]);
   return (
-    <div className="min-h-screen w-full flex items-start justify-center">
+    <div className={cn("min-h-screen w-full flex items-start justify-center", className)}>
       <div className="w-[90%] lg:w-[70%] min-h-screen flex flex-col items-center justify-center py-6">
         <div className="w-full items-center justify-start text-3xl font-semibold">
           My Coupons

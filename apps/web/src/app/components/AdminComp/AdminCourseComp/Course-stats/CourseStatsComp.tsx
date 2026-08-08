@@ -44,13 +44,14 @@ import {
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import { CChat, CCourse, CEnrolledStudent, CPayment } from "@/types/client";
 import Error from "next/error";
+import { cn } from "@/lib/utils";
 
 
 interface PaymentsResponse {
 
 }
 //Do all the complex calculation on servver then pass those data to the component as props
-export const CourseStatsComp: React.FC = (): React.JSX.Element => {
+export const CourseStatsComp: React.FC<{ className?: string }> = ({ className }): React.JSX.Element => {
   const router = useRouter();
   const [courses, setCourses] = useState<CCourse[]>([]);
   const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>([]);
@@ -418,7 +419,7 @@ export const CourseStatsComp: React.FC = (): React.JSX.Element => {
 
 
   return (
-    <div className="w-full min-h-screen flex flex-col justify-start items-center py-6 relative">
+    <div className={cn("w-full min-h-screen flex flex-col justify-start items-center py-6 relative", className)}>
       {loading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={loading} />

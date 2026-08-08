@@ -32,15 +32,15 @@ const userCourseSchema: Schema<IUserCourse> = new mongoose.Schema({
     },
     likedAt: {
         type: Date,
-        default: Date.now
+        
     },
     enrolledAt: {
         type: Date,
-        default: Date.now
+        
     },
     completedAt: {
         type: Date,
-        default: Date.now
+        
     }
 }, { timestamps: true });
 

@@ -47,7 +47,7 @@ export interface ISelectedPlan {
   messages: string;
   price: string;
 }
-export default function ChatPageComp({serverChats}:{serverChats: CChat[]}): React.JSX.Element {
+export default function ChatPageComp({serverChats, className}:{serverChats: CChat[], className?: string}): React.JSX.Element {
   const router = useRouter();
   const user: CAuthUser = useAuthStore((state) => state.authUser);
   const userId: string = useMemo(() => user?._id, [user]) ?? "";
@@ -433,7 +433,7 @@ export default function ChatPageComp({serverChats}:{serverChats: CChat[]}): Reac
     // );
   }, [userStatus]);
   return (
-    <div className="w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ">
+    <div className={cn("w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ", className)}>
       <div className="w-full h-[95%] flex justify-between items-start overflow-none bg-black">
         <div
           className={`flex flex-col  justify-start h-full overflow-hidden ${isCollapsed ? "w-[80px]" : "w-[300px]"

@@ -27,12 +27,14 @@ import {
 import { BiSolidCategoryAlt } from "react-icons/bi";
 import { CAuthUser, CCourse } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
+import { cn } from "@/lib/utils";
 
 
 interface CoursesPageCompProps {
-  initialCourses?: CCourse[];
+  initialCourses?: CCourse[]; 
+  className?: string
 }
-export const CoursesPageComp = ({ initialCourses }: CoursesPageCompProps): React.JSX.Element => {
+export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
 
   const [courses, setCourses] = useState<CCourse[]>([]);
@@ -330,7 +332,7 @@ export const CoursesPageComp = ({ initialCourses }: CoursesPageCompProps): React
   };
 
   return (
-    <div className="w-screen min-h-screen h-screen flex flex-col relative overflow-hidden">
+    <div className={cn("w-screen min-h-screen h-screen flex flex-col relative overflow-hidden", className)}>
       {isLoading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={isLoading} />

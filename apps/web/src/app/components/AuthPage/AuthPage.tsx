@@ -35,7 +35,7 @@ import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signUpSchema>;
-export const AuthPageComp = (): JSX.Element => {
+export const AuthPageComp = ({className}: { className?: string }): JSX.Element => {
     const [formType, setFormType] = useState<string>((): string => {
         if (typeof window !== "undefined") {
             return localStorage.getItem("authFormType") || "login";
@@ -168,7 +168,7 @@ export const AuthPageComp = (): JSX.Element => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen gap-4 overflow-auto pt-8">
+        <div className={cn("flex justify-center items-center min-h-screen gap-4 overflow-auto pt-8", className)}>
             <Tabs
                 value={formType}
                 onValueChange={handleTabChange}

@@ -21,8 +21,9 @@ import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { zodCouponSchema, CreateCoupon } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
+import { cn } from "@/lib/utils";
 
-const CreateCouponComp: React.FC = (): React.JSX.Element => {
+const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): React.JSX.Element => {
 
   const form = useForm<CreateCoupon>({
     resolver: zodResolver(zodCouponSchema),
@@ -61,7 +62,7 @@ const CreateCouponComp: React.FC = (): React.JSX.Element => {
     }
   };
   return (
-    <div className="min-h-screen w-full flex items-center justify-center">
+    <div className={cn("min-h-screen w-full flex items-center justify-center", className)}>
       <div className="w-[70%] h-full flex items-center justify-center">
         <Card className="w-137.5 space-y-4">
           <CardHeader className="">

@@ -1,18 +1,19 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { CEmailOtpSenderProps, CEmailOtpVerifierProps, COtpSenderProps, CResendOtpResponse, CSendOtpResponse, CVerifyOtpResponse } from "@/types/client";
 import { logger } from "@/utils/logger/logger.node";
+import { cn } from "@/lib/utils";
 
-export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent }: COtpSenderProps) => {
+export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent,className }: COtpSenderProps) => {
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
     try {
       const response = await axios.post<CSendOtpResponse>("/api/send-otp", { phoneNumber });
       // Show OTP in development mode
       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
         toast.success(`Development Mode - Your OTP is: ${response.data.otp || 'Check console'}`);
-        logger.debug({ otp: response.data.otp }, "Generated OTP (development)");
+        // logger.debug({ otp: response.data.otp }, "Generated OTP (development)");
       }
       toast.success(response.data.message || "OTP sent successfully");
       onOtpSent(); // Notify parent
@@ -38,14 +39,14 @@ export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent }: COtpSender
 ;
 
 // Email OTP Components
-export const EmailOtpSender = ({ email, onOtpSent }: CEmailOtpSenderProps) => {
+export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderProps) => {
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
     try {
       const response = await axios.post<CSendOtpResponse>("/api/send-email-otp", { email });
       // Show OTP in development mode
       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
         toast.success(`Development Mode - Your Email OTP is: ${response.data.otp || 'Check console'}`);
-        logger.debug({ otp: response.data.otp }, "Generated Email OTP (development)");
+        // logger.debug({ otp: response.data.otp }, "Generated Email OTP (development)");
       }
       toast.success(response.data.message || "Email OTP sent successfully");
       onOtpSent(); // Notify parent
@@ -57,7 +58,7 @@ export const EmailOtpSender = ({ email, onOtpSent }: CEmailOtpSenderProps) => {
   };
 
   return (
-    <div className="mb-4">
+    <div className={cn("mb-4", className)}>
       <button
         onClick={handleSendOtp}
         className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
@@ -68,14 +69,14 @@ export const EmailOtpSender = ({ email, onOtpSent }: CEmailOtpSenderProps) => {
   );
 };
 
-export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail }: CEmailOtpVerifierProps) => {
+export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }: CEmailOtpVerifierProps) => {
   const [otp, setOtp] = useState<number | string>("");
   const [countdown, setCountdown] = useState<number>(50);
   const [resendCount, setResendCount] = useState<number>(0);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const maxResendAttempts = 5;
 
-  React.useEffect(() => {
+  useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
       timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -109,7 +110,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail }: CEmailOtp
       // Show OTP in development mode
       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
         toast.success(`Development Mode - Your Email OTP is: ${response.data.otp || 'Check console'}`);
-        logger.debug({ otp: response.data.otp }, "Resent Email OTP (development)");
+        // logger.debug({ otp: response.data.otp }, "Resent Email OTP (development)");
       }
 
       toast.success("Email OTP resent successfully");
@@ -122,7 +123,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail }: CEmailOtp
   };
 
   return (
-    <div className="mb-4">
+    <div className={cn("mb-4", className)}>
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm text-gray-600">OTP sent to: {email}</span>
         <button
@@ -164,7 +165,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail }: CEmailOtp
   );
 };
 
-export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber }: CEmailOtpVerifierProps) => {
+export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber, className }: CEmailOtpVerifierProps) => {
   const [otp, setOtp] = useState<number | string>("");
   const [countdown, setCountdown] = useState<number>(50); // Start with 50 seconds after first OTP
   const [resendCount, setResendCount] = useState<number>(0);
@@ -201,7 +202,7 @@ export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber }: CEmailO
       // Show OTP in development mode
       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
         toast.success(`Development Mode - Your OTP is: ${response.data.otp || 'Check console'}`);
-        logger.debug({ otp: response.data.otp }, "Resent OTP (development)");
+        // logger.debug({ otp: response.data.otp }, "Resent OTP (development)");
       }
 
       toast.success("OTP resent successfully");
@@ -214,7 +215,7 @@ export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber }: CEmailO
   };
 
   return (
-    <div className="mb-4">
+    <div className={cn("mb-4", className)}>
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm text-gray-600">OTP sent to: {phoneNumber}</span>
         <button

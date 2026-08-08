@@ -17,7 +17,6 @@ import { MdOutlinePeopleAlt } from "react-icons/md";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { logger } from "@/utils/logger/logger.node";
-
 import Link from "next/link";
 import { ImQuotesLeft } from "react-icons/im";
 import { useMemo } from "react";
@@ -60,8 +59,25 @@ import { BarLoader, ClipLoader } from "react-spinners";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import Autoplay from "embla-carousel-autoplay";
 import { formatRelativeDate } from "@/utils/date";
-import { CAuthUser, CCourse, CLesson, COrder, CReview } from "@/types/client";
-export default function CourseIdPageComp({ initialCourse, initialReviews }: { initialCourse: CCourse, initialReviews: CReview[] }): React.JSX.Element {
+import { CAuthUser, CCourse, CLesson, COrder, CReview, CUserCourse } from "@/types/client";
+import { cn } from "@/lib/utils";
+import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import CourseIdPageSkeleton from "./CourseId-Page-Skeleton";
+import { IInstructorStats } from "@/lib/getCachedCourse";
+import { IUserCourse } from "@repo/shared";
+
+interface CourseIdPageCompProps {
+  initialCourse: CCourse;
+  initialReviews: CReview[];
+  allCategories: CCategoryWithChildren[];
+  courseCategory: CCategoryWithChildren | null;
+  relevantCategoryCourses: CCourse[];
+  instructorStats: IInstructorStats | null;
+  userCourse?: CUserCourse | null;
+  otherCoursesByInstructor: CCourse[] | null;
+  className?: string;
+}
+export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, className }: CourseIdPageCompProps): React.JSX.Element {
   const router = useRouter();
   const { courseId } = useParams();
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
@@ -69,22 +85,22 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
   const { fetchCart, cart } = useCartStore();
   const [course, setCourse] = useState<CCourse>(initialCourse);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isLiked, setIsLiked] = useState<boolean>();
+  const [isLiked, setIsLiked] = useState<boolean>(userCourse?.isLiked || false);
   const [viewLesson, setViewLesson] = useState<boolean>(false);
   const [viewLessonId, setViewLessonId] = useState<string>("");
   const [isLessonCompleted, setIsLessonCompleted] = useState<boolean>(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
-  const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>([]);
-  const [totalReviewsOfInstructor, setTotalReviewsOfInstructor] = useState<number>(0);
-  const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>(0);
-  const [totalStudentsEnrolled, setTotalStudentsEnrolled] = useState<number>(0);
+  const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>(otherCoursesByInstructor || []);
+  const [totalReviewsOfInstructor, setTotalReviewsOfInstructor] = useState<number>(instructorStats?.totalReviews || 0);
+  const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>( instructorStats?.totalCourses || 0);
+  // const [totalStudentsEnrolled, setTotalStudentsEnrolled] = useState<number>(instructorStats?.totalStudentsEnrolled || 0);
   const [isAlreadyAdded, setIsAlreadyAdded] = useState<boolean>(false);
-  const [isEnrolled, setIsEnrolled] = useState<boolean>(false);
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(userCourse?.isEnrolled || false);
   const [order, setOrder] = useState<COrder | null>(null);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const [rating, setRating] = useState<number>(0);
+  const [isCompleted, setIsCompleted] = useState<boolean>(userCourse?.isCompleted || false);
+  const [rating, setRating] = useState<number>(course.averageRating || 0);
   const [comment, setComment] = useState<string>("");
-  const [reviews, setReviews] = useState<CReview[]>(initialReviews);
+  const [reviews, setReviews] = useState<CReview[]>(initialReviews || []);
   const [newReview, setNewReview] = useState<string>("");
   const [hover, setHover] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -575,9 +591,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
   useEffect((): void => {
     fetchUser();
   }, []);
+  if(isLoading) {
+    return <CourseIdPageSkeleton />;
+  }
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col gap-6  py-18 pt-0 ">
+    <div className={cn("relative w-full min-h-screen flex flex-col gap-6  py-18 pt-0 ", className)}>
       {isLoading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={isLoading} />
@@ -586,21 +605,21 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
       <div className="absolute top-0 left-0 w-full h-1/2 dark:bg-black bg-white z-[-1]" />
       {isLoading ? (
         <div className="w-full flex items-center justify-center ">
-          <Skeleton className="!w-[70%] lg:w-[60%] h-[50vh] rounded-lg flex item-center justify-center !pt-6" />
+          <Skeleton className="w-[70%]! lg:w-[60%] h-[50vh] rounded-lg flex item-center justify-center pt-6!" />
         </div>
       ) : (
         <div className="w-[90%] md:w-[70%] lg:w-[60%] bg-transparent mx-auto flex flex-col justify-start items-center relative">
-          <div className="relative w-full h-[300px] overflow-hidden">
+          <div className="relative w-full h-75 overflow-hidden">
             <Image alt="" src={course?.coverImage ? course?.coverImage : ""} fill className="rounded-lg" />
           </div>
         </div>
       )}
       <div className="relative w-[90%] md:w-[90%] lg:w-[60%] bg-transparent mx-auto flex flex-col justify-start items-center h-full gap-6 min-h-screen pt-2">
         {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full !pt-6" />
+          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full pt-6!" />
         ) : (
           !isEnrolled && (
-            <div className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full flex items-center justify-center border-1 border-gray-300">
+            <div className="absolute right-0 top-2 w-10 h-10 rounded-full flex items-center justify-center border border-gray-300">
               {isLiked ? (
                 <IoMdHeart
                   className="text-xl text-red-500 cursor-pointer"
@@ -630,11 +649,11 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           )
         )}
         {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full" />
+          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
         ) : (
           isEnrolled && (
             <div
-              className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full flex items-center justify-center border-1 border-gray-300"
+              className="absolute right-0 top-2 w-10 h-10 rounded-full flex items-center justify-center border border-gray-300"
               onMouseEnter={() => {
                 setIsViewInfo(true);
               }}
@@ -644,7 +663,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
             >
               <TbMessageUser className="text-2xl relative cursor-pointer" />
               {isViewInfo && (
-                <Card className="w-[350px] absolute right-4 bottom-4 z-99 rounded-br-none">
+                <Card className="w-87.5 absolute right-4 bottom-4 z-99 rounded-br-none">
                   <CardHeader className=''>
                     <CardTitle className=''>Chat with Instructor</CardTitle>
                   </CardHeader>
@@ -687,10 +706,10 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
         )}
 
         {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full" />
+          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
         ) : (
           !isEnrolled && (
-            <div className="absolute right-12 top-2 w-[40px] h-[40px] rounded-full flex items-center justify-center border-1 border-gray-300">
+            <div className="absolute right-12 top-2 w-10 h-10 rounded-full flex items-center justify-center border border-gray-300">
               {isAlreadyAdded ? (
                 <BsCartCheckFill
                   className="text-xl cursor-pointer"
@@ -720,9 +739,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           )
         )}
         {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full" />
+          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
         ) : (
-          <div className="absolute right-33 top-2 w-[40px] h-[40px]  flex items-center justify-center  border-gray-300 cursor-pointer">
+          <div className="absolute right-33 top-2 w-10 h-10  flex items-center justify-center  border-gray-300 cursor-pointer">
             {!isEnrolled && (
               <Button
                 size='default'
@@ -743,9 +762,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-[40px] h-[40px] rounded-full" />
+          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
         ) : (
-          <div className="absolute right-30 top-2 w-[40px] h-[40px]  flex items-center justify-center  border-gray-300">
+          <div className="absolute right-30 top-2 w-10 h-10  flex items-center justify-center  border-gray-300">
             {isCompleted && (
               <Button
                 size='default'
@@ -766,7 +785,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         <div className="w-full flex flex-col items-start justify-center gap-3 pt-12 md:pt-0">
-          <p className="dark:text-white text-black text-2xl sm:text-3xl lg:text-4xl capitalize whitespace-normal break-words line-clamp-3 leading-tight cursor-pointer">
+          <p className="dark:text-white text-black text-2xl sm:text-3xl lg:text-4xl capitalize whitespace-normal wrap-break-word line-clamp-3 leading-tight cursor-pointer">
             {course?.title}
           </p>
           {course?.topics?.[0]?.topic && (
@@ -776,12 +795,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
             <p>{course.topics[0].description}</p>
           )}
           {isLoading ? (
-            <Skeleton className="w-[10px] h-[30px] " />
+            <Skeleton className="w-2.5 h-7.5 " />
           ) : (
             <Badge variant='default' className=''>Bestseller</Badge>
           )}
           {isLoading ? (
-            <Skeleton className="w-[10px] h-[30px] " />
+            <Skeleton className="w-2.5 h-7.5 " />
           ) : (
             <p className="dark:text-white text-black text-2xl capitalize whitespace-normal break-words line-clamp-2">
               ₹ {Number(course?.price)}
@@ -792,45 +811,45 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
         <div className="flex gap-2 w-full   justify-start items-center">
           <span className="flex gap-2  items-center">
             {isLoading ? (
-              <Skeleton className="w-[10px] h-[10px] rounded-full" />
+              <Skeleton className="w-2.5 h-2.5 rounded-full" />
             ) : (
               <LuOctagonAlert />
             )}
             {""}
             {isLoading ? (
-              <Skeleton className="w-[50px] h-[10px]" />
+              <Skeleton className="w-12 h-2.5" />
             ) : (
               <span className="text-sm">{formattedDate}</span>
             )}
           </span>
           <span className="flex gap-2  items-center">
             {isLoading ? (
-              <Skeleton className="w-[10px] h-[10px] rounded-full" />
+              <Skeleton className="w-2.5 h-2.5 rounded-full" />
             ) : (
               <IoGlobeOutline />
             )}
             {""}
             {isLoading ? (
-              <Skeleton className="w-[50px] h-[10px]" />
+              <Skeleton className="w-12 h-2.5" />
             ) : (
               <p>{course?.language}</p>
             )}
           </span>
           <span className="flex gap-2 items-center">
             {isLoading ? (
-              <Skeleton className="w-[10px] h-[10px] rounded-full" />
+              <Skeleton className="w-2.5 h-2.5 rounded-full" />
             ) : (
               <LuCaptions />
             )}
             {""}
             {isLoading ? (
-              <Skeleton className="w-[50px] h-[10px]" />
+              <Skeleton className="w-12 h-2.5" />
             ) : (
               course?.language
             )}
           </span>
         </div>
-        <div className="w-full h-[120px] flex flex-row justify-start items-center border-2 border-gray-300 rounded-lg mt-4">
+        <div className="w-full h-30 flex flex-row justify-start items-center border-2 border-gray-300 rounded-lg mt-4">
           {isLoading ? (
             <Skeleton className="w-1/5 h-full " />
           ) : (
@@ -852,41 +871,41 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           )}
           <Separator
             orientation="vertical"
-            className="!h-3/5 w-px bg-gray-300 mx-2 hidden sm:block"
+            className="h-3/5! w-px bg-gray-300 mx-2 hidden sm:block"
           />
           {isLoading ? (
             <Skeleton className="w-1/5 h-full " />
           ) : (
-            <span className="w-1/5 hidden  sm:flex flex-col gap-1 justify-center items-center break-words text-center">
-              <StarRating rating={course?.rating || 0} />
-              <p>{course?.rating || 0} ratings</p>
+            <span className="w-1/5 hidden  sm:flex flex-col gap-1 justify-center items-center wrap-break text-center">
+              <StarRating rating={course?.averageRating || 0} />
+              <p>{course?.averageRating || 0} ratings</p>
             </span>
           )}
           <Separator
             orientation="vertical"
-            className="!h-3/5 w-px bg-gray-300 mx-2"
+            className="h-3/5! w-px bg-gray-300 mx-2"
           />
 
           {isLoading ? (
             <Skeleton className="w-2/5 h-full " />
           ) : (
-            <span className="w-2/5 sm:w-1/5 flex flex-col gap-1 justify-center items-center break-words text-center">
+            <span className="w-2/5 sm:w-1/5 flex flex-col gap-1 justify-center items-center wrap-break text-center">
               <MdOutlinePeopleAlt className="text-2xl" />
               <p>{course?.enrolledStudents?.length || 0} learners</p>
             </span>
           )}
         </div>
         {isLoading ? (
-          <Skeleton className="w-full min-h-[100px] flex flex-col justify-start items-start border-2 py-2 px-4 mt-4  " />
+          <Skeleton className="w-full min-h-25 flex flex-col justify-start items-start border-2 py-2 px-4 mt-4  " />
         ) : (
-          <div className="w-full min-h-[100px] flex flex-col justify-start items-start border-2 py-2 px-4 mt-4  ">
+          <div className="w-full min-h-25 flex flex-col justify-start items-start border-2 py-2 px-4 mt-4  ">
             {isLoading ? (
-              <Skeleton className={"w-full h-[2px]"} />
+              <Skeleton className={"w-full h-0.5"} />
             ) : (
               <h3 className="text-2xl font-semibold">What you'll learn</h3>
             )}
             {isLoading ? (
-              <Skeleton className="w-full  h-[5px]" />
+              <Skeleton className="w-full  h-1.25" />
             ) : (
               <ul className="list-none list-inside dark:text-white text-black  pl-3 py-3 ">
                 {Array.isArray(course?.whatYouWillLearn) &&
@@ -901,7 +920,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className="w-full h-[50px]" />
+          <Skeleton className="w-full h-12.5" />
         ) : (
           <div className="w-full flex flex-col  justify-start items-start ">
             <h3 className="text-2xl font-semibold ">Explore Releated Topics</h3>
@@ -909,7 +928,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
               {course?.category?.name && categoryToSubcategories[course?.category?.name]?.map(
                 (subcategory: string) =>
                   isLoading ? (
-                    <Skeleton className="w-[40px] h-[20px]" />
+                    <Skeleton className="w-10 h-10" />
                   ) : (
                     <Link
                       key={subcategory}
@@ -928,16 +947,16 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className="w-full h-[80px]" />
+          <Skeleton className="w-full h-20" />
         ) : (
           <div className="w-full flex flex-col  justify-start items-start mt-4">
             <h3 className="text-2xl font-semibold ">This course includes :</h3>
             <div className="w-full grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-2 mt-4 px-2">
               <span className="w-1/2 h-full flex justify-start  items-center">
                 {isLoading ? (
-                  <Skeleton className="h-[20px]" />
+                  <Skeleton className="h-5" />
                 ) : (
-                  <div className="flex gap-3 min-h-[20px] justify-start items-center">
+                  <div className="flex gap-3 min-h-5 justify-start items-center">
                     <MdOutlineOndemandVideo className="text-2xl" />
                     <p className="whitespace-pre">
                       : {totalCourseDuration || 0} on demand video
@@ -946,9 +965,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                 )}
               </span>
               {isLoading ? (
-                <Skeleton className="h-[20px]" />
+                <Skeleton className="h-5" />
               ) : (
-                <span className="flex gap-3 min-h-[20px] justify-start items-center">
+                <span className="flex gap-3 min-h-5 justify-start items-center">
                   <CiTrophy className="text-2xl" />{" "}
                   <p>Certificate of completion</p>
                 </span>
@@ -958,7 +977,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           <div className="w-full flex flex-col  justify-start items-start mt-4">
             {isLoading ? (
@@ -966,7 +985,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
             ) : (
               <h3 className="text-2xl font-semibold ">Course content</h3>
             )}
-            <div className="w-full min-h-[50px] flex flex-col gap-2 mt-4 px-2">
+            <div className="w-full min-h-25 flex flex-col gap-2 mt-4 px-2">
               {(course?.lessons || [])?.map((lesson: CLesson) => {
                 return (
                   <div
@@ -974,13 +993,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                     className="w-full flex flex-col justify-between items-center relative"
                   >
                     <div
-                      className={`w-full min-h-[70px] justify-between items-center flex border-2 border-gray-300 rounded px-4 ${viewLesson || lesson._id == viewLessonId
+                      className={`w-full min-h-17.5 justify-between items-center flex border-2 border-gray-300 rounded px-4 ${viewLesson || lesson._id == viewLessonId
                         ? "rounded-b-none"
                         : "rounded"
                         }`}
                     >
                       {isLoading ? (
-                        <Skeleton className="w-1/2 h-[25px]" />
+                        <Skeleton className="w-1/2 h-6.25" />
                       ) : (
                         <span className="w-1/2 flex justify-start items-center gap-4">
                           {viewLesson ? (
@@ -1010,7 +1029,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                     </div>
                     {/* put the matching lesson Id here after the view Lesson */}
                     {viewLesson && (
-                      <div className="w-full min-h-[100px] border-2 border-t-none flex justify-between px-4">
+                      <div className="w-full min-h-25 border-2 border-t-none flex justify-between px-4">
                         <p className="flex items-center gap-3 ">
                           <MdOutlineOndemandVideo className="text-xl" />{" "}
                           {lesson?.name}
@@ -1041,7 +1060,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           <div className="w-full flex flex-col  justify-start items-start mt-4">
             {isLoading ? (
@@ -1049,7 +1068,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
             ) : (
               <h3 className="text-2xl font-semibold px-2">Requiremnts</h3>
             )}
-            <div className="w-full min-h-[50px] flex flex-col justify-start gap-2 mt-4 px-2">
+            <div className="w-full min-h-25 flex flex-col justify-start gap-2 mt-4 px-2">
               <ul>
                 {Array.isArray(course?.requirements) &&
                   course.requirements.map((item: string, index: number) => (
@@ -1066,7 +1085,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           <div className="w-full flex flex-col  justify-start items-start mt-4">
             {isLoading ? (
@@ -1074,7 +1093,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
             ) : (
               <h3 className="text-2xl font-semibold px-2">Description</h3>
             )}
-            <div className="w-full min-h-[50px] flex flex-col gap-2 mt-4 px-2 ">
+            <div className="w-full min-h-25 flex flex-col gap-2 mt-4 px-2 ">
               <p>
                 {isExpanded || !shouldTruncate
                   ? description
@@ -1104,17 +1123,17 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           (course?.reviews?.length || 0) > 0 && (
             <div className="w-full flex flex-col  justify-start items-start mt-4">
-              <div className="w-full min-h-[50px] flex flex-col gap-2 mt-4 px-2 ">
+              <div className="w-full min-h-12.5 flex flex-col gap-2 mt-4 px-2 ">
                 <div className="w-full">
                   <div className="mb-4 flex flex-row gap-2 w-full h-full items-start  jsutify-center">
                     <p>Course Reviews</p>{" "}
                     <GoDotFill className="inline-block mx-2 my-auto" />
                     <p className="text-gray-600">
-                      {course?.rating || 0} ratings
+                      {course?.averageRating || 0} ratings
                     </p>
                   </div>
                   <div className="grid-cols-6 flex-1">
@@ -1122,7 +1141,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                       <CarouselContent className="">
                         {(course?.reviews?.length === 0) ? (
                           <CarouselItem className=''>
-                            <Skeleton className="w-[280px] h-[300px] rounded-md" />
+                            <Skeleton className="w-70 h-75 rounded-md" />
                           </CarouselItem>
                         ) : (
                           (ranndomCoursesOnRating || []).map(
@@ -1133,7 +1152,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                               >
                                 <div className=" my-2 relative">
                                   <Link href={`/`}>
-                                    <Card className="w-[250px] h-[280px] my-2 relative pt-0 pb-3">
+                                    <Card className="w-62.5 h-70 my-2 relative pt-0 pb-3">
                                       <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
                                         <ImQuotesLeft />
                                       </CardHeader>
@@ -1146,7 +1165,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                                       <CardFooter className={"h-2/5"}>
                                         <div className="w-full flex justify-start items-center   gap-2">
                                           <div className="h-full w-1/3 flex flex-col items-center justify-start">
-                                            <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-start bg-[#F6F7F9]">
+                                            <div className="relative w-12.5 h-12.5 rounded-full overflow-hidden flex items-center justify-start bg-[#F6F7F9]">
                                               <Image
                                                 src={
                                                   review?.user?.profileImage ||
@@ -1159,7 +1178,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                                             </div>
                                           </div>
                                           <div className="h-full flex flex-col  w-2/3">
-                                            <p className="capitalize text-sm font-semibold break-words leading-snug">
+                                            <p className="capitalize text-sm font-semibold wrap-break-word leading-snug">
                                               {review?.user?.name ||
                                                 "John Doe"}
                                             </p>
@@ -1189,7 +1208,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           )
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           <div className="w-full flex flex-col  justify-between items-start mt-4">
             {isLoading ? (
@@ -1197,12 +1216,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
             ) : (
               <h3 className="text-2xl font-semibold px-2">Instructor</h3>
             )}
-            <div className="w-full min-h-[50px] flex flex-row justify-between items-center gap-2 mt-4 px-2">
+            <div className="w-full min-h-12.5 flex flex-row justify-between items-center gap-2 mt-4 px-2">
               <div className="w-1/6 ">
-                <div className="w-[60px] h-[60px] max-w-[100px] rounded-full relative ">
-                  {course?.instructor?.profileImage ? (
+                <div className="w-15 h-15 max-w-25 rounded-full relative ">
+                  {course?.instructorId?.profileImage ? (
                     <Image
-                      src={course.instructor.profileImage}
+                      src={course.instructorId.profileImage}
                       alt={course.title}
                       fill
                       className="object-cover rounded-full "
@@ -1213,7 +1232,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                 </div>
               </div>
               <p className="text-lg font-semibold w-2/5 flex items-center">
-                {course?.instructor?.name}
+                {course?.instructorId?.name}
               </p>
               <p className="flex gap-2 items-center justify-end w-1/6 ">
                 <MdOutlineOndemandVideo className="text-xl" />
@@ -1229,13 +1248,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           <div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
             <div className="w-full">
               <div className="mb-4 flex flex-col gap-2 w-full h-full">
                 <h2 className="text-2xl font-semibold ">
-                  Explore other courses by {course?.instructor?.name}{" "}
+                  Explore other courses by {course?.instructorId?.name}{" "}
                 </h2>
               </div>
               <div className="grid-cols-6 flex-1">
@@ -1243,7 +1262,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                   <CarouselContent className=''>
                     {releatedCourses.length === 0 ? (
                       <CarouselItem className=''>
-                        <Skeleton className="w-[280px] h-[350px] rounded-md" />
+                        <Skeleton className="w-70 h-75 rounded-md" />
                       </CarouselItem>
                     ) : (
                       (releatedCourses || []).map((course, index) => (
@@ -1253,7 +1272,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                         >
                           <div className=" my-2 relative">
                             <Link href={`/courses/${course._id}`}>
-                              <Card className="w-[250px] h-[300px] my-2 relative pt-0 pb-3">
+                              <Card className="w-62.5 h-75 my-2 relative pt-0 pb-3">
                                 <CardContent className="h-3/5 w-full flex justify-center relative p-0">
                                   {course?.coverImage ? (
                                     <div className="relative w-full h-full rounded-t-xl  overflow-hidden">
@@ -1265,12 +1284,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                                       />
                                     </div>
                                   ) : (
-                                    <Skeleton className="w-full h-[200px]" />
+                                    <Skeleton className="w-full h-50" />
                                   )}
                                 </CardContent>
                                 <CardFooter className={"flex-1"}>
                                   <div className="w-full flex flex-col flex-1 items-start justify-center gap-2">
-                                    <p className="capitalize text-lg font-semibold break-words leading-snug">
+                                    <p className="capitalize text-lg font-semibold wrap-break-word leading-snug">
                                       {course.title}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
@@ -1285,13 +1304,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                                     </p>
                                     <div className="flex gap-2">
                                       <Badge className='' variant="outline">
-                                        {course?.rating &&
-                                          formatRatingNumber(course.rating)}
+                                        {course?.averageRating &&
+                                          formatRatingNumber(course.averageRating)}
                                       </Badge>
                                       <Badge className='flex gap-2' variant="outline">
-                                        {course?.duration &&
+                                        {course?.totalDurationInSeconds &&
                                           convertToTotalHours(
-                                            course.duration
+                                            course.totalDurationInSeconds
                                           )}{" "}
                                         hours
                                       </Badge>
@@ -1316,7 +1335,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
           </div>
         )}
         {isLoading ? (
-          <Skeleton className={"w-full h-[100px] "} />
+          <Skeleton className={"w-full h-25 "} />
         ) : (
           <div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
             <div className="w-full ">
@@ -1473,35 +1492,35 @@ export default function CourseIdPageComp({ initialCourse, initialReviews }: { in
                 <CarouselContent className="w-full -ml-1">
                   {isLoading ? (
                     <CarouselItem className="flex">
-                      <Skeleton className="w-[280px] h-[300px] rounded-md" />
-                      <Skeleton className="w-[280px] h-[300px] rounded-md" />
-                      <Skeleton className="w-[280px] h-[300px] rounded-md" />
-                      <Skeleton className="w-[280px] h-[300px] rounded-md" />
+                      <Skeleton className="w-70 h-75 rounded-md" />
+                      <Skeleton className="w-70 h-75 rounded-md" />
+                      <Skeleton className="w-70 h-75 rounded-md" />
+                      <Skeleton className="w-70 h-75 rounded-md" />
                     </CarouselItem>
                   ) : (
                     (reviews ? reviews : []).map((review: CReview, index: number) => (
                       <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                         <div className=" my-2 relative">
                           <Link href={`/`}>
-                            <Card className=" h-[280px] my-2 relative pt-0 pb-3">
+                            <Card className=" h-70 my-2 relative pt-0 pb-3">
                               <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
                                 <ImQuotesLeft />
                               </CardHeader>
                               <CardContent className="min-h-1/5 max-h-2/5 w-full flex justify-center relative ">
-                                <p className="text-sm break-words line-clamp-5">{review?.text}</p>
+                                <p className="text-sm wrap-break-word line-clamp-5">{review?.text}</p>
                               </CardContent>
                               <CardFooter className={"h-2/5"}>
                                 <div className="w-full flex justify-start items-center   gap-2">
 
                                   <div className="h-full w-1/3 flex flex-col items-center justify-start">
-                                    <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
+                                    <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
                                       {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
 
                                     </div>
 
                                   </div>
                                   <div className="h-full flex flex-col  w-2/3">
-                                    <p className="capitalize text-sm font-semibold break-words leading-snug">{review?.user?.name}</p>
+                                    <p className="capitalize text-sm font-semibold wrap-word-break leading-snug">{review?.user?.name}</p>
                                     <p className="text-sm text-muted-foreground">
                                       {formatRelativeDate(review?.createdAt || review?.updatedAt)}
                                     </p>

@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 import { CButtonProps } from "@/types/client";
 import Link from "next/link";
 import { useState } from "react";
@@ -14,7 +15,7 @@ const Button: React.FC<CButtonProps> = ({ variant, className, ...props }) => {
 
   return <button className={`${variantClasses} ${className}`} {...props} />;
 };
-export default function Footer() {
+export default function Footer({className}: {className?: string}): React.JSX.Element {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,8 +29,7 @@ export default function Footer() {
   };
   return (
     <footer
-      className="bg-black dark:bg-black
-     text-white"
+      className={cn("bg-black dark:bg-black text-white", className)}
     >
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">

@@ -57,10 +57,28 @@ export interface CCategoryWithChildren extends CCategory {
  * `child.parent === p._id` instead.
  */
 export function buildCategoryTree(categories: CCategory[]): CCategoryWithChildren[] {
-  const parents : CCategory[] = categories.filter((c) => !c.parent);
+  if (!categories || categories.length === 0) {
+    logger.warn("Categories array is empty or undefined. Cannot build category tree.",{ totalCategories: categories?.length ?? 0 });
+    throw new Error("Categories array is empty or undefined. Cannot build category tree.");
+  }
+  const parents: CCategory[] = categories.filter((c) => !c.parent);
 
   return parents.map((p: CCategory) => ({
     ...p,
     children: categories.filter((child: CCategory) => child.parent?._id?.toString() === p._id),
   }));
+}
+
+export function buildCourseCategoryTree(categories: CCategory[], categoryId: string): CCategoryWithChildren | null {
+  if (!categoryId) {
+    logger.warn("Category ID is required to build course category tree.",{ categoryId });
+    throw new Error("Category ID is required to build course category tree.");
+  };
+  const parent = categories.find((c) => c._id === categoryId);
+  if (!parent) return null;
+
+  return {
+    ...parent,
+    children: categories.filter((c) => c.parent?._id?.toString() === parent._id)
+  };
 }

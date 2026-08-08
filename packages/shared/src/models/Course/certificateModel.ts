@@ -53,5 +53,5 @@ certificateSchema.index( // Ensure a user can only have one certificate per cour
   { unique: true }
 );
 
-const Certificate: Model<ICertificate> = mongoose.models.certificate || mongoose.model<ICertificate>('Certificate', certificateSchema);
+const Certificate: Model<ICertificate> = mongoose.models.Certificate || mongoose.model<ICertificate>('Certificate', certificateSchema);
 export default Certificate;

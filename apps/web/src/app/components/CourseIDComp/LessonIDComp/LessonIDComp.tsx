@@ -12,9 +12,10 @@ import { toast } from "sonner";
 import { CCourse, CLesson } from "@/types/client";
 import { logger } from "@/utils/logger/logger.node";
 import { clientLogger } from "@/utils/logger/clientLogger";
+import { cn } from "@/lib/utils";
 
 // Render a YouTube video player
-export const LeesonIdPageComp = (): React.JSX.Element => {
+export const LeesonIdPageComp = ({className}:{className?: string}): React.JSX.Element => {
   const router = useRouter();
   const courses = useCourseStore((state) => state.courses);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -119,7 +120,7 @@ if (isLoading) {
 
 
 return (
-  <div className="min-h-screen bg-gray-900 py-8">
+  <div className={cn("min-h-screen bg-gray-900 py-8", className)}>
     <div className="max-w-6xl mx-auto px-4">
       {/* Lesson Header */}
       <div className="mb-6">

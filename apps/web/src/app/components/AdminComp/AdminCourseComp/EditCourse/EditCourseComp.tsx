@@ -36,8 +36,9 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
+import { cn } from "@/lib/utils";
 
-const EditCourseComp = (): JSX.Element => {
+const EditCourseComp = ({className}: { className?: string }): JSX.Element => {
   const [form, setForm] = useState<CUpdateCourseForm>({
     title: "",
     description: "",
@@ -387,7 +388,7 @@ const EditCourseComp = (): JSX.Element => {
     // reset subcategory on category change
   };
   return (
-    <div className="flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8">
+    <div className={cn("flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8", className)}>
       <Card className="w-[550px] space-y-4">
         <CardHeader className="">
           <CardTitle className="">Edit project</CardTitle>

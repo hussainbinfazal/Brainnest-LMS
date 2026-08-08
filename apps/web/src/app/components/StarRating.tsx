@@ -7,7 +7,7 @@ import { toast } from 'sonner'; // or use `alert` if you prefer
 
 
 
-const CourseRating = ({ courseId, userRating = 0 }: CCourseRatingProps) => {
+const CourseRating = ({ courseId, userRating = 0, className }: CCourseRatingProps) => {
   const [rating, setRating] = useState<number>(userRating);
   const [hover, setHover] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

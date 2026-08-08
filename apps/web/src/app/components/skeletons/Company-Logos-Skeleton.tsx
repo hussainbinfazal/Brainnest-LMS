@@ -1,13 +1,19 @@
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils';
 import React from 'react'
+interface CompanyLogosSkeletonProps {
+  length?: number;
+  className?: string;
+  skeletonClassName?: string;
+}
 
-const CompanyLogosSkeleton = (length:number=8) : React.JSX.Element=> {
+const CompanyLogosSkeleton = ({length=8, className, skeletonClassName }: CompanyLogosSkeletonProps): React.JSX.Element=> {
   return (
-    <div className="flex gap-8 justify-center">
+    <div className={cn("flex gap-8 justify-center", className)}>
     {Array.from({ length }).map((_, i) => (
         <Skeleton
             key={i}
-            className="h-10 w-24 rounded-md"
+            className={cn("h-10 w-24 rounded-md", skeletonClassName)}
         />
     ))}
 </div>

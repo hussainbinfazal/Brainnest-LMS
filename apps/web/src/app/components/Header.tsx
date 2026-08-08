@@ -22,8 +22,9 @@ import { ModeToggle } from "@/components/Dark";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { User } from "next-auth";
 import { CAuthUser, CChatMessage } from "@/types/client";
+import { cn } from "@/lib/utils";
 
-export default function Header() {
+export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
@@ -119,7 +120,7 @@ export default function Header() {
       const data = response.data.chat;
       setChatAlreadyExists(data.length > 0);
       setChat(data);
-    } catch (error) {
+    } catch (error:unknown) {
       // console.log("Error fetching chat:", error);
     }
   }, []);
@@ -129,7 +130,7 @@ export default function Header() {
       const response = await axios.get("/api/cart");
       const cartData = response.data;
       setCartItemsCount(cartData?.courses?.length || 0);
-    } catch (error) {
+    } catch (error:unknown) {
       setCartItemsCount(0);
     }
   }, []);
@@ -152,7 +153,7 @@ export default function Header() {
   //   }
   // }, [status, session]);
   return (
-    <header className="sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 ">
+    <header className={cn("sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4", className)}>
       <Scroller />
       {loading && (
         <div className="absolute bottom-0 left-0 w-full">
