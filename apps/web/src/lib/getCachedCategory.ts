@@ -29,10 +29,10 @@ export async function getCategoriesWithCache(): Promise<CCategory[]> {
       .exec();
 
     const serialized = serializeCategories(totalCategories);
-    await setCached("Category", "all", serialized, CACHE_TTL.VERY_LONG);
-
+    const mapped = buildCategoryTree(serialized);
+    await setCached("Category", "all", mapped, CACHE_TTL.VERY_LONG);
     logger.info("Categories fetched successfully", { categoryCount: serialized.length });
-    return serialized;
+    return mapped;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Error in fetching categories";
     logger.error("Error fetching Categories", { message, error, cached });

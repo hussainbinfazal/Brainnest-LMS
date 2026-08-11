@@ -1,3 +1,4 @@
+import { logger } from "@repo/shared";
 import axios from "axios";
 
 
@@ -11,8 +12,6 @@ export const clientLogger = {
 
     error: (message: string, meta?: unknown) => {
         console.error(message, meta);
-
-        
         axios.post("/api/log", {
             level: "error",
             message,
@@ -20,8 +19,9 @@ export const clientLogger = {
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent,
             url: window.location.href,
-        }).catch(() => {
-           
+        }).catch((e: unknown) => {
+            const message = e instanceof Error ? e.message : 'Something went wrong';
+            logger.error("Error in ClientLogger", { e, message });
         });
     }
 };

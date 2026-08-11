@@ -84,8 +84,8 @@ export interface ITopic {
   description: string;
   slug: string;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 export interface ICart {
   _id: Types.ObjectId

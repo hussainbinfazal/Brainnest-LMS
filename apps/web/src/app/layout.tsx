@@ -40,6 +40,7 @@ export default function RootLayout({ children } : { children: React.ReactNode })
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        
         <NextAuthSessionProvider>
           <ThemeProvider
             attribute="class"

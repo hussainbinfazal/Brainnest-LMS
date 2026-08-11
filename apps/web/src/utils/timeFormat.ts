@@ -39,3 +39,4 @@ export function formatRatingNumber(num: number): string {
     return num.toString();
   }
 }
+

@@ -538,7 +538,7 @@ export interface CLesson {
   status?: 'completed' | 'incomplete';
 };
 
-export interface CSections {
+export interface CSection {
   _id?: string,
   title: string;
   description: string;

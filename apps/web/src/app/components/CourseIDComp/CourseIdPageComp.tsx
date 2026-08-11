@@ -26,7 +26,6 @@ import { FaRegHeart } from "react-icons/fa6";
 import { IoMdHeart } from "react-icons/io";
 import { BsCartCheckFill } from "react-icons/bs";
 import { Textarea } from "@/components/ui/textarea";
-
 import {
   Card,
   CardContent,
@@ -50,21 +49,24 @@ import { IoIosArrowDown } from "react-icons/io";
 import { GoDotFill } from "react-icons/go";
 import { IoIosArrowUp } from "react-icons/io";
 import { FaEye } from "react-icons/fa";
-import { LuDot } from "react-icons/lu";
 import { FaStar } from "react-icons/fa";
 import { toast } from "sonner";
 import { BsCart2 } from "react-icons/bs";
 import { TbMessageUser } from "react-icons/tb";
-import { BarLoader, ClipLoader } from "react-spinners";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import Autoplay from "embla-carousel-autoplay";
 import { formatRelativeDate } from "@/utils/date";
-import { CAuthUser, CCourse, CLesson, COrder, CReview, CUserCourse } from "@/types/client";
+import { CAuthUser, CCategory, CCourse, CLesson, COrder, CReview, CSection, CTopic, CUserCourse } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { CCategoryWithChildren } from "@/lib/getCachedCategory";
 import CourseIdPageSkeleton from "./CourseId-Page-Skeleton";
 import { IInstructorStats } from "@/lib/getCachedCourse";
-import { IUserCourse } from "@repo/shared";
+import { CCreateReview, zodReviewSchema } from "@/utils/fieldsValidation/Client/reviewSchemaValidation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { clientLogger } from "@/utils/logger/clientLogger";
+import { formatRatingNumber } from "@/utils/timeFormat";
+import { convertToTotalHours } from "@repo/shared";
 
 interface CourseIdPageCompProps {
   initialCourse: CCourse;
@@ -75,9 +77,12 @@ interface CourseIdPageCompProps {
   instructorStats: IInstructorStats | null;
   userCourse?: CUserCourse | null;
   otherCoursesByInstructor: CCourse[] | null;
+  initialTopic: CTopic | null;
+  allLessons: CLesson[] | null;
+  allSections: CSection[] | null;
   className?: string;
 }
-export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, className }: CourseIdPageCompProps): React.JSX.Element {
+export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor,initialTopic,allLessons,allSections, className }: CourseIdPageCompProps): React.JSX.Element {
   const router = useRouter();
   const { courseId } = useParams();
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
@@ -86,16 +91,19 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const [course, setCourse] = useState<CCourse>(initialCourse);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLiked, setIsLiked] = useState<boolean>(userCourse?.isLiked || false);
+  const [lessons,setLessons] = useState<CLesson[]>(allLessons || []);
+  const [sections, setSections] = useState<CSection[]>(allSections || []);
   const [viewLesson, setViewLesson] = useState<boolean>(false);
   const [viewLessonId, setViewLessonId] = useState<string>("");
   const [isLessonCompleted, setIsLessonCompleted] = useState<boolean>(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>(otherCoursesByInstructor || []);
   const [totalReviewsOfInstructor, setTotalReviewsOfInstructor] = useState<number>(instructorStats?.totalReviews || 0);
-  const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>( instructorStats?.totalCourses || 0);
+  const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>(instructorStats?.totalCourses || 0);
   // const [totalStudentsEnrolled, setTotalStudentsEnrolled] = useState<number>(instructorStats?.totalStudentsEnrolled || 0);
   const [isAlreadyAdded, setIsAlreadyAdded] = useState<boolean>(false);
   const [isEnrolled, setIsEnrolled] = useState<boolean>(userCourse?.isEnrolled || false);
+  const [category, setCategory] = useState<CCategoryWithChildren | null>(courseCategory);
   const [order, setOrder] = useState<COrder | null>(null);
   const [isCompleted, setIsCompleted] = useState<boolean>(userCourse?.isCompleted || false);
   const [rating, setRating] = useState<number>(course.averageRating || 0);
@@ -107,30 +115,41 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const [isViewInfo, setIsViewInfo] = useState<boolean>(false);
   const [chatId, setChatId] = useState<string>("");
   const [isPaid, setIsPaid] = useState<boolean>(false);
-  const handleAddReview = async (): Promise<void | string | number> => {
-    if (!rating) return toast.error("Please select a rating");
-    setLoading(true);
-    const reviewData = {
-      // user
-      rating: rating,
-      comment: comment.trim(),
+  const [topic,setTopic] = useState<CTopic | null>(initialTopic);
+ 
+    const form = useForm<CCreateReview>({
+      resolver: zodResolver(zodReviewSchema),
+      defaultValues: {
+        rating: 0,
+        comment: ""
+      }
+
+    })
+    const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = form
+    const onSubmit = async (data:CCreateReview): Promise<void> => {
+      setLoading(true);
+      try {
+      const reviewData = {
+        // user
+        rating: data.rating,
+        comment: data.comment.trim(),
+      };
+      
+        const response = await axios.post(`/api/courses/rate/${courseId}`, {
+          reviewData,
+        });
+        // setReviews((prevReviews) => [
+        //   ...(prevReviews || []),
+        //   response.data.newReview,
+        // ]);
+        toast.success("Thanks for your review!");
+      } catch (error: unknown) {
+        clientLogger.error("This is the error in this :", error);
+        toast.error("Something went wrong!, Please try again later");
+      } finally {
+        setLoading(false);
+      }
     };
-    try {
-      const response = await axios.post(`/api/courses/rate/${courseId}`, {
-        reviewData,
-      });
-      // setReviews((prevReviews) => [
-      //   ...(prevReviews || []),
-      //   response.data.newReview,
-      // ]);
-      toast.success("Thanks for your review!");
-    } catch (error: any) {
-      logger.error("This is the error in this :", error);
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Fetch sample reviews
 
@@ -141,25 +160,27 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   //   }
   // }, [courseId]);
 
-  const fetchCourseFromDB = useCallback(
-    async (courseId: string): Promise<void> => {
-      const response = await axios.get(`/api/course/${courseId}`);
-      const data = response.data;
+  // const fetchCourseFromDB = useCallback(
+  //   async (courseId: string): Promise<void> => {
+  //     const response = await axios.get(`/api/course/${courseId}`);
+  //     const data = response.data;
 
-      setCourse(data.course || data);
-      setIsLoading(false);
-      setTotalReviewsOfInstructor(data?.totalReviews);
-      setTotalCoursesOfInstructor(data?.coursesByInstructor.length);
-      setCoursesByInstructor(data?.coursesByInstructor);
-      setTotalStudentsEnrolled(data?.totalRatings);
-      // setReviews(data?.reviews);
-    },
-    [courseId]
-  );
-  const releatedCourses = useMemo((): CCourse[] => {
-    if (!coursesByInstructor || !Array.isArray(coursesByInstructor)) return [];
-    return coursesByInstructor.filter((course) => course._id !== courseId);
-  }, [coursesByInstructor, courseId]);
+  //     setCourse(data.course || data);
+  //     setIsLoading(false);
+  //     setTotalReviewsOfInstructor(data?.totalReviews);
+  //     setTotalCoursesOfInstructor(data?.coursesByInstructor.length);
+  //     setCoursesByInstructor(data?.coursesByInstructor);
+  //     setTotalStudentsEnrolled(data?.totalRatings);
+  //     // setReviews(data?.reviews);
+  //   },
+  //   [courseId]
+  // );
+
+
+  // const releatedCourses = useMemo((): CCourse[] => {
+  //   if (!coursesByInstructor || !Array.isArray(coursesByInstructor)) return [];
+  //   return coursesByInstructor.filter((course) => course._id !== courseId);
+  // }, [coursesByInstructor, courseId]);
 
   const categoryToSubcategories: Record<string, string[]> = {
     academics: ["math", "science", "history"],
@@ -236,27 +257,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }
   };
 
-  useEffect((): void => {
-    const checkLessons = async (): Promise<void> => {
-      if (course?.lessons?.length && user) {
-        for (const lesson of course.lessons) {
-          if (lesson._id) {
-            await checkCompletedLesson(lesson._id);
-          }
-        }
-      }
-    };
-    checkLessons();
-  }, [course?.lessons]);
-
-  useEffect(() => {
-    if (courseId) {
-      const timeout: NodeJS.Timeout = setTimeout(() => {
-        fetchCourseFromDB(Array.isArray(courseId) ? courseId[0] : courseId as string);
-      }, 10);
-      return (): void => clearTimeout(timeout);
-    }
-  }, [courseId]);
+ 
   const [isExpanded, setIsExpanded] = useState(false);
   const description = course?.description || "No description available.";
   const characterLimit = 100;
@@ -308,30 +309,6 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       throw new error("Error liking course");
     }
   };
-  function formatRatingNumber(num: number): string {
-    if (num >= 1_000_000) {
-      return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-    } else if (num >= 1_000) {
-      return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
-    } else {
-      return num.toString();
-    }
-  }
-  function convertToTotalHours(timeStr: string | number): number {
-    const parts: number[] = timeStr.toString().split(":").map(Number);
-
-    let hours: number = 0;
-    if (parts.length === 3) {
-      hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
-    } else if (parts.length === 2) {
-      hours = parts[0] / 60 + parts[1] / 3600;
-    } else if (parts.length === 1) {
-      hours = parts[0] / 3600;
-    }
-
-    return parseFloat(hours.toFixed(2)); // rounded to 2 decimals
-  }
-
   const handleAddToCart = async (courseId: string) => {
     const toastId = toast.loading("Adding to cart...");
     try {
@@ -517,32 +494,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }
   };
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
+ 
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  useEffect((): void => {
-    // Make sure cart is fetched when component mounts
-    if (user) {
-      fetchCart();
-    }
-  }, [user]);
-
-  useEffect((): void => {
-    if (user && course && user.completedCourses?.includes(course._id)) {
-      setIsCompleted(true);
-    } else {
-      setIsCompleted(false);
-    }
-  }, [user, course]);
-  const checkAlreadyAdded = (): void => {
+   const checkAlreadyAdded = (): void => {
     let isInCart = false;
     isInCart = cart.courses?.some(
       (cartCourse: CCourse) => cartCourse?._id === course?._id
@@ -550,18 +504,18 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     setIsAlreadyAdded(isInCart);
   };
 
-  const filteredCourseReviews = () => {
-    if (!course?.reviews) return [];
+  // const filteredCourseReviews = () => {
+  //   if (!course?.reviews) return [];
 
-    const filteredReviews = course.reviews.filter((item) => item.rating > 3);
+  //   const filteredReviews = course.reviews.filter((item) => item.rating > 3);
 
-    if (course.reviews.length < 5) {
-      return course.reviews;
-    } else {
-      return filteredReviews.slice(0, 9);
-    }
-  };
-  const handleDownloadCertificate = async () => {
+  //   if (course.reviews.length < 5) {
+  //     return course.reviews;
+  //   } else {
+  //     return filteredReviews.slice(0, 9);
+  //   }
+  // };
+  const handleDownloadCertificate = async ():Promise<void> => {
     try {
       const response = await axios.get(`/api/certificate/${courseId}`, {
         responseType: "blob", // Important for binary data
@@ -583,6 +537,52 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
+   useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  useEffect((): void => {
+    // Make sure cart is fetched when component mounts
+    if (user) {
+      fetchCart();
+    }
+  }, [user]);
+   useEffect((): void => {
+    if (user && course && user.completedCourses?.includes(course._id)) {
+      setIsCompleted(true);
+    } else {
+      setIsCompleted(false);
+    }
+  }, [user, course]);
+
+   useEffect((): void => {
+    const checkLessons = async (): Promise<void> => {
+      if (course?.lessons?.length && user) {
+        for (const lesson of course.lessons) {
+          if (lesson._id) {
+            await checkCompletedLesson(lesson._id);
+          }
+        }
+      }
+    };
+    checkLessons();
+  }, [course?.lessons]);
+
+  useEffect(() => {
+    if (courseId) {
+      const timeout: NodeJS.Timeout = setTimeout(() => {
+        fetchCourseFromDB(Array.isArray(courseId) ? courseId[0] : courseId as string);
+      }, 10);
+      return (): void => clearTimeout(timeout);
+    }
+  }, [courseId]);
   useEffect((): void => {
     if (user && cart) {
       checkAlreadyAdded();
@@ -591,7 +591,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   useEffect((): void => {
     fetchUser();
   }, []);
-  if(isLoading) {
+  if (isLoading) {
     return <CourseIdPageSkeleton />;
   }
 
@@ -788,11 +788,11 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
           <p className="dark:text-white text-black text-2xl sm:text-3xl lg:text-4xl capitalize whitespace-normal wrap-break-word line-clamp-3 leading-tight cursor-pointer">
             {course?.title}
           </p>
-          {course?.topics?.[0]?.topic && (
-            <p>{course.topics[0].topic}</p>
+          {initialTopic && (
+            <p>{topic?.name}</p>
           )}
-          {course?.topics?.[0]?.description && (
-            <p>{course.topics[0].description}</p>
+          {initialTopic && (
+            <p>{topic?.description}</p>
           )}
           {isLoading ? (
             <Skeleton className="w-2.5 h-7.5 " />
@@ -802,7 +802,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
           {isLoading ? (
             <Skeleton className="w-2.5 h-7.5 " />
           ) : (
-            <p className="dark:text-white text-black text-2xl capitalize whitespace-normal break-words line-clamp-2">
+            <p className="dark:text-white text-black text-2xl capitalize whitespace-normal wrap-break-word line-clamp-2">
               ₹ {Number(course?.price)}
             </p>
           )}
@@ -877,8 +877,8 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             <Skeleton className="w-1/5 h-full " />
           ) : (
             <span className="w-1/5 hidden  sm:flex flex-col gap-1 justify-center items-center wrap-break text-center">
-              <StarRating rating={course?.averageRating || 0} />
-              <p>{course?.averageRating || 0} ratings</p>
+              <StarRating rating={Number(course?.averageRating) || 0} />
+              <p>{Number(course?.averageRating) || 0} ratings</p>
             </span>
           )}
           <Separator
@@ -925,17 +925,17 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
           <div className="w-full flex flex-col  justify-start items-start ">
             <h3 className="text-2xl font-semibold ">Explore Releated Topics</h3>
             <div className="w-full flex gap-2 mt-4">
-              {course?.category?.name && categoryToSubcategories[course?.category?.name]?.map(
-                (subcategory: string) =>
+              {courseCategory && courseCategory?.children?.map(
+                (subCat) =>
                   isLoading ? (
                     <Skeleton className="w-10 h-10" />
                   ) : (
                     <Link
-                      key={subcategory}
-                      href={`/courses/${subcategory}`}
+                      key={subCat.name}
+                      href={`/courses/${subCat.slug}`}
                       className=" hover:underline border-2  px-6 py-2 rounded shadow-sm cursor-pointer"
                     >
-                      {subcategory}
+                      {subCat.name}
                     </Link>
                   )
               ) || (
@@ -1260,12 +1260,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
               <div className="grid-cols-6 flex-1">
                 <Carousel setApi={() => { }} opts={{}} plugins={[]} className="w-full">
                   <CarouselContent className=''>
-                    {releatedCourses.length === 0 ? (
+                    {relevantCategoryCourses.length === 0 ? (
                       <CarouselItem className=''>
                         <Skeleton className="w-70 h-75 rounded-md" />
                       </CarouselItem>
                     ) : (
-                      (releatedCourses || []).map((course, index) => (
+                      (relevantCategoryCourses || []).map((course, index) => (
                         <CarouselItem
                           key={`${index}-${index}`}
                           className="md:basis-1/3 lg:basis-1/3 xl:basis-1/3 2xl:basis-1/3 gap-3"
@@ -1293,14 +1293,14 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                                       {course.title}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                      {(course?.category?.name ?
-                                        course?.category?.name
+                                      {(courseCategory ?
+                                        courseCategory?.name
                                           .charAt(0)
                                           .toUpperCase() +
                                         course?.category?.name.slice(1) : "")}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                      ₹{parseInt(String(course?.price || 0))}
+                                      ₹{(Number(course?.price || 0))}
                                     </p>
                                     <div className="flex gap-2">
                                       <Badge className='' variant="outline">
@@ -1314,8 +1314,11 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                                           )}{" "}
                                         hours
                                       </Badge>
-                                      <Badge className='flex gap-2' variant="outline">
+                                      {/* <Badge className='flex gap-2' variant="outline">
                                         {course?.category?.subCategories[0]}
+                                      </Badge> */}
+                                      <Badge className='flex gap-2' variant="outline">
+                                        {courseCategory.parent}
                                       </Badge>
                                     </div>
                                   </div>
@@ -1339,72 +1342,87 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
         ) : (
           <div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
             <div className="w-full ">
-              <div className="mb-4 flex flex-col gap-2 w-full h-full">
-                <h2 className="text-2xl font-semibold ">Add your review</h2>
-              </div>
-              <div className="grid-cols-6 flex-1">
-                <div className="">
-                  <Textarea
-                    className=''
-                    placeholder="Type your review here."
-                    value={comment}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setComment(e.target.value)}
-                  />
+              <form id="create-review-form" className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+                <div className="mb-4 flex flex-col gap-2 w-full h-full">
+                  <h2 className="text-2xl font-semibold ">Add your review</h2>
                 </div>
-
-                <div className="flex flex-col items-start gap-2 mt-3">
-                  <div className="w-full flex justify-center items-center">
-                    <div className="flex">
-                      {[...Array(5)].map((_, index: number) => {
-                        const currentRating: number = index + 1;
-                        return (
-                          <label key={index}>
-                            <input
-                              type="radio"
-                              name="rating"
-                              value={currentRating}
-                              onClick={(): void => setRating(currentRating)}
-                              className="hidden"
-                            />
-                            <FaStar
-                              size={28}
-                              className={`cursor-pointer transition-colors ${currentRating <= (hover || rating)
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                                }`}
-                              onMouseEnter={(): void => setHover(currentRating ?? null)}
-                              onMouseLeave={(): void => setHover(null)}
-                            />
-                          </label>
-                        );
-                      })}
-                    </div>
+                <div className="grid-cols-6 flex-1">
+                  <div className="">
+                    <Controller  
+                    name="comment"
+                    control={control}
+                    render={({ field }) => (
+                      <Textarea
+                      className=''
+                      placeholder="Type your review here."
+                      value={field.value}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>): void => field.onChange(e.target.value)}
+                    />
+                    )}
+                    />
+                    
                   </div>
-                  <button
-                    className="bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700 transition disabled:opacity-50"
-                    onClick={handleAddReview}
-                    disabled={loading}
-                  >
-                    {loading ? "Submitting..." : "Submit Review"}
-                  </button>
+
+                  <div className="flex flex-col items-start gap-2 mt-3">
+                    <div className="w-full flex justify-center items-center">
+                      <div className="flex">
+                        {[...Array(5)].map((_, index: number) => {
+                          const currentRating: number = index + 1;
+                          return (
+                            <label key={index}>
+                              <input
+                                type="radio"
+                                value={currentRating}
+                                {...form.register("rating", { required: true })}
+                                className="hidden"
+                                
+                              />
+                              {form.formState.errors.rating && form.formState.errors.rating.type === "required" && (
+                                <p className="text-sm text-destructive">
+                                 {form.formState.errors.rating.message}
+                                 </p>
+                              )}
+                              <FaStar
+                                size={28}
+                                className={`cursor-pointer transition-colors ${currentRating <= (hover || rating)
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                                  }`}
+                                onMouseEnter={(): void => setHover(currentRating ?? null)}
+                                onMouseLeave={(): void => setHover(null)}
+                              />
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <button
+                      className="bg-blue-600 text-white px-4 py-3 rounded hover:bg-blue-700 transition disabled:opacity-50"
+                      type="submit"
+                      disabled={loading}
+                    >
+                      {loading ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
+        
         )}
-        {isLoading ? (
-          <Skeleton className="w-full h-full rounded-md" />
-        ) : (
-          <div className="w-full">
-            <div className="mb-4 flex flex-col gap-2 w-full h-full">
-              <h2 className="text-3xl font-bold ">
-                See what others are achieving through learning{" "}
-              </h2>
-              <p className="text-gray-600">
-                Know the achievers of the world through their stories
-              </p>
-            </div>
-            {/* <div className="grid-cols-6 flex-1">
+      {isLoading ? (
+        <Skeleton className="w-full h-full rounded-md" />
+      ) : (
+        <div className="w-full">
+          <div className="mb-4 flex flex-col gap-2 w-full h-full">
+            <h2 className="text-3xl font-bold ">
+              See what others are achieving through learning{" "}
+            </h2>
+            <p className="text-gray-600">
+              Know the achievers of the world through their stories
+            </p>
+          </div>
+          {/* <div className="grid-cols-6 flex-1">
               <Carousel className="w-full">
                 <CarouselContent>
                   {course?.reviews.length === 0 ? (
@@ -1474,75 +1492,75 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
               </Carousel>
             </div> */}
 
-            {/*This is ample review section */}
-            <div className="w-full grid-cols-6 flex-1">
-              <Carousel className="w-full" opts={{
-                align: "start",
-                loop: true,
-                dragFree: true,
-              }}
-                setApi={() => { }}
-                plugins={[
-                  Autoplay({
-                    delay: 2500,
-                    stopOnInteraction: false,
-                    stopOnMouseEnter: true,
-                  }),
-                ]}>
-                <CarouselContent className="w-full -ml-1">
-                  {isLoading ? (
-                    <CarouselItem className="flex">
-                      <Skeleton className="w-70 h-75 rounded-md" />
-                      <Skeleton className="w-70 h-75 rounded-md" />
-                      <Skeleton className="w-70 h-75 rounded-md" />
-                      <Skeleton className="w-70 h-75 rounded-md" />
-                    </CarouselItem>
-                  ) : (
-                    (reviews ? reviews : []).map((review: CReview, index: number) => (
-                      <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                        <div className=" my-2 relative">
-                          <Link href={`/`}>
-                            <Card className=" h-70 my-2 relative pt-0 pb-3">
-                              <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
-                                <ImQuotesLeft />
-                              </CardHeader>
-                              <CardContent className="min-h-1/5 max-h-2/5 w-full flex justify-center relative ">
-                                <p className="text-sm wrap-break-word line-clamp-5">{review?.text}</p>
-                              </CardContent>
-                              <CardFooter className={"h-2/5"}>
-                                <div className="w-full flex justify-start items-center   gap-2">
+          {/*This is ample review section */}
+          <div className="w-full grid-cols-6 flex-1">
+            <Carousel className="w-full" opts={{
+              align: "start",
+              loop: true,
+              dragFree: true,
+            }}
+              setApi={() => { }}
+              plugins={[
+                Autoplay({
+                  delay: 2500,
+                  stopOnInteraction: false,
+                  stopOnMouseEnter: true,
+                }),
+              ]}>
+              <CarouselContent className="w-full -ml-1">
+                {isLoading ? (
+                  <CarouselItem className="flex">
+                    <Skeleton className="w-70 h-75 rounded-md" />
+                    <Skeleton className="w-70 h-75 rounded-md" />
+                    <Skeleton className="w-70 h-75 rounded-md" />
+                    <Skeleton className="w-70 h-75 rounded-md" />
+                  </CarouselItem>
+                ) : (
+                  (reviews ? reviews : []).map((review: CReview, index: number) => (
+                    <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                      <div className=" my-2 relative">
+                        <Link href={`/`}>
+                          <Card className=" h-70 my-2 relative pt-0 pb-3">
+                            <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
+                              <ImQuotesLeft />
+                            </CardHeader>
+                            <CardContent className="min-h-1/5 max-h-2/5 w-full flex justify-center relative ">
+                              <p className="text-sm wrap-break-word line-clamp-5">{review?.comment}</p>
+                            </CardContent>
+                            <CardFooter className={"h-2/5"}>
+                              <div className="w-full flex justify-start items-center   gap-2">
 
-                                  <div className="h-full w-1/3 flex flex-col items-center justify-start">
-                                    <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
-                                      {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
+                                <div className="h-full w-1/3 flex flex-col items-center justify-start">
+                                  <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
+                                    {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
 
-                                    </div>
-
-                                  </div>
-                                  <div className="h-full flex flex-col  w-2/3">
-                                    <p className="capitalize text-sm font-semibold wrap-word-break leading-snug">{review?.user?.name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {formatRelativeDate(review?.createdAt || review?.updatedAt)}
-                                    </p>
                                   </div>
 
                                 </div>
-                              </CardFooter>
-                            </Card>
-                          </Link>
-                        </div>
-                      </CarouselItem>
-                    ))
-                  )}
-                </CarouselContent>
-                <CarouselPrevious className="" />
-                <CarouselNext className={"ml-4"} />
-              </Carousel>
-            </div>
+                                <div className="h-full flex flex-col  w-2/3">
+                                  <p className="capitalize text-sm font-semibold wrap-word-break leading-snug">{review?.user?.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatRelativeDate(review?.createdAt || review?.updatedAt)}
+                                  </p>
+                                </div>
+
+                              </div>
+                            </CardFooter>
+                          </Card>
+                        </Link>
+                      </div>
+                    </CarouselItem>
+                  ))
+                )}
+              </CarouselContent>
+              <CarouselPrevious className="" />
+              <CarouselNext className={"ml-4"} />
+            </Carousel>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
+    </div >
   );
 };
 
