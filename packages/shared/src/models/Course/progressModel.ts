@@ -16,28 +16,36 @@ const progressSchema = new mongoose.Schema<IProgress>(
       ref: "Course",
       required: true,
     },
-    completedLessons: [
+    sectionProgress: [
       {
-        lessonId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Lesson",
-        },
-        progress: {
-          type: Number,
-          default: 0
-        },
-        isCompleted: {
-          type: Boolean,
-          default: false
-        }
-      },
+        sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
+        completedCount: { type: Number, default: 0 },
+        totalLessons: { type: Number, required: true },
+      }
     ],
-    completedLessonsCount: 
-      {
-        type: Number,
-        default: 0,
-      },
+    // completedLessons: [
+    //   {
+    //     lessonId: {
+    //       type: mongoose.Schema.Types.ObjectId,
+    //       ref: "Lesson",
+    //     },
+    //     progress: {
+    //       type: Number,
+    //       default: 0
+    //     },
+    //     isCompleted: {
+    //       type: Boolean,
+    //       default: false
+    //     }
+    //   },
+    // ],
     
+    completedLessonsCount:
+    {
+      type: Number,
+      default: 0,
+    },
+
     percentageCompleted: {
       type: Number,
       default: 0,
@@ -47,7 +55,7 @@ const progressSchema = new mongoose.Schema<IProgress>(
       default: Date.now,
     },
 
-  }, 
+  },
   { timestamps: true }
 );
 

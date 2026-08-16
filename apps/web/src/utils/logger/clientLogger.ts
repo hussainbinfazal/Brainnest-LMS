@@ -1,4 +1,3 @@
-import { logger } from "@repo/shared";
 import axios from "axios";
 
 
@@ -20,8 +19,8 @@ export const clientLogger = {
             userAgent: navigator.userAgent,
             url: window.location.href,
         }).catch((e: unknown) => {
-            const message = e instanceof Error ? e.message : 'Something went wrong';
-            logger.error("Error in ClientLogger", { e, message });
+            const errMessage = e instanceof Error ? e.message : 'Something went wrong';
+            console.error("Failed to send log to server:", errMessage, e);
         });
     }
 };

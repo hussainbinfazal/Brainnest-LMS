@@ -16,7 +16,6 @@ import StarRating from "@/app/components/shared/StarRating";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { logger } from "@/utils/logger/logger.node";
 import Link from "next/link";
 import { ImQuotesLeft } from "react-icons/im";
 import { useMemo } from "react";
@@ -56,7 +55,7 @@ import { TbMessageUser } from "react-icons/tb";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import Autoplay from "embla-carousel-autoplay";
 import { formatRelativeDate } from "@/utils/date";
-import { CAuthUser, CCategory, CCourse, CLesson, COrder, CReview, CSection, CTopic, CUserCourse } from "@/types/client";
+import { CAuthUser, CCourse, CLesson, COrder, CProgress, CReview, CSection, CTopic, CUserCourse } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { CCategoryWithChildren } from "@/lib/getCachedCategory";
 import CourseIdPageSkeleton from "./CourseId-Page-Skeleton";
@@ -65,8 +64,8 @@ import { CCreateReview, zodReviewSchema } from "@/utils/fieldsValidation/Client/
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { clientLogger } from "@/utils/logger/clientLogger";
-import { formatRatingNumber } from "@/utils/timeFormat";
-import { convertToTotalHours } from "@repo/shared";
+import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
+
 
 interface CourseIdPageCompProps {
   initialCourse: CCourse;
@@ -80,27 +79,28 @@ interface CourseIdPageCompProps {
   initialTopic: CTopic | null;
   allLessons: CLesson[] | null;
   allSections: CSection[] | null;
+  userProgress: CProgress | null;
   className?: string;
 }
-export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor,initialTopic,allLessons,allSections, className }: CourseIdPageCompProps): React.JSX.Element {
+export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress, className }: CourseIdPageCompProps): React.JSX.Element {
   const router = useRouter();
   const { courseId } = useParams();
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const { fetchCart, cart } = useCartStore();
   const [course, setCourse] = useState<CCourse>(initialCourse);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLiked, setIsLiked] = useState<boolean>(userCourse?.isLiked || false);
-  const [lessons,setLessons] = useState<CLesson[]>(allLessons || []);
+  const [lessons, setLessons] = useState<CLesson[]>(allLessons || []);
   const [sections, setSections] = useState<CSection[]>(allSections || []);
-  const [viewLesson, setViewLesson] = useState<boolean>(false);
-  const [viewLessonId, setViewLessonId] = useState<string>("");
+  const [viewSection, setViewSection] = useState<boolean>(false);
+  const [viewSectionId, setViewSectionId] = useState<string | null>("");
   const [isLessonCompleted, setIsLessonCompleted] = useState<boolean>(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>(otherCoursesByInstructor || []);
   const [totalReviewsOfInstructor, setTotalReviewsOfInstructor] = useState<number>(instructorStats?.totalReviews || 0);
   const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>(instructorStats?.totalCourses || 0);
-  // const [totalStudentsEnrolled, setTotalStudentsEnrolled] = useState<number>(instructorStats?.totalStudentsEnrolled || 0);
+
   const [isAlreadyAdded, setIsAlreadyAdded] = useState<boolean>(false);
   const [isEnrolled, setIsEnrolled] = useState<boolean>(userCourse?.isEnrolled || false);
   const [category, setCategory] = useState<CCategoryWithChildren | null>(courseCategory);
@@ -115,41 +115,42 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const [isViewInfo, setIsViewInfo] = useState<boolean>(false);
   const [chatId, setChatId] = useState<string>("");
   const [isPaid, setIsPaid] = useState<boolean>(false);
-  const [topic,setTopic] = useState<CTopic | null>(initialTopic);
- 
-    const form = useForm<CCreateReview>({
-      resolver: zodResolver(zodReviewSchema),
-      defaultValues: {
-        rating: 0,
-        comment: ""
-      }
+  const [topic, setTopic] = useState<CTopic | null>(initialTopic);
+  const [userProgressData, setUserProgressData] = useState<CProgress | null>(userProgress);
 
-    })
-    const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = form
-    const onSubmit = async (data:CCreateReview): Promise<void> => {
-      setLoading(true);
-      try {
+  const form = useForm<CCreateReview>({
+    resolver: zodResolver(zodReviewSchema),
+    defaultValues: {
+      rating: 0,
+      comment: ""
+    }
+
+  })
+  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = form
+  const onSubmit = async (data: CCreateReview): Promise<void> => {
+    setLoading(true);
+    try {
       const reviewData = {
         // user
         rating: data.rating,
         comment: data.comment.trim(),
       };
-      
-        const response = await axios.post(`/api/courses/rate/${courseId}`, {
-          reviewData,
-        });
-        // setReviews((prevReviews) => [
-        //   ...(prevReviews || []),
-        //   response.data.newReview,
-        // ]);
-        toast.success("Thanks for your review!");
-      } catch (error: unknown) {
-        clientLogger.error("This is the error in this :", error);
-        toast.error("Something went wrong!, Please try again later");
-      } finally {
-        setLoading(false);
-      }
-    };
+
+      const response = await axios.post(`/api/courses/rate/${courseId}`, {
+        reviewData,
+      });
+      // setReviews((prevReviews) => [
+      //   ...(prevReviews || []),
+      //   response.data.newReview,
+      // ]);
+      toast.success("Thanks for your review!");
+    } catch (error: unknown) {
+      clientLogger.error("This is the error in this :", error);
+      toast.error("Something went wrong!, Please try again later");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch sample reviews
 
@@ -160,43 +161,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   //   }
   // }, [courseId]);
 
-  // const fetchCourseFromDB = useCallback(
-  //   async (courseId: string): Promise<void> => {
-  //     const response = await axios.get(`/api/course/${courseId}`);
-  //     const data = response.data;
 
-  //     setCourse(data.course || data);
-  //     setIsLoading(false);
-  //     setTotalReviewsOfInstructor(data?.totalReviews);
-  //     setTotalCoursesOfInstructor(data?.coursesByInstructor.length);
-  //     setCoursesByInstructor(data?.coursesByInstructor);
-  //     setTotalStudentsEnrolled(data?.totalRatings);
-  //     // setReviews(data?.reviews);
-  //   },
-  //   [courseId]
-  // );
-
-
-  // const releatedCourses = useMemo((): CCourse[] => {
-  //   if (!coursesByInstructor || !Array.isArray(coursesByInstructor)) return [];
-  //   return coursesByInstructor.filter((course) => course._id !== courseId);
-  // }, [coursesByInstructor, courseId]);
-
-  const categoryToSubcategories: Record<string, string[]> = {
-    academics: ["math", "science", "history"],
-    business: ["entrepreneurship", "management", "sales"],
-    design: ["ui", "ux", "graphic-design"],
-    development: ["web", "mobile", "game"],
-    finance: ["investing", "accounting", "crypto"],
-    fitness: ["yoga", "cardio", "strength"],
-    lifestyle: ["travel", "food", "productivity"],
-    marketing: ["seo", "content", "ads"],
-    music: ["production", "instrument", "theory"],
-    "personal-development": ["mindfulness", "habits", "communication"],
-    photography: ["editing", "gear", "composition"],
-    productivity: ["time-management", "tools", "automation"],
-    technology: ["ai", "cloud", "iot"],
-  };
 
   const formattedDate = useMemo((): string => {
     const dateString = course?.updatedAt || course?.createdAt;
@@ -209,10 +174,10 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   }, [course?.updatedAt, course?.createdAt]);
 
   const totalCourseDuration: string = useMemo((): string => {
-    if (!course || !Array.isArray(course.lessons)) return "0 mins";
+    if (!course || !Array.isArray(allLessons)) return "0 mins";
 
-    const totalMinutes: number = course.lessons.reduce((total, lesson) => {
-      return total + (lesson.duration || 0);
+    const totalMinutes: number = allLessons.reduce((total, lesson) => {
+      return total + ((lesson.durationInSeconds / 60) || 0);
     }, 0);
 
     const hours: number = Math.floor(totalMinutes / 60);
@@ -221,43 +186,57 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     return hours > 0 ? `${hours} h ${minutes} m` : `${minutes} m`;
   }, [course]);
 
-  const totalMinutesOfLesson = (minutes: number) => {
+  const totalMinutesOfLesson = (seconds: number): string => {
+    const minutes: number = seconds / 60;
     const min: number = minutes % 60;
     return min > 0 ? `${min} min` : `${Math.floor(minutes / 60)} h`;
   };
+  const getTotalMinutesOfSection = (sectionId: string): number => {
+    if (!allLessons) return 0
+    const sectionLessons = allLessons.filter((lesson) => lesson.sectionId === sectionId);
+    const totalMinutes: number = sectionLessons.reduce((total, lesson) => {
+      return total + ((lesson.durationInSeconds / 60) || 0);
+    }, 0);
+    return totalMinutes
+  }
   const checkCompletedLesson = async (lessonId: string) => {
-    const response = await axios.get(
-      `/api/progress/${courseId}/${lessonId}`
-    );
-    const data = await response.data.progress;
-    if (response.data.progress.completedLessons.includes(lessonId)) {
-      setIsLessonCompleted(true);
-      setCompletedLessons((prev) => [...prev, lessonId]);
-    }
-    setIsLoading(false);
-  };
-
-  // chat inititalization //
-
-  const handleInitializeChat = async (): Promise<void> => {
-    toast.loading("Initializing chat...");
     try {
-      const response = await axios.post("/api/chat", {
-        sender: user?._id,
-        receiver: course?.instructor?._id,
-      });
-      const data = response.data.chat;
-      setChatId(data?._id);
-    } catch (error: any) {
-      logger.error(error);
-      throw error;
-    } finally {
-      toast.dismiss();
-      router.push(`/chat`);
+      const response = await axios.get(
+        `/api/progress/${courseId}/${lessonId}`
+      );
+      const data = await response.data.progress;
+      if (response.data.progress.completedLessons.includes(lessonId)) {
+        setIsLessonCompleted(true);
+        setCompletedLessons((prev) => [...prev, lessonId]);
+      }
+      setIsLoading(false);
+    } catch (error: unknown) {
+      clientLogger.error("This is the error in this :", error);
     }
+
   };
 
- 
+  // // chat inititalization //
+  // //Move this Logic to the chat server side 
+  // const handleInitializeChat = async (): Promise<void> => {
+  //   toast.loading("Initializing chat...");
+  //   try {
+  //     const response = await axios.post("/api/chat", {
+  //       sender: user?._id,
+  //       receiver: course?.instructor?._id,
+  //     });
+  //     const data = response.data.chat;
+  //     setChatId(data?._id);
+  //   } catch (error: any) {
+  //     logger.error(error);
+  //     throw error;
+  //   } finally {
+  //     toast.dismiss();
+  //     router.push(`/chat`);
+  //   }
+  // };
+
+
   const [isExpanded, setIsExpanded] = useState(false);
   const description = course?.description || "No description available.";
   const characterLimit = 100;
@@ -272,10 +251,21 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     return shuffled.slice(0, randomCourseLength);
   }, [course, reviews]);
 
+
+  const getSectionLessons = (sectId: string): CLesson[] => {
+    if (!allLessons) return [];
+    const sectionLessons = allLessons.filter((lesson) => lesson.sectionId === sectId);
+    return sectionLessons
+  }
+
   const fetchUser = async (): Promise<void> => {
-    const response = await axios("/api/users/me");
-    if (response.data.user) {
-      setAuthUser(response.data.user);
+    try {
+      const response = await axios("/api/users/me");
+      if (response.data.user) {
+        setAuthUser(response.data.user);
+      }
+    } catch (error: unknown) {
+      clientLogger.error("Something went wrong while fetching the user")
     }
   };
   const likeCourse = async () => {
@@ -289,7 +279,8 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       fetchUser();
       setIsLiked(true);
       toast.success("Course liked! You'll find it in your Liked Courses.");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      clientLogger.error("Error liking course", error);
       throw new error("Error liking course");
     }
   };
@@ -318,7 +309,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       fetchUser();
       toast.success("Course added to cart");
     } catch (error: any) {
-      logger.error(error);
+      clientLogger.error(error);
       toast.error(error?.message || "Something went wrong");
       toast.dismiss(toastId);
       throw error;
@@ -338,22 +329,22 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       throw error;
     }
   };
-  useEffect(() => {
-    if (user && user.likedCourses && user?.likedCourses?.includes(Array.isArray(courseId) ? courseId[0] : courseId || "")) {
-      setIsLiked(true);
-    } else {
-      setIsLiked(false);
-    }
-  }, [user, cart]);
+  // useEffect(() => {
+  //   if (user && user.likedCourses && user?.likedCourses?.includes(Array.isArray(courseId) ? courseId[0] : courseId || "")) {
+  //     setIsLiked(true);
+  //   } else {
+  //     setIsLiked(false);
+  //   }
+  // }, [user, cart]);
 
-  useEffect((): void => {
-    if (user && course) {
-      const isUserEnrolled = user.enrolledCourses?.some(
-        (item) => item.toString() === course._id.toString()
-      );
-      setIsEnrolled(isUserEnrolled);
-    }
-  }, [user, course]);
+  // useEffect((): void => {
+  //   if (user && course) {
+  //     const isUserEnrolled = user.enrolledCourses?.some(
+  //       (item) => item.toString() === course._id.toString()
+  //     );
+  //     setIsEnrolled(isUserEnrolled);
+  //   }
+  // }, [user, course]);
 
   const verifyPayment = async (paymentData: any): Promise<any> => {
     try {
@@ -487,16 +478,17 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       } else {
         toast.error(response.data.message || "Failed to process payment");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.dismiss();
-      toast.error(error.response?.data?.message || "Something went wrong");
+      // error.response?.data?.message || 
+      toast.error("Something went wrong");
       alert("Failed to initiate payment. Please try again.");
     }
   };
 
- 
 
-   const checkAlreadyAdded = (): void => {
+
+  const checkAlreadyAdded = (): void => {
     let isInCart = false;
     isInCart = cart.courses?.some(
       (cartCourse: CCourse) => cartCourse?._id === course?._id
@@ -515,7 +507,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   //     return filteredReviews.slice(0, 9);
   //   }
   // };
-  const handleDownloadCertificate = async ():Promise<void> => {
+  const handleDownloadCertificate = async (): Promise<void> => {
     try {
       const response = await axios.get(`/api/certificate/${courseId}`, {
         responseType: "blob", // Important for binary data
@@ -537,7 +529,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
-   useEffect(() => {
+  useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -554,15 +546,15 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       fetchCart();
     }
   }, [user]);
-   useEffect((): void => {
-    if (user && course && user.completedCourses?.includes(course._id)) {
+  useEffect((): void => {
+    if (user && course && userProgressData?.percentageCompleted === 100) {
       setIsCompleted(true);
     } else {
       setIsCompleted(false);
     }
   }, [user, course]);
 
-   useEffect((): void => {
+  useEffect((): void => {
     const checkLessons = async (): Promise<void> => {
       if (course?.lessons?.length && user) {
         for (const lesson of course.lessons) {
@@ -575,14 +567,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     checkLessons();
   }, [course?.lessons]);
 
-  useEffect(() => {
-    if (courseId) {
-      const timeout: NodeJS.Timeout = setTimeout(() => {
-        fetchCourseFromDB(Array.isArray(courseId) ? courseId[0] : courseId as string);
-      }, 10);
-      return (): void => clearTimeout(timeout);
-    }
-  }, [courseId]);
+
   useEffect((): void => {
     if (user && cart) {
       checkAlreadyAdded();
@@ -591,23 +576,27 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   useEffect((): void => {
     fetchUser();
   }, []);
+  useEffect(() => {
+  
+      if (initialCourse && initialReviews.length > 0 && allCategories.length > 0 && courseCategory, relevantCategoryCourses.length > 0 && instructorStats && userCourse && otherCoursesByInstructor && initialTopic && allLessons && allSections && userProgress) {
+  
+        setIsLoading(false);
+      }
+  
+    }, [initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress]);
   if (isLoading) {
     return <CourseIdPageSkeleton />;
   }
 
   return (
     <div className={cn("relative w-full min-h-screen flex flex-col gap-6  py-18 pt-0 ", className)}>
-      {isLoading && (
+      {/* {isLoading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={isLoading} />
         </div>
-      )}
+      )} */}
       <div className="absolute top-0 left-0 w-full h-1/2 dark:bg-black bg-white z-[-1]" />
-      {isLoading ? (
-        <div className="w-full flex items-center justify-center ">
-          <Skeleton className="w-[70%]! lg:w-[60%] h-[50vh] rounded-lg flex item-center justify-center pt-6!" />
-        </div>
-      ) : (
+      {(
         <div className="w-[90%] md:w-[70%] lg:w-[60%] bg-transparent mx-auto flex flex-col justify-start items-center relative">
           <div className="relative w-full h-75 overflow-hidden">
             <Image alt="" src={course?.coverImage ? course?.coverImage : ""} fill className="rounded-lg" />
@@ -615,9 +604,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
         </div>
       )}
       <div className="relative w-[90%] md:w-[90%] lg:w-[60%] bg-transparent mx-auto flex flex-col justify-start items-center h-full gap-6 min-h-screen pt-2">
-        {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full pt-6!" />
-        ) : (
+        {(
           !isEnrolled && (
             <div className="absolute right-0 top-2 w-10 h-10 rounded-full flex items-center justify-center border border-gray-300">
               {isLiked ? (
@@ -648,9 +635,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           )
         )}
-        {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
-        ) : (
+        {(
           isEnrolled && (
             <div
               className="absolute right-0 top-2 w-10 h-10 rounded-full flex items-center justify-center border border-gray-300"
@@ -705,9 +690,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
           )
         )}
 
-        {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
-        ) : (
+        {(
           !isEnrolled && (
             <div className="absolute right-12 top-2 w-10 h-10 rounded-full flex items-center justify-center border border-gray-300">
               {isAlreadyAdded ? (
@@ -738,9 +721,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           )
         )}
-        {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
-        ) : (
+        {(
           <div className="absolute right-33 top-2 w-10 h-10  flex items-center justify-center  border-gray-300 cursor-pointer">
             {!isEnrolled && (
               <Button
@@ -761,9 +742,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             )}
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className="absolute right-0 top-2 w-10 h-10 rounded-full" />
-        ) : (
+        {(
           <div className="absolute right-30 top-2 w-10 h-10  flex items-center justify-center  border-gray-300">
             {isCompleted && (
               <Button
@@ -794,14 +773,10 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
           {initialTopic && (
             <p>{topic?.description}</p>
           )}
-          {isLoading ? (
-            <Skeleton className="w-2.5 h-7.5 " />
-          ) : (
+          {(
             <Badge variant='default' className=''>Bestseller</Badge>
           )}
-          {isLoading ? (
-            <Skeleton className="w-2.5 h-7.5 " />
-          ) : (
+          {(
             <p className="dark:text-white text-black text-2xl capitalize whitespace-normal wrap-break-word line-clamp-2">
               ₹ {Number(course?.price)}
             </p>
@@ -810,57 +785,41 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
 
         <div className="flex gap-2 w-full   justify-start items-center">
           <span className="flex gap-2  items-center">
-            {isLoading ? (
-              <Skeleton className="w-2.5 h-2.5 rounded-full" />
-            ) : (
+            {(
               <LuOctagonAlert />
             )}
             {""}
-            {isLoading ? (
-              <Skeleton className="w-12 h-2.5" />
-            ) : (
+            {(
               <span className="text-sm">{formattedDate}</span>
             )}
           </span>
           <span className="flex gap-2  items-center">
-            {isLoading ? (
-              <Skeleton className="w-2.5 h-2.5 rounded-full" />
-            ) : (
+            {(
               <IoGlobeOutline />
             )}
             {""}
-            {isLoading ? (
-              <Skeleton className="w-12 h-2.5" />
-            ) : (
+            {(
               <p>{course?.language}</p>
             )}
           </span>
           <span className="flex gap-2 items-center">
-            {isLoading ? (
-              <Skeleton className="w-2.5 h-2.5 rounded-full" />
-            ) : (
+            {(
               <LuCaptions />
             )}
             {""}
-            {isLoading ? (
-              <Skeleton className="w-12 h-2.5" />
-            ) : (
+            {(
               course?.language
             )}
           </span>
         </div>
         <div className="w-full h-30 flex flex-row justify-start items-center border-2 border-gray-300 rounded-lg mt-4">
-          {isLoading ? (
-            <Skeleton className="w-1/5 h-full " />
-          ) : (
+          {(
             <span className="w-1/5 h-full flex justify-center items-center">
               <RiVerifiedBadgeLine className="text-4xl" />
             </span>
           )}
 
-          {isLoading ? (
-            <Skeleton className="w-2/5 h-full " />
-          ) : (
+          {(
             <span className="w-2/5 h-full flex justify-start  items-center md:pl-4">
               <p className="lg:text-[13px] text-[10px] text-center leading-tight whitespace-pre-line font-semibold">
                 Access this top-rated course,plus <br /> 1,300+ more top rated
@@ -873,9 +832,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             orientation="vertical"
             className="h-3/5! w-px bg-gray-300 mx-2 hidden sm:block"
           />
-          {isLoading ? (
-            <Skeleton className="w-1/5 h-full " />
-          ) : (
+          {(
             <span className="w-1/5 hidden  sm:flex flex-col gap-1 justify-center items-center wrap-break text-center">
               <StarRating rating={Number(course?.averageRating) || 0} />
               <p>{Number(course?.averageRating) || 0} ratings</p>
@@ -886,27 +843,19 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             className="h-3/5! w-px bg-gray-300 mx-2"
           />
 
-          {isLoading ? (
-            <Skeleton className="w-2/5 h-full " />
-          ) : (
+          {(
             <span className="w-2/5 sm:w-1/5 flex flex-col gap-1 justify-center items-center wrap-break text-center">
               <MdOutlinePeopleAlt className="text-2xl" />
               <p>{course?.enrolledStudents?.length || 0} learners</p>
             </span>
           )}
         </div>
-        {isLoading ? (
-          <Skeleton className="w-full min-h-25 flex flex-col justify-start items-start border-2 py-2 px-4 mt-4  " />
-        ) : (
+        {(
           <div className="w-full min-h-25 flex flex-col justify-start items-start border-2 py-2 px-4 mt-4  ">
-            {isLoading ? (
-              <Skeleton className={"w-full h-0.5"} />
-            ) : (
+            {(
               <h3 className="text-2xl font-semibold">What you'll learn</h3>
             )}
-            {isLoading ? (
-              <Skeleton className="w-full  h-1.25" />
-            ) : (
+            {(
               <ul className="list-none list-inside dark:text-white text-black  pl-3 py-3 ">
                 {Array.isArray(course?.whatYouWillLearn) &&
                   course.whatYouWillLearn.map((item, index) => (
@@ -919,17 +868,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             )}
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className="w-full h-12.5" />
-        ) : (
+        {(
           <div className="w-full flex flex-col  justify-start items-start ">
             <h3 className="text-2xl font-semibold ">Explore Releated Topics</h3>
             <div className="w-full flex gap-2 mt-4">
               {courseCategory && courseCategory?.children?.map(
                 (subCat) =>
-                  isLoading ? (
-                    <Skeleton className="w-10 h-10" />
-                  ) : (
+                  (
                     <Link
                       key={subCat.name}
                       href={`/courses/${subCat.slug}`}
@@ -946,16 +891,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className="w-full h-20" />
-        ) : (
+        {( //This is the introduction of the course
           <div className="w-full flex flex-col  justify-start items-start mt-4">
             <h3 className="text-2xl font-semibold ">This course includes :</h3>
             <div className="w-full grid grid-cols-1 lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-1 gap-2 mt-4 px-2">
               <span className="w-1/2 h-full flex justify-start  items-center">
-                {isLoading ? (
-                  <Skeleton className="h-5" />
-                ) : (
+                {(
                   <div className="flex gap-3 min-h-5 justify-start items-center">
                     <MdOutlineOndemandVideo className="text-2xl" />
                     <p className="whitespace-pre">
@@ -964,9 +905,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                   </div>
                 )}
               </span>
-              {isLoading ? (
-                <Skeleton className="h-5" />
-              ) : (
+              {(
                 <span className="flex gap-3 min-h-5 justify-start items-center">
                   <CiTrophy className="text-2xl" />{" "}
                   <p>Certificate of completion</p>
@@ -976,96 +915,108 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
+        {/* {//Lesson and section} */}
+        {(
+          // {//Lesson Content}
           <div className="w-full flex flex-col  justify-start items-start mt-4">
-            {isLoading ? (
-              <Skeleton className="" />
-            ) : (
+            {(
               <h3 className="text-2xl font-semibold ">Course content</h3>
             )}
+            {/* {We are about to work on this component} */}
             <div className="w-full min-h-25 flex flex-col gap-2 mt-4 px-2">
-              {(course?.lessons || [])?.map((lesson: CLesson) => {
-                return (
-                  <div
-                    key={lesson?.name}
-                    className="w-full flex flex-col justify-between items-center relative"
-                  >
+              {
+                sections.map((section: CSection) => {
+                  const sectionLessons: CLesson[] = lessons.filter((l) => l.sectionId === section._id);
+                  return (
                     <div
-                      className={`w-full min-h-17.5 justify-between items-center flex border-2 border-gray-300 rounded px-4 ${viewLesson || lesson._id == viewLessonId
-                        ? "rounded-b-none"
-                        : "rounded"
-                        }`}
+                      key={section?.title}
+                      className="w-full flex flex-col justify-between items-center relative"
                     >
-                      {isLoading ? (
-                        <Skeleton className="w-1/2 h-6.25" />
-                      ) : (
-                        <span className="w-1/2 flex justify-start items-center gap-4">
-                          {viewLesson ? (
-                            <IoIosArrowUp
-                              onClick={() => {
-                                setViewLesson(false);
-                                setViewLessonId("");
-                              }}
-                              className="cursor-pointer"
-                            />
-                          ) : (
-                            <IoIosArrowDown
-                              onClick={() => {
-                                setViewLesson(true);
-                                setViewLessonId((lesson?._id ?? "") as string);
-                              }}
-                              className="cursor-pointer"
-                            />
-                          )}{" "}
-                          {lesson.name}
+                      <div
+                        className={`w-full min-h-17.5 justify-between items-center flex border-2 border-gray-300 rounded px-4 ${section._id === viewSectionId
+                          ? "rounded-b-none"
+                          : "rounded"
+                          }`}
+                      >
+                        {(
+                          <span className="w-1/2 flex justify-start items-center gap-4">
+                            {viewSectionId === section?._id ? (
+                              <IoIosArrowUp
+                                onClick={() => {
+                                  
+                                  setViewSection(false)
+                                  setViewSectionId((null));
+                                }}
+                                className="cursor-pointer"
+                              />
+                            ) : (
+                              <IoIosArrowDown
+                                onClick={() => {
+                                  setViewSection(true)
+                                  setViewSectionId((section?._id));
+
+                                }}
+                                className="cursor-pointer"
+                              />
+                            )}{" "}
+                            {section.title}
+                          </span>
+                        )}
+                        <span className="w-1/2 flex justify-end items-center gap-4">
+                          {/* {lesson?.description} */}
+                          <GoDotFill />
+                          <p>{getTotalMinutesOfSection(section._id ?? "")} min</p>
                         </span>
-                      )}
-                      <span className="w-1/2 flex justify-end items-center gap-4">
-                        {lesson?.video ? "1" : null} <GoDotFill />
-                        <p>{totalMinutesOfLesson(lesson.duration)}</p>
-                      </span>
-                    </div>
-                    {/* put the matching lesson Id here after the view Lesson */}
-                    {viewLesson && (
-                      <div className="w-full min-h-25 border-2 border-t-none flex justify-between px-4">
-                        <p className="flex items-center gap-3 ">
-                          <MdOutlineOndemandVideo className="text-xl" />{" "}
-                          {lesson?.name}
-                        </p>{" "}
-                        <p className="flex items-center gap-4">
-                          {user && (
-                            <FaEye
-                              className={`${isLessonCompleted
-                                ? "text-blue-500 "
-                                : " dark:data-[state=active]:text-white"
-                                } mr-2 cursor-pointer`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(
-                                  `/courses/${course?._id}/${lesson?._id}`
-                                );
-                              }}
-                            />
-                          )}
-                          {totalMinutesOfLesson(lesson.duration)}
-                        </p>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {/* put the matching lesson Id here after the view Lesson */}
+                      {viewSection && viewSectionId === section._id && (
+                        ///Section's lesson here 
+                        getSectionLessons(viewSectionId).map((lesson: CLesson) => {
+                          return (<div className={`w-full min-h-25 border-2 border-t-none flex justify-between px-4 ${section._id === viewSectionId
+                          ? "rounded-b-none"
+                          : "rounded"
+                          }`}>
+                            <p className="flex items-center gap-3 ">
+                              <MdOutlineOndemandVideo className="text-xl" />{" "}
+                              {lesson?.name}
+                            </p>{" "}
+                            <p className="flex items-center gap-4">
+                              {user && (
+                                <FaEye
+                                  className={`${isLessonCompleted
+                                    ? "text-blue-500 "
+                                    : " dark:data-[state=active]:text-white"
+                                    } mr-2 cursor-pointer`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(
+                                      `/courses/${course?._id}/${lesson?._id}`
+                                    );
+                                  }}
+                                />
+                              )}
+                              {totalMinutesOfLesson(lesson.durationInSeconds)}
+                            </p>
+
+
+
+
+                          </div>)
+                        })
+                
+                      )}
+                    </div>
+                  );
+
+                })
+              }
+              
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
+        {(
           <div className="w-full flex flex-col  justify-start items-start mt-4">
-            {isLoading ? (
-              <Skeleton className="" />
-            ) : (
+            {(
               <h3 className="text-2xl font-semibold px-2">Requiremnts</h3>
             )}
             <div className="w-full min-h-25 flex flex-col justify-start gap-2 mt-4 px-2">
@@ -1084,15 +1035,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
+        {(
           <div className="w-full flex flex-col  justify-start items-start mt-4">
-            {isLoading ? (
-              <Skeleton className="" />
-            ) : (
               <h3 className="text-2xl font-semibold px-2">Description</h3>
-            )}
             <div className="w-full min-h-25 flex flex-col gap-2 mt-4 px-2 ">
               <p>
                 {isExpanded || !shouldTruncate
@@ -1122,9 +1067,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
+        {(
           (course?.reviews?.length || 0) > 0 && (
             <div className="w-full flex flex-col  justify-start items-start mt-4">
               <div className="w-full min-h-12.5 flex flex-col gap-2 mt-4 px-2 ">
@@ -1207,29 +1150,25 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           )
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
+        {(
           <div className="w-full flex flex-col  justify-between items-start mt-4">
-            {isLoading ? (
-              <Skeleton className="" />
-            ) : (
+            {(
               <h3 className="text-2xl font-semibold px-2">Instructor</h3>
             )}
             <div className="w-full min-h-12.5 flex flex-row justify-between items-center gap-2 mt-4 px-2">
               <div className="w-1/6 ">
-                <div className="w-15 h-15 max-w-25 rounded-full relative ">
                   {course?.instructorId?.profileImage ? (
+                <div className="w-15 h-15 max-w-25 rounded-full relative ">
                     <Image
                       src={course.instructorId.profileImage}
                       alt={course.title}
                       fill
                       className="object-cover rounded-full "
                     />
-                  ) : (
-                    <CircleUser className="w-full h-full" />
-                  )}
                 </div>
+                  ) : (
+                    <CircleUser className="w-8 h-8" />
+                  )}
               </div>
               <p className="text-lg font-semibold w-2/5 flex items-center">
                 {course?.instructorId?.name}
@@ -1247,10 +1186,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
-          <div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
+        {(user &&
+          // Other Courses By same instructor
+          (<div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
             <div className="w-full">
               <div className="mb-4 flex flex-col gap-2 w-full h-full">
                 <h2 className="text-2xl font-semibold ">
@@ -1318,7 +1256,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                                         {course?.category?.subCategories[0]}
                                       </Badge> */}
                                       <Badge className='flex gap-2' variant="outline">
-                                        {courseCategory.parent}
+                                        {courseCategory?.parent?.name}
                                       </Badge>
                                     </div>
                                   </div>
@@ -1335,12 +1273,10 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                 </Carousel>
               </div>
             </div>
-          </div>
+          </div>)
         )}
-        {isLoading ? (
-          <Skeleton className={"w-full h-25 "} />
-        ) : (
-          <div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
+        {(user &&
+          (<div className="w-full flex flex-col  justify-between items-start mt-8 px-2">
             <div className="w-full ">
               <form id="create-review-form" className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
                 <div className="mb-4 flex flex-col gap-2 w-full h-full">
@@ -1348,19 +1284,19 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                 </div>
                 <div className="grid-cols-6 flex-1">
                   <div className="">
-                    <Controller  
-                    name="comment"
-                    control={control}
-                    render={({ field }) => (
-                      <Textarea
-                      className=''
-                      placeholder="Type your review here."
-                      value={field.value}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>): void => field.onChange(e.target.value)}
+                    <Controller
+                      name="comment"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea
+                          className=''
+                          placeholder="Type your review here."
+                          value={field.value}
+                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>): void => field.onChange(e.target.value)}
+                        />
+                      )}
                     />
-                    )}
-                    />
-                    
+
                   </div>
 
                   <div className="flex flex-col items-start gap-2 mt-3">
@@ -1375,12 +1311,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                                 value={currentRating}
                                 {...form.register("rating", { required: true })}
                                 className="hidden"
-                                
+
                               />
                               {form.formState.errors.rating && form.formState.errors.rating.type === "required" && (
                                 <p className="text-sm text-destructive">
-                                 {form.formState.errors.rating.message}
-                                 </p>
+                                  {form.formState.errors.rating.message}
+                                </p>
                               )}
                               <FaStar
                                 size={28}
@@ -1407,22 +1343,20 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                 </div>
               </form>
             </div>
-          </div>
-        
+          </div>)
+
         )}
-      {isLoading ? (
-        <Skeleton className="w-full h-full rounded-md" />
-      ) : (
-        <div className="w-full">
-          <div className="mb-4 flex flex-col gap-2 w-full h-full">
-            <h2 className="text-3xl font-bold ">
-              See what others are achieving through learning{" "}
-            </h2>
-            <p className="text-gray-600">
-              Know the achievers of the world through their stories
-            </p>
-          </div>
-          {/* <div className="grid-cols-6 flex-1">
+        {(
+          <div className="w-full">
+            <div className="mb-4 flex flex-col gap-2 w-full h-full">
+              <h2 className="text-3xl font-bold ">
+                See what others are achieving through learning{" "}
+              </h2>
+              <p className="text-gray-600">
+                Know the achievers of the world through their stories
+              </p>
+            </div>
+            {/* <div className="grid-cols-6 flex-1">
               <Carousel className="w-full">
                 <CarouselContent>
                   {course?.reviews.length === 0 ? (
@@ -1492,74 +1426,67 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
               </Carousel>
             </div> */}
 
-          {/*This is ample review section */}
-          <div className="w-full grid-cols-6 flex-1">
-            <Carousel className="w-full" opts={{
-              align: "start",
-              loop: true,
-              dragFree: true,
-            }}
-              setApi={() => { }}
-              plugins={[
-                Autoplay({
-                  delay: 2500,
-                  stopOnInteraction: false,
-                  stopOnMouseEnter: true,
-                }),
-              ]}>
-              <CarouselContent className="w-full -ml-1">
-                {isLoading ? (
-                  <CarouselItem className="flex">
-                    <Skeleton className="w-70 h-75 rounded-md" />
-                    <Skeleton className="w-70 h-75 rounded-md" />
-                    <Skeleton className="w-70 h-75 rounded-md" />
-                    <Skeleton className="w-70 h-75 rounded-md" />
-                  </CarouselItem>
-                ) : (
-                  (reviews ? reviews : []).map((review: CReview, index: number) => (
-                    <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                      <div className=" my-2 relative">
-                        <Link href={`/`}>
-                          <Card className=" h-70 my-2 relative pt-0 pb-3">
-                            <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
-                              <ImQuotesLeft />
-                            </CardHeader>
-                            <CardContent className="min-h-1/5 max-h-2/5 w-full flex justify-center relative ">
-                              <p className="text-sm wrap-break-word line-clamp-5">{review?.comment}</p>
-                            </CardContent>
-                            <CardFooter className={"h-2/5"}>
-                              <div className="w-full flex justify-start items-center   gap-2">
+            {/*This is ample review section */}
+            <div className="w-full grid-cols-6 flex-1">
+              <Carousel className="w-full" opts={{
+                align: "start",
+                loop: true,
+                dragFree: true,
+              }}
+                setApi={() => { }}
+                plugins={[
+                  Autoplay({
+                    delay: 2500,
+                    stopOnInteraction: false,
+                    stopOnMouseEnter: true,
+                  }),
+                ]}>
+                <CarouselContent className="w-full -ml-1">
+                  {(
+                    (reviews ? reviews : []).map((review: CReview, index: number) => (
+                      <CarouselItem key={`${index}-${index}`} className="px-2 sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                        <div className=" my-2 relative">
+                          <Link href={`/`}>
+                            <Card className=" h-70 my-2 relative pt-0 pb-3">
+                              <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
+                                <ImQuotesLeft />
+                              </CardHeader>
+                              <CardContent className="min-h-1/5 max-h-2/5 w-full flex justify-center relative ">
+                                <p className="text-sm wrap-break-word line-clamp-5">{review?.comment}</p>
+                              </CardContent>
+                              <CardFooter className={"h-2/5"}>
+                                <div className="w-full flex justify-start items-center   gap-2">
 
-                                <div className="h-full w-1/3 flex flex-col items-center justify-start">
-                                  <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
-                                    {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
+                                  <div className="h-full w-1/3 flex flex-col items-center justify-start">
+                                    <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
+                                      {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
 
+                                    </div>
+
+                                  </div>
+                                  <div className="h-full flex flex-col  w-2/3">
+                                    <p className="capitalize text-sm font-semibold wrap-word-break leading-snug">{review?.user?.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {formatRelativeDate(review?.createdAt || review?.updatedAt)}
+                                    </p>
                                   </div>
 
                                 </div>
-                                <div className="h-full flex flex-col  w-2/3">
-                                  <p className="capitalize text-sm font-semibold wrap-word-break leading-snug">{review?.user?.name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {formatRelativeDate(review?.createdAt || review?.updatedAt)}
-                                  </p>
-                                </div>
-
-                              </div>
-                            </CardFooter>
-                          </Card>
-                        </Link>
-                      </div>
-                    </CarouselItem>
-                  ))
-                )}
-              </CarouselContent>
-              <CarouselPrevious className="" />
-              <CarouselNext className={"ml-4"} />
-            </Carousel>
+                              </CardFooter>
+                            </Card>
+                          </Link>
+                        </div>
+                      </CarouselItem>
+                    ))
+                  )}
+                </CarouselContent>
+                <CarouselPrevious className="" />
+                <CarouselNext className={"ml-4"} />
+              </Carousel>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </div >
   );
 };

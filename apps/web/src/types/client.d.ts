@@ -272,6 +272,21 @@ export interface CCourse {
   updatedAt?: Date;
 }
 
+export interface CProgress {
+  _id: string;
+  user: string;
+  courseId: string;
+  sectionProgress: {
+    sectionId: Types.ObjectId;
+    completedCount: number;
+    totalLessons: number
+  },
+  completedLessonsCount:number,
+  percentageCompleted: number,
+  lastAccessedAt: Date
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 export interface CUserCourse {
   _id: string;
   user: string;
@@ -526,7 +541,7 @@ export interface CLesson {
   courseId?: string;
   name: string;
   videoUrl: string;
-  sectionId?: string;
+  sectionId: string;
   description: string;
   durationInSeconds: number;
   isPreview: boolean;
@@ -539,7 +554,7 @@ export interface CLesson {
 };
 
 export interface CSection {
-  _id?: string,
+  _id: string,
   title: string;
   description: string;
   order: number;

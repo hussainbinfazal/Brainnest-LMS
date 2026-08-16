@@ -75,14 +75,15 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
   const [isLoadingPage, setIsLoadingPage] = useState<boolean>(false);
   // const courses = useCourseStore((state) => state.courses);
   const [allCourses, setAllCourses] = useState<CCourse[]>(initialCourses || []);
-  const [totalCategories, setTotalCategories] = useState<CCategoryWithChildren[]>(allCategories || []);
+  const [totalCategories, setTotalCategories] = useState<CCategoryWithChildren[]>(allCategories);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [allReviews, setAllReviews] = useState<CReview[]>(fetchedReviews || []);
   const [sortBy, setSortBy] = useState<ReviewSortOption>("helpful");
   const [randomReviews, setRandomReviews] = useState<CReview[]>([]);
   const [shuffledCourses, setShuffledCourses] = useState<CCourse[]>([]);
   // Filter the course on behalf of the selected categories //
-
+  console.log("All Catgories", allCategories, allCategories.length);
+  console.log("This is total Category", totalCategories,  totalCategories.length);
   //Fetch user geographical location to show popular categories
   useEffect(() => {
     if (reviews.length > 0) {
@@ -190,7 +191,7 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
             >
               <CarouselContent className="w-full -ml-1">
                 {
-                  (courses || []).map((course: CCourse) => (
+                  (courses).map((course: CCourse) => (
                     <CarouselItem key={course?._id} className="pl-1 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                       <div className="p-1">
                         <Link href={`/courses/${course._id}`} className="w-full h-full">
@@ -248,14 +249,14 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
             {(
               <div className="flex w-full h-125 ">
                 {(
-                  <Tabs defaultValue={categories[0].name} className={"w-full h-full"}>
+                  <Tabs defaultValue={categories?.[3]?.name} className={"w-full h-full "}>
                     <Carousel plugins={[]} className="w-full ">
-                      <CarouselContent className="flex w-full px-2 border-b-2 border-b-gray-300 dark:border-b-gray-500   z-0">
+                      <CarouselContent className="flex w-full ml-3 z-0">
                         {categories.map((category: CCategory) => (
-                          <CarouselItem key={category._id} className="flex-none w-auto px-2 -mb-0.5 z-50 relative">
+                          <CarouselItem key={category._id} className="flex-none w-auto p-0! z-50 relative">
                             {isLoadingPage ? <CategoryChipsSkeleton /> : (
-                              <TabsList className={"m-0 border-0 shadow-none ring-0 bg-transparent p-0 w-auto"}>
-                                <TabsTrigger value={category.name} className="capitalize w-full h-full border-r-0 border-t-0 border-l-0 border-b-2 rounded -none shadow-none ring-0 bg-transparent  p-0 pl-0 dark:data-[state=active]:border-b-gray-300 data-[state=active]:border-b-black data-[state=active]:shadow-none data-[state=active]:ring-0 data-[state=active]:bg-transparent! data-[state=active]:p-0 data-[state=active]:rounded-none ">{category.name}</TabsTrigger>
+                              <TabsList className={"m-0 border-0 shadow-none ring-0 bg-transparent p-0"}>
+                                <TabsTrigger value={category.name} className="capitalize w-full h-full border-r-0 border-t-0 px-1! border-l-0 border-b-2! rounded-none shadow-none ring-0 bg-transparent dark:data-[state=active]:border-b-gray-300 border-b-gray-300! dark:border-b-gray-600 data-[state=active]:border-b-black data-[state=active]:shadow-none data-[state=active]:ring-0 data-[state=active]:bg-transparent! data-[state=active]:p-0 data-[state=active]:rounded-none ">{category.name}</TabsTrigger>
                               </TabsList>
                             )}
                           </CarouselItem>
@@ -271,17 +272,13 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
                     {categories.map((category: CCategoryWithChildren) => (
                       <TabsContent key={category._id} value={category.name} className={"bg-transparent py-4 px-2 pt-8 "}>
                         {/* Nested Tabs for subcategories */}
-                        {category && category.children.length > 0 && <Tabs defaultValue={category.children?.[0]?.name ?? ""} className={"w-full "}>
+                        {category && category.children.length > 0 && <Tabs defaultValue={category.children?.[0]?.name} className={"w-full"}>
                           {/* Subcategory Tabs */}
-                          {isLoadingPage ? (<Carousel>
-                            <CarouselContent>
-                              <SubcategoryChipsSkeleton />
-                            </CarouselContent>
-                          </Carousel>) : (
+                          {(
                             <TabsList className="flex w-full border-0 shadow-none ring-0 bg-transparent p-0 mr-auto">
                               <Carousel className={"w-full px-2"}>
                                 <CarouselContent className="" >
-                                  {(category.children || []).map((sub: CCategory) => (
+                                  {(category.children).map((sub: CCategory) => (
                                     <CarouselItem key={sub._id} className={"px-4 "}>
                                       <TabsTrigger value={sub.name} className={"border-0 shadow-none ring-0 bg-transparent px-4 py-4 rounded-full data-[state=active]:bg-brand-white! dark:bg-black dark:data-[state=active]:bg-white! dark:data-[state=active]:border-white!dark:data-[state=active]:!border-1  dark:text-black dark:data-[state=active]:text-black! "}>{sub.name}</TabsTrigger>
                                     </CarouselItem>
@@ -294,12 +291,12 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
                             </TabsList>)}
 
                           {/* Subcategory Content */}
-                          { (category.children || []).map((sub: CCategory) => (
+                          { (category.children).map((sub: CCategory) => (
                             <TabsContent key={sub._id} value={sub.name} className={"flex justify-center "}>
                               <Carousel className="mt-4 w-full">
                                 {(
                                 <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
-                                  {getCategoryCourses(sub._id, category._id, courses).map((course: CCourse) => (
+                                  {getCategoryCourses(sub._id, category._id, courses || []).map((course: CCourse) => (
                                     <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
                                       <Link href={`/courses/${course._id}`} className="inline-block">
                                         <Card className="w-75 h-87.5 relative">

@@ -12,7 +12,7 @@ import { buildCategoryTree, getCategoriesWithCache } from "@/lib/getCachedCatego
 export default async function Home(): Promise<JSX.Element> {
   await connectDB(process.env.MONGODB_URI!)
   const [courses, reviews, categories] = await Promise.all([getCoursesWithCache(), getReviewsWithCache(), getCategoriesWithCache()]);
-  const processedCategory = buildCategoryTree(categories);
+  // const processedCategory = buildCategoryTree(categories);
 //     /[
 //   {
 //     _id: "...",
@@ -31,6 +31,6 @@ export default async function Home(): Promise<JSX.Element> {
 //   }
 // ]
   return (
-    <HomePage initialCourses={courses} fetchedReviews={reviews} allCategories={processedCategory} />
+    <HomePage initialCourses={courses} fetchedReviews={reviews} allCategories={categories} />
   )
 }

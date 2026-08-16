@@ -6,6 +6,8 @@ export interface Ilogger {
     warn(message: string, meta?: Record<string, unknown>): void;
     error(message: string, meta?: Record<string, unknown>): void;
     debug(message: string, meta?: Record<string, unknown>): void;
+    fatal(message: string, meta?: Record<string, unknown>): void;
+    trace(message: string, meta?: Record<string, unknown>): void;
 
 }
 const pinoInstance = pino(
@@ -26,4 +28,6 @@ export const logger: Ilogger = {
     warn: (message, meta) => pinoInstance.warn(meta || {}, message),
     error: (message, meta) => pinoInstance.error(meta || {}, message),
     debug: (message, meta) => pinoInstance.debug(meta || {}, message),
+    fatal: (message, meta) => pinoInstance.fatal(meta || {}, message),
+    trace: (message, meta) => pinoInstance.trace(meta || {}, message),
 }

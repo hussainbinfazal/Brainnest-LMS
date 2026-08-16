@@ -2067,3 +2067,91 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## August 10
+Changes
+-Added lessons fetching logic with redis layer
+-Added sections fetching logic with redis layer
+-Refractored client types to match the updated types
+-Added zod schema validation for review on client side to validate expected review format
+-Added props based, data handling
+
+
+
+- lessons video processing with cloudinary SDK and sections logic on the client side 
+
+-- Completed
+
+--Pending
+-Homepage Component
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+-Intergrate Sentry form error monitoring at scale
+-Add delete Cache logic course update function
+-chat
+-message
+-cart routes
+
+## August 14
+Changes
+-Added sections based lesson logic with UI to improve UX
+-Seperated userProgress with lessonCompletion to prevent unbounded data condition
+-Added Skeletons with fully responsive to improve Ux overall
+-Added Instructor stats section
+-Removed dead code that is unnecessary now
+-Refractored client types to match the updated types
+-Added props based, data handling
+
+
+
+- lessons video processing with cloudinary SDK and sections logic on the client side 
+
+-- Completed
+
+--Pending
+-Homepage Component
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+-Intergrate Sentry form error monitoring at scale
+-Add delete Cache logic course update function
+-chat
+-message
+-cart routes

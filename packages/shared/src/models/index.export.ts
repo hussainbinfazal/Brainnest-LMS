@@ -17,6 +17,7 @@ export {default as Cart} from "./Cart/cartModel"
 export {default as Message} from "./Chat/messageModel"
 export {default as Chat} from "./Chat/chatModel"
 export {default as Order} from "./Cart/orderModel"
+export {default as LessonCompletion} from "./Course/lessonCompletionModel"
 
 
 

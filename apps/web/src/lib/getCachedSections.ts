@@ -1,5 +1,4 @@
-import { CLesson, CSection } from "@/types/client";
-import { serializeLessons } from "@/utils/serializer/lesson.serializer";
+import { CSection } from "@/types/client";
 import { serializeSections } from "@/utils/serializer/section.serializer";
 import { connectDB, ILesson, ISection, Lesson, logger, Section } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";

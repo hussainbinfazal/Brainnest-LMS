@@ -1,9 +1,10 @@
 import { Course, ICourse, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
-import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper"
+import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "../types/client"
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
-import mongoose from "mongoose";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
+import mongoose from "mongoose";
+import { serializeDocument } from "@/utils/serializer/serializeDocument";
 
 /**
  * Single source of truth for fetching courses with Redis caching.
@@ -20,11 +21,11 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
         })
         return cached;
     }
-    console.log("This is the url of mongodb", process.env.MONGODB_URI)
+    // console.log("This is the url of mongodb", process.env.MONGODB_URI)
     await connectDB(process.env.MONGODB_URI!);
     try {
         const courses: ICourse[] = await Course.find()
-            .populate("instructorId", "name email")
+            .populate("instructorId", "_idname email")
             .populate({
                 path: "category",
                 select: "name slug parent",
@@ -35,7 +36,7 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
                 },
             })
             .limit(50)
-            .lean({ virutals: true })
+            .lean({ virtuals: true })
             .exec();
 
         const serialized = serializeCourses(courses);
@@ -61,10 +62,11 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
         logger.info("Course fetched from cache");
         return cached;
     }
+    // const deletedCache = await invalidateCached(`course`, courseId);
     await connectDB(process.env.MONGODB_URI!);
     try {
         const course: ICourse | null = await Course.findById(courseId)
-            .populate("instructorId", "name email")
+            .populate("instructorId", "_id name email")
             .populate({
                 path: "category",
                 select: "name slug parent",
@@ -74,7 +76,7 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
 
                 },
             })
-            .lean({ virutals: true })
+            .lean({ virtuals: true })
             .exec();
         if (!course) {
             logger.warn("Course not found", { courseId });
@@ -145,7 +147,8 @@ export async function getInstructorStatsWithCache(instructorId: string): Promise
                 }
             }
         ]);
-        await setCached(`instructorStats`, instructorId, stats[0], CACHE_TTL.MEDIUM);
+        const serialized = serializeDocument(stats[0]);
+        await setCached(`instructorStats`, instructorId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Instructor Stats fetched successfully");
         if (!stats[0]) {
             logger.info("No stats found for instructor", { instructorId });

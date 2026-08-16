@@ -207,16 +207,23 @@ export interface IProgress {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
-  completedLessons: [{
-    lessonId: Types.ObjectId;
-    progress: number;
-    isCompleted: boolean
-  }];
+  sectionProgress: {
+    sectionId: Types.ObjectId;
+    completedCount: number;
+    totalLessons: number;
+  }
   completedLessonsCount: number;
   percentageCompleted: number;
   lastAccessedAt: Date;
 }
 
+export interface ILessonCompletion {
+  userId: Types.ObjectId;
+  courseId: Types.ObjectId;
+  sectionId: Types.ObjectId;
+  lessonId: Types.ObjectId;
+  completedAt: Date;
+}
 export interface IUser {
   _id: Types.ObjectId;
   name: string;

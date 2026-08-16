@@ -13,8 +13,8 @@ import { serializeCategories } from "@/utils/serializer/review.Serializer";
  * key means the cached data stays reusable for any consumer, not just one
  * specific tree shape.
  */
-export async function getCategoriesWithCache(): Promise<CCategory[]> {
-  const cached = await getCached<CCategory[]>("Category", "all");
+export async function getCategoriesWithCache(): Promise<CCategoryWithChildren[]> {
+  const cached = await getCached<CCategoryWithChildren[]>("Category", "all");
   if (cached) {
     logger.info("Categories fetched from cache", { categoryCount: cached.length });
     return cached;
@@ -28,14 +28,14 @@ export async function getCategoriesWithCache(): Promise<CCategory[]> {
       .lean()
       .exec();
 
-    const serialized = serializeCategories(totalCategories);
-    const mapped = buildCategoryTree(serialized);
+    const serialized : CCategory[] = serializeCategories(totalCategories);
+    const mapped : CCategoryWithChildren[] = buildCategoryTree(serialized);
     await setCached("Category", "all", mapped, CACHE_TTL.VERY_LONG);
     logger.info("Categories fetched successfully", { categoryCount: serialized.length });
     return mapped;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Error in fetching categories";
-    logger.error("Error fetching Categories", { message, error, cached });
+    logger.error("Error fetching Categories", { message, error });
     return [];
   }
 }
@@ -58,20 +58,21 @@ export interface CCategoryWithChildren extends CCategory {
  */
 export function buildCategoryTree(categories: CCategory[]): CCategoryWithChildren[] {
   if (!categories || categories.length === 0) {
-    logger.warn("Categories array is empty or undefined. Cannot build category tree.",{ totalCategories: categories?.length ?? 0 });
+    logger.warn("Categories array is empty or undefined. Cannot build category tree.", { totalCategories: categories?.length ?? 0 });
     throw new Error("Categories array is empty or undefined. Cannot build category tree.");
   }
   const parents: CCategory[] = categories.filter((c) => !c.parent);
 
+
   return parents.map((p: CCategory) => ({
     ...p,
-    children: categories.filter((child: CCategory) => child.parent?._id?.toString() === p._id),
+    children: categories.filter((child: CCategory) => child.parent?._id?.toString() === p._id?.toString()),
   }));
 }
 
 export function buildCourseCategoryTree(categories: CCategory[], categoryId: string): CCategoryWithChildren | null {
   if (!categoryId) {
-    logger.warn("Category ID is required to build course category tree.",{ categoryId });
+    logger.warn("Category ID is required to build course category tree.", { categoryId });
     throw new Error("Category ID is required to build course category tree.");
   };
   const parent = categories.find((c) => c._id === categoryId);
