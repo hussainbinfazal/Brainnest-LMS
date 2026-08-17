@@ -1,7 +1,7 @@
 import { Course, ICourse, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
 import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "../types/client"
-import { serializeCourses } from "@/utils/serializer/course.Serializer";
+import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import mongoose from "mongoose";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
@@ -21,11 +21,12 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
         })
         return cached;
     }
+    // await invaidateCached("Courses", "all")
     // console.log("This is the url of mongodb", process.env.MONGODB_URI)
     await connectDB(process.env.MONGODB_URI!);
     try {
         const courses: ICourse[] = await Course.find()
-            .populate("instructorId", "_idname email")
+            .populate("instructorId", "_id name email")
             .populate({
                 path: "category",
                 select: "name slug parent",
@@ -82,7 +83,7 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
             logger.warn("Course not found", { courseId });
             return null;
         }
-        const serialized = serializeCourses([course])[0];
+        const serialized = serializeCourse(course);
         await setCached(`course`, courseId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Course fetched successfully", { courseCount: serialized });
         return serialized;
@@ -102,6 +103,10 @@ export async function getReleatedCoursesWithCache(courseId: string): Promise<CCo
         logger.info("Related Courses fetched from cache");
         return cached;
     }
+    // await invalidateCached(`relatedCourses`, courseId)
+
+
+
     await connectDB(process.env.MONGODB_URI!);
     try {
         const relatedCourses: ICourse[] = await Course.find({ category: courseId }).limit(5).lean().exec();
@@ -133,6 +138,7 @@ export async function getInstructorStatsWithCache(instructorId: string): Promise
         logger.info("Instructor Stats fetched from cache");
         return cached;
     }
+    // await invalidateCached(`instructorStats`, instructorId);
     await connectDB(process.env.MONGODB_URI!);
     try {
         const stats = await Course.aggregate<IInstructorStats>([

@@ -281,7 +281,7 @@ export interface CProgress {
     completedCount: number;
     totalLessons: number
   },
-  completedLessonsCount:number,
+  completedLessonsCount: number,
   percentageCompleted: number,
   lastAccessedAt: Date
   createdAt?: Date;
@@ -482,7 +482,36 @@ export interface CAuthStore {
   fetchUser: () => Promise<void>;
   saveUserGeography: () => Promise<void>;
 }
+interface CProgressStore {
+  progressByCourse: Record<string, CCourseProgress>;
+  loadingByCourse: Record<string, boolean>;
 
+  fetchCourseProgress: (courseId: string) => Promise<void>;
+
+  setCourseProgress: (
+    courseId: string,
+    progress: CCourseProgress
+  ) => void;
+
+  isLessonCompleted: (
+    courseId: string,
+    lessonId: string
+  ) => boolean;
+
+  markLessonCompleted: (
+    courseId: string,
+    lessonId: string
+  ) => void;
+
+  markLessonIncomplete: (
+    courseId: string,
+    lessonId: string
+  ) => void;
+
+  clearCourseProgress: (
+    courseId: string
+  ) => void;
+}
 export interface CCartStore {
   cart: Record<string, CartItem>; // key can be productId
   fetchCart: () => Promise<Record<string, CartItem> | void>;
@@ -511,13 +540,23 @@ export interface CChatStore {
   addMessage?: (message: ChatMessage) => void;
   clearChat?: () => void;
 }
-export interface CCourseStore {
+interface CCourseStore {
   courses: CCourse[];
-  categories: CCategoriesWithChildren[]
   reviews: CReview[];
-  fetchCourses: ({ fetchedCourses, fetchedReviews, fetchedCategories }: { fetchedCourses?: Course[], fetchedReviews?: CReview[], fetchedCategories?: CCategoryWithChildren[] }) => Promise<CCourse[]>;
-  setCourses?: (courses: CCourse[]) => void;
+  categories: CCategoryWithChildren[];
 
+  isLoading: boolean;
+  hasFetched: boolean;
+
+  fetchCourses: (options?: {
+    fetchedCourses?: CCourse[];
+    fetchedReviews?: CReview[];
+    fetchedCategories?: CCategoryWithChildren[];
+    force?: boolean;
+  }) => Promise<CCourse[]>;
+
+  setCourses: (courses: CCourse[]) => void;
+  clearCourses: () => void;
 }
 
 

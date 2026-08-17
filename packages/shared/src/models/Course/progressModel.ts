@@ -23,22 +23,6 @@ const progressSchema = new mongoose.Schema<IProgress>(
         totalLessons: { type: Number, required: true },
       }
     ],
-    // completedLessons: [
-    //   {
-    //     lessonId: {
-    //       type: mongoose.Schema.Types.ObjectId,
-    //       ref: "Lesson",
-    //     },
-    //     progress: {
-    //       type: Number,
-    //       default: 0
-    //     },
-    //     isCompleted: {
-    //       type: Boolean,
-    //       default: false
-    //     }
-    //   },
-    // ],
     
     completedLessonsCount:
     {

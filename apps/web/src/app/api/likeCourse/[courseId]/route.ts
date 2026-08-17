@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB, logger } from "@repo/shared";
-import {Course, User, userCourse,IUser, validateMongooseId} from "@repo/shared";
+import { Course, User, userCourse, IUser, validateMongooseId } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
+import { CACHE_TTL, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { CUserCourse } from "@/types/client";
+import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 
 
 
@@ -63,8 +66,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             { upsert: true, new: true },
 
         );
+        await invalidateCached(`userCourses`, `${userId}-${courseId}`);
         logger.info("Course liked successfully", { courseName: courseDB.title });
-        return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title }, { status: 200 });
+        const serialized = serializeUserCourse(userCourseDB!);
+        await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
+        return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title, userCourse }, { status: 200 });
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';

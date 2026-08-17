@@ -61,7 +61,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
     throw new Error("Instructor stats is null");
   }
 
-  return <CourseIdPage initialCourse={course} initialReviews={reviews} allCategories={categoriesWithChildren} courseCategory={courseCategoryWithChildren} relevantCategoryCourses={relevantCategoryCourses} instructorStats={instructorStats} userCourse={userCourse} otherCoursesByInstructor={instructorOtherCourses} initialTopic={topic} allLessons={lessons} allSections={sections} userProgress={userProgress}/>;
+  return <CourseIdPage initialCourse={course} initialReviews={reviews} allCategories={categoriesWithChildren} courseCategory={courseCategoryWithChildren} relevantCategoryCourses={relevantCategoryCourses} instructorStats={instructorStats} userCourseStats={userCourse} otherCoursesByInstructor={instructorOtherCourses} initialTopic={topic} allLessons={lessons} allSections={sections} userProgress={userProgress}/>;
 }
 
 export default CoursePage;

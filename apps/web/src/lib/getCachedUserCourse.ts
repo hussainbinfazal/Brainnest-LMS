@@ -29,7 +29,7 @@ export async function getUserCourseByIdWithCache(userId: string, courseId: strin
             return null;
         }
         const serialized = serializeUserCourse(authUserCourse);
-        await setCached(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
+        await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
         logger.info("User Courses fetched successfully");
         return serialized;
     } catch (error: unknown) {

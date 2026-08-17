@@ -65,6 +65,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
+import { useProgressStore } from "@/lib/store/useProgressStore";
 
 
 interface CourseIdPageCompProps {
@@ -74,7 +75,7 @@ interface CourseIdPageCompProps {
   courseCategory: CCategoryWithChildren | null;
   relevantCategoryCourses: CCourse[];
   instructorStats: IInstructorStats | null;
-  userCourse?: CUserCourse | null;
+  userCourseStats?: CUserCourse | null;
   otherCoursesByInstructor: CCourse[] | null;
   initialTopic: CTopic | null;
   allLessons: CLesson[] | null;
@@ -82,17 +83,19 @@ interface CourseIdPageCompProps {
   userProgress: CProgress | null;
   className?: string;
 }
-export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress, className }: CourseIdPageCompProps): React.JSX.Element {
+export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourseStats, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress, className }: CourseIdPageCompProps): React.JSX.Element {
   const router = useRouter();
   const { courseId } = useParams();
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const { fetchCart, cart } = useCartStore();
   const [course, setCourse] = useState<CCourse>(initialCourse);
+  const [lessons, setLessons] = useState<CLesson[]>(allLessons ?? []);
+  const [sections, setSections] = useState<CSection[]>(allSections ?? []);
+  const [reviews, setReviews] = useState<CReview[]>(initialReviews ?? []);
+  const [userCourse, setUserCourse] = useState<CUserCourse | null>(userCourseStats ?? null)
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isLiked, setIsLiked] = useState<boolean>(userCourse?.isLiked || false);
-  const [lessons, setLessons] = useState<CLesson[]>(allLessons || []);
-  const [sections, setSections] = useState<CSection[]>(allSections || []);
+  const [isLiked, setIsLiked] = useState<boolean>(userCourse?.isLiked ?? false);
   const [viewSection, setViewSection] = useState<boolean>(false);
   const [viewSectionId, setViewSectionId] = useState<string | null>("");
   const [isLessonCompleted, setIsLessonCompleted] = useState<boolean>(false);
@@ -100,15 +103,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>(otherCoursesByInstructor || []);
   const [totalReviewsOfInstructor, setTotalReviewsOfInstructor] = useState<number>(instructorStats?.totalReviews || 0);
   const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>(instructorStats?.totalCourses || 0);
-
   const [isAlreadyAdded, setIsAlreadyAdded] = useState<boolean>(false);
-  const [isEnrolled, setIsEnrolled] = useState<boolean>(userCourse?.isEnrolled || false);
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(userCourse?.isEnrolled ?? false);
   const [category, setCategory] = useState<CCategoryWithChildren | null>(courseCategory);
   const [order, setOrder] = useState<COrder | null>(null);
-  const [isCompleted, setIsCompleted] = useState<boolean>(userCourse?.isCompleted || false);
-  const [rating, setRating] = useState<number>(course.averageRating || 0);
+  const [isCompleted, setIsCompleted] = useState<boolean>(userCourse?.isCompleted ?? false);
+  const [rating, setRating] = useState<number>(course.averageRating ?? 0);
   const [comment, setComment] = useState<string>("");
-  const [reviews, setReviews] = useState<CReview[]>(initialReviews || []);
   const [newReview, setNewReview] = useState<string>("");
   const [hover, setHover] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -125,7 +126,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       comment: ""
     }
 
-  })
+  });
+  const isLessonCompletedFromStore = useProgressStore(
+    (state) => state.isLessonCompleted
+  );
+  const fetchCourseProgress = useProgressStore(
+  (state) => state.fetchCourseProgress
+);
   const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = form
   const onSubmit = async (data: CCreateReview): Promise<void> => {
     setLoading(true);
@@ -151,16 +158,6 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       setLoading(false);
     }
   };
-
-  // Fetch sample reviews
-
-
-  // useEffect(() => {
-  //   if (courseId) {
-  //     setReviews(course?.reviews);
-  //   }
-  // }, [courseId]);
-
 
 
   const formattedDate = useMemo((): string => {
@@ -199,16 +196,13 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }, 0);
     return totalMinutes
   }
-  const checkCompletedLesson = async (lessonId: string) => {
+  const checkCompletedLesson = async (lessonId: string) : Promise<void> => {
     try {
-      const response = await axios.get(
-        `/api/progress/${courseId}/${lessonId}`
+      const completed = isLessonCompletedFromStore(
+        courseId as string,
+        lessonId
       );
-      const data = await response.data.progress;
-      if (response.data.progress.completedLessons.includes(lessonId)) {
-        setIsLessonCompleted(true);
-        setCompletedLessons((prev) => [...prev, lessonId]);
-      }
+      setIsLessonCompleted(completed);
       setIsLoading(false);
     } catch (error: unknown) {
       clientLogger.error("This is the error in this :", error);
@@ -268,20 +262,19 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       clientLogger.error("Something went wrong while fetching the user")
     }
   };
-  const likeCourse = async () => {
+  const likeCourse = async (): Promise<void> => {
     if (!user) {
       return alert("Please login first");
     }
     // params mai user id pass karni   hai
     try {
       if (!courseId) return alert("Error");
-      const reponse = await axios.post(`/api/likeCourse/${courseId}`);
-      fetchUser();
-      setIsLiked(true);
+      const response = await axios.post(`/api/likeCourse/${courseId}`);
+      setUserCourse(response.data.userCourse)
       toast.success("Course liked! You'll find it in your Liked Courses.");
     } catch (error: unknown) {
       clientLogger.error("Error liking course", error);
-      throw new error("Error liking course");
+      toast.error("Error liking course");
     }
   };
 
@@ -291,10 +284,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }
     // params mai user id pass karni   hai
     try {
-      if (!courseId) return alert("Error");
+      if (!courseId) return alert("Something went wrong");
       const reponse = await axios.delete(`/api/dislikeCourse/${courseId}`);
-      fetchUser();
-      setIsLiked(false);
+      setUserCourse(reponse.data.userCourse)
       toast.success("Course Disliked!");
     } catch (error: any) {
       throw new error("Error liking course");
@@ -577,13 +569,18 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     fetchUser();
   }, []);
   useEffect(() => {
-  
-      if (initialCourse && initialReviews.length > 0 && allCategories.length > 0 && courseCategory, relevantCategoryCourses.length > 0 && instructorStats && userCourse && otherCoursesByInstructor && initialTopic && allLessons && allSections && userProgress) {
-  
-        setIsLoading(false);
-      }
-  
-    }, [initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress]);
+
+    if (initialCourse && initialReviews.length > 0 && allCategories.length > 0 && courseCategory, relevantCategoryCourses.length > 0 && instructorStats && userCourse && otherCoursesByInstructor && initialTopic && allLessons && allSections && userProgress) {
+
+      setIsLoading(false);
+    }
+
+  }, [initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress]);
+  useEffect(() => {
+  if (!courseId) return;
+
+  fetchCourseProgress(courseId as string);
+}, [courseId, fetchCourseProgress]);
   if (isLoading) {
     return <CourseIdPageSkeleton />;
   }
@@ -677,7 +674,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                           toast.error("Please login first");
                           return;
                         }
-                        handleInitializeChat();
+                        // handleInitializeChat();
                       }}
                       className={"cursor-pointer"}
                     >
@@ -874,15 +871,15 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             <div className="w-full flex gap-2 mt-4">
               {courseCategory && courseCategory?.children?.map(
                 (subCat) =>
-                  (
-                    <Link
-                      key={subCat.name}
-                      href={`/courses/${subCat.slug}`}
-                      className=" hover:underline border-2  px-6 py-2 rounded shadow-sm cursor-pointer"
-                    >
-                      {subCat.name}
-                    </Link>
-                  )
+                (
+                  <Link
+                    key={subCat.name}
+                    href={`/courses/${subCat.slug}`}
+                    className=" hover:underline border-2  px-6 py-2 rounded shadow-sm cursor-pointer"
+                  >
+                    {subCat.name}
+                  </Link>
+                )
               ) || (
                   <p className="text-sm text-gray-500">
                     No related topics found.
@@ -943,7 +940,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                             {viewSectionId === section?._id ? (
                               <IoIosArrowUp
                                 onClick={() => {
-                                  
+
                                   setViewSection(false)
                                   setViewSectionId((null));
                                 }}
@@ -973,9 +970,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                         ///Section's lesson here 
                         getSectionLessons(viewSectionId).map((lesson: CLesson) => {
                           return (<div className={`w-full min-h-25 border-2 border-t-none flex justify-between px-4 ${section._id === viewSectionId
-                          ? "rounded-b-none"
-                          : "rounded"
-                          }`}>
+                            ? "rounded-b-none"
+                            : "rounded"
+                            }`}>
                             <p className="flex items-center gap-3 ">
                               <MdOutlineOndemandVideo className="text-xl" />{" "}
                               {lesson?.name}
@@ -1003,14 +1000,14 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
 
                           </div>)
                         })
-                
+
                       )}
                     </div>
                   );
 
                 })
               }
-              
+
             </div>
           </div>
         )}
@@ -1037,7 +1034,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
         )}
         {(
           <div className="w-full flex flex-col  justify-start items-start mt-4">
-              <h3 className="text-2xl font-semibold px-2">Description</h3>
+            <h3 className="text-2xl font-semibold px-2">Description</h3>
             <div className="w-full min-h-25 flex flex-col gap-2 mt-4 px-2 ">
               <p>
                 {isExpanded || !shouldTruncate
@@ -1157,18 +1154,18 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
             )}
             <div className="w-full min-h-12.5 flex flex-row justify-between items-center gap-2 mt-4 px-2">
               <div className="w-1/6 ">
-                  {course?.instructorId?.profileImage ? (
-                <div className="w-15 h-15 max-w-25 rounded-full relative ">
+                {course?.instructorId?.profileImage ? (
+                  <div className="w-15 h-15 max-w-25 rounded-full relative ">
                     <Image
                       src={course.instructorId.profileImage}
                       alt={course.title}
                       fill
                       className="object-cover rounded-full "
                     />
-                </div>
-                  ) : (
-                    <CircleUser className="w-8 h-8" />
-                  )}
+                  </div>
+                ) : (
+                  <CircleUser className="w-8 h-8" />
+                )}
               </div>
               <p className="text-lg font-semibold w-2/5 flex items-center">
                 {course?.instructorId?.name}
@@ -1356,76 +1353,6 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                 Know the achievers of the world through their stories
               </p>
             </div>
-            {/* <div className="grid-cols-6 flex-1">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {course?.reviews.length === 0 ? (
-                    <CarouselItem>
-                      <Skeleton className="w-[280px] h-[300px] rounded-md" />
-                    </CarouselItem>
-                  ) : (
-                    (filteredCourseReviews() || []).map((review, index) => (
-                      <CarouselItem
-                        key={`${index}-${index}`}
-                        className="md:basis-1/3 lg:basis-1/3 xl:basis-1/3 2xl:basis-1/4 gap-3"
-                      >
-                        <div className=" my-2 relative">
-                          <Link href={`/`}>
-                            <Card className="w-[250px] h-[280px] my-2 relative pt-0 pb-3">
-                              <CardHeader className="w-full h-1/8 flex justify-start items-center relative -mb-4">
-                                <ImQuotesLeft />
-                              </CardHeader>
-                              <CardContent className="min-h-2/5 max-h-2/5 w-full flex justify-center relative overflow-hidden">
-                                <p className="text-sm text-center">
-                                  {review?.comment ||
-                                    "Udemy gives you the ability to be persistent. I learned exactly what I needed to know in the real world. It helped me sell myself to get a new role."}
-                                </p>
-                              </CardContent>
-                              <CardFooter className={"h-2/5"}>
-                                <div className="w-full flex justify-start items-center   gap-2">
-                                  <div className="h-full w-1/3 flex flex-col items-center justify-start">
-                                    <div className="relative w-[50px] h-[50px] rounded-full overflow-hidden flex items-center justify-start bg-[#F6F7F9]">
-                                      <Image
-                                        src={
-                                          review?.user?.profileImage ||
-                                          "https://img-c.udemycdn.com/user/100x100/12345678.jpg"
-                                        }
-                                        alt={review?.user?.name}
-                                        fill
-                                        className="object-cover rounded-full"
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="h-full flex flex-col  w-2/3">
-                                    <p className="capitalize text-sm font-semibold break-words leading-snug">
-                                      {review?.user?.name || "John Doe"}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {review?.createdAt
-                                        ? new Date(
-                                            review.createdAt
-                                          ).toLocaleDateString("en-GB")
-                                        : review?.updatedAt
-                                        ? new Date(
-                                            review.updatedAt
-                                          ).toLocaleDateString("en-GB")
-                                        : "2 days ago"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </CardFooter>
-                            </Card>
-                          </Link>
-                        </div>
-                      </CarouselItem>
-                    ))
-                  )}
-                </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext className={"ml-4"} />
-              </Carousel>
-            </div> */}
-
             {/*This is ample review section */}
             <div className="w-full grid-cols-6 flex-1">
               <Carousel className="w-full" opts={{
@@ -1458,8 +1385,8 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                                 <div className="w-full flex justify-start items-center   gap-2">
 
                                   <div className="h-full w-1/3 flex flex-col items-center justify-start">
-                                    <div className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
-                                      {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
+                                    <div className="relative w-12.5 h-12.5 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
+                                      {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
 
                                     </div>
 
