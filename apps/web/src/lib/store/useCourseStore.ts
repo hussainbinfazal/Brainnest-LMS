@@ -7,10 +7,6 @@ import { CCategory, CCourse, CCourseStore, CReview } from "@/types/client";
 import { CCategoryWithChildren } from "../getCachedCategory";
 
 
-
-
-
-
 export const useCourseStore = create<CCourseStore>((set, get) => ({
     courses: [] as CCourse[],
     reviews: [] as CReview[],
@@ -42,29 +38,22 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             const fetchedReviews = data.reviews ?? [];
             const fetchedCategories = data.categories ?? [];
             set({ courses: fetchedCourses, reviews: fetchedReviews, categories: fetchedCategories, hasFetched: true, isLoading: false });
-
             // console.log("Response", response.data);
             return fetchedCourses;
-
         } catch (err: unknown) {
             let message = "Something went wrong";
-
             if (axios.isAxiosError(err)) {
                 message =
                     err.response?.data?.message ||
                     err.message ||
                     message;
-
             } else if (err instanceof Error) {
                 message = err.message;
             }
-
             toast.error(message);
-
             set({
                 isLoading: false,
             });
-
             return [];
         }
     },

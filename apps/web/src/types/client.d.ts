@@ -295,11 +295,11 @@ export interface CUserCourse {
   isEnrolled: boolean;
   isCompleted: boolean;
   progress: number;
-  likedAt: Date;
-  enrolledAt: Date;
-  completedAt: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
+  likedAt: Date | null;
+  enrolledAt: Date | null;
+  completedAt: Date | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CCourseShowcaseProps {

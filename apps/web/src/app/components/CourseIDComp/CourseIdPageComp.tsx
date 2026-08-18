@@ -66,6 +66,7 @@ import { Controller, useForm } from "react-hook-form";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 import { useProgressStore } from "@/lib/store/useProgressStore";
+import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
 
 
 interface CourseIdPageCompProps {
@@ -86,8 +87,11 @@ interface CourseIdPageCompProps {
 export default function CourseIdPageComp({ initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourseStats, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress, className }: CourseIdPageCompProps): React.JSX.Element {
   const router = useRouter();
   const { courseId } = useParams();
+  //Store States
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
+  const {setUserCourseById, getUserCourseById, clearUserCourseById, fetchUserCourseById,userCourseByCourseId} = useUserCourseStore();
+  const setLiked = useUserCourseStore((state) => state.setLiked);
   const { fetchCart, cart } = useCartStore();
   const [course, setCourse] = useState<CCourse>(initialCourse);
   const [lessons, setLessons] = useState<CLesson[]>(allLessons ?? []);
@@ -131,8 +135,8 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     (state) => state.isLessonCompleted
   );
   const fetchCourseProgress = useProgressStore(
-  (state) => state.fetchCourseProgress
-);
+    (state) => state.fetchCourseProgress
+  );
   const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = form
   const onSubmit = async (data: CCreateReview): Promise<void> => {
     setLoading(true);
@@ -196,7 +200,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }, 0);
     return totalMinutes
   }
-  const checkCompletedLesson = async (lessonId: string) : Promise<void> => {
+  const checkCompletedLesson = async (lessonId: string): Promise<void> => {
     try {
       const completed = isLessonCompletedFromStore(
         courseId as string,
@@ -266,13 +270,21 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     if (!user) {
       return alert("Please login first");
     }
+    if(!courseId){
+      return alert("Something went wrong");
+    }
+    setIsLiked(true)
+    setLiked(courseId as string, true);
+
     // params mai user id pass karni   hai
     try {
-      if (!courseId) return alert("Error");
       const response = await axios.post(`/api/likeCourse/${courseId}`);
-      setUserCourse(response.data.userCourse)
+      const updatedUserCourse = response.data.userCourse
+      setUserCourseById(courseId as string,updatedUserCourse)
       toast.success("Course liked! You'll find it in your Liked Courses.");
     } catch (error: unknown) {
+      setIsLiked(false);
+      setLiked(courseId as string, false);
       clientLogger.error("Error liking course", error);
       toast.error("Error liking course");
     }
@@ -577,10 +589,20 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
 
   }, [initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, userProgress]);
   useEffect(() => {
-  if (!courseId) return;
+    if (!courseId) return;
 
-  fetchCourseProgress(courseId as string);
-}, [courseId, fetchCourseProgress]);
+    fetchCourseProgress(courseId as string);
+  }, [courseId, fetchCourseProgress]);
+  useEffect(() => {
+
+    if (courseId && userCourseStats && userCourse) {
+      
+      setUserCourseById(
+        courseId as string,
+        userCourseStats
+      );
+    }
+  }, [courseId, userCourseStats, setUserCourse]);
   if (isLoading) {
     return <CourseIdPageSkeleton />;
   }

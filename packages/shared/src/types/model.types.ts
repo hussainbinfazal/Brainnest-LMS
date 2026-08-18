@@ -268,9 +268,12 @@ export interface IUserCourse {
   isEnrolled: boolean;
   isCompleted: boolean;
   progress: number;
-  likedAt: Date;
-  enrolledAt: Date;
-  completedAt: Date;
+  likedAt: Date | null;
+  enrolledAt: Date | null;
+  completedAt: Date | null;
+
+  createdAt: Date;
+  updatedAt: Date;
 
 }
 
