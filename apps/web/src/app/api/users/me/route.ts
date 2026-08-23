@@ -1,8 +1,7 @@
-import { connectDB, IUserCourse, logger, User, userCourse, } from "@repo/shared";
+import { connectDB, IUser, IUserCourse, logger, User, userCourse, } from "@repo/shared";
 import {  NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { IUser } from "@/types/model";
 import mongoose from "mongoose";
 
 //Look into this 

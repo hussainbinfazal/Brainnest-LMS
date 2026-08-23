@@ -56,14 +56,15 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
 export async function getCourseByIdWithCache(courseId: string): Promise<CCourse | null> {
     if (!validateMongooseId({ courseId: courseId })) {
         logger.warn("Invalid course Id", { courseId });
-        throw new Error("Invalid Course Id")
+        throw new Error(`Invalid Course Id ${courseId}`)
     }
+    await invalidateCached(`course`, courseId);
     const cached = await getCached<CCourse>(`course`, courseId);
     if (cached) {
-        logger.info("Course fetched from cache");
+        logger.info("1. Course fetched from cache", { cached });
         return cached;
     }
-    // const deletedCache = await invalidateCached(`course`, courseId);
+
     await connectDB(process.env.MONGODB_URI!);
     try {
         const course: ICourse | null = await Course.findById(courseId)
@@ -83,7 +84,13 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
             logger.warn("Course not found", { courseId });
             return null;
         }
+        // console.log("1. MONGODB RESULT:", course.instructorId);
         const serialized = serializeCourse(course);
+        // console.log("2. SERIALIZED:", serialized.instructorId);
+        // console.log(
+        //     "3. BEFORE REDIS:",
+        //     JSON.stringify(serialized.instructorId, null, 2)
+        // );
         await setCached(`course`, courseId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Course fetched successfully", { courseCount: serialized });
         return serialized;
@@ -192,7 +199,7 @@ export async function getUserCourseWithCache(userId: string): Promise<CCourse[] 
     }
 }
 
-export async function getInstructorOtherCoursesWithCache(instructorId: string): Promise<CCourse[]> {
+export async function getInstructorOtherCoursesWithCache(instructorId: string, courseId: string): Promise<CCourse[]> {
     if (!validateMongooseId({ userId: instructorId })) {
         logger.warn("Invalid user id", { userId: instructorId });
         throw new Error("Invalid Instructor Id");
@@ -204,7 +211,7 @@ export async function getInstructorOtherCoursesWithCache(instructorId: string): 
     }
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const instructoreOtherCourses: ICourse[] = await Course.find({ instructorId: instructorId }).limit(5).lean().exec();
+        const instructoreOtherCourses: ICourse[] = await Course.find({ _id: { $ne: courseId }, instructorId: instructorId, }).limit(5).lean().exec();
         const serialized = serializeCourses(instructoreOtherCourses);
         await setCached(`instructorOtherCourses`, instructorId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Instructor Other Courses fetched successfully", { courseCount: serialized.length });

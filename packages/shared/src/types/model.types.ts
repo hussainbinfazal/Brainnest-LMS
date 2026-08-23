@@ -262,6 +262,7 @@ export interface IUserToken {
 }
 
 export interface IUserCourse {
+  _id: Types.ObjectId;
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   isLiked: boolean;
@@ -271,7 +272,6 @@ export interface IUserCourse {
   likedAt: Date | null;
   enrolledAt: Date | null;
   completedAt: Date | null;
-
   createdAt: Date;
   updatedAt: Date;
 

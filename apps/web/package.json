@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "seed:dev-users": "tsx src/dev/seed-devUsers.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

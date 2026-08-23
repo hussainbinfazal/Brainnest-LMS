@@ -49,7 +49,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         });
         return NextResponse.json({
             message: 'OTP sent to email successfully',
-            ...(process.env.NODE_ENVIRONMENT! === 'development' && { email })
+            ...(process.env.NODE_ENV! === 'development' && { email })
         }, { status: 202 });
     } catch (error: any) {
         console.error('Email OTP error:', error);

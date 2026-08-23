@@ -1,6 +1,6 @@
 import pino from 'pino'
 
-const isProduction = process.env.NODE_ENVIRONMENT === 'production';
+const isProduction = process.env.NODE_ENV === 'production';
 export interface Ilogger {
     info(message: string, meta?: Record<string, unknown>): void;
     warn(message: string, meta?: Record<string, unknown>): void;

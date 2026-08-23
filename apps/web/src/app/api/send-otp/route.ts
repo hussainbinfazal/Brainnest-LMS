@@ -42,7 +42,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         };
 
         // Send SMS via Twilio or fallback for development
-        if (process.env.NODE_ENVIRONMENT! === 'production' && process.env.TWILIO_PHONE_NUMBER!?.startsWith('+1')) {
+        if (process.env.NODE_ENV! === 'production' && process.env.TWILIO_PHONE_NUMBER!?.startsWith('+1')) {
             try {
                 const message: MessageInstance = await client.messages.create({
                     body: `Your Brainnest verification code is: ${otp}`,
@@ -61,7 +61,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         return NextResponse.json({
             message: 'OTP sent successfully',
-            ...(process.env.NODE_ENVIRONMENT === 'development' && { otp })
+            ...(process.env.NODE_ENV === 'development' && { otp })
         });
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';

@@ -545,7 +545,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
 
                                     <div className="h-full w-1/3 flex flex-col items-center justify-start">
                                       <div className="relative w-12.5 h-12.5 rounded-full overflow-hidden flex items-center justify-center bg-[#F6F7F9] dark:text-black">
-                                        {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
+                                        {review?.user?.profileImage ? (<Image src={review?.user?.profileImage || "/user.png"} alt={review?.user?.name || "user"} width={50} height={50} className="w-full h-full object-cover" />) : (<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>)}
                                         {/*  */}
 
                                       </div>

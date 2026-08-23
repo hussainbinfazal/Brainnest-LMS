@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
 import { JWT } from "next-auth/jwt";
 import type { User as NextAuthUser, Account, Profile } from "next-auth";
-import {connectDB, User, UserDocument} from "@repo/shared";
+import { connectDB, User, UserDocument } from "@repo/shared";
 import { IUser } from "@repo/shared";
 
 
@@ -39,6 +39,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
+          role: user.role,
+          phoneNumber: user.phoneNumber,
+          profileImage: user.profileImage,
         } as any;
       },
     }),
@@ -54,7 +57,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === "github" || account?.provider === "google") {
         try {
           await connectDB(process.env.MONGODB_URI!);
-          let existingUser : IUser|null = await User.findOne({ email: user.email });
+          let existingUser: IUser | null = await User.findOne({ email: user.email });
 
           if (!existingUser) {
             const newUser: UserDocument = new User({

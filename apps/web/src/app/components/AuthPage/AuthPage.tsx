@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
-
 import { signIn } from "next-auth/react";
 import { ControllerRenderProps, FieldValues, FieldPath } from "react-hook-form";
 
@@ -31,6 +30,7 @@ import { JSX } from "react/jsx-runtime";
 import { loginSchema, signUpSchema } from "@/utils/fieldsValidation/Auth/ZodAuthSchema";
 import ProfileImageUpload from "../ProfileImageUpload";
 import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
+import { cn } from "@/lib/utils";
 
 
 type LoginFormValues = z.infer<typeof loginSchema>;

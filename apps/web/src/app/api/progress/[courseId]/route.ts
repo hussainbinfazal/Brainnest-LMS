@@ -1,3 +1,4 @@
+import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
@@ -9,6 +10,17 @@ import { NextResponse } from "next/server";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
+    const params= await context.params;
+    const courseId = Array.isArray(params.courseId)
+        ? params.courseId[0]
+        : params.courseId;  //Store States
+    const lessonId = Array.isArray(params.lessonId)
+        ? params.lessonId[0]
+        : params.lessonId;  //Store States
+    if (!courseId || !lessonId) {
+        logger.error("Invalid course or lesson ID in progress route");
+        return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
+    }
     const user: ISessionUser | null = await getDataFromToken(request);
     if (!user || !user.id) {
         logger.info("Unauthorized access", { ip: request.ip });
@@ -20,7 +32,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const { courseId, lessonId } = context.params;
+
         const user: ISessionUser | null = await getDataFromToken(request);
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: request.ip });

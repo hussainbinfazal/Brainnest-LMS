@@ -2,7 +2,6 @@
 
 import { create } from "zustand";
 import axios from "axios";
-import { toast } from "sonner";
 import { CCourse, CUserCourse } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 
@@ -15,22 +14,23 @@ interface CUserCourseStore {
         userCourse: CUserCourse
     ) => void;
     getUserCourseById: (courseId: string) => CUserCourse | null;
-    setLiked: (courseId: string, updates: Partial<CUserCourse>) => void;
+    updateUserCourse: (courseId: string, updates: Partial<CUserCourse>) => void;
     clearUserCourseById: () => void;
 }
 
 export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
     userCourseByCourseId: {},
     isLoading: false,
-
+    
     fetchUserCourseById: async (courseId: string,) => {
         try {
 
             const response = await axios.get(`/api/userCourse/${courseId}`);
-
+            
             set({ userCourseByCourseId: response.data.userCourse });
         } catch (error: unknown) {
-            clientLogger.error("Error fetching user course", error);
+            const message = error instanceof Error ? error.message : "Error in user Course Store"
+            clientLogger.error("Error fetching user course", { message, error });
             // toast.error("Something went wrong!");
         }
     },
@@ -42,7 +42,7 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             },
         })),
     getUserCourseById: (courseId) => get().userCourseByCourseId[courseId] ?? null,
-    setLiked: (courseId: string, updates) => {
+    updateUserCourse: (courseId: string, updates) => {
         set((state) => {
             const current = state.userCourseByCourseId[courseId];
             if (!current) return state;
@@ -58,6 +58,7 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             };
         })
     },
+
     clearUserCourseById: () =>
         set({
             userCourseByCourseId: {}

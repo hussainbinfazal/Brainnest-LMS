@@ -1,7 +1,5 @@
 import { clientLogger } from "@/utils/logger/clientLogger";
 import axios from "axios";
-import { useCallback } from "react";
-
 interface data {
     country_name: string;
     city?: string;

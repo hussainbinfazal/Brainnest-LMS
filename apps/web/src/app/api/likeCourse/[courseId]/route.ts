@@ -1,9 +1,10 @@
+import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB, logger } from "@repo/shared";
 import { Course, User, userCourse, IUser, validateMongooseId } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { CACHE_TTL, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CUserCourse } from "@/types/client";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 
@@ -14,23 +15,27 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
-        const { courseId } = context.params;
 
         if (!user) {
             logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
-
+        const { courseId } = await context.params;
         const userId: string = user.id;
 
         if (!userId || !validateMongooseId({ userId })) {
-            logger.info("Invalid user id");
+            logger.info("Invalid user id", { userId });
             return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
         }
 
         if (!courseId || !validateMongooseId({ courseId })) {
-            logger.info("Invalid course id");
+            logger.info("Invalid course id", { courseId });
             return NextResponse.json({ message: "Invalid course id" }, { status: 400 })
+        }
+        const cached = await getCached<CUserCourse>(`userCourse`, `${userId}:${courseId}`)
+        if (cached) {
+            logger.info("This is the cached user course", { userCourse: cached });
+            return NextResponse.json({ message: "This is the cached user course", userCourse: cached }, { status: 200 });
         }
         const [userDB, courseDB, userCourseDB] = await Promise.all([
             User.exists({ _id: userId }),
@@ -60,13 +65,18 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
                 courseId: courseId
             },
             {
-                isLiked: true,
-                likedAt: new Date()
+                $set: {
+                    isLiked: true,
+                    likedAt: new Date(),
+                },
+                $setOnInsert: {
+                    isPurchased: false,
+                },
             },
-            { upsert: true, new: true },
+            { upsert: true, returnDocument: "after" }
 
         );
-        await invalidateCached(`userCourses`, `${userId}-${courseId}`);
+        // await invalidateCached(`userCourses`, `${userId}-${courseId}`);
         logger.info("Course liked successfully", { courseName: courseDB.title });
         const serialized = serializeUserCourse(userCourseDB!);
         await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
@@ -75,7 +85,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error liking course:", { error: message });
-        return NextResponse.json({ message: `Error liking course` }, { status: 500 });
+        return NextResponse.json({ message: `Error liking course ${message}` }, { status: 500 });
     }
 }
 

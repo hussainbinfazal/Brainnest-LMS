@@ -11,6 +11,7 @@ allowBuilds:
   '@prisma/engines': true
   canvas: true
   core-js: true
+  esbuild: false
   msgpackr-extract: true
   prisma: true
   protobufjs: true

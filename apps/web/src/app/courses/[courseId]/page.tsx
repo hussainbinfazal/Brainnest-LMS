@@ -11,6 +11,7 @@ import { getUserCourseByIdWithCache } from "@/lib/getCachedUserCourse";
 import { getCachedTopic } from "@/lib/getCachedTopic";
 import { getLessonsByIdWithCache } from "@/lib/getCachedLessons";
 import { getSectionsByIdWithCache } from "@/lib/getCachedSections";
+import { getSession } from "@/dev/auth-helper";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {
   await connectDB(process.env.MONGODB_URI!);
@@ -19,7 +20,9 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
   if(!courseId || typeof courseId !== "string") {
      return notFound();
   }
-  const userSession = await auth();
+  // const userSession = await auth();
+  const userSession = await getSession()
+  console.log("This is user session on server", userSession);
   if (!userSession?.user?.id) {
     logger.warn("User not authenticated", { courseId });
   }
@@ -41,19 +44,19 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
   if (!course) {
     notFound();
   }
-  console.log("This is the course on server side", course)
+  // console.log("This is the course on server side", course)
   const categoriesWithChildren: CCategoryWithChildren[] = buildCategoryTree(categories);
   const categoryId = course?.category?.toString();
   if(!categoryId) logger.warn("Course has no resolvable category",{courseId: course._id});
   const courseCategoryWithChildren: CCategoryWithChildren | null = buildCourseCategoryTree(categories, categoryId);
-  if(!course.instructorId) {
+  if(!course.instructorId._id) {
     logger.warn("Course instructorId is null", { courseId: course._id });
     throw new Error("Course instructorId is null");
   }
   let courseInstructorId :string = course?.instructorId?._id.toString();
   const [instructorStats, instructorOtherCourses] = await Promise.all([
     getInstructorStatsWithCache(courseInstructorId),
-    getInstructorOtherCoursesWithCache(courseInstructorId),
+    getInstructorOtherCoursesWithCache(courseInstructorId, courseId),
   ])
 
   if(!instructorStats) {

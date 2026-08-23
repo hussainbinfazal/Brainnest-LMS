@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { CEmailOtpSenderProps, CEmailOtpVerifierProps, COtpSenderProps, CResendOtpResponse, CSendOtpResponse, CVerifyOtpResponse } from "@/types/client";
-import { logger } from "@/utils/logger/logger.node";
+import { clientLogger } from "@/utils/logger/clientLogger";
 import { cn } from "@/lib/utils";
 
 export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent,className }: COtpSenderProps) => {
@@ -19,7 +19,8 @@ export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent,className }: 
       onOtpSent(); // Notify parent
       return response.data
     } catch (error: any) {
-      logger.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to send OTP";
+      clientLogger.error(errorMessage, error);
       toast.error(error.response?.data?.message || "Failed to send OTP");
     }
   };
@@ -51,9 +52,10 @@ export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderP
       toast.success(response.data.message || "Email OTP sent successfully");
       onOtpSent(); // Notify parent
       return response.data
-    } catch (error: any) {
-      logger.error(error);
-      toast.error(error.response?.data?.message || "Failed to send email OTP");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to send email OTP";
+      clientLogger.error(message, error);
+      toast.error("Failed to send email OTP");
     }
   };
 
@@ -91,7 +93,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
       toast.success(response.data.message || "Email OTP verified");
       onVerified(); // Notify parent
     } catch (error: any) {
-      console.error(error);
+      // console.error(error);
       toast.error(error.response?.data?.message || "Email OTP verification failed");
     } finally {
       setIsVerifying(false);
@@ -117,7 +119,8 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
       setCountdown(50);
       setResendCount(resendCount + 1);
     } catch (error: any) {
-      logger.error(error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to resend email OTP";
+      clientLogger.error(errorMessage, error);
       toast.error(error.response?.data?.message || "Failed to resend email OTP");
     }
   };
@@ -208,9 +211,10 @@ export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber, className
       toast.success("OTP resent successfully");
       setCountdown(50); // 50 seconds countdown
       setResendCount(resendCount + 1);
-    } catch (error: any) {
-      logger.error(error);
-      toast.error(error.response?.data?.message || "Failed to resend OTP");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to resend OTP";
+      clientLogger.error(message, error);
+      toast.error("Failed to resend OTP");
     }
   };
 

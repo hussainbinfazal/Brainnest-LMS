@@ -13,11 +13,11 @@ export async function fetchServerCourses({ page = 0, paginatedAllCourses = false
   console.log("Fetching server courses");
   try {
     if (paginatedAllCourses) {
-      const res = await axios.get(`${process.env.NODE_ENVIRONMENT === 'development' ? process.env.NEXT_PUBLIC_API_URL_DEV : process.env.NEXT_PUBLIC_API_URL}/api/courses?page=${page}&limit=${limit}`);
+      const res = await axios.get(`${process.env.NODE_ENV === 'development' ? process.env.NEXT_PUBLIC_API_URL_DEV : process.env.NEXT_PUBLIC_API_URL}/api/courses?page=${page}&limit=${limit}`);
       logger.info("Fetched paginated courses server side fetched Successfully");
       return res.data.data;
     } else {
-      const res = await axios.get(`${process.env.NODE_ENVIRONMENT === 'development' ? process.env.NEXT_PUBLIC_API_URL_DEV : process.env.NEXT_PUBLIC_API_URL}/api/course`);
+      const res = await axios.get(`${process.env.NODE_ENV === 'development' ? process.env.NEXT_PUBLIC_API_URL_DEV : process.env.NEXT_PUBLIC_API_URL}/api/course`);
       return res.data;
     }
   } catch (error: unknown) {
@@ -28,7 +28,7 @@ export async function fetchServerCourses({ page = 0, paginatedAllCourses = false
 }
 // export async function fetchSampleReviews(): Promise<Review[]> {
 //   try {
-//     const res = await axios.get(`${process.env.NODE_ENVIRONMENT === 'development' ? process.env.NEXT_PUBLIC_API_URL_DEV : process.env.NEXT_PUBLIC_API_URL}/reviews/reviews.json`);
+//     const res = await axios.get(`${process.env.NODE_ENV=== 'development' ? process.env.NEXT_PUBLIC_API_URL_DEV : process.env.NEXT_PUBLIC_API_URL}/reviews/reviews.json`);
 //     return res.data;
 //   } catch (err) {
 //     console.error("Error fetching courses", err);

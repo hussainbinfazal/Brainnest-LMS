@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
 
-  const BYPASS_AUTH = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+  const BYPASS_AUTH = process.env._BYPASS_AUTH === 'true';
   if (BYPASS_AUTH) {
     const res = NextResponse.next();
     res.headers.set("X-Request-ID", requestId);
@@ -64,7 +64,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Check admin access for admin routes
-  if (pathname.startsWith("/admin") && token.role !== "instructor") {
+  if (pathname.startsWith("/admin") && token.role !== "instructor" && token.role !== "admin") {
     log('Non-admin trying to access admin route')
     return NextResponse.redirect(new URL("/", req.url))
   }
