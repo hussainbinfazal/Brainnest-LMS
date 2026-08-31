@@ -1,3 +1,4 @@
+import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB, userCourse, validateMongooseId, logger } from "@repo/shared";
@@ -11,7 +12,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
     await connectDB(process.env.MONGODB_URI!);
     try {
         const user: ISessionUser | null = await getDataFromToken(request);
-        const { courseId } = context.params;
+        const { courseId } = await context.params;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -24,23 +25,27 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         }
 
+
         // Update UserCourse record to mark as not liked
         const updatedUserCourse = await userCourse.findOneAndUpdate(
             {
                 userId: userId,
-                courseId: courseId,
-                isLiked: true
+                courseId: courseId
 
             },
             {
                 $set: {
                     isLiked: false,
-                    likedAt: null
-
-                }
+                    likedAt: null,
+                },
+                $setOnInsert: {
+                    isPurchased: false,
+                },
             },
-            { new: true }
-        );
+            { returnDocument: "after" }
+        ).lean().exec();
+
+
         if (!updatedUserCourse) {
             logger.info("Already unliked or not enrolled")
             return NextResponse.json({ message: "Already unliked or not enrolled" }, { status: 404 });
@@ -48,9 +53,8 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         await invalidateCached(`userCourses`, `${userId}-${courseId}`);
         const serializedUserCourse = serializeUserCourse(updatedUserCourse);
         await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serializedUserCourse, CACHE_TTL.MEDIUM);
-        let cachedCourse = await getCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`);
         logger.info("Course unliked successfully", { userId: userId, courseId });
-        return NextResponse.json({ message: "Course unliked successfully", userCourse: updatedUserCourse }, { status: 200 });
+        return NextResponse.json({ message: "Course unliked successfully", userCourse: serializedUserCourse }, { status: 200 });
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';

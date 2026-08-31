@@ -247,17 +247,18 @@ export interface CCourse {
     profileImage?: string;
   };
   averageRating: number;
-  totalDurationInSeconds: number;
   price: number;
-  isPaid: boolean;
   discount: number;
   level: 'beginner' | 'intermediate' | 'expert';
+  totalEnrolledCount: number,
   language: string;
   status: 'draft' | 'published';
   topics: CTopic[];
   lessons: CLesson[];
-  reviews: CReview[];
-  enrolledStudents?: EnrolledStudent[];
+  totalReviews: number;
+  ratingDistribution: number[];
+  totalLessons: number;
+  certificate: boolean;
   faq?: CFaq[];
   requirements?: string[];
   whatYouWillLearn?: string[];
@@ -591,7 +592,17 @@ export interface CLesson {
   order: number;
   status?: 'completed' | 'incomplete';
 };
-
+export interface CLessonProgress {
+  _id?: string;
+  userId: string;
+  courseId: string;
+  sectionId: string;
+  lessonId: string;
+  status: string;
+  lastPositionSeconds: number;
+  progressPercentage: number;
+  completedAt: Date;
+}
 export interface CSection {
   _id: string,
   title: string;

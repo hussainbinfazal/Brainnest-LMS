@@ -217,11 +217,14 @@ export interface IProgress {
   lastAccessedAt: Date;
 }
 
-export interface ILessonCompletion {
+export interface ILessonProgress {
   userId: Types.ObjectId;
   courseId: Types.ObjectId;
   sectionId: Types.ObjectId;
   lessonId: Types.ObjectId;
+  status: string;
+  lastPositionSeconds: number;
+  progressPercentage: number;
   completedAt: Date;
 }
 export interface IUser {

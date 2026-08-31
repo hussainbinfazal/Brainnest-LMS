@@ -5,9 +5,11 @@ import { CProgressStore, CProgress } from "@/types/client";
 import axios from "axios";
 
 
+
 export const useProgressStore = create<CProgressStore>(
     (set, get) => ({
         progressByCourse: {},
+        progressByLessons:[],
         loadingByCourse: {},
 
         fetchCourseProgress: async (courseId: string) => {

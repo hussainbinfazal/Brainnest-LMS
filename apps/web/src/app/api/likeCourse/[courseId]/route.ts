@@ -32,11 +32,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             logger.info("Invalid course id", { courseId });
             return NextResponse.json({ message: "Invalid course id" }, { status: 400 })
         }
-        const cached = await getCached<CUserCourse>(`userCourse`, `${userId}:${courseId}`)
-        if (cached) {
-            logger.info("This is the cached user course", { userCourse: cached });
-            return NextResponse.json({ message: "This is the cached user course", userCourse: cached }, { status: 200 });
-        }
+        // const cached = await getCached<CUserCourse>(`userCourse`, `${userId}:${courseId}`)
+        // if (cached) {
+        //     logger.info("This is the cached user course", { userCourse: cached });
+        //     return NextResponse.json({ message: "This is the cached user course", userCourse: cached }, { status: 200 });
+        // }
         const [userDB, courseDB, userCourseDB] = await Promise.all([
             User.exists({ _id: userId }),
             Course.exists({ _id: courseId }).select("title").lean(),
@@ -58,8 +58,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             return NextResponse.json({ message: "User already liked this course", courseName: courseDB.title }, { status: 400 });
         }
 
+        logger.info("Course liked successfully", {
+            courseName: courseDB.title,
+        });
         // Create or update UserCourse record
-        await userCourse.findOneAndUpdate(
+        const updatedUserCourse = await userCourse.findOneAndUpdate(
             {
                 userId: userId,
                 courseId: courseId
@@ -75,12 +78,18 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             },
             { upsert: true, returnDocument: "after" }
 
-        );
-        // await invalidateCached(`userCourses`, `${userId}-${courseId}`);
+        ).lean().exec();
+        if (!updatedUserCourse) {
+            return NextResponse.json({ message: "Unable to like course" }, { status: 500 });
+        }
+        await invalidateCached(`userCourses`, `${userId}-${courseId}`);
         logger.info("Course liked successfully", { courseName: courseDB.title });
-        const serialized = serializeUserCourse(userCourseDB!);
+        logger.info("1 BEFORE serialize");
+        const serialized = serializeUserCourse(updatedUserCourse);
+        logger.info("2 AFTER serialize");
         await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
-        return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title, userCourse }, { status: 200 });
+
+        return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title, userCourse: serialized }, { status: 200 });
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';

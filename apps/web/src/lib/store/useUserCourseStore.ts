@@ -15,19 +15,29 @@ interface CUserCourseStore {
     ) => void;
     getUserCourseById: (courseId: string) => CUserCourse | null;
     updateUserCourse: (courseId: string, updates: Partial<CUserCourse>) => void;
+    isUpdatingLikeByCourseId: Record<string, boolean>;
+    setUpdatingLike: (courseId: string, state: boolean) => void;
     clearUserCourseById: () => void;
 }
 
 export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
     userCourseByCourseId: {},
+    isUpdatingLikeByCourseId: {},
+
     isLoading: false,
-    
+
     fetchUserCourseById: async (courseId: string,) => {
         try {
 
             const response = await axios.get(`/api/userCourse/${courseId}`);
-            
-            set({ userCourseByCourseId: response.data.userCourse });
+
+            const userCourse = response.data.userCourse as CUserCourse;
+            set((state) => ({
+                userCourseByCourseId: {
+                    ...state.userCourseByCourseId,
+                    [courseId]: userCourse,
+                },
+            }));
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Error in user Course Store"
             clientLogger.error("Error fetching user course", { message, error });
@@ -58,6 +68,15 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             };
         })
     },
+    setUpdatingLike: (courseId: string, isUpdating: boolean) => {
+        set((state) => ({
+            isUpdatingLikeByCourseId: {
+                ...state.isUpdatingLikeByCourseId,
+                [courseId]: isUpdating,
+            },
+        }))
+    },
+
 
     clearUserCourseById: () =>
         set({

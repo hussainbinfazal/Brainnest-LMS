@@ -21,15 +21,14 @@ const progressSchema = new mongoose.Schema<IProgress>(
         sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
         completedCount: { type: Number, default: 0 },
         totalLessons: { type: Number, required: true },
+        
       }
     ],
-    
     completedLessonsCount:
     {
       type: Number,
       default: 0,
     },
-
     percentageCompleted: {
       type: Number,
       default: 0,
