@@ -76,7 +76,7 @@ const mockReview = (overrides: Partial<CReview> = {}): CReview => ({
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ...overrides,
-});
+} as unknown as CReview);
 
 const mockCourse = (overrides: Partial<CCourse> = {}): CCourse => ({
   _id: "course-1",
@@ -88,7 +88,6 @@ const mockCourse = (overrides: Partial<CCourse> = {}): CCourse => ({
   averageRating: 4.5,
   totalDurationInSeconds: 3600,
   price: 999,
-  isPaid: true,
   discount: 0,
   level: "beginner",
   language: "English",
@@ -102,7 +101,7 @@ const mockCourse = (overrides: Partial<CCourse> = {}): CCourse => ({
   createdAt: new Date(),
   updatedAt: new Date(),
   ...overrides,
-});
+} as unknown as CCourse);
 
 const defaultProps: HomeProps = {
   initialCourses: [mockCourse()],

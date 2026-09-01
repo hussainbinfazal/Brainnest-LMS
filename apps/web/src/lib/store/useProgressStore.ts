@@ -1,7 +1,7 @@
 "use client";
 
-import { create} from "zustand";
-import { CProgressStore, CProgress } from "@/types/client";
+import { create } from "zustand";
+import { CProgressStore, CProgress, CLessonProgress } from "@/types/client";
 import axios from "axios";
 
 
@@ -9,20 +9,30 @@ import axios from "axios";
 export const useProgressStore = create<CProgressStore>(
     (set, get) => ({
         progressByCourse: {},
-        progressByLessons:[],
+        progressByLessons: {} as Record<string, CLessonProgress[]>,
         loadingByCourse: {},
+        loadingLessonsProgress: {},
 
         fetchCourseProgress: async (courseId: string) => {
             const existingProgress =
                 get().progressByCourse[courseId];
 
+            const existingLessonsProgress =
+                get().progressByLessons[courseId];
             // Already fetched
             if (existingProgress) {
                 return;
             }
 
+            if (existingLessonsProgress) {
+                return;
+            }
+
             // Already fetching
             if (get().loadingByCourse[courseId]) {
+                return;
+            }
+            if (get().loadingLessonsProgress[courseId]) {
                 return;
             }
 
@@ -31,17 +41,34 @@ export const useProgressStore = create<CProgressStore>(
                     ...state.loadingByCourse,
                     [courseId]: true,
                 },
+                loadingLessonsProgress: {
+                    ...state.loadingLessonsProgress,
+                    [courseId]: true,
+                },
             }));
 
             try {
-                const response = await axios.get(
+                // const response = await axios.get(
+                //     `/api/progress/${courseId}`
+                // );
+                const [progressResponse,progressLessonResponse] = await Promise.all([
+                    await axios.get(
                     `/api/progress/${courseId}`
-                );
+                ),
+                await axios.get(
+                    `/api/progress/lessons/${courseId}`
+                ),
+                   
+                ])
 
                 set((state) => ({
                     progressByCourse: {
                         ...state.progressByCourse,
-                        [courseId]: response.data.courseProgress,
+                        [courseId]: progressResponse.data.courseProgress,
+                    },
+                    progressByLessons: {
+                        ...state.progressByLessons,
+                        [courseId]: progressLessonResponse.data.userLessonsProgress,
                     },
                 }));
             } catch (error: unknown) {
@@ -69,7 +96,18 @@ export const useProgressStore = create<CProgressStore>(
                     [courseId]: progress,
                 },
             })),
+        setLessonsProgress: (
+            courseId: string,
+            userLessonsProgress: CLessonProgress[]
+        ) =>
+            set((state) => ({
+                progressByLessons: {
+                    ...state.progressByLessons,
+                    [courseId]: userLessonsProgress,
+                },
+            })),
 
+            //To be complete
         isLessonCompleted: (
             courseId: string,
             lessonId: string

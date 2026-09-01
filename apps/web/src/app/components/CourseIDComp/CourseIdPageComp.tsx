@@ -98,6 +98,10 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const setLiked = useUserCourseStore((state) => state.updateUserCourse);
   const fetchCart = useCartStore((state) => state.fetchCart);
   const cart = useCartStore((state) => state.cart);
+  const authUserProgress = useProgressStore((state) => state.progressByCourse);
+  const authUserProgressLessons = useProgressStore((state) => state.progressByLessons);
+  const setAuthUserProgress = useProgressStore((state) => state.setCourseProgress);
+  const setAuthUserProgressLessons = useProgressStore((state) => state.setLessonsProgress);
   const [course, setCourse] = useState<CCourse>(initialCourse);
   const [lessons, setLessons] = useState<CLesson[] | null>(allLessons ?? []);
   const [sections, setSections] = useState<CSection[] | null>(allSections ?? []);
@@ -113,7 +117,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   // console.log(" ----- > This is the isLiked state in the useUserCouresStore on courseId Page", isLiked);
   // console.log("This is the userCourse in zustand", userCourseByCourseId);
   const [viewSection, setViewSection] = useState<boolean>(false);
-  const [viewSectionId, setViewSectionId] = useState<string | null>(allSections?.[0]?._id ?? "");
+  const [viewSectionId, setViewSectionId] = useState<string | null>(null);
   const [isLessonCompleted, setIsLessonCompleted] = useState<boolean>(false);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>(otherCoursesByInstructor || []);
@@ -516,9 +520,14 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       alert("Failed to initiate payment. Please try again.");
     }
   };
-
-
-
+  const handleLikeClick = (): void => {
+    if (!user) {
+      router.push("/login");
+      toast.error("Please login first");
+      return;
+    }
+    toggleLikeCourse();
+  };
   const checkAlreadyAdded = (): void => {
     let isInCart = false;
     isInCart = cart.courses?.some(
@@ -606,8 +615,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   }, [initialCourse, initialReviews, allCategories, courseCategory, relevantCategoryCourses, instructorStats, userCourse, otherCoursesByInstructor, initialTopic, allLessons, allSections, uProgress]);
   useEffect(() => {
     if (!courseId) return;
-
-    fetchCourseProgress(courseId as string);
+    if (uProgress) {
+      setAuthUserProgress(courseId as string, uProgress.currentProgress)
+      setAuthUserProgressLessons(courseId as string, uProgress.lessons)
+    } else {
+      fetchCourseProgress(courseId as string);
+    }
   }, [courseId, fetchCourseProgress]);
   useEffect(() => {
     if (courseId && userCourseStats) {
@@ -641,28 +654,14 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                 <IoMdHeart
                   aria-label="like-course"
                   className="text-xl text-red-500 group-hover:scale-110 ease-in-out duration-400 transition-transform active:scale-90"
-                  onClick={() => {
-                    if (!user) {
-                      router.push("/login");
-                      toast.error("Please login first");
-                      return;
-                    }
-                    toggleLikeCourse();
-                  }}
+                  onClick={handleLikeClick}
                 />
               ) : (
                 <FaRegHeart
                   aria-label="like-course"
                   className="text-xl cursor-pointer group-hover:scale-110 ease-in-out duration-400 transition-transform active:scale-90"
 
-                  onClick={(): void => {
-                    if (!user) {
-                      router.push("/login");
-                      toast.error("Please login first");
-                      return;
-                    }
-                    toggleLikeCourse();
-                  }}
+                  onClick={handleLikeClick}
                 />
               )}
             </div>
@@ -999,7 +998,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                         </span>
                       </div>
                       {/* put the matching lesson Id here after the view Lesson */}
-                      {viewSection && viewSectionId === section._id && (
+                      {viewSection && viewSectionId === section._id && viewSectionId && (
                         ///Section's lesson here 
                         getSectionLessons(viewSectionId).map((lesson: CLesson) => {
                           return (<div className={`w-full min-h-25 border-2 border-t-none flex justify-between px-4 ${section._id === viewSectionId
