@@ -7,6 +7,7 @@ export { default as Lesson } from "./Course/lessonModel";
 export { default as Section } from "./Course/sectionModel";
 export { default as Topic } from "./Course/topicModel";
 export { default as Review } from "./Course/reviewModel";
+export { default as lessonProgress} from "./Course/lessonProgressModel";
 export { default as User } from "./User/userModel";
 export { default as Coupon } from "./Coupon/couponModel";
 export { default as CouponUsage } from "./Coupon/couponUsageModel";
@@ -17,7 +18,7 @@ export {default as Cart} from "./Cart/cartModel"
 export {default as Message} from "./Chat/messageModel"
 export {default as Chat} from "./Chat/chatModel"
 export {default as Order} from "./Cart/orderModel"
-export {default as LessonCompletion} from "./Course/lessonProgressModel"
+export {default as LessonProgress} from "./Course/lessonProgressModel"
 
 
 

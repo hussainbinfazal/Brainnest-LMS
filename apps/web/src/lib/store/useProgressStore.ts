@@ -1,11 +1,15 @@
 "use client";
 
 import { create } from "zustand";
-import { CProgressStore, CProgress, CLessonProgress } from "@/types/client";
+import { CProgressStore, CProgress, CLessonProgress, CSection } from "@/types/client";
 import axios from "axios";
 
 
-
+export interface CSectionProgress {
+    sectionId: string;
+    completedCount: number;
+    totalLessons: number;
+}
 export const useProgressStore = create<CProgressStore>(
     (set, get) => ({
         progressByCourse: {},
@@ -51,14 +55,16 @@ export const useProgressStore = create<CProgressStore>(
                 // const response = await axios.get(
                 //     `/api/progress/${courseId}`
                 // );
-                const [progressResponse,progressLessonResponse] = await Promise.all([
+
+                ///Update these urls to fetch the course progress and lessons progress separately
+                const [progressResponse, progressLessonResponse] = await Promise.all([
                     await axios.get(
-                    `/api/progress/${courseId}`
-                ),
-                await axios.get(
-                    `/api/progress/lessons/${courseId}`
-                ),
-                   
+                        `/api/progress/complete/${courseId}/$`
+                    ),
+                    await axios.get(
+                        `/api/progress/lessons/${courseId}`
+                    ),
+
                 ])
 
                 set((state) => ({
@@ -107,25 +113,29 @@ export const useProgressStore = create<CProgressStore>(
                 },
             })),
 
-            //To be complete
+        //To be complete
         isLessonCompleted: (
             courseId: string,
             lessonId: string
         ) => {
-            const courseProgress =
-                get().progressByCourse[courseId];
+            const lessonProgress =
+                get().progressByLessons[courseId];
 
             return (
-                courseProgress?.completedLessonIds.includes(
-                    lessonId
-                ) ?? false
+                lessonProgress?.filter((progress) => progress.lessonId === lessonId && progress.status === "completed" && progress.progressPercentage === 100).length > 0 ? true : false
             );
         },
 
-        markLessonCompleted: (
+        markLessonCompleted: async (
             courseId: string,
-            lessonId: string
-        ) =>
+            lessonId: string,
+            sectionId: string,
+            userId: string
+        ) => {
+            const response = await axios.post(`/api/progress/complete/${courseId}/${lessonId}`);
+            const updatedProgress = response.data.courseProgress;
+            const updatedLesson = response.data.lessonProgress
+            useProgressStore.getState().setCourseProgress(courseId, updatedProgress);
             set((state) => {
                 const current =
                     state.progressByCourse[courseId];
@@ -133,85 +143,28 @@ export const useProgressStore = create<CProgressStore>(
                 if (!current) return state;
 
                 if (
-                    current.completedLessonIds.includes(
-                        lessonId
-                    )
+                    current.sectionProgress.filter((section: CSectionProgress) => section.sectionId === sectionId && section.completedCount >= section.totalLessons).length > 0 // If the section is already completed, do not mark the lesson as completed
                 ) {
                     return state;
                 }
 
-                return {
-                    progressByCourse: {
-                        ...state.progressByCourse,
-
-                        [courseId]: {
-                            ...current,
-
-                            completedLessonIds: [
-                                ...current.completedLessonIds,
-                                lessonId,
-                            ],
-
-                            progress: current.progress
-                                ? {
-                                    ...current.progress,
-
-                                    completedLessonsCount:
-                                        current.progress
-                                            .completedLessonsCount + 1,
-                                }
-                                : null,
-                        },
-                    },
-                };
-            }),
-
-        markLessonIncomplete: (
-            courseId: string,
-            lessonId: string
-        ) =>
-            set((state) => {
-                const current =
-                    state.progressByCourse[courseId];
-
-                if (!current) return state;
-
-                if (
-                    !current.completedLessonIds.includes(
-                        lessonId
+                const existing = state.progressByLessons[courseId] || [];
+                const next = existing.some((item) => item.lessonId === updatedLesson.lessonId)
+                    ? existing.map((item) =>
+                        item.lessonId === updatedLesson.lessonId
+                            ? { ...item, ...updatedLesson }
+                            : item
                     )
-                ) {
-                    return state;
-                }
-
+                    : [...existing, updatedLesson];
                 return {
-                    progressByCourse: {
-                        ...state.progressByCourse,
-
-                        [courseId]: {
-                            ...current,
-
-                            completedLessonIds:
-                                current.completedLessonIds.filter(
-                                    (id: string) => id !== lessonId
-                                ),
-
-                            progress: current.progress
-                                ? {
-                                    ...current.progress,
-
-                                    completedLessonsCount:
-                                        Math.max(
-                                            0,
-                                            current.progress
-                                                .completedLessonsCount - 1
-                                        ),
-                                }
-                                : null,
-                        },
-                    },
+                    progressByLessons: {
+                        ...state.progressByLessons,
+                        [courseId]: next,
+                    }
                 };
-            }),
+            });
+
+        },
 
         clearCourseProgress: (courseId: string) =>
             set((state) => {
@@ -219,9 +172,14 @@ export const useProgressStore = create<CProgressStore>(
                     [courseId]: _,
                     ...remaining
                 } = state.progressByCourse;
+                const {
+                    [courseId]: __,
+                    ...remainingLessons
+                } = state.progressByLessons;
 
                 return {
                     progressByCourse: remaining,
+                    progressByLessons: remainingLessons,
                 };
             }),
     })

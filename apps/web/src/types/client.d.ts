@@ -273,15 +273,16 @@ export interface CCourse {
   updatedAt?: Date;
 }
 
+export interface sectionProgress {
+  sectionId: string;
+  completedCount: number;
+  totalLessons: number;
+}
 export interface CProgress {
   _id: string;
   user: string;
   courseId: string;
-  sectionProgress: {
-    sectionId: Types.ObjectId;
-    completedCount: number;
-    totalLessons: number
-  },
+  sectionProgress: sectionProgress[];
   completedLessonsCount: number,
   percentageCompleted: number,
   lastAccessedAt: Date
@@ -484,7 +485,7 @@ export interface CAuthStore {
   saveUserGeography: () => Promise<void>;
 }
 interface CProgressStore {
-  progressByCourse: Record<string, CCourseProgress>;
+  progressByCourse: Record<string, CProgress>;
   progressByLessons: Record<string, CLessonProgress[]>;
   loadingByCourse: Record<string, boolean>;
   loadingLessonsProgress: Record<string, boolean>;
@@ -492,7 +493,7 @@ interface CProgressStore {
 
   setCourseProgress: (
     courseId: string,
-    progress: CCourseProgress
+    progress: CProgress
   ) => void;
   setLessonsProgress: (
     courseId: string,
@@ -506,12 +507,9 @@ interface CProgressStore {
 
   markLessonCompleted: (
     courseId: string,
-    lessonId: string
-  ) => void;
-
-  markLessonIncomplete: (
-    courseId: string,
-    lessonId: string
+    lessonId: string,
+    sectionId: string,
+    userId: string
   ) => void;
 
   clearCourseProgress: (
@@ -607,6 +605,8 @@ export interface CLessonProgress {
   lastPositionSeconds: number;
   progressPercentage: number;
   completedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 export interface CSection {
   _id: string,
