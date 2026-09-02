@@ -487,6 +487,7 @@ export interface CAuthStore {
 interface CProgressStore {
   progressByCourse: Record<string, CProgress>;
   progressByLessons: Record<string, CLessonProgress[]>;
+  completedLessonIds:Record<string, string[]>;
   loadingByCourse: Record<string, boolean>;
   loadingLessonsProgress: Record<string, boolean>;
   fetchCourseProgress: (courseId: string) => Promise<void>;

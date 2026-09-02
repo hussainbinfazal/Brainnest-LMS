@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { CProgressStore, CProgress, CLessonProgress, CSection } from "@/types/client";
 import axios from "axios";
+import { clientLogger } from "@/utils/logger/clientLogger";
 
 
 export interface CSectionProgress {
@@ -14,6 +15,7 @@ export const useProgressStore = create<CProgressStore>(
     (set, get) => ({
         progressByCourse: {},
         progressByLessons: {} as Record<string, CLessonProgress[]>,
+        completedLessonIds: {} as Record<string, string[]>,
         loadingByCourse: {},
         loadingLessonsProgress: {},
 
@@ -23,22 +25,25 @@ export const useProgressStore = create<CProgressStore>(
 
             const existingLessonsProgress =
                 get().progressByLessons[courseId];
+            const existingCompletedLessonIds = get().completedLessonIds[courseId];
             // Already fetched
             if (existingProgress) {
                 return;
-            }
+            };
 
             if (existingLessonsProgress) {
                 return;
-            }
-
+            };
+            if (existingCompletedLessonIds) {
+                return;
+            };
             // Already fetching
             if (get().loadingByCourse[courseId]) {
                 return;
-            }
+            };
             if (get().loadingLessonsProgress[courseId]) {
                 return;
-            }
+            };
 
             set((state) => ({
                 loadingByCourse: {
@@ -57,12 +62,9 @@ export const useProgressStore = create<CProgressStore>(
                 // );
 
                 ///Update these urls to fetch the course progress and lessons progress separately
-                const [progressResponse, progressLessonResponse] = await Promise.all([
+                const [progressResponse] = await Promise.all([
                     await axios.get(
-                        `/api/progress/complete/${courseId}/$`
-                    ),
-                    await axios.get(
-                        `/api/progress/lessons/${courseId}`
+                        `/api/progress/${courseId}/$`
                     ),
 
                 ])
@@ -70,18 +72,25 @@ export const useProgressStore = create<CProgressStore>(
                 set((state) => ({
                     progressByCourse: {
                         ...state.progressByCourse,
-                        [courseId]: progressResponse.data.courseProgress,
+                        [courseId]: progressResponse.data.progress,
                     },
                     progressByLessons: {
                         ...state.progressByLessons,
-                        [courseId]: progressLessonResponse.data.userLessonsProgress,
+                        [courseId]: progressResponse.data.lessonsProgress,
                     },
+                    completedLessonIds: {
+                        ...state.completedLessonIds,
+                        [courseId]: progressResponse.data.completedLessonIds,
+                    }
                 }));
+                clientLogger.info("Fetched course progress successfully", { courseId, progress: progressResponse.data.progress, lessonsProgress: progressResponse.data.lessonsProgress, completedLessonIds: progressResponse.data.completedLessonIds });
             } catch (error: unknown) {
-                console.error(
-                    "Failed to fetch course progress",
-                    error
-                );
+                const message = error instanceof Error ? error.message : 'Unknown error';
+                clientLogger.error("Failed to fetch course progress", { message });
+                // console.error(
+                //     "Failed to fetch course progress",
+                //     error
+                // );
             } finally {
                 set((state) => ({
                     loadingByCourse: {
@@ -94,13 +103,14 @@ export const useProgressStore = create<CProgressStore>(
 
         setCourseProgress: (
             courseId: string,
-            progress: CProgress
+            progress: CProgress,
         ) =>
             set((state) => ({
                 progressByCourse: {
                     ...state.progressByCourse,
                     [courseId]: progress,
                 },
+
             })),
         setLessonsProgress: (
             courseId: string,
@@ -134,7 +144,9 @@ export const useProgressStore = create<CProgressStore>(
         ) => {
             const response = await axios.post(`/api/progress/complete/${courseId}/${lessonId}`);
             const updatedProgress = response.data.courseProgress;
-            const updatedLesson = response.data.lessonProgress
+            const updatedLesson = response.data.lessonProgress;
+            const updatedCompletedLessonIds = response.data.completedLessonIds;
+
             useProgressStore.getState().setCourseProgress(courseId, updatedProgress);
             set((state) => {
                 const current =
@@ -160,7 +172,12 @@ export const useProgressStore = create<CProgressStore>(
                     progressByLessons: {
                         ...state.progressByLessons,
                         [courseId]: next,
+                    },
+                    completedLessonIds: {
+                        ...state.completedLessonIds,
+                        [courseId]: updatedCompletedLessonIds,
                     }
+
                 };
             });
 
@@ -176,10 +193,15 @@ export const useProgressStore = create<CProgressStore>(
                     [courseId]: __,
                     ...remainingLessons
                 } = state.progressByLessons;
+                const {
+                    [courseId]: ___,
+                    ...remainingCompletedLessonIds
+                } = state.completedLessonIds;
 
                 return {
                     progressByCourse: remaining,
                     progressByLessons: remainingLessons,
+                    completedLessonIds: remainingCompletedLessonIds,
                 };
             }),
     })

@@ -33,13 +33,13 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const [progress, completedLessons] = await Promise.all([
+        const [progress, completedLessons, allLessonsProgress] = await Promise.all([
             Progress.findOne(
                 {
                     userId,
                     courseId,
                 }
-            ).lean(),
+            ).lean().exec(),
 
             LessonProgress.find(
                 {
@@ -52,14 +52,20 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
                     sectionId: 1,
                     completedAt: 1,
                 }
-            ).lean(),
+            ).lean().exec(),
+            LessonProgress.find(
+                {
+                    userId,
+                    courseId,
+                }
+            ).lean().exec()
         ]);
         const completedLessonIds: string[] = completedLessons
             .filter((l: ILessonProgress) => l.completedAt)
             .map((l: ILessonProgress) => l.lessonId.toString());
         const response = {
             progress,
-            completedLessons,
+            lessonsProgress: allLessonsProgress,
             completedLessonIds,
         };
         logger.info("This is the progress of the Lesson", { progress, lessonId });
