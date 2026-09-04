@@ -1,5 +1,5 @@
 "use client";
-import { useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import React, { useCallback } from "react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -90,6 +90,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const courseId = Array.isArray(params.courseId)
     ? params.courseId[0]
     : params.courseId;  //Store States
+  if (!courseId) {
+    return notFound();
+  }
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
@@ -102,6 +105,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const authUserProgressLessons = useProgressStore((state) => state.progressByLessons);
   const setAuthUserProgress = useProgressStore((state) => state.setCourseProgress);
   const setAuthUserProgressLessons = useProgressStore((state) => state.setLessonsProgress);
+  const authUserCompletedLessons = useProgressStore((state) => state.completedLessonIds);
   const [course, setCourse] = useState<CCourse>(initialCourse);
   const [lessons, setLessons] = useState<CLesson[] | null>(allLessons ?? []);
   const [sections, setSections] = useState<CSection[] | null>(allSections ?? []);
@@ -147,9 +151,6 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }
 
   });
-  const isLessonCompletedFromStore = useProgressStore(
-    (state) => state.isLessonCompleted
-  );
   const fetchCourseProgress = useProgressStore(
     (state) => state.fetchCourseProgress
   );
@@ -218,10 +219,8 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   }
   const checkCompletedLesson = async (lessonId: string): Promise<void> => {
     try {
-      const completed = isLessonCompletedFromStore(
-        courseId as string,
-        lessonId
-      );
+
+      const completed = authUserCompletedLessons[courseId]?.includes(lessonId)
       setIsLessonCompleted(completed);
       setIsLoading(false);
     } catch (error: unknown) {
@@ -554,6 +553,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       toast.success("Certificate downloaded successfully!");
     } catch (error: any) {
       console.error("Download error:", error);
+      clientLogger.error("Certificate Download Error", { error })
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   };

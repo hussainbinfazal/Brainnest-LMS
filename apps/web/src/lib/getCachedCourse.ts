@@ -2,9 +2,9 @@ import { Course, ICourse, connectDB, logger, userCourse, validateMongooseId } fr
 import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "../types/client"
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
-import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import mongoose from "mongoose";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
+import { IGetCourseByParamsResponse } from "@/types/server";
 
 /**
  * Single source of truth for fetching courses with Redis caching.
@@ -14,7 +14,7 @@ import { serializeDocument } from "@/utils/serializer/serializeDocument";
 
 
 export async function getCoursesWithCache(): Promise<CCourse[]> {
-    const cached = await getCached<CCourse[]>("Courses", "all");
+    const cached = await getCached<CCourse[]>("courses", "all");
     if (cached) {
         logger.info("Courses fetched Succesfully from Cache", {
             courseCount: cached.length
@@ -51,7 +51,7 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
         logger.error("Error fetching courses", { message, cachedCourses: cached, error });
         return [];
     }
-}
+};
 
 export async function getCourseByIdWithCache(courseId: string): Promise<CCourse | null> {
     if (!validateMongooseId({ courseId: courseId })) {
@@ -125,6 +125,54 @@ export async function getReleatedCoursesWithCache(courseId: string): Promise<CCo
         const message = error instanceof Error ? error.message : 'Something went wrong';
         logger.error("Error fetching related Courses", { message, cachedRelatedCourses: cached, error });
         return [];
+    }
+}
+
+export async function getCourseByParamsWithCache(page: number, limit: number, skip: number): Promise<IGetCourseByParamsResponse> {
+    await connectDB(process.env.MONGODB_URI!);
+    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
+        logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
+        throw new Error("Invalid parameters for fetching courses");
+    };
+    const cached = await getCached<IGetCourseByParamsResponse>(`coursesByParams`, `${page}-${limit}-${skip}`);
+    if (cached) {
+        logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
+        return cached;
+    };
+    try {
+        const [totalCourseDoc, coursesInDB] = await Promise.all([
+            Course.countDocuments().lean().exec(),
+            Course.find().skip(skip).limit(limit).lean().exec()
+        ]);
+        const totalCourses: number = totalCourseDoc;
+        const courses: ICourse[] = coursesInDB;
+        logger.info("Courses fetched successfully", { totalCourses, page, limit });
+        const totalPages = Math.ceil(totalCourses / limit);
+        const hasNextPage: boolean = page < totalPages;
+        const hasPrevPage: boolean = page > 1;
+        let response = {
+            paginatedCourses: serializeCourses(courses),
+            hasNextPage,
+            hasPrevPage,
+            currentPage: page,
+            totalPage: Math.ceil(totalCourses / limit),
+            totalCourses: totalCourses
+        }
+        await setCached(`coursesByParams`, `${page}-${limit}-${skip}`, response, CACHE_TTL.MEDIUM);
+        logger.info("Courses cached successfully", { page, limit, skip, courseCount: response.paginatedCourses.length });
+        return response;
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        logger.error("Error fetching courses:", { error: message });
+        return {
+            paginatedCourses: [],
+            currentPage: page,
+            hasNextPage: false,
+            hasPrevPage: false,
+            totalPage: 0,
+            totalCourses: 0
+        };
+        // return NextResponse.json({ message: ` Error fetching courses: ${message}` }, { status: 500 });
     }
 }
 

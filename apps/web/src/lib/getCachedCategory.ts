@@ -56,6 +56,8 @@ export interface CCategoryWithChildren extends CCategory {
  * elsewhere in the codebase, change the comparison below to
  * `child.parent === p._id` instead.
  */
+
+
 export function buildCategoryTree(categories: CCategory[]): CCategoryWithChildren[] {
   if (!categories || categories.length === 0) {
     logger.warn("Categories array is empty or undefined. Cannot build category tree.", { totalCategories: categories?.length ?? 0 });
@@ -70,6 +72,8 @@ export function buildCategoryTree(categories: CCategory[]): CCategoryWithChildre
   }));
 }
 
+
+//For particular course category tree, we can use this function to build the tree for a specific category and its children. This is useful when we want to display the category hierarchy for a specific course.
 export function buildCourseCategoryTree(categories: CCategory[], categoryId: string): CCategoryWithChildren | null {
   if (!categoryId) {
     logger.warn("Category ID is required to build course category tree.", { categoryId });

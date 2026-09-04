@@ -487,7 +487,7 @@ export interface CAuthStore {
 interface CProgressStore {
   progressByCourse: Record<string, CProgress>;
   progressByLessons: Record<string, CLessonProgress[]>;
-  completedLessonIds:Record<string, string[]>;
+  completedLessonIds: Record<string, string[]>;
   loadingByCourse: Record<string, boolean>;
   loadingLessonsProgress: Record<string, boolean>;
   fetchCourseProgress: (courseId: string) => Promise<void>;
@@ -547,9 +547,14 @@ export interface CChatStore {
 }
 interface CCourseStore {
   courses: CCourse[];
+  cachedPaginatedCourses: CCourse[];
+  cachedCurrentPageNumber: number;
+  cachedTotalPages: number;
+  cachedHasNextPage: boolean;
+  cachedHasPrevPage: boolean;
+  cachedTotalCourses:number
   reviews: CReview[];
   categories: CCategoryWithChildren[];
-
   isLoading: boolean;
   hasFetched: boolean;
 
@@ -559,7 +564,9 @@ interface CCourseStore {
     fetchedCategories?: CCategoryWithChildren[];
     force?: boolean;
   }) => Promise<CCourse[]>;
-
+  fetchPaginatedCourse: (options: { page: number; itemsPerPage: number }) => Promise<void>;
+  setPaginatedCourses: (paginatedCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses:number) => void;
+  clearPaginatedCourses: () => void;
   setCourses: (courses: CCourse[]) => void;
   clearCourses: () => void;
 }

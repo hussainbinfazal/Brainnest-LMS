@@ -30,7 +30,14 @@ export interface MyRazorpayOrder {
   attempts: number;
   created_at: number;
 }
-
+export interface IGetCourseByParamsResponse {
+  paginatedCourses: CCourse[];
+  currentPage: number;
+  hasNextPage: boolean,
+  hasPrevPage: boolean,
+  totalPage: number;
+  totalCourses: number;
+}
 interface OtpEntry {
   otp: string;
   expires: number;

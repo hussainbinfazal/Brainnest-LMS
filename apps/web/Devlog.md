@@ -2403,3 +2403,47 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## August 3
+Changes
+-Added faceted Search on client side
+-Added api route with mongodb aggregate pipeline with facets to fetch and process queries for faceted objects on client side.
+-Added query route with pagination as params to manage courses on courses page perfectly.
+-Refractored client side logic by passing main data as ssr props to reduce latency, and zustand state for caching,
+
+
+- Add caching with zustand store to 
+- lessons video processing with cloudinary SDK and sections logic on the client side 
+-cart function on courseIdComp
+
+-- Completed
+
+--Pending
+-Homepage Component
+--userProgress in zustand store
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+-Intergrate Sentry form error monitoring at scale
+-Add delete Cache logic course update function
+-chat
+-message
+-cart routes

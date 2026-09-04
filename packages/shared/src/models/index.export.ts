@@ -7,7 +7,6 @@ export { default as Lesson } from "./Course/lessonModel";
 export { default as Section } from "./Course/sectionModel";
 export { default as Topic } from "./Course/topicModel";
 export { default as Review } from "./Course/reviewModel";
-export { default as lessonProgress} from "./Course/lessonProgressModel";
 export { default as User } from "./User/userModel";
 export { default as Coupon } from "./Coupon/couponModel";
 export { default as CouponUsage } from "./Coupon/couponUsageModel";

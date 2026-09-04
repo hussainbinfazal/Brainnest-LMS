@@ -47,7 +47,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
     notFound();
   }
   // console.log("This is the course on server side", course)
-  const categoriesWithChildren: CCategoryWithChildren[] = buildCategoryTree(categories);
+  const categoriesWithChildren: CCategoryWithChildren[] = buildCategoryTree(categories); //To build category tree for client;
   const categoryId = course?.category?.toString();
   if(!categoryId) logger.warn("Course has no resolvable category",{courseId: course._id});
   const courseCategoryWithChildren: CCategoryWithChildren | null = buildCourseCategoryTree(categories, categoryId);

@@ -27,5 +27,5 @@ lessonProgressSchema.index({ userId: 1, lessonId: 1 }, { unique: true });
 lessonProgressSchema.index({ userId: 1, sectionId: 1 }); // per-section progress
 lessonProgressSchema.index({ userId: 1, courseId: 1 });
 
-const LessonProgress: mongoose.Model<ILessonProgress> = mongoose.models.LessonProgress || mongoose.model<ILessonProgress>("LessonCompletion", lessonProgressSchema);
-export default lessonProgress;
+const LessonProgress: mongoose.Model<ILessonProgress> = mongoose.models.LessonProgress || mongoose.model<ILessonProgress>("LessonProgress", lessonProgressSchema);
+export default LessonProgress;

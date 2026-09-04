@@ -28,17 +28,30 @@ import { BiSolidCategoryAlt } from "react-icons/bi";
 import { CAuthUser, CCourse } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
 import { cn } from "@/lib/utils";
+import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { useCourseStore } from "@/lib/store/useCourseStore";
+import { clientLogger } from "@/utils/logger/clientLogger";
 
 
 interface CoursesPageCompProps {
-  initialCourses?: CCourse[]; 
+  initialCourses?: CCourse[];
+  pagCourses: {
+    paginatedCourses: CCourse[],
+    currentPage: number,
+    hasNextPage: boolean,
+    hasPrevPage: boolean,
+    totalPage: number,
+    totalCourses: number
+  }
+  categoriesWithChildren: CCategoryWithChildren[];
   className?: string
 }
-export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompProps): React.JSX.Element => {
+export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, className }: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
-
-  const [courses, setCourses] = useState<CCourse[]>([]);
-  const [categories, setCategories] = useState<{ [key: string]: string[] }>({});
+  const [courses, setCourses] = useState<CCourse[] |
+  []>(pagCourses.paginatedCourses);
+  const [categories, setCategories] = useState<CCategoryWithChildren[] | []>(categoriesWithChildren);
+  const [sidebarCategories, setSidebarCategories] = useState<Record<string, string[]>>({});
   const [languages, setLanguages] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -49,9 +62,17 @@ export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompPr
   const [filteredCourses, setFilteredCourses] = useState<CCourse[]>([]);
   const [likedCourseIds, setLikedCourseIds] = useState<string[]>([]);
   const [closeSidebar, setCloseSidebar] = useState<boolean>(false);
-  const itemsPerPage: number = 6;
+  const itemsPerPage: number = 6; //This is limit;
   const user = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
+  const cachedPaginatedCourses = useCourseStore((state) => state.cachedPaginatedCourses);
+  const fetchPaginatedCourses = useCourseStore((state) => state.fetchPaginatedCourse);
+  const setPaginatedCourses = useCourseStore((state) => state.setPaginatedCourses);
+  const cachedCurrentPageNumber = useCourseStore((state) => state.cachedCurrentPageNumber);
+  const cachedTotalPages = useCourseStore((state) => state.cachedTotalPages);
+  const cachedHasNextPage = useCourseStore((state) => state.cachedHasNextPage);
+  const cachedHasPrevPage = useCourseStore((state) => state.cachedHasPrevPage);
+  const cachedTotalCourses = useCourseStore((state) => state.cachedTotalCourses);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [page, setPage] = useState<number>(1);
@@ -103,38 +124,30 @@ export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompPr
   const fetchAllCourses = useCallback(async (): Promise<void> => {
 
     try {
-      const response = await axios.get(
-        `/api/courses?page=${page}&limit=${itemsPerPage}`
-      );
-      const {
-        data,
-        currentPage,
-        totalPages,
-        totalCourses,
-        hasNextPage,
-        hasPrevPage,
-      } = response?.data;
-      setCourses(data);
+      await fetchPaginatedCourses({ page, itemsPerPage });
+      setCourses(cachedPaginatedCourses);
       extractSidebarItems(data);
-      setCurrentPage(currentPage);
-      setTotalPages(totalPages);
-      setTotalCourses(totalCourses);
-      setHasNextPage(hasNextPage);
-      setHasPrevPage(hasPrevPage);
+      setCurrentPage(cachedCurrentPageNumber);
+      setTotalPages(cachedTotalPages);
+      setTotalCourses(cachedTotalCourses);
+      setHasNextPage(cachedHasNextPage);
+      setHasPrevPage(cachedHasPrevPage);
       setIsLoading(false);
-    } catch (error: any) {
-      throw error;
+    } catch (error: unknown) {
+      const message: string = error instanceof Error ? error.message : "Unknown error occurred while fetching courses.";
+      clientLogger.error("Failed to fetch courses", { message, error });
     } finally {
+      setIsLoading(false)
     }
   }, [page, itemsPerPage]);
   const extractSidebarItems = (courses: CCourse[]) => {
     const map: { [key: string]: Set<string> } = {};
     const languageSet = new Set<string>();
     const levelSet = new Set<string>();
-
     courses.forEach((course: CCourse) => {
-      const category: string = (course?.category?.name) ?? "";
-      const subCategories: string[] = course?.category?.subCategories || [];
+      const courseCategory: CCategoryWithChildren[] = categories.filter((cat) => cat._id === course.category?._id);
+      const category: string = (courseCategory[0]?.name) ?? "";
+      const subCategories: CCategoryWithChildren[] = courseCategory[0]?.children as CCategoryWithChildren[] || [];
       const language: string | undefined = course.language;
       const level: string | undefined = course.level;
 
@@ -142,8 +155,8 @@ export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompPr
         map[category] = new Set();
       }
 
-      subCategories.forEach((sub: string) => {
-        map[category].add(sub);
+      subCategories.forEach((sub: CCategoryWithChildren) => {
+        map[category].add(sub.name);
       });
       if (language) {
         languageSet.add(language);
@@ -159,34 +172,12 @@ export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompPr
       return acc;
     }, {});
 
-    setCategories(categoryMap);
+    setSidebarCategories(categoryMap);
     setLanguages(Array.from(languageSet));
     setLevels(Array.from(levelSet));
   };
 
-  function convertToTotalHours(timeStr: string | number): number {
-    const parts: number[] = timeStr.toString().split(":").map(Number);
 
-    let hours: number = 0;
-    if (parts.length === 3) {
-      hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
-    } else if (parts.length === 2) {
-      hours = parts[0] / 60 + parts[1] / 3600;
-    } else if (parts.length === 1) {
-      hours = parts[0] / 3600;
-    }
-
-    return parseFloat(hours.toFixed(2)); // rounded to 2 decimals
-  }
-  function formatRatingNumber(num: number): string {
-    if (num >= 1_000_000) {
-      return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-    } else if (num >= 1_000) {
-      return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
-    } else {
-      return num.toString();
-    }
-  }
 
   useEffect(() => {
     const timer = setTimeout((): void => {
@@ -300,7 +291,7 @@ export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompPr
       ? filteredCourses
       : courses.filter((course) => {
         const title = course.title?.toLowerCase() || "";
-        const instructorName = course.instructor?.name?.toLowerCase() || "";
+        const instructorName = course.instructorId?.name?.toLowerCase() || "";
         const term = searchTerm.toLowerCase();
 
         return title.includes(term) || instructorName.includes(term);
@@ -343,7 +334,7 @@ export const CoursesPageComp = ({ initialCourses, className }: CoursesPageCompPr
           <Skeleton className="w-[235px] min-h-screen" />
         ) : (
           <div
-            className={`min-h-screen !h-full ${closeSidebar ? "w-[70px]" : "w-[250px]"
+            className={`min-h-screen h-full! ${closeSidebar ? "w-[70px]" : "w-[250px]"
               }  border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white overflow-y-auto`}
           >
             <div className="min-h-screen h-full flex flex-col relative gap-4">

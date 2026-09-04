@@ -5,10 +5,18 @@ import axios, { AxiosError } from "axios";
 import { toast } from "sonner"
 import { CCategory, CCourse, CCourseStore, CReview } from "@/types/client";
 import { CCategoryWithChildren } from "../getCachedCategory";
+import { clientLogger } from "@/utils/logger/clientLogger";
+import { number } from "framer-motion";
 
 
 export const useCourseStore = create<CCourseStore>((set, get) => ({
     courses: [] as CCourse[],
+    cachedCurrentPageNumber: 1,
+    cachedTotalPages: 1,
+    cachedHasNextPage: false,
+    cachedHasPrevPage: false,
+    cachedTotalCourses: 0,
+    cachedPaginatedCourses: [] as CCourse[],
     reviews: [] as CReview[],
     categories: [] as CCategoryWithChildren[],
     isLoading: false,
@@ -57,6 +65,42 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             return [];
         }
     },
+    fetchPaginatedCourse: async ({ page, itemsPerPage }: { page: number; itemsPerPage: number }): Promise<void> => {
+        set({ isLoading: true })
+        try {
+            const response = await axios.get(
+                `/api/courses?page=${page}&limit=${itemsPerPage}`
+            );
+            const { data, currentPage, totalPages, hasNextPage, hasPrevPage, totalCourses } = response.data;
+            const paginatedCourses = data;
+            get().setPaginatedCourses(paginatedCourses, hasNextPage, hasPrevPage, currentPage, totalPages, totalCourses);
+            set({
+                cachedCurrentPageNumber: currentPage,
+                cachedTotalPages: totalPages,
+                cachedHasNextPage: hasNextPage,
+                cachedHasPrevPage: hasPrevPage,
+            });
+            // return;
+        }
+        catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Unknown error';
+            clientLogger.error("Failed to fetch paginated courses", { message });
+        } finally {
+            set({ isLoading: false })
+        }
+
+    },
+    setPaginatedCourses: (paginatedCourses, newHasNextPage, newHasPrevPage, newCurrentPageNumber, newTotalPages, newTotalCourses) =>
+        set({
+            cachedPaginatedCourses: paginatedCourses,
+            cachedHasNextPage: newHasNextPage,
+            cachedHasPrevPage: newHasPrevPage,
+            cachedCurrentPageNumber: newCurrentPageNumber,
+            cachedTotalPages: newTotalPages,
+            cachedTotalCourses: newTotalCourses
+
+
+        }),
     setCourses: (courses) =>
         set({
             courses,
@@ -70,5 +114,6 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             categories: [],
             hasFetched: false,
         }),
+    clearPaginatedCourses: () => set({ cachedPaginatedCourses: [], cachedCurrentPageNumber: 1, cachedTotalPages: 1, cachedHasNextPage: false, cachedHasPrevPage: false, cachedTotalCourses: 0 }),
 
 }));
