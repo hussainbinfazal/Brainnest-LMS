@@ -552,7 +552,7 @@ interface CCourseStore {
   cachedTotalPages: number;
   cachedHasNextPage: boolean;
   cachedHasPrevPage: boolean;
-  cachedTotalCourses:number
+  cachedTotalCourses: number
   reviews: CReview[];
   categories: CCategoryWithChildren[];
   isLoading: boolean;
@@ -565,7 +565,7 @@ interface CCourseStore {
     force?: boolean;
   }) => Promise<CCourse[]>;
   fetchPaginatedCourse: (options: { page: number; itemsPerPage: number }) => Promise<void>;
-  setPaginatedCourses: (paginatedCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses:number) => void;
+  setPaginatedCourses: (paginatedCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number) => void;
   clearPaginatedCourses: () => void;
   setCourses: (courses: CCourse[]) => void;
   clearCourses: () => void;
@@ -727,3 +727,18 @@ export interface CuploadResult {
 
 }
 export type CuploadType = "image" | "video";
+
+
+export type CFacets = {
+  categories: {
+    _id: string;
+    count: number;
+    category: ICategory[];
+  }[];
+  languages: {
+    _id: string;
+  }[];
+  levels: {
+    _id: string;
+  }[];
+}

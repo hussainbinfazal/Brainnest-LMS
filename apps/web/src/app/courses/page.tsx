@@ -3,7 +3,8 @@ import { JSX } from "react/jsx-runtime";
 import { logger, ICourse } from "@repo/shared";
 import { getCourseByParamsWithCache, getCoursesWithCache } from "@/lib/getCachedCourse";
 import { CoursesPageComp } from "../components/CoursesComp/CoursesPageComp";
-import {getCategoriesWithCache } from "@/lib/getCachedCategory";
+import { getCategoriesWithCache } from "@/lib/getCachedCategory";
+import { getCachedFacets } from "@/lib/getCachedFacets";
 
 
 type CoursesPageProps = {
@@ -20,15 +21,18 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps): P
     1, Number.parseInt(params.limit ?? "5", 10) || 5
   );
   const skip: number = (page - 1) * limit
-  const [courses, pagCourses, categories] = await Promise.all([getCoursesWithCache(),
-  getCourseByParamsWithCache(page, limit, skip),
-  getCategoriesWithCache()]);
+  const [courses, pagCourses, categories, cachedFacets] = await Promise.all([
+    getCoursesWithCache(),
+    getCourseByParamsWithCache(page, limit, skip),
+    getCategoriesWithCache(),
+    getCachedFacets()
+  ]);
   let cachedCoursesKey = `courses:all`;
 
 
-  logger.info("Fetching courses for CoursesPage, paginatedCourses", { cachedCoursesKey, });
+  logger.info("Fetching courses for CoursesPage, paginatedCourses", { cachedCoursesKey, page, limit, skip });
   // console.log("Redis Client:", redisClient);
-  return <CoursesPageComp initialCourses={courses} pagCourses={pagCourses} categoriesWithChildren={categories} />;
+  return <CoursesPageComp initialCourses={courses} pagCourses={pagCourses} categoriesWithChildren={categories} cachedFacets={cachedFacets} />;
 };
 
 

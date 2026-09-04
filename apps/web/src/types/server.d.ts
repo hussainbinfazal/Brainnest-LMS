@@ -37,8 +37,24 @@ export interface IGetCourseByParamsResponse {
   hasPrevPage: boolean,
   totalPage: number;
   totalCourses: number;
-}
-interface OtpEntry {
+};
+
+export type IFacets = {
+  categories: {
+    _id: string;
+    count: number;
+    category: ICategory[];
+  }[];
+  languages: {
+    _id: string;
+  }[];
+  levels: {
+    _id: string;
+  }[];
+};
+
+
+export interface OtpEntry {
   otp: string;
   expires: number;
 }

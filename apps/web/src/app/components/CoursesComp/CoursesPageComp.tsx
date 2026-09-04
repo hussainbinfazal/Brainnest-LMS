@@ -25,7 +25,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { BiSolidCategoryAlt } from "react-icons/bi";
-import { CAuthUser, CCourse } from "@/types/client";
+import { CAuthUser, CCourse, CFacets } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
 import { cn } from "@/lib/utils";
 import { CCategoryWithChildren } from "@/lib/getCachedCategory";
@@ -44,9 +44,10 @@ interface CoursesPageCompProps {
     totalCourses: number
   }
   categoriesWithChildren: CCategoryWithChildren[];
+  cachedFacets: CFacets
   className?: string
 }
-export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, className }: CoursesPageCompProps): React.JSX.Element => {
+export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, cachedFacets, className }: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
   const [courses, setCourses] = useState<CCourse[] |
   []>(pagCourses.paginatedCourses);

@@ -34,6 +34,14 @@ export const COURSES_ALL = {
   usedIn: ["Homepage", "Courses Page", "Admin Panel"],
 };
 
+export const COURSES_FACETS = {
+  namespace: "courses-facets",
+  id: "category:language:level",
+  ttl: "VERY_LONG",
+  description: "Facet data for category, language, and level filters",
+  usedIn: ["Courses Page", "Course Filter API"],
+};
+
 /**
  * namespace: "course"
  * id: courseId (MongoDB ObjectId)
@@ -389,6 +397,7 @@ export const ALL_CACHE_KEYS = [
   INSTRUCTOR_STATS,
   CART_BY_USER,
   UPLOAD_SESSION,
+  COURSES_FACETS
 ];
 
 // ============================================================================

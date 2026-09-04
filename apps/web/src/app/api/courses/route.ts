@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Course, User, connectDB, logger } from "@repo/shared";
+import { Course, connectDB, logger } from "@repo/shared";
 import { ICourse } from "@repo/shared";
 import { CustomNextRequest, IGetCourseByParamsResponse } from "@/types/server";
-import { CCourse } from "@/types/client";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
 
