@@ -35,7 +35,7 @@ export interface IGetCourseByParamsResponse {
   currentPage: number;
   hasNextPage: boolean,
   hasPrevPage: boolean,
-  totalPage: number;
+  totalPages: number;
   totalCourses: number;
 };
 

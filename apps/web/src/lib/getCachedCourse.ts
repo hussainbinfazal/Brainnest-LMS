@@ -1,4 +1,4 @@
-import { Course, ICourse, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
+import { COURSES_ALL, COURSE_BY_ID, Course, ICourse, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
 import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "../types/client"
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
@@ -14,7 +14,7 @@ import { IGetCourseByParamsResponse } from "@/types/server";
 
 
 export async function getCoursesWithCache(): Promise<CCourse[]> {
-    const cached = await getCached<CCourse[]>("courses", "all");
+    const cached = await getCached<CCourse[]>(COURSES_ALL.namespace, COURSES_ALL.id);
     if (cached) {
         logger.info("Courses fetched Succesfully from Cache", {
             courseCount: cached.length
@@ -41,7 +41,7 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
             .exec();
 
         const serialized = serializeCourses(courses);
-        await setCached("Courses", "all", serialized, CACHE_TTL.MEDIUM);
+        await setCached(COURSES_ALL.namespace, COURSES_ALL.id, serialized, CACHE_TTL.MEDIUM);
         logger.info("Courses fetched Succesfully from DB", {
             courseCount: courses.length
         })
@@ -58,8 +58,8 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
         logger.warn("Invalid course Id", { courseId });
         throw new Error(`Invalid Course Id ${courseId}`)
     }
-    await invalidateCached(`course`, courseId);
-    const cached = await getCached<CCourse>(`course`, courseId);
+    await invalidateCached(COURSE_BY_ID.namespace,  courseId);
+    const cached = await getCached<CCourse>(COURSE_BY_ID.namespace, courseId);
     if (cached) {
         logger.info("1. Course fetched from cache", { cached });
         return cached;
@@ -91,7 +91,7 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
         //     "3. BEFORE REDIS:",
         //     JSON.stringify(serialized.instructorId, null, 2)
         // );
-        await setCached(`course`, courseId, serialized, CACHE_TTL.MEDIUM);
+        await setCached(COURSE_BY_ID.namespace, courseId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Course fetched successfully", { courseCount: serialized });
         return serialized;
     } catch (error: unknown) {

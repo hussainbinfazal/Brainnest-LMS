@@ -2447,3 +2447,52 @@ Frontend → Backend (save metadata)
 -chat
 -message
 -cart routes
+
+## August 4
+Changes
+--Replaced client-side sidebar facet computation (looping over paginated course data in useEffect) with a MongoDB $facet aggregation — categories, languages, and levels computed server-side in one query, cached in Redis
+--Fixed a subtle bug where filters and search were only ever operating on the current page's 6 courses instead of the full catalog — moved category/subcategory/language/level filtering into the Mongo query itself, with countDocuments and find sharing the same filter so pagination math stays correct
+--Redesigned cache keys to encode every query parameter (page, filters) so different filter combinations don't collide in Redis
+Cleaned up a pile of stale/dead useEffects and clarified when useCallback actually matters (only when something checks a function's identity, not "just in case")
+--Traced a Mongoose 9 breaking change (FilterQuery → QueryFilter) that was silently failing TypeScript
+--Designed a batch endpoint for fetching per-user course interaction records (UserCourse junction collection) instead of syncing a likedCourses array on the User document — same pattern I've been using for granular progress tracking
+
+
+- Add caching with zustand store to 
+- lessons video processing with cloudinary SDK and sections logic on the client side 
+-cart function on courseIdComp
+
+-- Completed
+
+--Pending
+-Homepage Component
+--userProgress in zustand store
+--zod resolver in the createCourseComponent and category,lessons,topic,sections and video Upload logic 
+-Adding payment reconcillation logic with webhook 
+--install razorpay and the other with their types on the chat server and authentication in socket too
+-Complete The file upload route with optimisation and backend route for very large files over 500 mb (optimisation)
+-Add custom next request with ip log in all the routes in logger
+-complete review
+-Add Frontend architecture for new fields :
+-topics
+-lessons
+-category
+-review
+-like course
+-rate limiting and helpful score calculation
+-Calculate spam score and userBehaviour
+- calculate helpful reviews on with score
+- update progress and delete progress
+-current Upload Architecuture
+Frontend → Backend (get signature)
+Frontend → Cloudinary (direct upload)
+Frontend → Backend (save metadata)
+-cloudinary frontend upload architecture and save metadata to db in backend on the backend
+-Intergrate Sentry form error monitoring at scale
+-Add delete Cache logic course update function
+-chat
+-message
+-cart routes
+
+
+

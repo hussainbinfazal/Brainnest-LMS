@@ -18,7 +18,7 @@
 // ============================================================================
 
 /** 
- * namespace: "Courses"
+ * namespace: "courses"
  * id: "all"
  * ttl: MEDIUM (15min)
  * Usage: List all available courses (public listing)
@@ -27,7 +27,7 @@
  * Full Key: Courses:all
  */
 export const COURSES_ALL = {
-  namespace: "Courses",
+  namespace: "courses",
   id: "all",
   ttl: "MEDIUM",
   description: "All available courses - public listing",
@@ -40,6 +40,14 @@ export const COURSES_FACETS = {
   ttl: "VERY_LONG",
   description: "Facet data for category, language, and level filters",
   usedIn: ["Courses Page", "Course Filter API"],
+};
+
+export const COURSES_FILTERED_BY_PARAMS = {
+  namespace: "coursesByParams",
+  id: "page-limit-category-language-level",
+  ttl: "MEDIUM",
+  description: "Paginated course list filtered by category, language, and level",
+  usedIn: ["Courses API", "Courses Page Filters"],
 };
 
 /**

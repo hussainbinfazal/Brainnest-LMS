@@ -31,6 +31,9 @@ import { cn } from "@/lib/utils";
 import { CCategoryWithChildren } from "@/lib/getCachedCategory";
 import { useCourseStore } from "@/lib/store/useCourseStore";
 import { clientLogger } from "@/utils/logger/clientLogger";
+import { formatRatingNumber } from "@/utils/timeFormat";
+import { convertToTotalHours } from "@repo/shared";
+import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
 
 
 interface CoursesPageCompProps {
@@ -40,14 +43,16 @@ interface CoursesPageCompProps {
     currentPage: number,
     hasNextPage: boolean,
     hasPrevPage: boolean,
-    totalPage: number,
+    totalPages: number,
     totalCourses: number
   }
   categoriesWithChildren: CCategoryWithChildren[];
-  cachedFacets: CFacets
+  initialFacetsCategories: CCategoryWithChildren[],
+  initialFacetsLanguages: string[],
+  initialFacetsLevels: string[]
   className?: string
 }
-export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, cachedFacets, className }: CoursesPageCompProps): React.JSX.Element => {
+export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, initialFacetsCategories, initialFacetsLanguages, initialFacetsLevels, className }: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
   const [courses, setCourses] = useState<CCourse[] |
   []>(pagCourses.paginatedCourses);
@@ -57,10 +62,11 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const [levels, setLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedsubCategories, setSelectedsubCategories] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<CCourse[]>([]);
+  // const [filteredCourses, setFilteredCourses] = useState<CCourse[]>([]);
   const [likedCourseIds, setLikedCourseIds] = useState<string[]>([]);
   const [closeSidebar, setCloseSidebar] = useState<boolean>(false);
   const itemsPerPage: number = 6; //This is limit;
@@ -74,14 +80,18 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const cachedHasNextPage = useCourseStore((state) => state.cachedHasNextPage);
   const cachedHasPrevPage = useCourseStore((state) => state.cachedHasPrevPage);
   const cachedTotalCourses = useCourseStore((state) => state.cachedTotalCourses);
+  const setLiked = useUserCourseStore((state) => state.updateUserCourse);
+  const setUpdatingLike = useUserCourseStore((state) => state.setUpdatingLike);
+  const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(searchTerm);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [totalCourses, setTotalCourses] = useState<number>(0);
   const [hasNextPage, setHasNextPage] = useState<boolean>(false);
   const [hasPrevPage, setHasPrevPage] = useState<boolean>(false);
-
+  const maxVisiblePages = 4; // Number of visible page buttons
   const [sidebarItems, setSidebarItems] = [
     {
       title: "Categories",
@@ -127,7 +137,6 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     try {
       await fetchPaginatedCourses({ page, itemsPerPage });
       setCourses(cachedPaginatedCourses);
-      extractSidebarItems(data);
       setCurrentPage(cachedCurrentPageNumber);
       setTotalPages(cachedTotalPages);
       setTotalCourses(cachedTotalCourses);
@@ -140,53 +149,50 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     } finally {
       setIsLoading(false)
     }
-  }, [page, itemsPerPage]);
-  const extractSidebarItems = (courses: CCourse[]) => {
-    const map: { [key: string]: Set<string> } = {};
-    const languageSet = new Set<string>();
-    const levelSet = new Set<string>();
-    courses.forEach((course: CCourse) => {
-      const courseCategory: CCategoryWithChildren[] = categories.filter((cat) => cat._id === course.category?._id);
-      const category: string = (courseCategory[0]?.name) ?? "";
-      const subCategories: CCategoryWithChildren[] = courseCategory[0]?.children as CCategoryWithChildren[] || [];
-      const language: string | undefined = course.language;
-      const level: string | undefined = course.level;
+  }, [page, itemsPerPage, selectedCategory, selectedsubCategories, selectedLanguages, selectedLevels]);
 
-      if (!map[category]) {
-        map[category] = new Set();
-      }
+  //Remove this function after tesing the sidebar logic
+  // const extractSidebarItems = (courses: CCourse[]) => {
+  //   const map: { [key: string]: Set<string> } = {};
+  //   const languageSet = new Set<string>();
+  //   const levelSet = new Set<string>();
+  //   courses.forEach((course: CCourse) => {
+  //     const courseCategory: CCategoryWithChildren[] = categories.filter((cat) => cat._id === course.category?._id);
+  //     const category: string = (courseCategory[0]?.name) ?? "";
+  //     const subCategories: CCategoryWithChildren[] = courseCategory[0]?.children as CCategoryWithChildren[] || [];
+  //     const language: string | undefined = course.language;
+  //     const level: string | undefined = course.level;
 
-      subCategories.forEach((sub: CCategoryWithChildren) => {
-        map[category].add(sub.name);
-      });
-      if (language) {
-        languageSet.add(language);
-      }
+  //     if (!map[category]) {
+  //       map[category] = new Set();
+  //     }
 
-      if (level) {
-        levelSet.add(level);
-      }
-    });
+  //     subCategories.forEach((sub: CCategoryWithChildren) => {
+  //       map[category].add(sub.name);
+  //     });
+  //     if (language) {
+  //       languageSet.add(language);
+  //     }
 
-    const categoryMap: { [key: string]: string[] } = Object.entries(map).reduce((acc: { [key: string]: string[] }, [cat, subs]) => {
-      acc[cat] = Array.from(subs);
-      return acc;
-    }, {});
+  //     if (level) {
+  //       levelSet.add(level);
+  //     }
+  //   });
 
-    setSidebarCategories(categoryMap);
-    setLanguages(Array.from(languageSet));
-    setLevels(Array.from(levelSet));
+  //   const categoryMap: { [key: string]: string[] } = Object.entries(map).reduce((acc: { [key: string]: string[] }, [cat, subs]) => {
+  //     acc[cat] = Array.from(subs);
+  //     return acc;
+  //   }, {});
+
+  //   setSidebarCategories(categoryMap);
+  //   setLanguages(Array.from(languageSet));
+  //   setLevels(Array.from(levelSet));
+  // };
+
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategory((prev) => (prev === categoryId ? null : categoryId)); // click again to clear
+    setSelectedsubCategories([]);
   };
-
-
-
-  useEffect(() => {
-    const timer = setTimeout((): void => {
-      fetchAllCourses();
-    }, 300); // Small delay to prevent immediate load
-    return (): void => clearTimeout(timer);
-  }, [fetchAllCourses]);
-
   const handleCheckboxChange = (value: string, type: string) => {
     const updateSelected = (selected: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
       if (selected.includes(value)) {
@@ -205,36 +211,75 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
       updateSelected(selectedLevels, setSelectedLevels);
     }
   };
-  useEffect(() => {
-    const filtered: CCourse[] = courses.filter((course: CCourse) => {
-      const matchesSubcategory: boolean =
-        ((selectedsubCategories?.length ?? 0) === 0 ||
-          course?.category?.subCategories?.some((sub: string) =>
-            selectedsubCategories?.includes(sub)
-          )) ?? false;
 
-      const matchesLanguage: boolean =
-        selectedLanguages?.length === 0 ||
-        selectedLanguages?.includes(course?.language ?? "");
+  const toggleLikeCourse = async (courseId: string): Promise<void> => {
+    if (!user) {
+      return alert("Please login first");
+    }
+    if (!courseId) {
+      return alert("Something went wrong");
+    }
+    // console.log("1. LIKE COURSE FUNCTION CALLED")
+    const store = useUserCourseStore.getState();
+    const currentUserCourse = store.userCourseByCourseId[courseId];
+    const isUpdating = store.isUpdatingLikeByCourseId[courseId]
+    // console.log("2. LIKE COURSE FUNCTION CALLED")
 
-      const matchesLevel: boolean =
-        selectedLevels?.length === 0 || selectedLevels?.includes(course?.level ?? "");
+    //Avoid duplicate request
+    if (isUpdating) {
+      toast.error("You have already liked this course");
+      return
+    }
 
-      return matchesSubcategory && matchesLanguage && matchesLevel;
+    // console.log("3. LIKE COURSE FUNCTION CALLED")
+
+    // Store previous state for rollback
+    const previousUserCourse = currentUserCourse;
+    const shouldLike = !currentUserCourse?.isLiked;
+    setUpdatingLike(courseId, true);
+    setLiked(courseId, {
+      isLiked: shouldLike,
+      likedAt: shouldLike ? new Date() : null,
     });
 
-    setFilteredCourses(filtered);
-  }, [selectedsubCategories, selectedLanguages, selectedLevels, courses]);
-  useEffect(() => {
-  }, [selectedLanguages]);
+    // We have to pass pass courseId from params in the url 
+    try {
+      // console.log("3. This is the try block of the like course function")
+      // console.log("This is the should Like state",shouldLike)
+      const response = shouldLike
+        ? await axios.post(`/api/likeCourse/${courseId}`)
+        : await axios.delete(`/api/dislikeCourse/${courseId}`);
+      const updatedUserCourse = response.data.userCourse
+      setUserCourseById(courseId as string, updatedUserCourse)
+      toast.success(`${shouldLike ? "Course liked! You'll find it in your Liked Courses." : "Course disliked!"}`);
+      // console.log("LIKE DEBUG FRONTEND:", {
+      //   currentUserCourse,
+      //   isLiked,
+      // });
 
-  useEffect(() => {
-  }, [selectedsubCategories]);
-  useEffect(() => {
-    if (user?.likedCourses) {
-      setLikedCourseIds(user.likedCourses);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        // console.log("LIKE COURSE API ERROR:", {
+        //   status: error.response?.status,
+        //   data: error.response?.data,
+        //   message: error.message,
+        // });
+
+        clientLogger.error(`Error ${shouldLike ? "liking" : "disliking"} course`, {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+      }
+      const message = error instanceof Error ? error.message : "Something went wrong while   liking the course.";
+      setUserCourseById(courseId as string, previousUserCourse);
+      clientLogger.error(`Error ${shouldLike ? "liking" : "disliking"} course`, message);
+      toast.error(`Failed to ${shouldLike ? "like" : "dislike"} course`);
+    } finally {
+      setUpdatingLike(courseId, false);
     }
-  }, [user]);
+  }
+
 
   const likeCourse = async (courseId: string): Promise<void> => {
     if (!user) {
@@ -289,16 +334,16 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
 
   const searchedCourses: CCourse[] =
     searchTerm.trim() === ""
-      ? filteredCourses
+      ? courses
       : courses.filter((course) => {
-        const title = course.title?.toLowerCase() || "";
-        const instructorName = course.instructorId?.name?.toLowerCase() || "";
-        const term = searchTerm.toLowerCase();
+        const title: string = course.title?.toLowerCase() || "";
+        const instructorName: string = course.instructorId?.name?.toLowerCase() || "";
+        const term: string | null = searchTerm.toLowerCase();
 
         return title.includes(term) || instructorName.includes(term);
       });
 
-  const maxVisiblePages = 4; // Number of visible page buttons
+
 
   const handlePageChange = (page: number): void => {
     if (page >= 1 && page <= totalPages) {
@@ -322,7 +367,19 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
 
     return pages;
   };
+  useEffect(() => {
+    fetchAllCourses();
+  }, [fetchAllCourses]);
 
+  useEffect(() => {
+    if (user?.likedCourses) {
+      setLikedCourseIds(user.likedCourses);
+    }
+  }, [user]);
+  useEffect(() => {
+    const timer: NodeJS.Timeout = setTimeout((): void => setDebouncedSearchTerm(searchTerm), 400);
+    return (): void => clearTimeout(timer);
+  }, [searchTerm]);
   return (
     <div className={cn("w-screen min-h-screen h-screen flex flex-col relative overflow-hidden", className)}>
       {isLoading && (
@@ -332,10 +389,10 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
       )}
       <div className="w-full h-full flex flex-row gap-6 relative bg-white dark:bg-black">
         {isLoading ? (
-          <Skeleton className="w-[235px] min-h-screen" />
+          <Skeleton className="w-58.75 min-h-screen" />
         ) : (
           <div
-            className={`min-h-screen h-full! ${closeSidebar ? "w-[70px]" : "w-[250px]"
+            className={`min-h-screen h-full! ${closeSidebar ? "w-17.5" : "w-62.5"
               }  border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white overflow-y-auto`}
           >
             <div className="min-h-screen h-full flex flex-col relative gap-4">
@@ -361,25 +418,30 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                       className="flex flex-col justify-center gap-3"
                     >
                       <p className="mt-3 mb-3 text-xl">Categories</p>
-                      {Object.entries(categories).map(([category, subcats]) => (
-                        <div key={category} className="flex flex-col gap-2">
-                          <p className="font-semibold pl-0">
-                            {category.charAt(0).toUpperCase() +
-                              category.slice(1)}
+                      {initialFacetsCategories.map((cat: CCategoryWithChildren) => (
+                        <div key={cat._id} className="flex flex-col gap-2">
+                          <p className={cn(
+                            "font-semibold pl-0 cursor-pointer",
+                            selectedCategory === cat._id && "text-blue-500"
+                          )}
+                            onClick={() => handleCategoryClick(cat._id)}
+                          >
+                            {cat.name.charAt(0).toUpperCase() +
+                              cat.name.slice(1)}
                           </p>
                           <div className="pl-0 space-y-3 mt-1 ">
-                            {subcats?.map((sub) => (
-                              <div className="flex gap-3 items-center">
+                            {cat.children?.map((sub) => (
+                              <div key={sub._id} className="flex gap-3 items-center">
                                 <input
                                   type="checkbox"
-                                  value={sub}
+                                  value={sub._id}
                                   className="mr-2 appearance-none w-3 h-3 rounded-full border border-gray-400 checked:bg-blue-500"
-                                  checked={selectedsubCategories.includes(sub)}
+                                  checked={selectedsubCategories.includes(sub._id)}
                                   onChange={() =>
-                                    handleCheckboxChange(sub, "subCategories")
+                                    handleCheckboxChange(sub._id, "subCategories")
                                   }
                                 />
-                                {sub.charAt(0).toUpperCase() + sub.slice(1)}
+                                {sub.name.charAt(0).toUpperCase() + sub.name.slice(1)}
                               </div>
                             ))}
                           </div>
@@ -392,7 +454,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                       className="flex flex-col justify-center gap-3"
                     >
                       <p>Languages</p>
-                      {languages.map((lang) => (
+                      {initialFacetsLanguages.map((lang) => (
                         <div className="flex gap-3 items-center">
                           <input
                             type="checkbox"
@@ -413,7 +475,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                       className="flex flex-col justify-center gap-3"
                     >
                       <p>Levels</p>
-                      {levels.map((level) => (
+                      {initialFacetsLevels.map((level) => (
                         <div className="flex gap-3 items-center">
                           <input
                             type="checkbox"
@@ -470,7 +532,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                     return (
                       <Card
                         key={course?._id}
-                        className="w-[300px] h-[380px] relative"
+                        className="w-75 h-95 relative"
                       >
                         <CardContent className="h-3/5 w-full flex justify-center relative">
                           {course?.coverImage ? (
@@ -483,7 +545,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                               />
                             </div>
                           ) : (
-                            <Skeleton className="w-full h-[200px]" />
+                            <Skeleton className="w-full h-50" />
                           )}
                         </CardContent>
                         <CardFooter className="flex-1">
@@ -493,17 +555,17 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                                 {course.title}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {course?.instructor?.name}
+                                {course?.instructorId?.name}
                               </p>
                               <div className="flex gap-2">
                                 <Badge className='' variant="outline">
-                                  {course?.rating
-                                    ? formatRatingNumber(course.rating)
+                                  {course?.averageRating
+                                    ? formatRatingNumber(course.averageRating)
                                     : "0"}
                                 </Badge>
                                 <Badge className='' variant="outline">
-                                  {course?.duration
-                                    ? convertToTotalHours(course.duration)
+                                  {course?.totalDurationInSeconds
+                                    ? convertToTotalHours(course.totalDurationInSeconds)
                                     : "0"}{" "}
                                   hours
                                 </Badge>

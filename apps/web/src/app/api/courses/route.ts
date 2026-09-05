@@ -1,5 +1,6 @@
+import mongoose, { QueryFilter } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
-import { Course, connectDB, logger } from "@repo/shared";
+import { COURSES_FILTERED_BY_PARAMS, Course, connectDB, logger } from "@repo/shared";
 import { ICourse } from "@repo/shared";
 import { CustomNextRequest, IGetCourseByParamsResponse } from "@/types/server";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -12,11 +13,30 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     const page = parseInt(searchParams?.get('page') || '1') || 1;
     const limit = parseInt(searchParams?.get('limit') || '5') || 5;
     const skip = Number((page - 1)) * limit;
+
+
+    const category = searchParams?.get('category');
+    const childCategories = searchParams?.getAll('childCategories');
+    const languages = searchParams?.getAll('languages');
+    const levels = searchParams?.getAll('levels');
+    const categoryIds: string[] = [
+        ...(category ? [category] : []), //single Id
+        ...childCategories, //subcategories Id
+    ];
+    // [[categoryId?],[subCategoriesIds?]]
     if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
         logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
         throw new Error("Invalid parameters for fetching courses");
     };
-    const cached = await getCached<IGetCourseByParamsResponse>(`coursesByParams`, `${page}-${limit}-${skip}`);
+    //Custom query to fetch course by on the basis of params.
+    const query: QueryFilter<ICourse> = {};
+    if (category) query["category._id"] = category;
+    if (childCategories) query["subCategories._id"] = { $in: childCategories };
+    if (languages.length) query.language = { $in: languages };
+    if (levels.length) query.levels = { $in: levels };
+
+    const cacheId = `${page}-${limit}-cat:${[...categoryIds].sort().join(",")}-lang:${[...languages].sort().join(",")}-level:${[...levels].sort().join(",")}`;//Dynamic Conditional Cache Key
+    const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, cacheId);
     if (cached) {
         logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
         return NextResponse.json(
@@ -26,7 +46,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
                 currentPage: cached.currentPage,
                 hasNextPage: cached.hasNextPage,
                 hasPrevPage: cached.hasPrevPage,
-                totalPages: cached.totalPage,
+                totalPages: cached.totalPages,
                 totalCourses: cached.totalCourses
             },
             { status: 200 }
@@ -35,36 +55,48 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     await connectDB(process.env.MONGODB_URI!);
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
-            Course.countDocuments(),
-            Course.find().skip(skip).limit(limit)
+            Course.countDocuments(query),
+            Course.find(query).skip(skip).limit(limit)
         ]);
         const totalCourses: number = totalCourseDoc;
         const courses: ICourse[] = coursesInDB;
-
-        if (!courses || courses.length === 0) {
-            return NextResponse.json({ message: "No Courses Found" }, { status: 404 });
-        }
-        logger.info("Courses fetched successfully", { totalCourses, page, limit });
         const totalPages: number = Math.ceil(totalCourses / limit);
         const hasNextPage: boolean = page < totalPages;
         const hasPrevPage: boolean = page > 1;
-
+        if (!courses || courses.length === 0) {
+            return NextResponse.json({ message: "No Courses Found" }, { status: 404 });
+        }
+        if (!courses || courses.length === 0) {
+            logger.info("No courses matched filters ", {
+                page, limit, category, childCategories, languages, levels
+            });
+            return NextResponse.json({
+                message: "No courses Found",
+                data: [],
+                currentPage: page,
+                hasNextPage: false,
+                hasPrevPage,
+                totalPages: 0,
+                totalCourses: 0
+            }, { status: 200 })
+        }
+        logger.info("Courses fetched successfully", { totalCourses, page, limit });
         const responseData: IGetCourseByParamsResponse = {
             paginatedCourses: serializeCourses(courses),
             currentPage: page,
             hasNextPage,
             hasPrevPage,
-            totalPage: Math.ceil(totalCourses / limit),
+            totalPages: totalPages,
             totalCourses: totalCourses
         };
-        await setCached(`coursesByParams`, `${page}-${limit}-${skip}`, responseData,CACHE_TTL.MEDIUM);
+        await setCached(COURSES_FILTERED_BY_PARAMS.namespace, cacheId, responseData, CACHE_TTL.MEDIUM);
         return NextResponse.json({
             message: "Courses Fetched Succesfully",
             data: serializeCourses(courses),
             currentPage: page,
             hasNextPage,
             hasPrevPage,
-            totalPages: Math.ceil(totalCourses / limit),
+            totalPages,
             totalCourses
 
         });

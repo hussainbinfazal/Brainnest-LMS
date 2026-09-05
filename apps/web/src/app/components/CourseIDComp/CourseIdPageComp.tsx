@@ -298,9 +298,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       toast.error("You have already liked this course");
       return
     }
-
     // console.log("3. LIKE COURSE FUNCTION CALLED")
-
     // Store previous state for rollback
     const previousUserCourse = currentUserCourse;
     const shouldLike = !currentUserCourse?.isLiked;

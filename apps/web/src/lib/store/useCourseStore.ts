@@ -7,6 +7,7 @@ import { CCategory, CCourse, CCourseStore, CReview } from "@/types/client";
 import { CCategoryWithChildren } from "../getCachedCategory";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { number } from "framer-motion";
+import { Category } from "@repo/shared";
 
 
 export const useCourseStore = create<CCourseStore>((set, get) => ({
@@ -65,11 +66,22 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             return [];
         }
     },
-    fetchPaginatedCourse: async ({ page, itemsPerPage }: { page: number; itemsPerPage: number }): Promise<void> => {
+    fetchPaginatedCourse: async ({ page, itemsPerPage, category, childCategories = [], languages = [], levels = [] }: { page: number; itemsPerPage: number, category?: string, childCategories?: string[], languages?: string[], levels?: string[] }): Promise<void> => {
         set({ isLoading: true })
         try {
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: itemsPerPage.toString(),
+            });
+            if (category) {
+                params.append("category", category);
+            }
+            childCategories.forEach((id) => params.append("subCategories", id));
+            languages.forEach((id: string) => params.append("languages", id));
+            levels.forEach((id: string) => params.append("level", id));
+
             const response = await axios.get(
-                `/api/courses?page=${page}&limit=${itemsPerPage}`
+                `/api/courses?${params.toString()}`
             );
             const { data, currentPage, totalPages, hasNextPage, hasPrevPage, totalCourses } = response.data;
             const paginatedCourses = data;

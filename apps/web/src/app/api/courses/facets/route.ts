@@ -1,12 +1,12 @@
 import { CustomNextRequest, IFacets } from "@/types/server";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { connectDB, Course, ICategory, logger } from "@repo/shared";
+import { connectDB, Course, COURSES_FACETS, ICategory, logger } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { NextResponse } from "next/server";
 export async function GET(request: CustomNextRequest, response: NextResponse): Promise<NextResponse> {
     try {
         await connectDB(process.env.MONGODB_URI!);
-        const cached = getCached(COURSES_FACETS.namespace, "category:language:level");
+        const cached = getCached(COURSES_FACETS.namespace, COURSES_FACETS.id);
         if (cached) {
             return NextResponse.json({ message: "Facets data grouped successfully", data: cached }, { status: 200 });
         }
@@ -32,7 +32,7 @@ export async function GET(request: CustomNextRequest, response: NextResponse): P
                 levels: facets[0].levels,
             };
             const serializedFacets = serializeDocument(data);
-            await setCached<IFacets>(`courses-facets`, "category:language:level", serializedFacets, CACHE_TTL.VERY_LONG);
+            await setCached<IFacets>(COURSES_FACETS.namespace, COURSES_FACETS.id, serializedFacets, CACHE_TTL.VERY_LONG);
             return NextResponse.json({ success: true, serializedFacets }, { status: 200 });
         }
         return NextResponse.json({ success: true, data: [] }, { status: 200 })
