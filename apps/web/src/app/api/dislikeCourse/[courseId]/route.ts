@@ -1,4 +1,4 @@
-import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
+// import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB, userCourse, validateMongooseId, logger } from "@repo/shared";

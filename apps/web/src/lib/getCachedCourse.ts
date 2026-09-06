@@ -155,7 +155,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
             hasNextPage,
             hasPrevPage,
             currentPage: page,
-            totalPage: Math.ceil(totalCourses / limit),
+            totalPages: Math.ceil(totalCourses / limit),
             totalCourses: totalCourses
         }
         await setCached(`coursesByParams`, `${page}-${limit}-${skip}`, response, CACHE_TTL.MEDIUM);
@@ -169,7 +169,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
             currentPage: page,
             hasNextPage: false,
             hasPrevPage: false,
-            totalPage: 0,
+            totalPages: 0,
             totalCourses: 0
         };
         // return NextResponse.json({ message: ` Error fetching courses: ${message}` }, { status: 500 });

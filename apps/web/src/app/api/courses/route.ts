@@ -35,7 +35,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     if (languages.length) query.language = { $in: languages };
     if (levels.length) query.levels = { $in: levels };
 
-    const cacheId = `${page}-${limit}-cat:${[...categoryIds].sort().join(",")}-lang:${[...languages].sort().join(",")}-level:${[...levels].sort().join(",")}`;//Dynamic Conditional Cache Key
+    const cacheId = `page-${page}-limit:${limit}-cat:${[...categoryIds].sort().join(",")}-lang:${[...languages].sort().join(",")}-level:${[...levels].sort().join(",")}`;//Dynamic Conditional Cache Key
     const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, cacheId);
     if (cached) {
         logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
@@ -55,8 +55,8 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     await connectDB(process.env.MONGODB_URI!);
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
-            Course.countDocuments(query),
-            Course.find(query).skip(skip).limit(limit)
+            Course.countDocuments(query).lean().exec(),
+            Course.find(query).skip(skip).limit(limit).lean().exec()
         ]);
         const totalCourses: number = totalCourseDoc;
         const courses: ICourse[] = coursesInDB;
@@ -80,6 +80,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
                 totalCourses: 0
             }, { status: 200 })
         }
+        console.log("These are the courses on pagination/api------------------------------------->>>>>>>>>>>>>>>>>>>", courses)
         logger.info("Courses fetched successfully", { totalCourses, page, limit });
         const responseData: IGetCourseByParamsResponse = {
             paginatedCourses: serializeCourses(courses),
@@ -102,6 +103,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         });
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
+        console.log("This is the error on Fetch Paginated Courses", error, message);
         logger.error("Error fetching courses:", { error: message });
         return NextResponse.json({ message: ` Error fetching courses` }, { status: 500 });
     }

@@ -1,4 +1,4 @@
-import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
+// import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";

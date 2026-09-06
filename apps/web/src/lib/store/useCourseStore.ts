@@ -66,7 +66,7 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             return [];
         }
     },
-    fetchPaginatedCourse: async ({ page, itemsPerPage, category, childCategories = [], languages = [], levels = [] }: { page: number; itemsPerPage: number, category?: string, childCategories?: string[], languages?: string[], levels?: string[] }): Promise<void> => {
+    fetchPaginatedCourse: async ({ page, itemsPerPage, category, childCategories = [], languages = [], levels = [] }: { page: number; itemsPerPage: number, category?: string, childCategories?: string[], languages?: string[], levels?: string[] }) => {
         set({ isLoading: true })
         try {
             const params = new URLSearchParams({
@@ -92,11 +92,20 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
                 cachedHasNextPage: hasNextPage,
                 cachedHasPrevPage: hasPrevPage,
             });
+            return {
+                paginatedCourses,
+                currentPage,
+                hasNextPage,
+                hasPrevPage,
+                totalPages,
+                totalCourses
+            };
             // return;
         }
         catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Unknown error';
             clientLogger.error("Failed to fetch paginated courses", { message });
+            return { paginatedCourses: [], currentPage: 1, hasNextPage: false, hasPrevPage: false, totalPages: 1, totalCourses: 0 };
         } finally {
             set({ isLoading: false })
         }

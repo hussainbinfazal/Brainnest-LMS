@@ -1,5 +1,5 @@
 import HomePage from "./components/home/Homepage";
-import "@/config/redis/redis";
+// import "@/config/redis/redis";
 import { CCategory, CCourse, CReview } from "@/types/client";
 import { JSX } from "react/jsx-runtime";
 import { Category, connectDB, ICategory, IReview, logger, Review } from "@repo/shared";

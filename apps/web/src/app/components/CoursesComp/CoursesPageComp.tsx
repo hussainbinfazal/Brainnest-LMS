@@ -31,9 +31,9 @@ import { cn } from "@/lib/utils";
 import { CCategoryWithChildren } from "@/lib/getCachedCategory";
 import { useCourseStore } from "@/lib/store/useCourseStore";
 import { clientLogger } from "@/utils/logger/clientLogger";
-import { formatRatingNumber } from "@/utils/timeFormat";
-import { convertToTotalHours } from "@repo/shared";
+import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
+import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";
 
 
 interface CoursesPageCompProps {
@@ -62,12 +62,11 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const [levels, setLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedsubCategories, setSelectedsubCategories] = useState<string[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   // const [filteredCourses, setFilteredCourses] = useState<CCourse[]>([]);
-  const [likedCourseIds, setLikedCourseIds] = useState<string[]>([]);
   const [closeSidebar, setCloseSidebar] = useState<boolean>(false);
   const itemsPerPage: number = 6; //This is limit;
   const user = useAuthStore((state) => state.authUser);
@@ -83,6 +82,10 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const setLiked = useUserCourseStore((state) => state.updateUserCourse);
   const setUpdatingLike = useUserCourseStore((state) => state.setUpdatingLike);
   const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
+  const fetchUserCoursesByIds = useUserCourseStore((state) => state.fetchUserCoursesByIds);
+  const getUserCourseById = useUserCourseStore((state) => state.getUserCourseById);
+  const isLiked = (courseId: string) => getUserCourseById(courseId)?.isLiked ?? false;
+
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(searchTerm);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -132,16 +135,17 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     },
   ];
 
+  // Fetch all courses logic
   const fetchAllCourses = useCallback(async (): Promise<void> => {
 
     try {
-      await fetchPaginatedCourses({ page, itemsPerPage });
-      setCourses(cachedPaginatedCourses);
-      setCurrentPage(cachedCurrentPageNumber);
-      setTotalPages(cachedTotalPages);
-      setTotalCourses(cachedTotalCourses);
-      setHasNextPage(cachedHasNextPage);
-      setHasPrevPage(cachedHasPrevPage);
+      await fetchPaginatedCourses({ page, itemsPerPage, category: selectedCategory, childCategories: selectedsubCategories, languages: selectedLanguages, levels: selectedLevels });
+      setCourses(useCourseStore.getState().cachedPaginatedCourses);
+      setCurrentPage(useCourseStore.getState().cachedCurrentPageNumber);
+      setTotalPages(useCourseStore.getState().cachedTotalPages);
+      setTotalCourses(useCourseStore.getState().cachedTotalCourses);
+      setHasNextPage(useCourseStore.getState().cachedHasNextPage);
+      setHasPrevPage(useCourseStore.getState().cachedHasPrevPage);
       setIsLoading(false);
     } catch (error: unknown) {
       const message: string = error instanceof Error ? error.message : "Unknown error occurred while fetching courses.";
@@ -189,8 +193,10 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   //   setLevels(Array.from(levelSet));
   // };
 
+
+  //Sidebar Logic
   const handleCategoryClick = (categoryId: string) => {
-    setSelectedCategory((prev) => (prev === categoryId ? null : categoryId)); // click again to clear
+    setSelectedCategory((prev) => (prev === categoryId ? "" : categoryId)); // click again to clear
     setSelectedsubCategories([]);
   };
   const handleCheckboxChange = (value: string, type: string) => {
@@ -212,6 +218,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     }
   };
 
+  //Like / Dislike Course Logic
   const toggleLikeCourse = async (courseId: string): Promise<void> => {
     if (!user) {
       return alert("Please login first");
@@ -279,59 +286,6 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
       setUpdatingLike(courseId, false);
     }
   }
-
-
-  const likeCourse = async (courseId: string): Promise<void> => {
-    if (!user) {
-      return alert("Please login first");
-    }
-    // params mai user id pass karni   hai
-    try {
-      if (!courseId) return alert("Error");
-      const reponse = await axios.post(`/api/likeCourse/${courseId}`);
-      fetchUser();
-      setLikedCourseIds([...likedCourseIds, courseId]);
-      toast.success("Course liked! You'll find it in your Liked Courses.");
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong while liking the course.";
-
-      toast.error(message);
-    }
-  };
-
-  const unlikeCourse = async (courseId: any): Promise<void> => {
-    if (!user) {
-      return alert("Please login first");
-    }
-    // params mai user id pass karni   hai
-    try {
-      if (!courseId) return alert("Error");
-      const reponse = await axios.delete(`/api/dislikeCourse/${courseId}`);
-      fetchUser();
-      setLikedCourseIds(likedCourseIds.filter((id) => id !== courseId));
-      toast.success("Course Disliked!");
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Something went wrong while liking the course.";
-      toast.error(message);
-    }
-  };
-  const fetchUser = async (): Promise<void> => {
-    try {
-      const response = await axios("/api/users/me");
-      if (response.data.user) {
-        setAuthUser(response.data.user);
-      }
-    } catch (error: any) {
-      throw error;
-    }
-  };
-
   const searchedCourses: CCourse[] =
     searchTerm.trim() === ""
       ? courses
@@ -345,41 +299,30 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
 
 
 
+  //Pagination
   const handlePageChange = (page: number): void => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
 
-  // Generate visible page numbers
-  const getVisiblePages: () => number[] = (): number[] => {
-    const pages: number[] = [];
-    let startPage: number = Number(Math.max(1, currentPage - Math.floor(maxVisiblePages / 2)));
-    let endPage: number = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
-    return pages;
-  };
+  //Fetch All Courses as soon as the component mounts
   useEffect(() => {
     fetchAllCourses();
   }, [fetchAllCourses]);
 
-  useEffect(() => {
-    if (user?.likedCourses) {
-      setLikedCourseIds(user.likedCourses);
-    }
-  }, [user]);
+  // Debounce search term for atleast 400ms
   useEffect(() => {
     const timer: NodeJS.Timeout = setTimeout((): void => setDebouncedSearchTerm(searchTerm), 400);
     return (): void => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Fetch Batch User Courses that user has interacted with
+  useEffect(() => {
+    if (courses.length > 0) {
+      fetchUserCoursesByIds(courses.map((c) => c._id));
+    }
+  }, [courses]);
   return (
     <div className={cn("w-screen min-h-screen h-screen flex flex-col relative overflow-hidden", className)}>
       {isLoading && (
@@ -572,12 +515,12 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                               </div>
                             </div>
                             <div className="w-full flex justify-between ">
-                              {likedCourseIds.includes(course._id) ? (
+                              {isLiked(course._id) ? (
                                 <Button
                                   size="default"
                                   variant="outline"
                                   onClick={() => {
-                                    unlikeCourse(course._id);
+                                    toggleLikeCourse(course._id);
                                   }}
                                   className="px-10"
                                 >
@@ -590,7 +533,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                                   size='default'
                                   variant="outline"
                                   onClick={() => {
-                                    likeCourse(course._id);
+                                    toggleLikeCourse(course._id);
                                   }}
                                   className="px-10"
                                 >
@@ -635,7 +578,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                       />
                     </PaginationItem>
 
-                    {getVisiblePages().map((page) => (
+                    {getVisiblePages({ currentPage, totalPages, maxVisiblePages }).map((page) => (
                       <PaginationItem key={page}>
                         <PaginationLink className=''
                           onClick={() => handlePageChange(page)}

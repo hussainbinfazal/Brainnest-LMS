@@ -19,7 +19,7 @@ type CUserCourseStore = {
     isUpdatingLikeByCourseId: Record<string, boolean>;
     setUpdatingLike: (courseId: string, state: boolean) => void;
     clearUserCourseById: () => void;
-}
+};
 
 export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
     userCourseByCourseId: {},
@@ -60,6 +60,8 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             });
         } catch (error: unknown) {
             const message: string = error instanceof Error ? error.message : "Error in user Course Store"
+            clientLogger.error("Error fetching user course", { message, error });
+            // toast.error("Something went wrong!");
         }
     },
     setUserCourseById: (courseId, userCourse: CUserCourse) =>
@@ -92,7 +94,7 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
                 ...state.isUpdatingLikeByCourseId,
                 [courseId]: isUpdating,
             },
-        }))
+        }));
     },
 
 
