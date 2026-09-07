@@ -118,6 +118,12 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
         ? state.userCourseByCourseId[courseId]?.isLiked ?? false
         : false
   );
+  const isEnrolled = useUserCourseStore((
+    state) =>
+    courseId
+      ? state.userCourseByCourseId[courseId]?.isEnrolled ?? false
+      : false
+  );
   // console.log(" ----- > This is the isLiked state in the useUserCouresStore on courseId Page", isLiked);
   // console.log("This is the userCourse in zustand", userCourseByCourseId);
   const [viewSection, setViewSection] = useState<boolean>(false);
@@ -128,7 +134,6 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const [totalReviewsOfInstructor, setTotalReviewsOfInstructor] = useState<number>(instructorStats?.totalReviews || 0);
   const [totalCoursesOfInstructor, setTotalCoursesOfInstructor] = useState<number>(instructorStats?.totalCourses || 0);
   const [isAlreadyAdded, setIsAlreadyAdded] = useState<boolean>(false);
-  const [isEnrolled, setIsEnrolled] = useState<boolean>(userCourse?.isEnrolled ?? false);
   const [category, setCategory] = useState<CCategoryWithChildren | null>(courseCategory);
   const [order, setOrder] = useState<COrder | null>(null);
   const [isCompleted, setIsCompleted] = useState<boolean>(userCourse?.isCompleted ?? false);
@@ -970,7 +975,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                           : "rounded"
                           }`}
                       >
-                        <button className="w-1/2 flex justify-start items-center gap-4"
+                        <div className="flex gap-4 flex-1">{isEnrolled && <button className="flex justify-start items-center gap-4"
                           aria-label={viewSectionId === section?._id ? "collapse-section" : "expand-section"}
                           onClick={() => {
                             if (viewSectionId === section?._id) {
@@ -986,8 +991,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                           ) : (
                             <IoIosArrowDown className="cursor-pointer" />
                           )}{" "}
+                        </button>}
                           {section.title}
-                        </button>
+                        </div>
 
                         <span className="w-1/2 flex justify-end items-center gap-4">
                           {/* {lesson?.description} */}
