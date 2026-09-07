@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -164,45 +163,6 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
       setIsLoading(false)
     }
   }, [page, itemsPerPage, filters.category, filters.subCategory, filters.languages, filters.levels,]);
-
-  //Remove this function after tesing the sidebar logic
-  // const extractSidebarItems = (courses: CCourse[]) => {
-  //   const map: { [key: string]: Set<string> } = {};
-  //   const languageSet = new Set<string>();
-  //   const levelSet = new Set<string>();
-  //   courses.forEach((course: CCourse) => {
-  //     const courseCategory: CCategoryWithChildren[] = categories.filter((cat) => cat._id === course.category?._id);
-  //     const category: string = (courseCategory[0]?.name) ?? "";
-  //     const subCategories: CCategoryWithChildren[] = courseCategory[0]?.children as CCategoryWithChildren[] || [];
-  //     const language: string | undefined = course.language;
-  //     const level: string | undefined = course.level;
-
-  //     if (!map[category]) {
-  //       map[category] = new Set();
-  //     }
-
-  //     subCategories.forEach((sub: CCategoryWithChildren) => {
-  //       map[category].add(sub.name);
-  //     });
-  //     if (language) {
-  //       languageSet.add(language);
-  //     }
-
-  //     if (level) {
-  //       levelSet.add(level);
-  //     }
-  //   });
-
-  //   const categoryMap: { [key: string]: string[] } = Object.entries(map).reduce((acc: { [key: string]: string[] }, [cat, subs]) => {
-  //     acc[cat] = Array.from(subs);
-  //     return acc;
-  //   }, {});
-
-  //   setSidebarCategories(categoryMap);
-  //   setLanguages(Array.from(languageSet));
-  //   setLevels(Array.from(levelSet));
-  // };
-
 
   //Sidebar Logic
   const handleCategoryClick = (categoryId: string) => {

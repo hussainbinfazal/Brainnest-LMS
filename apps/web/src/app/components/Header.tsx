@@ -28,7 +28,6 @@ export default function Header({ className }: { className?: string }): React.JSX
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
-  let [user, setUser] = useState<CAuthUser | null | undefined>(null);
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
@@ -55,31 +54,6 @@ export default function Header({ className }: { className?: string }): React.JSX
     }
   }, [authUser?._id]);
 
-  useEffect(() => {
-    // Set authUser from session if available
-    if (session?.user && !authUser) {
-      const mappedUser: CAuthUser = {
-
-        _id: session.user.id || "",
-        name: session.user.name || "",
-        email: session.user.email || "",
-        role: "student", // default role if not provided
-        phoneNumber: undefined,
-        imageUrl: session.user.image || undefined,
-        profileImage: undefined,
-        firstName: session.user.name?.split(" ")[0] || "",
-        enrolledCourses: [], // default empty array
-        certificates: [],     // default empty array
-      };
-      setAuthUser(mappedUser);
-      setHasInitialized(true);
-    } else if (!authUser && status === "unauthenticated") {
-      // console.log("Fetching user in header...");
-      fetchUser().catch((error) => {
-        // console.error("Failed to fetch user:", error);
-      });
-    }
-  }, [session, authUser, status, fetchUser]);
 
   const handleLogout = async () => {
     await signOut();
@@ -90,7 +64,7 @@ export default function Header({ className }: { className?: string }): React.JSX
 
   useEffect(() => {
     console.log("authUser", authUser);
-  }, [user, authUser]);
+  }, [authUser]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -201,7 +175,7 @@ export default function Header({ className }: { className?: string }): React.JSX
               >
                 <LiaShoppingCartSolid className="text-3xl" />
                 {cartItemsCount > 0 && (
-                  <span className="absolute -top-2 -right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-2 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {cartItemsCount}
                   </span>
                 )}
@@ -266,7 +240,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                   >
                     <AvatarImage
                       src={
-                        authUser?.imageUrl || ""
+                        authUser?.profileImage || ""
                         // authUser?.profileImage ||
                         // session?.user?.image
                       }
@@ -274,7 +248,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                       className="cursor-pointer"
                     />
                     <AvatarFallback className="cursor-pointer">
-                      {authUser?.firstName?.charAt(0).toUpperCase()}
+                      {authUser?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -286,7 +260,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                         : authUser
                           ? "min-h-38"
                           : " min-h-10"
-                        }  w-40 z-[70]`}
+                        }  w-40 z-70`}
 
                     >
                       <CardContent className="flex flex-col gap-3 items-center justify-center">

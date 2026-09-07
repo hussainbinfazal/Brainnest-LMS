@@ -24,6 +24,8 @@ type CUserCourseStore = {
 export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
     userCourseByCourseId: {},
     isUpdatingLikeByCourseId: {},
+    enrolledCourseIds: [],
+    likedCourseIds: [],
     isLoading: false,
 
     fetchUserCourseById: async (courseId: string) => {
@@ -51,6 +53,34 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
         }
     },
     fetchUserCoursesByIds: async (courseIds: string[]) => {
+        if (courseIds.length === 0) return;
+        try {
+            const response = await axios.post("/api/userCourse/batch", { courseIds });
+            const userCourses = response.data.userCourses as CUserCourse[];
+            set((state) => {
+                const updated = { ...state.userCourseByCourseId };
+                userCourses.forEach((userCourse) => {
+                    updated[userCourse.courseId] = userCourse;
+                });
+                return {
+                    userCourseByCourseId: updated,
+                };
+            });
+        } catch (error: unknown) {
+            let message = "Something went wrong,in user Course Store(batch)";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            clientLogger.error("Error fetching batch user courses", { message, error });
+            // toast.error("Something went wrong!");
+        }
+    },
+    fetchUserCoursesByUserIds: async (courseIds: string[]) => {
         if (courseIds.length === 0) return;
         try {
             const response = await axios.post("/api/userCourse/batch", { courseIds });
