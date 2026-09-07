@@ -34,6 +34,7 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
 import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";
+import CoursesPageSkeleton from "./CoursesPage-skeleton";
 
 
 interface CoursesPageCompProps {
@@ -336,6 +337,10 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     }
   }, [courses, user]);
 
+  if (isLoading) {
+    return <CoursesPageSkeleton />
+  }
+
   return (
     <div className={cn("w-screen min-h-screen h-screen flex flex-col relative overflow-hidden", className)}>
       {isLoading && (
@@ -344,9 +349,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
         </div>
       )}
       <div className="w-full h-full flex flex-row gap-6 relative bg-white dark:bg-black">
-        {isLoading ? (
-          <Skeleton className="w-58.75 min-h-screen" />
-        ) : (
+        {(
           <div
             className={`min-h-screen h-full! ${closeSidebar ? "w-17.5" : "w-62.5"
               }  border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white overflow-y-auto`}
@@ -455,12 +458,10 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
             </div>
           </div>
         )}
-        {isLoading ? (
-          <Skeleton className="w-full h-screen" />
-        ) : (
+        {(
           <div
-            className={`${closeSidebar ? "w-[calc(100%-70px)]" : "w-[calc(100%-250px)]"
-              } md:w-2/3 min-h-screen h-full flex flex-col gap-2 justify-between pt-4 overflow-auto`}
+            className={`${closeSidebar ? "w-[calc(100%-70px)]" : "flex-1"
+              } md:w-2/3 min-h-screen h-full flex flex-col gap-2 justify-between pt-4 overflow-auto pr-5`}
           >
             <span className="w-full flex justify-between items-center">
               <span className="inline-block text-3xl">Courses</span>
@@ -476,7 +477,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
               </span>
             </span>
             <div className="w-full flex-1 flex items-start justify-start">
-              <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3  gap-4 justify-items-center">
+              <div className="w-full h-full grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ">
                 {searchedCourses?.length === 0 ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <p className="text-muted-foreground text-lg">
@@ -490,7 +491,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                     return (
                       <Card
                         key={course?._id}
-                        className="w-75 h-95 relative"
+                        className="max-w-75 h-95 relative"
                       >
                         <CardContent className="h-3/5 w-full flex justify-center relative">
                           {course?.coverImage ? (
@@ -579,9 +580,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
               </div>
             </div>
             <div className="py-4">
-              {isLoading ? (
-                <Skeleton className="" />
-              ) : (
+              {(
                 <Pagination className=''>
                   <PaginationContent className=''>
                     <PaginationItem>
