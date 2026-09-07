@@ -52,20 +52,29 @@ interface CoursesPageCompProps {
   initialFacetsLevels: string[]
   className?: string
 }
+type CCoursesFilter = {
+  category: string,
+  subCategory: string,
+  languages: string[],
+  levels: string[]
+}
 export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, initialFacetsCategories, initialFacetsLanguages, initialFacetsLevels, className }: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
   const [courses, setCourses] = useState<CCourse[] |
   []>(pagCourses.paginatedCourses);
   const [categories, setCategories] = useState<CCategoryWithChildren[] | []>(categoriesWithChildren);
+  const [filters, setFilters] = useState<CCoursesFilter>({
+    category: "",
+    subCategory: "",
+    languages: [],
+    levels: [],
+  });
   const [sidebarCategories, setSidebarCategories] = useState<Record<string, string[]>>({});
   const [languages, setLanguages] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedsubCategories, setSelectedsubCategories] = useState<string[]>([]);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
+
   // const [filteredCourses, setFilteredCourses] = useState<CCourse[]>([]);
   const [closeSidebar, setCloseSidebar] = useState<boolean>(false);
   const itemsPerPage: number = 6; //This is limit;
@@ -84,8 +93,8 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
   const fetchUserCoursesByIds = useUserCourseStore((state) => state.fetchUserCoursesByIds);
   const getUserCourseById = useUserCourseStore((state) => state.getUserCourseById);
-  const isLiked = (courseId: string) => getUserCourseById(courseId)?.isLiked ?? false;
-
+  const userCourseByCourseId = useUserCourseStore((state) => state.userCourseByCourseId);
+  const isLiked = (courseId: string) => userCourseByCourseId[courseId]?.isLiked ?? false;
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(searchTerm);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -139,7 +148,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const fetchAllCourses = useCallback(async (): Promise<void> => {
 
     try {
-      await fetchPaginatedCourses({ page, itemsPerPage, category: selectedCategory, childCategories: selectedsubCategories, languages: selectedLanguages, levels: selectedLevels });
+      await fetchPaginatedCourses({ page, itemsPerPage, category: filters.category, childCategory: filters.subCategory, languages: filters.languages, levels: filters.levels });
       setCourses(useCourseStore.getState().cachedPaginatedCourses);
       setCurrentPage(useCourseStore.getState().cachedCurrentPageNumber);
       setTotalPages(useCourseStore.getState().cachedTotalPages);
@@ -153,7 +162,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     } finally {
       setIsLoading(false)
     }
-  }, [page, itemsPerPage, selectedCategory, selectedsubCategories, selectedLanguages, selectedLevels]);
+  }, [page, itemsPerPage, filters.category, filters.subCategory, filters.languages, filters.levels,]);
 
   //Remove this function after tesing the sidebar logic
   // const extractSidebarItems = (courses: CCourse[]) => {
@@ -196,26 +205,29 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
 
   //Sidebar Logic
   const handleCategoryClick = (categoryId: string) => {
-    setSelectedCategory((prev) => (prev === categoryId ? "" : categoryId)); // click again to clear
-    setSelectedsubCategories([]);
+    setFilters((prev) => ({
+      ...prev,
+      category: prev.category === categoryId ? "" : categoryId,
+      subCategory: "", // reset child when parent changes
+    }));
+    // setCurrentPage(1);
   };
-  const handleCheckboxChange = (value: string, type: string) => {
-    const updateSelected = (selected: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-      if (selected.includes(value)) {
-        setter(selected.filter((v: string) => v !== value));
-      } else {
-        setter([...selected, value]);
-      }
-    };
-
-    if (type === "subCategories")
-      updateSelected(selectedsubCategories, setSelectedsubCategories);
-    if (type === "languages") {
-      updateSelected(selectedLanguages, setSelectedLanguages);
-    }
-    if (type === "levels") {
-      updateSelected(selectedLevels, setSelectedLevels);
-    }
+  const handleSubCategoryChange = (value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      subCategory: prev.subCategory === value ? "" : value,
+    }));
+    // setCurrentPage(1);
+  };
+  const handleCheckboxChange = (value: string, type: "languages" | "levels") => {
+    setFilters((prev) => {
+      const current = prev[type];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [type]: updated };
+    });
+    // setCurrentPage(1);
   };
 
   //Like / Dislike Course Logic
@@ -319,10 +331,11 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
 
   // Fetch Batch User Courses that user has interacted with
   useEffect(() => {
-    if (courses.length > 0) {
+    if (courses.length > 0 && user) {
       fetchUserCoursesByIds(courses.map((c) => c._id));
     }
-  }, [courses]);
+  }, [courses, user]);
+
   return (
     <div className={cn("w-screen min-h-screen h-screen flex flex-col relative overflow-hidden", className)}>
       {isLoading && (
@@ -364,10 +377,10 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                       {initialFacetsCategories.map((cat: CCategoryWithChildren) => (
                         <div key={cat._id} className="flex flex-col gap-2">
                           <p className={cn(
-                            "font-semibold pl-0 cursor-pointer",
-                            selectedCategory === cat._id && "text-blue-500"
+                            "font-semibold pl-0",
+                            filters.category === cat._id && "text-blue-500"
                           )}
-                            onClick={() => handleCategoryClick(cat._id)}
+                          // onClick={() => handleCategoryClick(cat._id)}
                           >
                             {cat.name.charAt(0).toUpperCase() +
                               cat.name.slice(1)}
@@ -379,9 +392,11 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                                   type="checkbox"
                                   value={sub._id}
                                   className="mr-2 appearance-none w-3 h-3 rounded-full border border-gray-400 checked:bg-blue-500"
-                                  checked={selectedsubCategories.includes(sub._id)}
-                                  onChange={() =>
-                                    handleCheckboxChange(sub._id, "subCategories")
+                                  checked={filters.subCategory === sub._id}
+                                  onChange={() => {
+                                    handleSubCategoryChange(sub._id)
+
+                                  }
                                   }
                                 />
                                 {sub.name.charAt(0).toUpperCase() + sub.name.slice(1)}
@@ -398,12 +413,12 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                     >
                       <p>Languages</p>
                       {initialFacetsLanguages.map((lang) => (
-                        <div className="flex gap-3 items-center">
+                        <div key={lang} className="flex gap-3 items-center">
                           <input
                             type="checkbox"
                             value={lang}
                             className="mr-2 appearance-none w-3 h-3 rounded-full border border-gray-400 checked:bg-blue-500"
-                            checked={selectedLanguages.includes(lang)}
+                            checked={filters.languages.includes(lang)}
                             onChange={() =>
                               handleCheckboxChange(lang, "languages")
                             }
@@ -419,12 +434,12 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                     >
                       <p>Levels</p>
                       {initialFacetsLevels.map((level) => (
-                        <div className="flex gap-3 items-center">
+                        <div key={level} className="flex gap-3 items-center">
                           <input
                             type="checkbox"
                             value={level}
                             className="mr-2 appearance-none w-3 h-3 rounded-full border border-gray-400 checked:bg-blue-500"
-                            checked={selectedLevels.includes(level)}
+                            checked={filters.levels.includes(level)}
                             onChange={() =>
                               handleCheckboxChange(level, "levels")
                             }
@@ -485,6 +500,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
                                 alt={course.title}
                                 fill
                                 className="object-cover"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                               />
                             </div>
                           ) : (

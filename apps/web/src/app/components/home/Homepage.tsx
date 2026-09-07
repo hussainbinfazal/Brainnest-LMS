@@ -81,9 +81,18 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
   const [sortBy, setSortBy] = useState<ReviewSortOption>("helpful");
   const [randomReviews, setRandomReviews] = useState<CReview[]>([]);
   const [shuffledCourses, setShuffledCourses] = useState<CCourse[]>([]);
+  const [activeCategory, setActiveCategory] = useState("");
+  const displayCategories = categories.length > 0 ? categories : totalCategories;
+
+  useEffect(() => {
+    if (displayCategories.length > 0 && !displayCategories.some((category) => category.name === activeCategory)) {
+      setActiveCategory(displayCategories[0].name);
+    }
+  }, [displayCategories, activeCategory]);
+
   // Filter the course on behalf of the selected categories //
-  console.log("All Catgories", allCategories, allCategories.length);
-  console.log("This is total Category", totalCategories,  totalCategories.length);
+  // console.log("All Catgories", allCategories, allCategories.length);
+  // console.log("This is total Category", totalCategories,  totalCategories.length);
   //Fetch user geographical location to show popular categories
   useEffect(() => {
     if (reviews.length > 0) {
@@ -204,6 +213,7 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
                                     alt={course.title}
                                     fill
                                     className="object-cover"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                   />
                                 </div>
                               ) : (
@@ -249,10 +259,10 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
             {(
               <div className="flex w-full h-125 ">
                 {(
-                  <Tabs defaultValue={categories?.[3]?.name} className={"w-full h-full "}>
+                  <Tabs value={activeCategory} onValueChange={setActiveCategory} className={"w-full h-full "}>
                     <Carousel plugins={[]} className="w-full ">
                       <CarouselContent className="flex w-full ml-3 z-0">
-                        {categories.map((category: CCategory) => (
+                        {displayCategories.map((category: CCategory) => (
                           <CarouselItem key={category._id} className="flex-none w-auto p-0! z-50 relative">
                             {isLoadingPage ? <CategoryChipsSkeleton /> : (
                               <TabsList className={"m-0 border-0 shadow-none ring-0 bg-transparent p-0"}>
@@ -269,7 +279,7 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
 
 
                     {/* Tabs Content */}
-                    {categories.map((category: CCategoryWithChildren) => (
+                    {displayCategories.map((category: CCategoryWithChildren) => (
                       <TabsContent key={category._id} value={category.name} className={"bg-transparent py-4 px-2 pt-8 "}>
                         {/* Nested Tabs for subcategories */}
                         {category && category.children.length > 0 && <Tabs defaultValue={category.children?.[0]?.name} className={"w-full"}>
@@ -308,6 +318,7 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
                                                   alt={course.title}
                                                   fill
                                                   className="object-cover"
+                                                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                                 />
                                               </div>
                                             ) : (
@@ -384,6 +395,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                                         alt={category.name ?? "Category image"}
                                         fill
                                         className="object-cover hover:scale-150 transition-transform duration-300 ease-in-out"
+                                        sizes="(max-width: 768px) 25vw, 10vw"
                                         onError={(e) => {
                                           const target = e.target as HTMLImageElement;
                                           target.src = `https://via.placeholder.com/150x150/f0f0f0/666666?text=${category.name}`;
@@ -419,6 +431,7 @@ pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
                         alt={item}
                         fill
                         className="object-contain hover:scale-105 transition-transform duration-300 ease-in-out border-0 border-none! outline-none! shadow-none"
+                        sizes="100px"
                       />
                     </div>
                   </div>)}</div></>

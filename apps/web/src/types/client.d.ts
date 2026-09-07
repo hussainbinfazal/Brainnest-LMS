@@ -564,7 +564,7 @@ interface CCourseStore {
     fetchedCategories?: CCategoryWithChildren[];
     force?: boolean;
   }) => Promise<CCourse[]>;
-  fetchPaginatedCourse: (options: { page: number; itemsPerPage: number, category?: string, childCategories?: string[], languages?: string[], levels?: string[] }) => Promise<{ paginatedCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
+  fetchPaginatedCourse: (options: { page: number; itemsPerPage: number, category?: string, childCategory?: string, languages?: string[], levels?: string[] }) => Promise<{ paginatedCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
   setPaginatedCourses: (paginatedCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number, category?: string, subCategories?: string[], languages?: string[], levels?: string[]) => void;
   clearPaginatedCourses: () => void;
   setCourses: (courses: CCourse[]) => void;

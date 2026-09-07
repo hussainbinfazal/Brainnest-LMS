@@ -5,7 +5,7 @@ declare global {
     var __redisClient: UpstashRedis | undefined
 }
 
-let redisClient: UpstashRedis | null = null;
+// let redisClient: UpstashRedis | null = null;
 export function initializeRedis(client: UpstashRedis) {
     globalThis.__redisClient = client;
     // redisClient = client;
@@ -13,7 +13,7 @@ export function initializeRedis(client: UpstashRedis) {
 }
 
 export function getRedisClient() {
-    if (globalThis.__redisClient) {
+    if (!globalThis.__redisClient) {
         // if (!redisClient) {
         const url: string = process.env.UPSTASH_REDIS_URL!;
         const token: string = process.env.UPSTASH_REDIS_TOKEN!;

@@ -70,6 +70,7 @@ export default function CategoriesSection({ categories: categories, isLoading: i
                               alt={category}
                               fill
                               className="object-contain"
+                              sizes="80px"
                               onError={(e) => {
                                 setImgSrc(`https://via.placeholder.com/80x80/f0f0f0/666666?text=${category.charAt(0)}`);
                               }}

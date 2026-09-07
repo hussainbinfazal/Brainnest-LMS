@@ -1,7 +1,8 @@
-import { Category, connectDB, ICategory, logger } from "@repo/shared";
+import { Category, connectDB, Course, ICategory, logger } from "@repo/shared";
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 import { CCategory } from "@/types/client";
 import { serializeCategories } from "@/utils/serializer/review.Serializer";
+import mongoose from "mongoose";
 
 /**
  * Single source of truth for fetching all categories (flat, not tree-shaped)
@@ -23,13 +24,27 @@ export async function getCategoriesWithCache(): Promise<CCategoryWithChildren[]>
   await connectDB(process.env.MONGODB_URI!);
 
   try {
-    const totalCategories: ICategory[] = await Category.find()
-      .populate("parent", "_id name")
+    //Only find those categories whose courses are present in db
+    const categoryIdsWithCourses: mongoose.Types.ObjectId[] =
+      await Course.distinct("category");
+
+    const categoriesWithCourses = await Category.find({
+      _id: { $in: categoryIdsWithCourses },
+    }).select("_id parent").lean().exec();
+    const parentIds = categoriesWithCourses
+      .map((category) => category.parent)
+      .filter((parent): parent is mongoose.Types.ObjectId => parent instanceof mongoose.Types.ObjectId);
+    const categoryIds: mongoose.Types.ObjectId[] = [...categoryIdsWithCourses, ...parentIds];
+
+    const totalCategories: ICategory[] = await Category.find({
+      _id: { $in: categoryIds },
+    }).populate("parent", "_id name")
       .lean()
       .exec();
 
-    const serialized : CCategory[] = serializeCategories(totalCategories);
-    const mapped : CCategoryWithChildren[] = buildCategoryTree(serialized);
+    console.log("totalCategories-------------------->", totalCategories.length, totalCategories);
+    const serialized: CCategory[] = serializeCategories(totalCategories);
+    const mapped: CCategoryWithChildren[] = buildCategoryTree(serialized);
     await setCached("Category", "all", mapped, CACHE_TTL.VERY_LONG);
     logger.info("Categories fetched successfully", { categoryCount: serialized.length });
     return mapped;

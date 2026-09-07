@@ -5,12 +5,14 @@ declare global {
     var __ioredisConnection: IORedisClient | undefined
 }
 
-function createIORedisConnection(): IORedisClient {
+function createIORedisConnection(REDIS_URL?: string): IORedisClient {
 
-    if (!process.env.REDIS_URL) {
+    console.log("RAW REDIS_URL PARAM:", REDIS_URL); // add this line
+
+    if (!REDIS_URL) {
         throw new Error("Missing Redis environment variables")
     }
-    const client = new IORedis(process.env.REDIS_URL!, {
+    const client = new IORedis(REDIS_URL!, {
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
         retryStrategy(times: number) {
@@ -25,7 +27,7 @@ function createIORedisConnection(): IORedisClient {
     return client
 }
 
-export const connection: IORedisClient = globalThis.__ioredisConnection ?? createIORedisConnection()
+export const connection: IORedisClient = globalThis.__ioredisConnection ?? createIORedisConnection(process.env.REDIS_URL)
 if (process.env.NODE_ENV !== 'production') {
     globalThis.__ioredisConnection = connection
 }

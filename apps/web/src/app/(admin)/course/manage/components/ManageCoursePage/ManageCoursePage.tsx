@@ -111,7 +111,7 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
             ? courses
             : courses.filter((course: CCourse) => {
                 const title = course.title?.toLowerCase() || "";
-                const instructorName = course.instructor?.name?.toLowerCase() || "";
+                const instructorName = course.instructorId?.name?.toLowerCase() || "";
                 const term = searchTerm?.toLowerCase() || "";
 
                 return title.includes(term) || instructorName.includes(term);

@@ -53,7 +53,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
   const courseCategoryWithChildren: CCategoryWithChildren | null = buildCourseCategoryTree(categories, categoryId);
   if(!course?.instructorId?._id) {
     logger.warn("Course instructorId is null", { courseId: course._id });
-    throw new Error("Course instructorId is null");
+    return notFound();
   };
   let courseInstructorId:string = course?.instructorId._id.toString();
   const [instructorStats, instructorOtherCourses] = await Promise.all([
@@ -63,7 +63,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
 
   if(!instructorStats) {
     logger.warn("Instructor stats is null", { courseId: course._id });
-    throw new Error("Instructor stats is null");
+    return notFound();
   }
 
   return <CourseIdPage initialCourse={course} initialReviews={reviews} allCategories={categoriesWithChildren} courseCategory={courseCategoryWithChildren} relevantCategoryCourses={relevantCategoryCourses} instructorStats={instructorStats} userCourseStats={userCourse} otherCoursesByInstructor={instructorOtherCourses} initialTopic={topic} allLessons={lessons} allSections={sections} uProgress={progress}/>;

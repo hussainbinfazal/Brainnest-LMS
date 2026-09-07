@@ -28,7 +28,7 @@ export interface ICourse {
   whatYouWillLearn: string[];
   video: string;
   previewVideo: string;
-  category: ICategory;
+  category: mongoose.Types.ObjectId | ICategory;
   subCategory: ICategory;
   sections: ISection[];
   dripType: string;

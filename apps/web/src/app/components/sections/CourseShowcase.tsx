@@ -82,6 +82,7 @@ export default function CourseShowcase({
                               alt={course.title}
                               fill
                               className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">

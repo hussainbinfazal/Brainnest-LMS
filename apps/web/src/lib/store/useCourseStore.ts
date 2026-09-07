@@ -66,7 +66,7 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             return [];
         }
     },
-    fetchPaginatedCourse: async ({ page, itemsPerPage, category, childCategories = [], languages = [], levels = [] }: { page: number; itemsPerPage: number, category?: string, childCategories?: string[], languages?: string[], levels?: string[] }) => {
+    fetchPaginatedCourse: async ({ page, itemsPerPage, category, childCategory, languages = [], levels = [] }: { page: number; itemsPerPage: number, category?: string, childCategory?: string, languages?: string[], levels?: string[] }) => {
         set({ isLoading: true })
         try {
             const params = new URLSearchParams({
@@ -76,7 +76,10 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             if (category) {
                 params.append("category", category);
             }
-            childCategories.forEach((id) => params.append("subCategories", id));
+            if (childCategory) {
+                params.append("childCategories", childCategory);
+            }
+            
             languages.forEach((id: string) => params.append("languages", id));
             levels.forEach((id: string) => params.append("level", id));
 

@@ -19,9 +19,9 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     const childCategories = searchParams?.getAll('childCategories');
     const languages = searchParams?.getAll('languages');
     const levels = searchParams?.getAll('levels');
-    const categoryIds: string[] = [
+    const categoryIds: (string | mongoose.Types.ObjectId)[] = [
         ...(category ? [category] : []), //single Id
-        ...childCategories, //subcategories Id
+        ...childCategories.map((id) => new mongoose.Types.ObjectId(id)), //subcategories Id
     ];
     // [[categoryId?],[subCategoriesIds?]]
     if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
@@ -30,10 +30,9 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     };
     //Custom query to fetch course by on the basis of params.
     const query: QueryFilter<ICourse> = {};
-    if (category) query["category._id"] = category;
-    if (childCategories) query["subCategories._id"] = { $in: childCategories };
-    if (languages.length) query.language = { $in: languages };
-    if (levels.length) query.levels = { $in: levels };
+    if (categoryIds.length > 0) query.category = { $in: categoryIds };
+    if (languages.length > 0) query.language = { $in: languages };
+    if (levels.length > 0) query.levels = { $in: levels };
 
     const cacheId = `page-${page}-limit:${limit}-cat:${[...categoryIds].sort().join(",")}-lang:${[...languages].sort().join(",")}-level:${[...levels].sort().join(",")}`;//Dynamic Conditional Cache Key
     const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, cacheId);
@@ -63,9 +62,6 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         const totalPages: number = Math.ceil(totalCourses / limit);
         const hasNextPage: boolean = page < totalPages;
         const hasPrevPage: boolean = page > 1;
-        if (!courses || courses.length === 0) {
-            return NextResponse.json({ message: "No Courses Found" }, { status: 404 });
-        }
         if (!courses || courses.length === 0) {
             logger.info("No courses matched filters ", {
                 page, limit, category, childCategories, languages, levels

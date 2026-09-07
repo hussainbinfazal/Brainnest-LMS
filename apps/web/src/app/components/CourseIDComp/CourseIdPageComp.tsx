@@ -1155,9 +1155,8 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                                                 "John Doe"}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                              {review?.createdAt ||
-                                                review?.updatedAt ||
-                                                "2 days ago"}
+                                              {formatRelativeDate(review?.createdAt || review?.updatedAt || "2023-01-01T00:00:00.000Z")}
+
                                             </p>
                                           </div>
                                         </div>

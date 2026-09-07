@@ -40,14 +40,14 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             }));
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Error in user Course Store"
-            clientLogger.error("Error fetching user course", { message, error });
+            clientLogger.error("Error fetching single user course", { message, error });
             // toast.error("Something went wrong!");
         }
     },
     fetchUserCoursesByIds: async (courseIds: string[]) => {
         if (courseIds.length === 0) return;
         try {
-            const response = await axios.post("/api/userCourses/batch", { courseIds });
+            const response = await axios.post("/api/userCourse/batch", { courseIds });
             const userCourses = response.data.userCourses as CUserCourse[];
             set((state) => {
                 const updated = { ...state.userCourseByCourseId };
@@ -60,7 +60,7 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             });
         } catch (error: unknown) {
             const message: string = error instanceof Error ? error.message : "Error in user Course Store"
-            clientLogger.error("Error fetching user course", { message, error });
+            clientLogger.error("Error fetching batch user courses", { message, error });
             // toast.error("Something went wrong!");
         }
     },
