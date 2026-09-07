@@ -1,6 +1,6 @@
 import { IFacets } from "@/types/server";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { connectDB, Course, ICategory, logger } from "@repo/shared";
+import { connectDB, Course, COURSES_FACETS, ICategory, logger } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 
@@ -8,7 +8,7 @@ import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig
 export async function getCachedFacets(): Promise<IFacets> {
     try {
         await connectDB(process.env.MONGODB_URI!);
-        const cached = await getCached<IFacets>(`courses-facets`, "category:language:level");
+        const cached = await getCached<IFacets>(COURSES_FACETS.namespace, "category:language:level");
         if (cached) {
             return cached;
         }
@@ -34,7 +34,7 @@ export async function getCachedFacets(): Promise<IFacets> {
                 levels: facets[0].levels,
             };
             const serializedFacets = serializeDocument(data);
-            await setCached<IFacets>(`courses-facets`, "category:language:level", serializedFacets, CACHE_TTL.VERY_LONG);
+            await setCached<IFacets>(COURSES_FACETS.namespace, "category:language:level", serializedFacets, CACHE_TTL.VERY_LONG);
             return serializedFacets
         } else {
             return { categories: [], languages: [], levels: [] }

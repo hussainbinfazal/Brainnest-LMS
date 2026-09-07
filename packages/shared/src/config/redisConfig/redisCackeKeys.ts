@@ -172,6 +172,10 @@ export const CATEGORIES_ALL = {
   description: "All course categories with parent-child relationships",
   usedIn: ["Homepage", "Navigation", "Category Filter"],
 };
+// ============================================================================
+//FACETS CACHE KEYS
+// ============================================================================
+
 
 // ============================================================================
 // REVIEW CACHE KEYS
@@ -224,7 +228,7 @@ export const REVIEWS_BY_COURSE = {
  * Used by: User dashboard, my courses page
  * Full Key: userCourses:userId
  */
-export const USER_COURSES_LIST = {
+export const USER_COURSE_LIST = {
   namespace: "userCourses",
   id: "userId",
   ttl: "MEDIUM",
@@ -263,12 +267,30 @@ export const USER_COURSE_DETAIL = {
  * Full Key: progress:userId:courseId
  */
 export const PROGRESS_BY_USER_COURSE = {
-  namespace: "progress",
+  namespace: "progress:course",
   id: "userId:courseId",
   ttl: "MEDIUM",
   description: "User's learning progress in a course (lessons completed, etc)",
   usedIn: ["Progress Tracking", "Course Completion"],
 };
+/**
+ * namespace: "progress:course:lessons"
+ * id: userId:courseId (composite key format with colon)
+ * ttl: MEDIUM (15min)
+ * Usage: User's lessons progress in a course (lessons completed, percentage)
+
+ * Invalidated by: Progress lesson completion.
+ * Used by: Lesson Progress tracking.
+ * Full Key: progress:course:lessons:userId:courseId
+ */
+export const PROGRESS_BY_LESSON = {
+  namespace: "progress:course:lessons",
+  id: "userId:courseId",
+  ttl: "MEDIUM",
+  description: "User's lessons progress in a course(lessons completed, etc)",
+  usedIn: ["Progress Tracking", "Course Completion"],
+};
+
 
 /**
  * namespace: "userCourse"
@@ -398,7 +420,7 @@ export const ALL_CACHE_KEYS = [
   CATEGORIES_ALL,
   REVIEWS_ALL_COURSES,
   REVIEWS_BY_COURSE,
-  USER_COURSES_LIST,
+  USER_COURSE_LIST,
   USER_COURSE_DETAIL,
   PROGRESS_BY_USER_COURSE,
   USER_COURSE_MAPPING,

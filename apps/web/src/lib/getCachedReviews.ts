@@ -1,4 +1,4 @@
-import { IReview, Review, connectDB, logger } from "@repo/shared";
+import { IReview, REVIEWS_ALL_COURSES, REVIEWS_BY_COURSE, Review, connectDB, logger } from "@repo/shared";
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 import { CReview } from "@/types/client";
 import { serializeReviews } from "@/utils/serializer/review.Serializer";
@@ -10,7 +10,7 @@ import { serializeReviews } from "@/utils/serializer/review.Serializer";
  */
 export async function getReviewsWithCache(): Promise<CReview[]> {
   logger.info("")
-  const cached = await getCached<CReview[]>("reviews:courses", "all");
+  const cached = await getCached<CReview[]>(REVIEWS_ALL_COURSES.namespace, "all");
   if (cached) {
     logger.info("Reviews fetched from cache", { reviewCount: cached.length });
     return cached;
@@ -26,7 +26,7 @@ export async function getReviewsWithCache(): Promise<CReview[]> {
       .exec();
 
     const serialized = serializeReviews(rawReviews);
-    await setCached("reviews:courses", "all", serialized, CACHE_TTL.MEDIUM);
+    await setCached(REVIEWS_ALL_COURSES.namespace, "all", serialized, CACHE_TTL.MEDIUM);
 
     logger.info("Reviews fetched successfully", { reviewCount: serialized.length });
     return serialized;
@@ -38,7 +38,7 @@ export async function getReviewsWithCache(): Promise<CReview[]> {
 };
 
 export async function getCourseReviewsWithCache(courseId: string): Promise<CReview[] | []> {
-  const cached = await getCached<CReview[]>(`reviews:course`, courseId);
+  const cached = await getCached<CReview[]>(REVIEWS_BY_COURSE.namespace, courseId);
   if (cached) {
     logger.info("Reviews fetched from cache", { reviewCount: cached.length });
     return cached;
@@ -50,8 +50,8 @@ export async function getCourseReviewsWithCache(courseId: string): Promise<CRevi
       .limit(50)
       .lean()
       .exec();
-    const serialized : CReview[] = serializeReviews(rawReview);
-    await setCached("reviews:course", courseId, serialized, CACHE_TTL.MEDIUM)
+    const serialized: CReview[] = serializeReviews(rawReview);
+    await setCached(REVIEWS_BY_COURSE.namespace, courseId, serialized, CACHE_TTL.MEDIUM)
       ;
     logger.info("Reviews fetched successfully", { reviewCount: serialized.length });
     return serialized;

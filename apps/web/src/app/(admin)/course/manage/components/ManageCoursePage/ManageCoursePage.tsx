@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import { CCourse } from "@/types/client";
+import { clientLogger } from "@/utils/logger/clientLogger";
 const MotionButton = motion(Button)
 
 const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse[] }): React.JSX.Element => {
@@ -40,7 +41,18 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
             setCourses(
                 (prevCourses: CCourse[]) => [...prevCourses, ...(response.data.courses || [])]
             );
-        } catch (error: any) {
+        } catch (error: unknown) {
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            clientLogger.error(message);
+            // toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -64,7 +76,16 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
             const { user } = response.data;
             setAuthUser(user);
             toast.success("Welcome to the teaching team at Brainnest.");
-        } catch (error: any) {
+        } catch (error: unknown) {
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
         }
     }, [authUser]);
     const handleDeleteCourse = async (courseId: string) => {

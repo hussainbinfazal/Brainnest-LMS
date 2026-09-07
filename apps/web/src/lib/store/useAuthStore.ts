@@ -40,14 +40,22 @@ export const useAuthStore = create<CAuthStore>(
 
           }
         } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : 'Unknown error';
+          let message = "Something went wrong";
+          if (axios.isAxiosError(error)) {
+            message =
+              error.response?.data?.message ||
+              error.message ||
+              message;
+          } else if (error instanceof Error) {
+            message = error.message;
+          }
           clientLogger.info(`Error in fetching user: ${message}`);
           // console.log(error);
         }
       },
       saveUserGeography: async () => {
-        try { 
-          if(get().userLocation === null){
+        try {
+          if (get().userLocation === null) {
             const location = await fetchUserLocation()
             set({ userLocation: location });
           }

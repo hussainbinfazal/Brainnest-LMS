@@ -1,5 +1,4 @@
-import { progressQueue } from "@/lib/queue/progressQueue";
-import { connectDB, LessonCompletion, Progress } from "@repo/shared";
+import { connectDB, ILessonProgress, IProgress, Progress } from "@repo/shared";
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
@@ -127,6 +126,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             logger.info("Invalid progress value", { progressValue });
             return NextResponse.json({ message: "Invalid progress value" }, { status: 400 });
         }
+        //Integrate worker queue of other repo here 
         await progressQueue.add("update-progress", { userId, courseId, lessonId, progressValue });
         logger.info("Progress of the Lesson updated in worker");
         return NextResponse.json({ message: "Progress updated" }, { status: 202 });

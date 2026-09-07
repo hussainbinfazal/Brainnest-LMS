@@ -3,11 +3,11 @@ import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { connectDB, ILessonProgress, ISessionUser, logger, Progress, validateMongooseId } from "@repo/shared";
+import { connectDB, ILessonProgress, ISessionUser, logger, Progress, PROGRESS_BY_USER_COURSE, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { LessonProgress } from "@repo/shared";
 import { NextResponse } from "next/server";
-import { Types } from "mongoose";
+
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
@@ -28,7 +28,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
     const userId: string = user.id;
-    let cached = await getCached<CProgress>(`progress:course`, `${userId}:${courseId}`)
+    let cached = await getCached<CProgress>(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`)
     if (cached) return NextResponse.json({ message: "This is the progress of the course", response: cached }, { status: 200 });
 
     await connectDB(process.env.MONGODB_URI!);
@@ -70,7 +70,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         };
         logger.info("This is the progress of the Lesson", { progress, lessonId });
         const serializedProgress = await serializeDocument(response);
-        await setCached("progress:course",
+        await setCached(PROGRESS_BY_USER_COURSE.namespace,
             `${userId}:${courseId}`, serializedProgress, CACHE_TTL.MEDIUM)
         return NextResponse.json({ message: "This is the progress of the lesson", response }, { status: 200 });
     } catch (error: unknown) {

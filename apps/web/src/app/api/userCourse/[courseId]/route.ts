@@ -2,7 +2,7 @@ import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, ISessionUser, IUserCourse, logger, userCourse, validateMongooseId } from "@repo/shared";
+import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, userCourse, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { NextResponse } from "next/server";
 
@@ -30,7 +30,7 @@ export async function GET(request:
             logger.warn("Invalid user id", { userId });
             throw new Error("Invalid user Id");
         }
-        const cached = await getCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`);
+        const cached = await getCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         if (cached) {
             logger.info("User Courses fetched from cache");
             return NextResponse.json({ userCourse: cached });
@@ -41,7 +41,7 @@ export async function GET(request:
             return NextResponse.json({ message: "User Course not found" }, { status: 404 });
         }
         const serialized = serializeUserCourse(authUserCourse);
-        await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
+        await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
         logger.info("User Courses fetched successfully");
         console.log("LIKE DEBUG:", {
             userId,

@@ -20,9 +20,16 @@ export const useCartStore = create<CCartStore>((set) => ({
             return response.data
 
         } catch (error: unknown) {
-            const message= error instanceof Error ? error.message : 'Something went wrong';
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             clientLogger.error(message);
-            
             toast.error(message);
 
         }

@@ -2,7 +2,7 @@ import { CLessonProgress, CProgress } from "@/types/client";
 import { serializeLessonsProgress } from "@/utils/serializer/lessonProgress.Serializer";
 import { serializeProgress } from "@/utils/serializer/progress.Serializer";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, ILessonProgress, IProgress, IUserCourse, logger, Progress, userCourse, validateMongooseId } from "@repo/shared";
+import { connectDB, ILessonProgress, IProgress, IUserCourse, logger, Progress, PROGRESS_BY_LESSON, PROGRESS_BY_USER_COURSE, userCourse, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import lessonProgress from "@repo/shared/models/Course/lessonProgressModel";
 
@@ -21,8 +21,8 @@ export async function getUserProgressByIdWithCache(userId: string, courseId: str
         }
 
         const [cachedProgress, cachedLessonsProgress] = await Promise.all([
-            getCached<CProgress>("userProgress", `${userId}-${courseId}`),
-            getCached<CLessonProgress[]>("lessonProgress", `${userId}-${courseId}`),
+            getCached<CProgress>(PROGRESS_BY_USER_COURSE.namespace, `${userId}-${courseId}`),
+            getCached<CLessonProgress[]>(PROGRESS_BY_LESSON.namespace, `${userId}-${courseId}`),
         ]);
         if (cachedProgress && cachedLessonsProgress) {
             logger.info("User Progress fetched from cache");
@@ -40,14 +40,14 @@ export async function getUserProgressByIdWithCache(userId: string, courseId: str
         const progressSerialized = serializeProgress(authUserProgress);
         const lessonWithStatusSerialized = serializeLessonsProgress(lessonWithStatus);
         await Promise.all([
-            setCached<CProgress>("userProgress", `${userId}-${courseId}`, progressSerialized, CACHE_TTL.MEDIUM),
-            setCached<CLessonProgress[]>("lessonProgress", `${userId}-${courseId}`, lessonWithStatusSerialized, CACHE_TTL.MEDIUM),
+            setCached<CProgress>(PROGRESS_BY_USER_COURSE.namespace, `${userId}-${courseId}`, progressSerialized, CACHE_TTL.MEDIUM),
+            setCached<CLessonProgress[]>(PROGRESS_BY_LESSON.namespace, `${userId}-${courseId}`, lessonWithStatusSerialized, CACHE_TTL.MEDIUM),
         ]);
-        console.log("USER PROGRESS DEBUG:", {
-            userId,
-            courseId,
-            userProgressId: authUserProgress?._id,
-        });
+        // console.log("USER PROGRESS DEBUG:", {
+        //     userId,
+        //     courseId,
+        //     userProgressId: authUserProgress?._id,
+        // });
         logger.info("User Progress fetched successfully");
         return { currentProgress: progressSerialized, lessons: lessonWithStatusSerialized };
 

@@ -1,7 +1,7 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { connectDB, logger } from "@repo/shared";
+import { connectDB, logger, USER_COURSE_DETAIL } from "@repo/shared";
 import { Course, User, userCourse, IUser, validateMongooseId } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -38,9 +38,9 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         //     return NextResponse.json({ message: "This is the cached user course", userCourse: cached }, { status: 200 });
         // }
         const [userDB, courseDB, userCourseDB] = await Promise.all([
-            User.exists({ _id: userId }),
-            Course.exists({ _id: courseId }).select("title").lean(),
-            userCourse.findOne({ userId: userId, courseId: courseId })
+            User.exists({ _id: userId }).exec(),
+            Course.exists({ _id: courseId }).select("title").lean().exec(),
+            userCourse.findOne({ userId: userId, courseId: courseId }).exec()
         ])
         if (!userDB) {
             logger.info("User not found");
@@ -82,12 +82,12 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         if (!updatedUserCourse) {
             return NextResponse.json({ message: "Unable to like course" }, { status: 500 });
         }
-        await invalidateCached(`userCourses`, `${userId}-${courseId}`);
+        await invalidateCached(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         logger.info("Course liked successfully", { courseName: courseDB.title });
         logger.info("1 BEFORE serialize");
         const serialized = serializeUserCourse(updatedUserCourse);
         logger.info("2 AFTER serialize");
-        await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
+        await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
 
         return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title, userCourse: serialized }, { status: 200 });
 

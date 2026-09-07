@@ -3,11 +3,9 @@
 import { create } from "zustand";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner"
-import { CCategory, CCourse, CCourseStore, CReview } from "@/types/client";
+import { CCourse, CCourseStore, CReview } from "@/types/client";
 import { CCategoryWithChildren } from "../getCachedCategory";
 import { clientLogger } from "@/utils/logger/clientLogger";
-import { number } from "framer-motion";
-import { Category } from "@repo/shared";
 
 
 export const useCourseStore = create<CCourseStore>((set, get) => ({
@@ -79,7 +77,7 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             if (childCategory) {
                 params.append("childCategories", childCategory);
             }
-            
+
             languages.forEach((id: string) => params.append("languages", id));
             levels.forEach((id: string) => params.append("level", id));
 
@@ -106,7 +104,15 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             // return;
         }
         catch (error: unknown) {
-            const message = error instanceof Error ? error.message : 'Unknown error';
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             clientLogger.error("Failed to fetch paginated courses", { message });
             return { paginatedCourses: [], currentPage: 1, hasNextPage: false, hasPrevPage: false, totalPages: 1, totalCourses: 0 };
         } finally {

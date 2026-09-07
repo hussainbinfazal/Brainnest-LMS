@@ -1,8 +1,7 @@
-import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress } from "@repo/shared";
+import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { certificateQueue } from "@/lib/queue/certificateQueue";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 import { userCourse as UserCourse } from "@repo/shared";
 import { LessonProgress } from "@repo/shared";
@@ -37,7 +36,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         };
         //Invalidate Cached Progress for the course 
-        await invalidateCached(`progress:course`, `${userId}:${courseId}`);
+        await invalidateCached(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`);
 
 
         //Find the course, lesson and user in the database
@@ -75,7 +74,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             { userId, lessonId, courseId, sectionId },
             { $setOnInsert: { userId, courseId, sectionId, lessonId, completedAt: new Date(), lastPositionSeconds: 0, status: "completed" } },
             { upsert: true, new: true, includeResultMetadata: true }
-        );
+        ).exec();
 
         const isNewCompletion = Boolean(completionResult.lastErrorObject?.upserted)
         const lessonProgressDoc = completionResult.value; //Actual Updated lesson
@@ -128,7 +127,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             completedLessonIds
         }
         const serializedCachedFormat = await serializeDocument(cachedFormat);
-        await setCached(`progress:course`, `${userId}:${courseId}`, serializedCachedFormat, CACHE_TTL.MEDIUM);
+        await setCached(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`, serializedCachedFormat, CACHE_TTL.MEDIUM);
         let response = {
             courseProgress: progressDB,
             lessonProgress: lessonProgressDoc, //Updated Course

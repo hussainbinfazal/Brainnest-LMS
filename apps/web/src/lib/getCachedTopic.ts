@@ -1,5 +1,5 @@
 import { CCourse, CTopic } from "@/types/client";
-import { connectDB, Course, ICourse, ITopic, logger, Topic, validateMongooseId } from "@repo/shared";
+import { connectDB, Course, COURSE_BY_ID, ICourse, ITopic, logger, Topic, TOPIC_BY_ID, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 
@@ -10,7 +10,7 @@ export async function getCachedTopic(courseId: string): Promise<CTopic | null> {
     }
     await connectDB(process.env.MONGODB_URI);
     try {
-        let cachedCourse = await getCached<CCourse & { topic: ITopic }>(`course`, courseId,); //Course are caching on behalf of courseId
+        let cachedCourse = await getCached<CCourse & { topic: ITopic }>(COURSE_BY_ID.namespace, courseId,); //Course are caching on behalf of courseId
         if (cachedCourse) {
             return (JSON.parse(cachedCourse.topic)); // return cached topic
         } else {
@@ -21,8 +21,8 @@ export async function getCachedTopic(courseId: string): Promise<CTopic | null> {
                 return null;
             }
             const topic: ITopic | null = course.topic;
-            await setCached(`course`, courseId, JSON.stringify(course), CACHE_TTL.MEDIUM);
-            await setCached(`topic`, (topic._id.toString()), JSON.stringify(topic), CACHE_TTL.MEDIUM);
+            await setCached(COURSE_BY_ID.namespace, courseId, JSON.stringify(course), CACHE_TTL.MEDIUM);
+            await setCached(TOPIC_BY_ID.namespace, (topic._id.toString()), JSON.stringify(topic), CACHE_TTL.MEDIUM);
             return (JSON.stringify(topic) as unknown as CTopic)
         }
 

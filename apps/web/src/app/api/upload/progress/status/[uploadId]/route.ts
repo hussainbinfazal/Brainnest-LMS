@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { logger } from "@repo/shared";
+import { logger, UPLOAD_SESSION } from "@repo/shared";
 import { CustomNextRequest } from "@/types/server";
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 
@@ -20,7 +20,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
         if (!uploadId) {
             return NextResponse.json({ error: "Missing uploadId" }, { status: 400 });
         }
-        const data = await getCached<ProgressData>(`upload`, uploadId);
+        const data = await getCached<ProgressData>(UPLOAD_SESSION.namespace, uploadId);
         if (!data) {
             return NextResponse.json({ error: "Not found" }, { status: 404 });
         }

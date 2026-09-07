@@ -1,4 +1,4 @@
-import { Category, connectDB, Course, ICategory, logger } from "@repo/shared";
+import { CATEGORIES_ALL, Category, connectDB, Course, ICategory, logger } from "@repo/shared";
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 import { CCategory } from "@/types/client";
 import { serializeCategories } from "@/utils/serializer/review.Serializer";
@@ -15,7 +15,7 @@ import mongoose from "mongoose";
  * specific tree shape.
  */
 export async function getCategoriesWithCache(): Promise<CCategoryWithChildren[]> {
-  const cached = await getCached<CCategoryWithChildren[]>("Category", "all");
+  const cached = await getCached<CCategoryWithChildren[]>(CATEGORIES_ALL.namespace, CATEGORIES_ALL.id);
   if (cached) {
     logger.info("Categories fetched from cache", { categoryCount: cached.length });
     return cached;
@@ -45,7 +45,7 @@ export async function getCategoriesWithCache(): Promise<CCategoryWithChildren[]>
     console.log("totalCategories-------------------->", totalCategories.length, totalCategories);
     const serialized: CCategory[] = serializeCategories(totalCategories);
     const mapped: CCategoryWithChildren[] = buildCategoryTree(serialized);
-    await setCached("Category", "all", mapped, CACHE_TTL.VERY_LONG);
+    await setCached(CATEGORIES_ALL.namespace, CATEGORIES_ALL.id, mapped, CACHE_TTL.VERY_LONG);
     logger.info("Categories fetched successfully", { categoryCount: serialized.length });
     return mapped;
   } catch (error: unknown) {

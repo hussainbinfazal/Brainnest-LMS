@@ -28,9 +28,7 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
 
     fetchUserCourseById: async (courseId: string) => {
         try {
-
             const response = await axios.get(`/api/userCourse/${courseId}`);
-
             const userCourse = response.data.userCourse as CUserCourse;
             set((state) => ({
                 userCourseByCourseId: {
@@ -39,7 +37,15 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
                 },
             }));
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Error in user Course Store"
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             clientLogger.error("Error fetching single user course", { message, error });
             // toast.error("Something went wrong!");
         }
@@ -59,7 +65,15 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
                 };
             });
         } catch (error: unknown) {
-            const message: string = error instanceof Error ? error.message : "Error in user Course Store"
+            let message = "Something went wrong,in user Course Store(batch)";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             clientLogger.error("Error fetching batch user courses", { message, error });
             // toast.error("Something went wrong!");
         }

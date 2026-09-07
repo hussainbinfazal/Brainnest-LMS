@@ -1,6 +1,6 @@
 import { CUserCourse } from "@/types/client";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, IUserCourse, logger, userCourse, validateMongooseId } from "@repo/shared";
+import { connectDB, IUserCourse, logger, USER_COURSE_DETAIL, userCourse, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 export async function getUserCourseByIdWithCache(userId: string, courseId: string): Promise<CUserCourse | null> {
@@ -18,7 +18,7 @@ export async function getUserCourseByIdWithCache(userId: string, courseId: strin
             logger.warn("Invalid user id", { userId });
             throw new Error("Invalid user Id");
         }
-        const cached = await getCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`);
+        const cached = await getCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         if (cached) {
             logger.info("User Courses fetched from cache");
             return cached;
@@ -29,7 +29,7 @@ export async function getUserCourseByIdWithCache(userId: string, courseId: strin
             return null;
         }
         const serialized = serializeUserCourse(authUserCourse);
-        await setCached<CUserCourse>(`userCourses`, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
+        await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
         console.log("LIKE DEBUG:", {
             userId,
             courseId,

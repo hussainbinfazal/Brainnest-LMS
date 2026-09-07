@@ -1,4 +1,4 @@
-import { COURSES_ALL, COURSE_BY_ID, Course, ICourse, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
+import { COURSES_ALL, COURSES_FILTERED_BY_PARAMS, COURSE_BY_ID, Course, ICourse, INSTRUCTOR_OTHER_COURSES, INSTRUCTOR_STATS, RELATED_COURSES, USER_COURSE_LIST, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
 import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "../types/client"
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
@@ -58,7 +58,7 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
         logger.warn("Invalid course Id", { courseId });
         throw new Error(`Invalid Course Id ${courseId}`)
     }
-    await invalidateCached(COURSE_BY_ID.namespace,  courseId);
+    await invalidateCached(COURSE_BY_ID.namespace, courseId);
     const cached = await getCached<CCourse>(COURSE_BY_ID.namespace, courseId);
     if (cached) {
         logger.info("1. Course fetched from cache", { cached });
@@ -105,20 +105,18 @@ export async function getReleatedCoursesWithCache(courseId: string): Promise<CCo
     if (!validateMongooseId({ courseId: courseId })) {
         logger.warn("Invalid course id", { courseId });
     }
-    const cached = await getCached<CCourse[]>(`relatedCourses`, courseId);
+    const cached = await getCached<CCourse[]>(RELATED_COURSES.namespace, courseId);
     if (cached) {
         logger.info("Related Courses fetched from cache");
         return cached;
     }
-    // await invalidateCached(`relatedCourses`, courseId)
-
-
+    // await invalidateCached(RELATED_COURSES.namespace, courseId)
 
     await connectDB(process.env.MONGODB_URI!);
     try {
         const relatedCourses: ICourse[] = await Course.find({ category: courseId }).limit(5).lean().exec();
         const serialized = serializeCourses(relatedCourses);
-        await setCached(`relatedCourses`, courseId, serialized, CACHE_TTL.MEDIUM);
+        await setCached(RELATED_COURSES.namespace, courseId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Related Courses fetched successfully", { courseCount: serialized.length });
         return serialized;
     } catch (error: unknown) {
@@ -134,7 +132,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
         logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
         throw new Error("Invalid parameters for fetching courses");
     };
-    const cached = await getCached<IGetCourseByParamsResponse>(`coursesByParams`, `${page}-${limit}-${skip}`);
+    const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, `${page}-${limit}-${skip}`);
     if (cached) {
         logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
         return cached;
@@ -158,7 +156,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
             totalPages: Math.ceil(totalCourses / limit),
             totalCourses: totalCourses
         }
-        await setCached(`coursesByParams`, `${page}-${limit}-${skip}`, response, CACHE_TTL.MEDIUM);
+        await setCached(COURSES_FILTERED_BY_PARAMS.namespace, `${page}-${limit}-${skip}`, response, CACHE_TTL.MEDIUM);
         logger.info("Courses cached successfully", { page, limit, skip, courseCount: response.paginatedCourses.length });
         return response;
     } catch (error: unknown) {
@@ -188,7 +186,7 @@ export async function getInstructorStatsWithCache(instructorId: string): Promise
         logger.warn("Invalid user id", { userId: instructorId });
         throw new Error("Invalid Instructor Id");
     }
-    const cached = await getCached<IInstructorStats>(`instructorStats`, instructorId);
+    const cached = await getCached<IInstructorStats>(INSTRUCTOR_STATS.namespace, instructorId);
     if (cached) {
         logger.info("Instructor Stats fetched from cache");
         return cached;
@@ -209,7 +207,7 @@ export async function getInstructorStatsWithCache(instructorId: string): Promise
             }
         ]);
         const serialized = serializeDocument(stats[0]);
-        await setCached(`instructorStats`, instructorId, serialized, CACHE_TTL.MEDIUM);
+        await setCached(INSTRUCTOR_STATS.namespace, instructorId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Instructor Stats fetched successfully");
         if (!stats[0]) {
             logger.info("No stats found for instructor", { instructorId });
@@ -228,7 +226,7 @@ export async function getUserCourseWithCache(userId: string): Promise<CCourse[] 
         logger.warn("Invalid user id", { userId });
         throw new Error("Invalid user Id");
     }
-    const cached = await getCached<CCourse[]>(`userCourses`, userId);
+    const cached = await getCached<CCourse[]>(USER_COURSE_LIST.namespace, userId);
     if (cached) {
         logger.info("User Courses fetched from cache");
         return cached;
@@ -237,7 +235,7 @@ export async function getUserCourseWithCache(userId: string): Promise<CCourse[] 
     try {
         const userCourses: ICourse[] = await Course.find({ enrolled: userId }).lean().exec();
         const serialized = serializeCourses(userCourses);
-        await setCached(`userCourses`, userId, serialized, CACHE_TTL.MEDIUM);
+        await setCached(USER_COURSE_LIST.namespace, userId, serialized, CACHE_TTL.MEDIUM);
         logger.info("User Courses fetched successfully", { courseCount: serialized.length });
         return serialized;
     } catch (error: unknown) {
@@ -252,7 +250,7 @@ export async function getInstructorOtherCoursesWithCache(instructorId: string, c
         logger.warn("Invalid user id", { userId: instructorId });
         throw new Error("Invalid Instructor Id");
     }
-    const cached = await getCached<CCourse[]>(`instructorOtherCourses`, instructorId);
+    const cached = await getCached<CCourse[]>(INSTRUCTOR_OTHER_COURSES.namespace, instructorId);
     if (cached) {
         logger.info("Instructor Other Courses fetched from cache");
         return cached;
@@ -261,7 +259,7 @@ export async function getInstructorOtherCoursesWithCache(instructorId: string, c
     try {
         const instructoreOtherCourses: ICourse[] = await Course.find({ _id: { $ne: courseId }, instructorId: instructorId, }).limit(5).lean().exec();
         const serialized = serializeCourses(instructoreOtherCourses);
-        await setCached(`instructorOtherCourses`, instructorId, serialized, CACHE_TTL.MEDIUM);
+        await setCached(INSTRUCTOR_OTHER_COURSES.namespace, instructorId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Instructor Other Courses fetched successfully", { courseCount: serialized.length });
         return serialized;
     } catch (error: unknown) {

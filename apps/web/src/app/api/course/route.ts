@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { Course, connectDB, logger, ICourse } from "@repo/shared";
 import { CustomNextRequest } from "@/types/server";
 import mongoose from "mongoose";
-import { CCourse } from "@/types/client";
-import { serializeCourses } from "@/utils/serializer/course.Serializer";
-import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { getCoursesWithCache } from "@/lib/getCachedCourse";
 
 
