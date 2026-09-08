@@ -1,7 +1,7 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL } from "@repo/shared";
+import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST } from "@repo/shared";
 import mongoose from "mongoose";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
@@ -51,6 +51,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
             return NextResponse.json({ message: "Already unliked or not enrolled" }, { status: 404 });
         }
         await invalidateCached(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
+        await invalidateCached(USER_COURSE_LIST.namespace, `${userId}`);
         const serializedUserCourse = serializeUserCourse(updatedUserCourse);
         await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serializedUserCourse, CACHE_TTL.MEDIUM);
         logger.info("Course unliked successfully", { userId: userId, courseId });

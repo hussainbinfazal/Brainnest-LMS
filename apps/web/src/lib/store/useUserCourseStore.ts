@@ -16,6 +16,9 @@ type CUserCourseStore = {
     getUserCourseById: (courseId: string) => CUserCourse | null;
     updateUserCourse: (courseId: string, updates: Partial<CUserCourse>) => void;
     fetchUserCoursesByIds: (courseIds: string[]) => Promise<void>;
+    fetchUserCoursesByUserIds: (courseIds: string[]) => Promise<void>;
+    fetchAllUserCoursesByUserIds: (userId: string) => Promise<void>;
+    setAllUserCoursesByUserIds: (userCourses: CUserCourse[]) => void;
     isUpdatingLikeByCourseId: Record<string, boolean>;
     setUpdatingLike: (courseId: string, state: boolean) => void;
     clearUserCourseById: () => void;
@@ -107,6 +110,45 @@ export const useUserCourseStore = create<CUserCourseStore>((set, get) => ({
             clientLogger.error("Error fetching batch user courses", { message, error });
             // toast.error("Something went wrong!");
         }
+    },
+    fetchAllUserCoursesByUserIds: async (userId: string) => {
+        try {
+            const response = await axios.get(`/api/userCourse?userId=${userId}`);
+            const userCourses = response.data.userCourses as CUserCourse[];
+            set((state) => {
+                const updated = { ...state.userCourseByCourseId };
+                userCourses.forEach((userCourse) => {
+                    updated[userCourse.courseId] = userCourse;
+                });
+                return {
+                    userCourseByCourseId: updated,
+                };
+            });
+        } catch (error: unknown) {
+            let message = "Something went wrong,in user Course Store(batch)";
+            if (axios.isAxiosError(error)) {
+                message =
+                    error.response?.data?.message ||
+                    error.message ||
+                    message;
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            clientLogger.error("Error fetching batch user courses", { message, error });
+            // toast.error("Something went wrong!");
+        }
+
+    },
+    setAllUserCoursesByUserIds: (userCourses: CUserCourse[]) => {
+        set((state) => {
+            const updated = { ...state.userCourseByCourseId };
+            userCourses.forEach((userCourse) => {
+                updated[userCourse.courseId] = userCourse;
+            });
+            return {
+                userCourseByCourseId: updated,
+            };
+        });
     },
     setUserCourseById: (courseId, userCourse: CUserCourse) =>
         set((state) => ({

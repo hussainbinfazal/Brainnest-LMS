@@ -1,7 +1,7 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { connectDB, logger, USER_COURSE_DETAIL } from "@repo/shared";
+import { connectDB, logger, USER_COURSE_DETAIL, USER_COURSE_LIST } from "@repo/shared";
 import { Course, User, userCourse, IUser, validateMongooseId } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -83,6 +83,8 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             return NextResponse.json({ message: "Unable to like course" }, { status: 500 });
         }
         await invalidateCached(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
+        await invalidateCached(USER_COURSE_LIST.namespace, `${userId}`);
+        
         logger.info("Course liked successfully", { courseName: courseDB.title });
         logger.info("1 BEFORE serialize");
         const serialized = serializeUserCourse(updatedUserCourse);

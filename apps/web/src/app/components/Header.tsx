@@ -23,6 +23,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { User } from "next-auth";
 import { CAuthUser, CChatMessage } from "@/types/client";
 import { cn } from "@/lib/utils";
+import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
@@ -94,7 +95,7 @@ export default function Header({ className }: { className?: string }): React.JSX
       const data = response.data.chat;
       setChatAlreadyExists(data.length > 0);
       setChat(data);
-    } catch (error:unknown) {
+    } catch (error: unknown) {
       // console.log("Error fetching chat:", error);
     }
   }, []);
@@ -104,7 +105,7 @@ export default function Header({ className }: { className?: string }): React.JSX
       const response = await axios.get("/api/cart");
       const cartData = response.data;
       setCartItemsCount(cartData?.courses?.length || 0);
-    } catch (error:unknown) {
+    } catch (error: unknown) {
       setCartItemsCount(0);
     }
   }, []);
@@ -139,8 +140,9 @@ export default function Header({ className }: { className?: string }): React.JSX
           />
         </div>
       )}
+      <DottedGlowBackground className="hidden z-0 dark:block" />
       <div
-        className={`container flex justify-center h-14 max-w-screen-2xl items-center`}
+        className={`container flex justify-center h-14 max-w-screen-2xl items-center relative`}
       >
         <div className="mr-4 flex">
           <Link

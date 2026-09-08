@@ -13,7 +13,7 @@ interface CategoryCardSkeletonProps {
 interface CategoryCardBackgroundSkeletonProps {
   className?: string;
 }
-export const ReviewCardSkeleton:React.FC<CategoryCardSkeletonProps> = ({cardClassName, cardContentClassName, skeletonClassName, cardFooterClassName, cardFooterSkeletonClassName}: CategoryCardSkeletonProps):React.JSX.Element => {
+export const ReviewCardSkeleton: React.FC<CategoryCardSkeletonProps> = ({ cardClassName, cardContentClassName, skeletonClassName, cardFooterClassName, cardFooterSkeletonClassName }: CategoryCardSkeletonProps): React.JSX.Element => {
   return (
     <Card className={cn("h-70", cardClassName)}>
       <CardContent className={cn("space-y-3 pt-6", cardContentClassName)}>
@@ -33,14 +33,14 @@ export const ReviewCardSkeleton:React.FC<CategoryCardSkeletonProps> = ({cardClas
     </Card>
   );
 }
-export const ReviewCardBackgroundSkeleton = ({className}: CategoryCardBackgroundSkeletonProps):React.JSX.Element => {
+export const ReviewCardBackgroundSkeleton = ({ className }: CategoryCardBackgroundSkeletonProps): React.JSX.Element => {
   return (
-   <div className={cn("flex gap-4 w-full rounded-lg skeleton-shimmer ", className)}>
-    {Array.from({ length: 6 }).map((_, i) => (
-      <ReviewCardSkeleton cardClassName={"h-80 w-75"} />
-    ))}
-   </div>
+    <div className={cn("flex gap-4 w-full rounded-lg skeleton-shimmer ", className)}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <ReviewCardSkeleton key={i} cardClassName={"h-80 w-75"} />
+      ))}
+    </div>
   );
 }
-  
+
 

@@ -1,6 +1,6 @@
 import { CUserCourse } from "@/types/client";
-import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, IUserCourse, logger, USER_COURSE_DETAIL, userCourse, validateMongooseId } from "@repo/shared";
+import { serializeUserCourse, serializeUserCourses } from "@/utils/serializer/userCourse.Serializer";
+import { connectDB, IUserCourse, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, userCourse, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 export async function getUserCourseByIdWithCache(userId: string, courseId: string): Promise<CUserCourse | null> {
@@ -44,5 +44,33 @@ export async function getUserCourseByIdWithCache(userId: string, courseId: strin
         logger.error("Error fetching User Courses", { message, error });
         return null;
     }
+}
 
+export async function getAllUserCourseByIdWithCache(userId: string): Promise<CUserCourse[] | []> {
+    try {
+        await connectDB(process.env.MONGODB_URI!);
+        const cached = await getCached<CUserCourse[]>(USER_COURSE_LIST.namespace, userId);
+        if (cached) {
+            return cached
+        };
+        if (!validateMongooseId({ userId })) {
+            logger.warn("Invalid user id", { userId });
+            return []
+        };
+
+        const authUserCourse: IUserCourse[] | null = await userCourse.find({ userId: userId }).lean().exec();
+        if (!authUserCourse) {
+            logger.info("User Courses not found");
+            return [];
+        }
+        const serialized: CUserCourse[] = serializeUserCourses(authUserCourse);
+        await setCached<CUserCourse[]>(USER_COURSE_LIST.namespace, userId, serialized, CACHE_TTL.MEDIUM);
+        logger.info("User All Courses fetched successfully");
+        return serialized;
+    } catch (error: unknown) {
+        const message: string = error instanceof Error ? error.message : 'Something went wrong in getAllUserCourseByIdWithCache';
+        logger.error("Error fetching User Courses", { message, error });
+        return []
+
+    }
 }

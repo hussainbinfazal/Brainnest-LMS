@@ -21,7 +21,7 @@ function formatDocs(docs: { pageContent: string }[]): string {
 }
 
 export function buildRagChain(vectorStore: MongoDBAtlasVectorSearch): RunnableSequence<string, string> {
-    const retriever = vectorStore.asRetriever({ k: 3 }); // top 3 relevant chunks
+    const retriever = vectorStore.asRetriever({ k: 5 }); // top 3 relevant chunks
 
     return RunnableSequence.from([
         {

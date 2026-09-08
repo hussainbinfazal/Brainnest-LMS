@@ -1,4 +1,6 @@
 "use client";
+import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
+import { GridBackground } from "@/components/ui/grid-background";
 import { cn } from "@/lib/utils";
 import { CButtonProps } from "@/types/client";
 import Link from "next/link";
@@ -15,7 +17,7 @@ const Button: React.FC<CButtonProps> = ({ variant, className, ...props }) => {
 
   return <button className={`${variantClasses} ${className}`} {...props} />;
 };
-export default function Footer({className}: {className?: string}): React.JSX.Element {
+export default function Footer({ className }: { className?: string }): React.JSX.Element {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,10 +31,12 @@ export default function Footer({className}: {className?: string}): React.JSX.Ele
   };
   return (
     <footer
-      className={cn("bg-black dark:bg-black text-white", className)}
+      className={cn("bg-black dark:bg-black text-white relative", className)}
     >
+      <DottedGlowBackground className="z-10 dark:block" />
+      <GridBackground className="absolute inset-0 z-0 pointer-events-none" />
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Section */}
           <div className="lg:col-span-2">
@@ -177,7 +181,7 @@ export default function Footer({className}: {className?: string}): React.JSX.Ele
         </div>
 
         {/* Newsletter Signup */}
-        <div className="mt-16 pt-8 border-t border-slate-700">
+        <div className="mt-16 pt-8 border-t border-gray-800">
           <div className="max-w-md mx-auto text-center lg:max-w-none lg:text-left lg:flex lg:items-center lg:justify-between">
             <div className="lg:flex-1">
               <h4 className="text-xl font-semibold mb-2 text-white">
@@ -211,20 +215,20 @@ export default function Footer({className}: {className?: string}): React.JSX.Ele
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-slate-700 bg-black">
+      <div className="relative border-t border-slate-900  bg-transparent">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="text-slate-400 text-sm">
+            <div className="text-slate-400 dark:text-white text-sm">
               © 2025 Brainnest. All rights reserved. Brainnest is a registered
               trademark of Brainnest Inc.
             </div>
             <div className="flex items-center space-x-6 text-sm">
               <span className="text-slate-400">
-                🌟 Trusted by 5K+ learners worldwide
+                🌟 Trusted by + learners worldwide
               </span>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 text-slate-400 ">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-slate-400">
+                <span className="text-slate-400 ">
                   System Status: All systems operational
                 </span>
               </div>

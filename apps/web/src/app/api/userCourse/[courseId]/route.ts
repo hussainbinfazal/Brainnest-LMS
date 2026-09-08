@@ -16,11 +16,6 @@ export async function GET(request:
 
     const userId: string = user.id;
     const { courseId } = await context.params;
-    if (!validateMongooseId({ userId: userId })) {
-        logger.warn("Invalid user id", { userId });
-        throw new Error("Invalid user Id");
-    }
-    await connectDB(process.env.MONGODB_URI!);
     try {
         if (!validateMongooseId({ courseId: courseId })) {
             logger.warn("Invalid course id", { courseId });
@@ -35,6 +30,7 @@ export async function GET(request:
             logger.info("User Courses fetched from cache");
             return NextResponse.json({ userCourse: cached });
         }
+        await connectDB(process.env.MONGODB_URI!);
         const authUserCourse: IUserCourse | null = await userCourse.findOne({ userId: userId, courseId: courseId }).lean().exec();
         if (!authUserCourse) {
             logger.info("User Courses not found");

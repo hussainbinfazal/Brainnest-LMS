@@ -37,12 +37,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton"
-
-import SubcategoryChipsSkeleton from "../skeletons/Subcategory-Chips-Skeleton"
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { useSession } from "next-auth/react";
-import { CCategory, CCourse, CReview, CUserLocation } from "@/types/client";
+import { CCategory, CCourse, CReview, CUserCourse, CUserLocation } from "@/types/client";
 import { formatRelativeDate } from "@/utils/date";
 import { ReviewSortOption, sortedReviews } from "@/lib/helpers/sortReviews";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
@@ -53,16 +51,18 @@ import { getPopularCategories } from "@/lib/helpers/sortCategories";
 import CategoryChipsSkeleton from "../skeletons/Category-Chips-Skeleton";
 import { cn } from "@/lib/utils";
 import HomePageSkeleton from "./homepage-skeleton";
+import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
 
 export interface HomeProps {
   initialCourses: CCourse[];
   fetchedReviews: CReview[];
   allCategories: CCategoryWithChildren[];
+  allUserCourses: CUserCourse[],
   children?: React.ReactNode;
   className?: string;
 }
 
-export default function HomePage({ initialCourses, fetchedReviews, allCategories, children, className }: HomeProps) {
+export default function HomePage({ initialCourses, fetchedReviews, allCategories, allUserCourses, children, className }: HomeProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { fetchCourses, courses, setCourses, reviews, categories } = useCourseStore();
@@ -70,7 +70,7 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
   const authUser = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const userLocation = useAuthStore((state) => state.userLocation);
-
+  const setAllUserCoursesByUserIds = useUserCourseStore((state) => state.setAllUserCoursesByUserIds);
   const [userGeography, setUserGeography] = useState<CUserLocation | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState<boolean>(false);
   // const courses = useCourseStore((state) => state.courses);
@@ -125,6 +125,11 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
     loadLocation();
   }, []);
 
+  useEffect(() => {
+    if (session?.user?.id) {
+      setAllUserCoursesByUserIds(allUserCourses)
+    }
+  }, [session?.user?.id, allUserCourses, setAllUserCoursesByUserIds])
   //Auth status
   useEffect(() => {
     // Check for OAuth success toast
@@ -135,7 +140,7 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
     }
   }, []);
 
-  if(isLoadingPage) return <HomePageSkeleton/>
+  if (isLoadingPage) return <HomePageSkeleton />
   return (
     <main className={cn("flex  items-center justify-center min-h-screen  pb-20 gap-10 font-(family-name:--font-geist-sans) dark:bg-black bg-white", className)}>
       <section className="w-full max-w-4/5 min-w-0  flex flex-col justify-center items-center gap-6 overflow-hidden">
@@ -178,9 +183,9 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
         <section className="w-full flex justify-center ">
           <div className="w-[90%] md:w-[70%]  min-h-137.5 p-4 gap-8">
             <div className="mb-4 flex flex-col gap-2">
-                  <h2 className="text-3xl font-bold ">Ready to imagine your career?</h2>
-                  <p className="text-gray-600">Get the skills and real-world experienced employerswant with Career Accelerators.</p>
-                
+              <h2 className="text-3xl font-bold ">Ready to imagine your career?</h2>
+              <p className="text-gray-600">Get the skills and real-world experienced employerswant with Career Accelerators.</p>
+
             </div>
             <Carousel
 
@@ -301,57 +306,57 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
                             </TabsList>)}
 
                           {/* Subcategory Content */}
-                          { (category.children).map((sub: CCategory) => (
+                          {(category.children).map((sub: CCategory) => (
                             <TabsContent key={sub._id} value={sub.name} className={"flex justify-center "}>
                               <Carousel className="mt-4 w-full">
                                 {(
-                                <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
-                                  {getCategoryCourses(sub._id, category._id, courses || []).map((course: CCourse) => (
-                                    <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
-                                      <Link href={`/courses/${course._id}`} className="inline-block">
-                                        <Card className="w-75 h-87.5 relative">
-                                          <CardContent className="h-3/5 w-full flex justify-center relative">
-                                            {course?.coverImage ? (
-                                              <div className="relative w-full h-full p-4 rounded-xl overflow-hidden">
-                                                <Image
-                                                  src={course.coverImage}
-                                                  alt={course.title}
-                                                  fill
-                                                  className="object-cover"
-                                                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                                />
+                                  <CarouselContent className={"w-full px-2 -ml-2 md:-ml-4"}>
+                                    {getCategoryCourses(sub._id, category._id, courses || []).map((course: CCourse) => (
+                                      <CarouselItem key={course._id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3">
+                                        <Link href={`/courses/${course._id}`} className="inline-block">
+                                          <Card className="w-75 h-87.5 relative">
+                                            <CardContent className="h-3/5 w-full flex justify-center relative">
+                                              {course?.coverImage ? (
+                                                <div className="relative w-full h-full p-4 rounded-xl overflow-hidden">
+                                                  <Image
+                                                    src={course.coverImage}
+                                                    alt={course.title}
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                                  />
+                                                </div>
+                                              ) : (
+                                                <Skeleton className="w-full h-50" />
+                                              )}
+                                            </CardContent>
+                                            <CardFooter className="flex-1">
+                                              <div className="w-full flex flex-col flex-1 gap-2">
+                                                <p className="capitalize text-xl font-semibold wrap-break leading-snug">
+                                                  {course.title}
+                                                </p>
+                                                <p className="text-sm text-muted-foreground">{course?.instructorId?.name}</p>
+                                                <div className="flex gap-2">
+                                                  <Badge
+                                                    className=""
+                                                    variant="outline">{course?.averageRating ? `${formatRatingNumber(course.averageRating)} ⭐` : "0"}</Badge>
+                                                  <Badge
+                                                    className=""
+                                                    variant="outline">
+                                                    {course?.totalDurationInSeconds ? `⏱️ ${convertToTotalHours(course.totalDurationInSeconds)} ` : "0"} hours
+                                                  </Badge>
+                                                </div>
                                               </div>
-                                            ) : (
-                                              <Skeleton className="w-full h-50" />
-                                            )}
-                                          </CardContent>
-                                          <CardFooter className="flex-1">
-                                            <div className="w-full flex flex-col flex-1 gap-2">
-                                              <p className="capitalize text-xl font-semibold wrap-break leading-snug">
-                                                {course.title}
-                                              </p>
-                                              <p className="text-sm text-muted-foreground">{course?.instructorId?.name}</p>
-                                              <div className="flex gap-2">
-                                                <Badge
-                                                  className=""
-                                                  variant="outline">{course?.averageRating ? `${formatRatingNumber(course.averageRating)} ⭐` : "0"}</Badge>
-                                                <Badge
-                                                  className=""
-                                                  variant="outline">
-                                                  {course?.totalDurationInSeconds ? `⏱️ ${convertToTotalHours(course.totalDurationInSeconds)} ` : "0"} hours
-                                                </Badge>
-                                              </div>
-                                            </div>
-                                          </CardFooter>
-                                        </Card>
-                                      </Link>
-                                    </CarouselItem>
-                                  ))}
-                                </CarouselContent>
-                                 )}
+                                            </CardFooter>
+                                          </Card>
+                                        </Link>
+                                      </CarouselItem>
+                                    ))}
+                                  </CarouselContent>
+                                )}
                                 <CarouselPrevious className="" />
                                 <CarouselNext className={"ml-4"} />
-                               
+
                               </Carousel>
                             </TabsContent>
                           ))}
