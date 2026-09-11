@@ -24,14 +24,17 @@ import { User } from "next-auth";
 import { CAuthUser, CChatMessage } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
+import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
 
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
+  const sessionUser = session?.user
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
-  const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
+  const enrolledCourses = useUserCourseStore((state) => state.enrolledCourseIds);
   const chat: CChatMessage[] | null = useChatStore((state) => state.chat);
   const setChat = useChatStore((state) => state.setChat);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -39,14 +42,12 @@ export default function Header({ className }: { className?: string }): React.JSX
   const avatarRef = useRef<HTMLDivElement>(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState<boolean>(false);
   const [cartItemsCount, setCartItemsCount] = useState<number>(0);
-  const { data: session, status } = useSession();
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios("/api/users/me");
       if (response.data.user) {
         setAuthUser(response.data.user);
-        setHasInitialized(true);
       }
     } catch (err) {
       // console.error("Failed to fetch user:", err);
@@ -63,9 +64,6 @@ export default function Header({ className }: { className?: string }): React.JSX
 
   };
 
-  useEffect(() => {
-    console.log("authUser", authUser);
-  }, [authUser]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -110,6 +108,9 @@ export default function Header({ className }: { className?: string }): React.JSX
     }
   }, []);
 
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser])
   useEffect(() => {
     if (authUser) {
       const timer = setTimeout(() => {
@@ -185,7 +186,7 @@ export default function Header({ className }: { className?: string }): React.JSX
               <Link href="/courses/liked-courses" className="px-4">
                 <CiHeart className="text-2xl hover:text-gray-200 font-semibold" />
               </Link>
-              {authUser && "" && (
+              {session?.user && "" && (
                 <Link
                   href="/about"
                   className="px-4 hover:underline underline-offset-4"
@@ -193,7 +194,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                   Profile
                 </Link>
               )}
-              {authUser?.role === "instructor" && (
+              {session?.user?.role === "instructor" && (
                 <Link
                   href={`/myprofile`}
                   className="px-4 hover:underline underline-offset-4"
@@ -206,7 +207,7 @@ export default function Header({ className }: { className?: string }): React.JSX
             <div className="flex items-center gap-4">
               <ModeToggle />
 
-              {authUser?.role === "instructor" ? (
+              {session?.user?.role === "instructor" ? (
                 <Link href="/course/manage">
                   <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
@@ -217,12 +218,12 @@ export default function Header({ className }: { className?: string }): React.JSX
                   </Button>
                 </Link>
               )}
-              {status === "unauthenticated" && (
+              {!session?.user && (
                 <Link href={"/login"}>
                   <Button className="ml-6 rounded-sm cursor-pointer">Login</Button>
                 </Link>
               )}
-              {status === "authenticated" && (
+              {session?.user && (
                 <Button className="ml-6 rounded-sm cursor-pointer" onClick={handleLogout}>
                   Logout
                 </Button>
@@ -231,7 +232,7 @@ export default function Header({ className }: { className?: string }): React.JSX
               <div className="relative ml-4"
                 ref={avatarRef}
               >
-                {authUser && (
+                {session?.user && (
                   <Avatar
 
                     className="ml-4 relative cursor-pointer"
@@ -266,12 +267,12 @@ export default function Header({ className }: { className?: string }): React.JSX
 
                     >
                       <CardContent className="flex flex-col gap-3 items-center justify-center">
-                        {authUser && authUser.role === "instructor" && (
+                        {session?.user && session?.user?.role === "instructor" && (
                           <Link href={`/course/manage`} className="mt-4">
                             <p className="whitespace-pre">Manage Courses</p>
                           </Link>
                         )}
-                        {authUser?.role === "instructor" && (
+                        {session?.user?.role === "instructor" && (
                           <Link
                             href={`/`}
                             className={`${badgeVariants({
@@ -282,26 +283,26 @@ export default function Header({ className }: { className?: string }): React.JSX
                           </Link>
                         )}
 
-                        {authUser && authUser?.enrolledCourses?.length ? (
+                        {session?.user && enrolledCourses.size > 0 ? (
                           <Link href={`/mycourses`}>
                             <p>My courses</p>
                           </Link>
                         ) : null}
-                        {authUser && (
+                        {session?.user && (
                           <Link href="/myprofile">
                             <p>Profile</p>
                           </Link>
                         )}
-                        {authUser && chatAlreadyExists && (
+                        {session?.user && chatAlreadyExists && (
                           <Link href="/chat">
                             <p>Chat</p>
                           </Link>
                         )}
-                        {authUser && authUser?.certificates?.length > 0 && (
+                        {/* {authUser && authUser?.certificates?.length > 0 && (
                           <Link href="/myprofile/mycertificates">
                             <p>My Certificates</p>
                           </Link>
-                        )}
+                        )} */}
 
                         <p
                           className="cursor-pointer"

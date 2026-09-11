@@ -13,75 +13,51 @@ import { fetchUserLocation } from "../helpers/getUserLocation";
 
 
 export const useAuthStore = create<CAuthStore>(
-  persist(
-    (set, get) => ({
-      authUser: null,
-      setAuthUser: (authUser: CAuthUser | null) => set({ authUser }),
-      clearAuthUser: () => set({ authUser: null, hasInitialized: false }),
-      setAuthLoading: (loading: boolean) => set({ isAuthLoading: loading }),
-      setHasInitialized: (value: boolean) => set({ hasInitialized: value }),
-      setUserLoggedInitialized: (value: boolean) => set({ userLoggedInitialized: value }),
-      userLoggedInitialized: false,
-      hasInitialized: false,
-      isAuthLoading: true,
-      userLocation: null,
-      setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
-      fetchUser: async () => {
-        const { setAuthLoading } = get();
-        setAuthLoading(true);
-        try {
-          const response = await axios("/api/users/me");
-          // clientLogger.debug("Response from fetchUser", response);
-          if (response.data.user) {
-            set({
-              authUser: response.data.user, isAuthLoading: false,
-              hasInitialized: true,
-            });
 
-          }
-        } catch (error: unknown) {
-          let message = "Something went wrong";
-          if (axios.isAxiosError(error)) {
-            message =
-              error.response?.data?.message ||
-              error.message ||
-              message;
-          } else if (error instanceof Error) {
-            message = error.message;
-          }
-          clientLogger.info(`Error in fetching user: ${message}`);
-          // console.log(error);
-        }
-      },
-      saveUserGeography: async () => {
-        try {
-          if (get().userLocation === null) {
-            const location = await fetchUserLocation()
-            set({ userLocation: location });
-          }
-        } catch (error: unknown) {
+  (set, get) => ({
+    authUser: null,
+    setAuthUser: (authUser: CAuthUser) => set({ authUser }),
+    clearAuthUser: () => set({ authUser: null }),
+    setAuthLoading: (loading: boolean) => set({ isAuthLoading: loading }),
+    isAuthLoading: true,
+    userLocation: null,
+    setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
+    fetchUser: async () => {
+      const { setAuthLoading } = get();
+      setAuthLoading(true);
+      try {
+        const response = await axios("/api/users/me");
+        // clientLogger.debug("Response from fetchUser", response);
+        if (response.data.user) {
+          set({
+            authUser: response.data.user, isAuthLoading: false,
+          });
 
         }
-      },
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state: CAuthStore | undefined) => {
-        if (!state) return {};
-        return {
-          hasInitialized: state.hasInitialized,
-          userLoggedInitialized: state.userLoggedInitialized
+      } catch (error: unknown) {
+        let message = "Something went wrong";
+        if (axios.isAxiosError(error)) {
+          message =
+            error.response?.data?.message ||
+            error.message ||
+            message;
+        } else if (error instanceof Error) {
+          message = error.message;
         }
-      },
-      onRehydrateStorage: () => (state: CAuthStore | undefined) => {
-
-        if (state) {
-          const typedState = state as CAuthStore;
-          clientLogger.info("Rehydrated state:", { hasInitialized: typedState.hasInitialized, userLoggedInitialized: typedState.userLoggedInitialized });
-        }
-        // console.log("Rehydrated state:", state);
-      },
+        clientLogger.info(`Error in fetching user: ${message}`);
+        // console.log(error);
+      }
     },
+    saveUserGeography: async () => {
+      try {
+        if (get().userLocation === null) {
+          const location = await fetchUserLocation()
+          set({ userLocation: location });
+        }
+      } catch (error: unknown) {
 
-  ) as unknown as StateCreator<CAuthStore> & PersistOptions<CAuthStore, CAuthStore>
+      }
+    },
+  }),
+
 );

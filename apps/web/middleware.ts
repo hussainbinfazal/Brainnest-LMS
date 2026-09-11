@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
 
-  const BYPASS_AUTH = process.env._BYPASS_AUTH === 'true';
+  const BYPASS_AUTH = process.env.BYPASS_AUTH === 'true';
   if (BYPASS_AUTH) {
     const res = NextResponse.next();
     res.headers.set("X-Request-ID", requestId);

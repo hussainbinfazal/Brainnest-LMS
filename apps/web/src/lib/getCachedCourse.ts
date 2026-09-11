@@ -1,10 +1,12 @@
-import { COURSES_ALL, COURSES_FILTERED_BY_PARAMS, COURSE_BY_ID, Course, ICourse, INSTRUCTOR_OTHER_COURSES, INSTRUCTOR_STATS, RELATED_COURSES, USER_COURSE_LIST, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
+import { COURSES_ALL, COURSES_FILTERED_BY_PARAMS, COURSE_BY_ID, Course, ICourse, INSTRUCTOR_OTHER_COURSES, INSTRUCTOR_STATS, IUserCourse, LIKED_COURSES_BY_USER, RELATED_COURSES, USER_COURSE_LIST, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
 import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "../types/client"
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
 import mongoose from "mongoose";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { IGetCourseByParamsResponse } from "@/types/server";
+import { IGetCourseByParamsResponse, IGetLikedCourseByParamsResponse } from "@/types/server";
+import { getSession } from "@/dev/auth-helper";
+import UserCourse from "@repo/shared/models/User/userCourse";
 
 /**
  * Single source of truth for fetching courses with Redis caching.
@@ -127,7 +129,6 @@ export async function getReleatedCoursesWithCache(courseId: string): Promise<CCo
 }
 
 export async function getCourseByParamsWithCache(page: number, limit: number, skip: number): Promise<IGetCourseByParamsResponse> {
-    await connectDB(process.env.MONGODB_URI!);
     if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
         logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
         throw new Error("Invalid parameters for fetching courses");
@@ -137,6 +138,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
         logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
         return cached;
     };
+    await connectDB(process.env.MONGODB_URI!);
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
             Course.countDocuments().lean().exec(),
@@ -269,4 +271,86 @@ export async function getInstructorOtherCoursesWithCache(instructorId: string, c
     }
 
 }
+
+
+export async function getUserLikedCoursesWithCache(userId: string, page: number, limit: number, skip: number): Promise<IGetLikedCourseByParamsResponse> {
+    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
+        logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
+        throw new Error("Invalid parameters for fetching courses");
+    };
+    const session = await getSession();
+    if (!session?.user) {
+        logger.error("User is not logged in");
+        return {
+            likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
+        }
+    }
+    if (session.user.id !== userId || !validateMongooseId({ userId: userId })) {
+        logger.warn("Invalid user id", { userId });
+        return {
+            likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
+        }
+    }
+    const cached = await getCached<IGetLikedCourseByParamsResponse>(LIKED_COURSES_BY_USER.namespace, `${page}:${limit}:${skip}:${userId}`);
+    if (cached) {
+        logger.info("User Liked Courses fetched Succesfully from Cache", {
+            courseCount: cached.likedCourses.length
+        })
+        return cached;
+    }
+    // await invaidateCached("Courses", "all")
+    // console.log("This is the url of mongodb", process.env.MONGODB_URI)
+    await connectDB(process.env.MONGODB_URI!);
+    try {
+
+        const userCourses: IUserCourse[] = await UserCourse.find({ userId: userId, isLiked: true }).select("courseId").lean().exec()
+
+        //Negative caching
+        if (userCourses.length === 0) {
+            await setCached(LIKED_COURSES_BY_USER.namespace, `${page}:${limit}:${skip}:${userId}`, { likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0 }, CACHE_TTL.MEDIUM)
+        };
+        const courseIds = userCourses.map((uc) => uc.courseId);
+        const courses: ICourse[] = await Course.find({
+            _id: { $in: courseIds }
+        })
+            .populate("instructorId", "_id name email")
+            .populate({
+                path: "category",
+                select: "name slug parent",
+                populate: {
+                    path: "parent",
+                    select: "name slug"
+
+                },
+            })
+            .skip(skip)
+            .limit(limit)
+            .lean({ virtuals: true })
+            .exec();
+        const totalCourseCount = await Course.countDocuments({ _id: { $in: courseIds } }).lean().exec();
+        const totalPages = Math.ceil(totalCourseCount / limit);
+        const hasNextPage: boolean = page < totalPages;
+        const hasPrevPage: boolean = page > 1;
+        let response = {
+            likedCourses: serializeCourses(courses),
+            hasNextPage,
+            hasPrevPage,
+            currentPage: page,
+            totalPages: Math.ceil(totalCourseCount / limit),
+            totalCourses: totalCourseCount
+        }
+        const serialized = serializeCourses(courses);
+        await setCached(LIKED_COURSES_BY_USER.namespace, `${page}: ${limit}: ${skip}: ${userId}`, response, CACHE_TTL.MEDIUM);
+        logger.info("Liked User Courses fetched Succesfully from DB", {
+            courseCount: serialized.length
+        })
+        return response
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Something went wrong';
+        logger.error("Error fetching Liked User courses", { message, cachedCourses: cached, error });
+        return {
+            likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
+        };
+    }
+};
 

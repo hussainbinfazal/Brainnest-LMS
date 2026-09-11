@@ -34,6 +34,14 @@ export const COURSES_ALL = {
   usedIn: ["Homepage", "Courses Page", "Admin Panel"],
 };
 
+export const LIKED_COURSES_BY_USER = {
+  namespace: "liked-courses",
+  id: "page:limit:skip:userId",
+  ttl: "MEDIUM",
+  description: "List of liked courses by user",
+  usedIn: ["Liked Courses Page"],
+}
+
 export const COURSES_FACETS = {
   namespace: "courses-facets",
   id: "category:language:level",
@@ -416,6 +424,7 @@ export const ALL_CACHE_KEYS = [
   INSTRUCTOR_OTHER_COURSES,
   LESSONS_BY_COURSE,
   SECTIONS_BY_COURSE,
+  LIKED_COURSES_BY_USER,
   TOPIC_BY_ID,
   CATEGORIES_ALL,
   REVIEWS_ALL_COURSES,

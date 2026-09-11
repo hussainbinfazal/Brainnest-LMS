@@ -470,16 +470,12 @@ export interface CfetchCouponsResponse {
 
 export interface CAuthStore {
   authUser: CAuthUser | null;
-  userLoggedInitialized: boolean;
-  hasInitialized: boolean;
   isAuthLoading: boolean;
   userLocation: CUserLocation | null;
 
-  setAuthUser: (authUser: CAuthUser | null) => void;
+  setAuthUser: (authUser: CAuthUser) => void;
   clearAuthUser: () => void;
   setAuthLoading: (loading: boolean) => void;
-  setHasInitialized: (value: boolean) => void;
-  setUserLoggedInitialized: (value: boolean) => void;
   setUserLocation: (location: CUserLocation) => void;
   fetchUser: () => Promise<void>;
   saveUserGeography: () => Promise<void>;

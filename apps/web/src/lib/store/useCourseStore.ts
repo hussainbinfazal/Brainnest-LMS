@@ -64,6 +64,7 @@ export const useCourseStore = create<CCourseStore>((set, get) => ({
             return [];
         }
     },
+
     fetchPaginatedCourse: async ({ page, itemsPerPage, category, childCategory, languages = [], levels = [] }: { page: number; itemsPerPage: number, category?: string, childCategory?: string, languages?: string[], levels?: string[] }) => {
         set({ isLoading: true })
         try {

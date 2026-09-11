@@ -143,7 +143,6 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
       ],
     },
   ];
-
   // Fetch all courses logic
   const fetchAllCourses = useCallback(async (): Promise<void> => {
 

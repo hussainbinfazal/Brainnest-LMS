@@ -1,6 +1,6 @@
 // lib/auth-helper.ts
 import { auth } from "@/auth" // wherever your next-auth config exports auth()
-import { connectDB, User } from "@repo/shared";
+import { connectDB, logger, User } from "@repo/shared";
 import type { Session } from "next-auth";
 
 export type DevUserRole = "student" | "instructor" | "admin";
@@ -62,7 +62,8 @@ export async function getDevUser(role: DevUserRole) {
   }[role];
 
   await connectDB(process.env.MONGODB_URI);
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).exec();
+  logger.info("Development user found", { user });
 
   if (!user) {
     throw new Error(

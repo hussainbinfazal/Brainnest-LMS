@@ -20,7 +20,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     try {
         const authUserCourses = await getAllUserCourseByIdWithCache(userId!);
         logger.info("All User Courses Fetched Successfully ", { totalUserCourses: authUserCourses.length });
-        return NextResponse.json({ message: "User course route" }, { status: 200 });
+        return NextResponse.json({ message: "User course route", data: authUserCourses }, { status: 200 });
     } catch (error: unknown) {
         const message: string = error instanceof Error ? error.message : 'Something went wrong in User course route';
         logger.error("Error in All User course route", { error, message });

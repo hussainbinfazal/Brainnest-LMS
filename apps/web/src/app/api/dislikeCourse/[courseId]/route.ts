@@ -1,7 +1,7 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { getDataFromToken } from "@/utils/getDataFromToken";
-import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST } from "@repo/shared";
+import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, LIKED_COURSES_BY_USER } from "@repo/shared";
 import mongoose from "mongoose";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
@@ -25,6 +25,10 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         }
 
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams?.get('page') || '1') || 1;
+        const limit = parseInt(searchParams?.get('limit') || '5') || 5;
+        const skip = Number((page - 1)) * limit;
 
         // Update UserCourse record to mark as not liked
         const updatedUserCourse = await userCourse.findOneAndUpdate(
@@ -52,11 +56,11 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         }
         await invalidateCached(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         await invalidateCached(USER_COURSE_LIST.namespace, `${userId}`);
+        await invalidateCached(LIKED_COURSES_BY_USER.namespace, `${page}:${limit}:${skip}:${userId}`)
         const serializedUserCourse = serializeUserCourse(updatedUserCourse);
         await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serializedUserCourse, CACHE_TTL.MEDIUM);
         logger.info("Course unliked successfully", { userId: userId, courseId });
         return NextResponse.json({ message: "Course unliked successfully", userCourse: serializedUserCourse }, { status: 200 });
-
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in unliking course", { error: message });

@@ -1,6 +1,4 @@
-import { configDotenv } from "dotenv";
-
-configDotenv({ path: [".env", "../../.env"] });
+import "@repo/shared/src/config/env";
 import mongoose, { type mongo } from "mongoose";
 import { MongoClient } from "mongodb";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";

@@ -38,6 +38,14 @@ export interface IGetCourseByParamsResponse {
   totalPages: number;
   totalCourses: number;
 };
+export interface IGetLikedCourseByParamsResponse {
+  likedCourses: CCourse[];
+  currentPage: number;
+  hasNextPage: boolean,
+  hasPrevPage: boolean,
+  totalPages: number;
+  totalCourses: number;
+};
 
 export type IFacets = {
   categories: {
