@@ -238,6 +238,43 @@ export interface CCategory {
 export interface CCourse {
   _id: string;
   title: string;
+  topics: CTopic[];
+  description?: string;
+  coverImage?: string;
+  instructorId?: {
+    _id: string;
+    name: string;
+    profileImage?: string;
+  };
+  price: number;
+  averageRating: number;
+  discount: number;
+  level: 'beginner' | 'intermediate' | 'expert';
+  totalEnrolledCount: number,
+  language: string;
+  status: 'draft' | 'published';
+  topic: CTopic[];
+  totalReviews: number;
+  ratingDistribution: number[];
+  totalLessons: number;
+  certificate: boolean;
+  faq?: CFaq[];
+  requirements?: string[];
+  whatYouWillLearn?: string[];
+  video?: string;
+  previewVideo?: string;
+  tags?: string[];
+  dripType: string,
+  category: CCategory;
+  totalDurationInSeconds: number;
+  published?: boolean
+  purchased?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+export interface CCourseManage {
+  _id: string;
+  title: string;
   topic: string;
   description?: string;
   coverImage?: string;

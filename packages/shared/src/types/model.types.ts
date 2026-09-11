@@ -3,7 +3,7 @@ import mongoose, { Document, HydratedDocument, Types } from "mongoose";
 export interface ICourse {
   _id: Types.ObjectId;
   title: string;
-  topic: Types.ObjectId | ITopic;
+  topics: Types.ObjectId | ITopic[];
   description: string;
   instructorId: Types.ObjectId | IUser;
   price: number;

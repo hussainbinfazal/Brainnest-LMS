@@ -42,3 +42,6 @@ src/scripts/migration.js
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+devlog.md

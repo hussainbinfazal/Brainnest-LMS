@@ -8,8 +8,7 @@ export default function LikeCoursesPageSkeleton(
 ): React.JSX.Element {
     return (<div className={cn("w-screen min-h-screen h-screen flex overflow-hidden",className)}>
         {/* Sidebar */}
-        
-
+    
         {/* Main Content */}
         <main className="flex-1 min-h-screen h-full flex flex-col gap-4 pt-4 px-4">
             {/* Header */}

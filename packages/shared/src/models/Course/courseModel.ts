@@ -9,12 +9,12 @@ const courseSchema = new mongoose.Schema<ICourse>({
     type: String,
     required: true
   },
-  topic: {
+  topics: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Topic",
     required: true,
     index: true
-  },
+  }],
   description:
   {
     type: String,
@@ -40,13 +40,13 @@ const courseSchema = new mongoose.Schema<ICourse>({
     type: Number,
     default: 0
   },
-  ratingDistribution: {
+  ratingDistribution: [{
     1: Number,
     2: Number,
     3: Number,
     4: Number,
     5: Number
-  },
+  }],
   totalLessons: {
     type: Number,
     default: 0
@@ -75,6 +75,10 @@ const courseSchema = new mongoose.Schema<ICourse>({
     type: Number,
     default: 0
 
+  },
+  certificate: {
+    type: Boolean,
+    default: false
   },
   language: {
     type: String,
@@ -150,7 +154,7 @@ courseSchema.pre("findOneAndDelete", async function (next) {
       Section.deleteMany({ courseId: course._id })
     ]);
   }
- 
+
 })
 courseSchema.index({ instructorId: 1, status: 1 });
 courseSchema.index({ category: 1, status: 1, price: 1 });

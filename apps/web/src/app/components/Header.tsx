@@ -42,6 +42,7 @@ export default function Header({ className }: { className?: string }): React.JSX
   const avatarRef = useRef<HTMLDivElement>(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState<boolean>(false);
   const [cartItemsCount, setCartItemsCount] = useState<number>(0);
+  console.log("This is the seession user in header", sessionUser, session, status)
   const fetchUser = useCallback(async () => {
     setLoading(true);
     try {
@@ -194,7 +195,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                   Profile
                 </Link>
               )}
-              {session?.user?.role === "instructor" && (
+              {authUser?.role === "instructor" && (
                 <Link
                   href={`/myprofile`}
                   className="px-4 hover:underline underline-offset-4"
@@ -207,7 +208,7 @@ export default function Header({ className }: { className?: string }): React.JSX
             <div className="flex items-center gap-4">
               <ModeToggle />
 
-              {session?.user?.role === "instructor" ? (
+              {authUser?.role === "instructor" ? (
                 <Link href="/course/manage">
                   <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
@@ -218,12 +219,12 @@ export default function Header({ className }: { className?: string }): React.JSX
                   </Button>
                 </Link>
               )}
-              {!session?.user && (
+              {!authUser && (
                 <Link href={"/login"}>
                   <Button className="ml-6 rounded-sm cursor-pointer">Login</Button>
                 </Link>
               )}
-              {session?.user && (
+              {authUser && (
                 <Button className="ml-6 rounded-sm cursor-pointer" onClick={handleLogout}>
                   Logout
                 </Button>
@@ -232,7 +233,7 @@ export default function Header({ className }: { className?: string }): React.JSX
               <div className="relative ml-4"
                 ref={avatarRef}
               >
-                {session?.user && (
+                {authUser && (
                   <Avatar
 
                     className="ml-4 relative cursor-pointer"
@@ -267,12 +268,12 @@ export default function Header({ className }: { className?: string }): React.JSX
 
                     >
                       <CardContent className="flex flex-col gap-3 items-center justify-center">
-                        {session?.user && session?.user?.role === "instructor" && (
+                        {session?.user && (
                           <Link href={`/course/manage`} className="mt-4">
                             <p className="whitespace-pre">Manage Courses</p>
                           </Link>
                         )}
-                        {session?.user?.role === "instructor" && (
+                        {authUser?.role === "instructor" && (
                           <Link
                             href={`/`}
                             className={`${badgeVariants({
@@ -283,17 +284,17 @@ export default function Header({ className }: { className?: string }): React.JSX
                           </Link>
                         )}
 
-                        {session?.user && enrolledCourses.size > 0 ? (
+                        {authUser && enrolledCourses.size > 0 ? (
                           <Link href={`/mycourses`}>
                             <p>My courses</p>
                           </Link>
                         ) : null}
-                        {session?.user && (
+                        {authUser && (
                           <Link href="/myprofile">
                             <p>Profile</p>
                           </Link>
                         )}
-                        {session?.user && chatAlreadyExists && (
+                        {authUser && chatAlreadyExists && (
                           <Link href="/chat">
                             <p>Chat</p>
                           </Link>

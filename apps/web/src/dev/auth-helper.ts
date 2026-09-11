@@ -63,7 +63,7 @@ export async function getDevUser(role: DevUserRole) {
 
   await connectDB(process.env.MONGODB_URI);
   const user = await User.findOne({ email }).exec();
-  logger.info("Development user found", { user });
+  logger.info("Development user found",  {userId: user?.role});
 
   if (!user) {
     throw new Error(

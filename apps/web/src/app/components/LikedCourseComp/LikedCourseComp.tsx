@@ -257,7 +257,7 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
         {likedCourses.length === 0 ? (
 
           <div className="w-full h-screen  flex justify-center items-center">
-            No course Found
+            No Liked Courses Found
           </div>
 
         ) : (
