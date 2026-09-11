@@ -218,3 +218,7 @@ describe("LikedCoursesPageComp", () => {
         })
     })
 });
+
+
+
+// pnpm --dir .\apps\web test -- --run src/app/components/LikedCourseComp/LikedCoursesCompTest.test.ts

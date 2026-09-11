@@ -35,6 +35,7 @@ yarn-error.log*
 
 src/scripts/data-transfer.js
 src/scripts/migration.js
+src/dev
 
 # vercel
 .vercel
