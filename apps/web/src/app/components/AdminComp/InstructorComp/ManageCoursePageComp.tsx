@@ -32,7 +32,6 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
     const setAuthUser = useAuthStore((state) => state.setAuthUser);
     const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
     const [searchTerm, setSearchTerm] = useState<string>('');
-
     const router = useRouter();
     const [loading, setLoading] = useState<boolean>(true);
     const getMyCourses = useCallback(async () => {
@@ -225,14 +224,14 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 w-full mt-4 justify-items-center">
                             {Array.from({ length: courses.length || 3 }).map((_, index) => (
-                                <Card key={index} className="w-[300px] h-[400px] p-4 space-y-4 ">
-                                    <Skeleton className="h-[200px] w-full" />
+                                <Card key={index} className="w-75 h-100 p-4 space-y-4 ">
+                                    <Skeleton className="h-50 w-full" />
                                     <Skeleton className="h-6 w-3/4" />
                                     <Skeleton className="h-4 w-1/2" />
                                     <Skeleton className="h-6 w-full" />
                                     <div className="flex justify-between">
-                                        <Skeleton className="h-10 w-[80px]" />
-                                        <Skeleton className="h-10 w-[80px]" />
+                                        <Skeleton className="h-10 w-20" />
+                                        <Skeleton className="h-10 w-20" />
                                     </div>
                                 </Card>
                             ))}
@@ -254,7 +253,7 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
                                             <div>
                                                 <Card
                                                     key={course._id}
-                                                    className="w-[400px] sm:w-[320px] h-[350px] my-2 relative"
+                                                    className="w-100 sm:w-[320px] h-87.5 my-2 relative"
                                                 >
                                                     <CardContent className="h-3/5 w-full flex justify-center relative">
                                                         {course?.coverImage ? (
@@ -267,12 +266,12 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
                                                                 />
                                                             </div>
                                                         ) : (
-                                                            <Skeleton className="w-full h-[200px]" />
+                                                            <Skeleton className="w-full h-50" />
                                                         )}
                                                     </CardContent>
                                                     <CardFooter className={"flex-1"}>
                                                         <div className="w-full flex flex-col flex-1 gap-2">
-                                                            <p className="capitalize text-xl font-semibold break-words leading-snug">
+                                                            <p className="capitalize text-xl font-semibold wrap-break leading-snug">
                                                                 {course.title}
                                                             </p>
                                                             <p className="text-sm text-muted-foreground">

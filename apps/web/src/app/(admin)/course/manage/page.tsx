@@ -1,47 +1,36 @@
 import React from "react";
-import ManageCoursePageComponent from "../../../components/AdminComp/InstructorComp/ManageCoursePage";
-import { connectDB, logger } from "@repo/shared";
+import ManageCoursePageComponent from "@/app/components/AdminComp/InstructorComp/ManageCoursePageComp";
+import { ISessionUser, logger, validateMongooseId } from "@repo/shared";
 import { JSX } from "react/jsx-runtime";
-import { auth } from "@/auth";
-import { ICourse,Course } from "@repo/shared";
-import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
-
-import { CCourse, CReview } from "@/types/client";
-import { serializeCourses } from "@/utils/serializer/course.Serializer";
+import { getSession } from "@/dev/auth-helper";
+import { notFound } from "next/navigation";
+import { Session } from "next-auth";
+import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
 
 
 
 async function ManagePage(): Promise<JSX.Element> {
-
   try {
-    await connectDB(process.env.MONGODB_URI!);
-    const usersSession = await auth();
-    
-     if (!usersSession?.user?.id) {
-      return <ManageCoursePageComponent fetchedCourses={[]} />;
+    const session: Session | null = await getSession() // replace actual next auth in prod
+    if (!session?.user) {
+      return notFound()
     }
-   const authenticatedUserId = usersSession.user.id;
-    const cacheNamespace = `courses:user:${authenticatedUserId}`;
-     let courses: CCourse[] = [];
-    const cachedUserCourses = await getCached<CCourse[]>(cacheNamespace, "all");
-    if (cachedUserCourses) {
-      courses = cachedUserCourses;
-    } else {
-      const rawCourses = await Course.find({ instructor: authenticatedUserId })
-        .populate("instructor", "name email")
-        .populate("enrolledStudents.user", "_id name email profileImage role")
-        .lean();
-
-      if (rawCourses.length > 0) {
-        courses = serializeCourses(rawCourses) as CCourse[];
-        await setCached(cacheNamespace, "all", courses, CACHE_TTL.MEDIUM);
-      }
+    const user: ISessionUser = session?.user;
+    if (user?.role !== "instructor") {
+      logger.warn("Unauthorized", { user });
+      return notFound()
     }
-   
-    return <ManageCoursePageComponent fetchedCourses={courses} />;
-
-  } catch (error:unknown) {
-    logger.error("Error in ManagePage:", {error});
+    const instructorId: string = user.id
+    if (!validateMongooseId({ userId: instructorId })) {
+      logger.warn("Invalid user id", { userId: instructorId });
+      return notFound()
+    }
+    const cachedInstructorCourses = await getInstructorCoursesWithCache(instructorId)
+    logger.info("Instructor Courses fetched from cache", { courseCount: cachedInstructorCourses.length });
+    return <ManageCoursePageComponent fetchedCourses={cachedInstructorCourses} />
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Something went wrong while fetching Instructor Courses";
+    logger.error("Error in ManagePage:", { error, message });
     return <ManageCoursePageComponent fetchedCourses={[]} />;
   }
 };

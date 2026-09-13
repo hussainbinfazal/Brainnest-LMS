@@ -31,8 +31,17 @@ export const COURSES_ALL = {
   id: "all",
   ttl: "MEDIUM",
   description: "All available courses - public listing",
-  usedIn: ["Homepage", "Courses Page", "Admin Panel"],
+  usedIn: ["Homepage", "Courses Page"],
 };
+
+export const INSTRUCTOR_COURSES_ALL = {
+  namespace: "instructor-courses",
+  id: "instructorId",
+  ttl: "MEDIUM",
+  description: "All Available courses by an instructor",
+  usedIn: ["Instructor Dashboard"],
+}
+
 
 export const LIKED_COURSES_BY_USER = {
   namespace: "liked-courses",
@@ -419,6 +428,7 @@ export const QUEUE_KEYS = {
 
 export const ALL_CACHE_KEYS = [
   COURSES_ALL,
+  INSTRUCTOR_COURSES_ALL,
   COURSE_BY_ID,
   RELATED_COURSES,
   INSTRUCTOR_OTHER_COURSES,
