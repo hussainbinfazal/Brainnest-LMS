@@ -79,7 +79,11 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
     try {
         const [totalInstructorCourseDoc, instructorCoursesInDB] = await Promise.all([
             Course.countDocuments({ instructorId: instructorId }),
-            await Course.find({ instructorId: instructorId })
+            await Course.find({ instructorId: instructorId, isDeleted: false }, null, {
+                sort: {
+                    createdAt: -1
+                }
+            })
                 .populate("instructorId", "_id name email")
                 .populate({
                     path: "category",

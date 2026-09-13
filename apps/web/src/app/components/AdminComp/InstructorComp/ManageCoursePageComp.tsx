@@ -20,6 +20,7 @@ import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
+import { set } from "mongoose";
 const MotionButton = motion.create(Button);
 
 interface ManageCoursePageProps {
@@ -29,17 +30,24 @@ interface ManageCoursePageProps {
 const ManageCoursePageComponent = ({
     paginatedInstructorCourses,
 }: ManageCoursePageProps): React.JSX.Element => {
+    const router = useRouter();
     const [courses, setCourses] = useState<CCourse[]>(
         paginatedInstructorCourses || []
     );
+
+    ///Store states
     const authUser = useAuthStore((state) => state.authUser);
     const setAuthUser = useAuthStore((state) => state.setAuthUser);
     const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
     const fetchPaginatedInstructorCourses = useInstructorCoursesStore(
         (state) => state.fetchPaginatedInstructorCourses
     );
+    const deleteInstructorCourse = useInstructorCoursesStore(
+        (state) => state.deleteInstructorCourse
+    );
+
+    //Component States
     const [searchTerm, setSearchTerm] = useState<string>("");
-    const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const itemsPerPage: number = 6; //This is limit;
     const [debouncedSearchTerm, setDebouncedSearchTerm] =
@@ -128,11 +136,27 @@ const ManageCoursePageComponent = ({
         }
     }, [authUser]);
     const handleDeleteCourse = async (courseId: string) => {
+        let instructorId = authUser?._id?.toString();
+        if (
+            !authUser ||
+            authUser === null ||
+            authUser.role !== "instructor" ||
+            !instructorId
+        ) {
+            toast.error("You are not an unauthorized");
+            return;
+        }
         try {
-            const response = await axios.delete(`/api/admin/course/${courseId}?${params.toString()}`);
+            setIsLoading(true);
+            await deleteInstructorCourse({ page, itemsPerPage, courseId, instructorId });
             toast.success("Course deleted successfully");
-            getMyCourses();
-        } catch (error: any) { }
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Something went wrong";
+            toast.error("Something went wrong");
+            clientLogger.error("Error deleting course through instructor Store", { message, error });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     useEffect(() => {

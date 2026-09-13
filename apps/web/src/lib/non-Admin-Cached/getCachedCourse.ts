@@ -27,7 +27,7 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
     // console.log("This is the url of mongodb", process.env.MONGODB_URI)
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const courses: ICourse[] = await Course.find()
+        const courses: ICourse[] = await Course.find({}).sort({ createdAt: -1 })
             .populate("instructorId", "_id name email")
             .populate({
                 path: "category",
@@ -116,7 +116,7 @@ export async function getReleatedCoursesWithCache(courseId: string): Promise<CCo
 
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const relatedCourses: ICourse[] = await Course.find({ category: courseId }).limit(5).lean().exec();
+        const relatedCourses: ICourse[] = await Course.find({ category: courseId }).sort({ createdAt: -1 }).limit(5).lean().exec();
         const serialized = serializeCourses(relatedCourses);
         await setCached(RELATED_COURSES.namespace, courseId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Related Courses fetched successfully", { courseCount: serialized.length });
@@ -142,7 +142,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
             Course.countDocuments().lean().exec(),
-            Course.find().skip(skip).limit(limit).lean().exec()
+            Course.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec()
         ]);
         const totalCourses: number = totalCourseDoc;
         const courses: ICourse[] = coursesInDB;
@@ -235,8 +235,10 @@ export async function getUserCourseWithCache(userId: string): Promise<CCourse[] 
     }
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const userCourses: ICourse[] = await Course.find({ enrolled: userId }).lean().exec();
-        const serialized = serializeCourses(userCourses);
+        const userCourses = await UserCourse.find({ userId: new mongoose.Types.ObjectId(userId) }).lean().exec();
+        const courseIds = userCourses.map((userCourse) => userCourse.courseId);
+        const courses = await Course.find({ _id: { $in: courseIds } }).lean().exec();
+        const serialized = serializeCourses(courses);
         await setCached(USER_COURSE_LIST.namespace, userId, serialized, CACHE_TTL.MEDIUM);
         logger.info("User Courses fetched successfully", { courseCount: serialized.length });
         return serialized;

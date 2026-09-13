@@ -167,5 +167,6 @@ courseSchema.index({ instructorId: 1, status: 1 });
 courseSchema.index({ category: 1, status: 1, price: 1 });
 courseSchema.index({ status: 1, averageRating: -1 });
 courseSchema.index({ status: 1, totalEnrolledCount: -1 });
+
 const Course: Model<ICourse> = mongoose.models.Course || mongoose.model<ICourse>('Course', courseSchema);
 export default Course;

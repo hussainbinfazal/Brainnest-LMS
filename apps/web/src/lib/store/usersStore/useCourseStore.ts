@@ -10,7 +10,7 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 
 export const useCourseStore = create<CCourseStore>((set, get) => ({
     courses: [] as CCourse[],
-    
+
     cachedCurrentPageNumber: 1,
     cachedTotalPages: 1,
     cachedHasNextPage: false,
