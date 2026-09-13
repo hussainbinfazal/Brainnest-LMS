@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { LiaShoppingCartSolid } from "react-icons/lia";
 import { CiHeart } from "react-icons/ci";
 import { useState, useRef } from "react";

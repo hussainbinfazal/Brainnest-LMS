@@ -1,8 +1,8 @@
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
-import { useAuthStore } from "@/lib/store/useAuthStore";
-import { useCartStore } from "@/lib/store/useCartStore";
-import { useCourseStore } from "@/lib/store/useCourseStore";
-import { useProgressStore } from "@/lib/store/useProgressStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
+import { useCartStore } from "@/lib/store/usersStore/useCartStore";
+import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
+import { useProgressStore } from "@/lib/store/usersStore/useProgressStore";
 import { createStoreMock } from "./createStoreMock";
 import { CCourse } from "@/types/client";
 

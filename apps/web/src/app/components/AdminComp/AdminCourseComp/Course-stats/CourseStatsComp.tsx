@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";

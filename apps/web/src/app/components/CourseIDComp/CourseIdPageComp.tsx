@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import StarRating from "@/app/components/shared/StarRating";
 import { MdOutlinePeopleAlt } from "react-icons/md";
 import Image from "next/image";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import Link from "next/link";
 import { ImQuotesLeft } from "react-icons/im";
 import { useMemo } from "react";
@@ -38,7 +38,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useCartStore } from "@/lib/store/useCartStore";
+import { useCartStore } from "@/lib/store/usersStore/useCartStore";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MdOutlineOndemandVideo } from "react-icons/md";
@@ -56,16 +56,16 @@ import Autoplay from "embla-carousel-autoplay";
 import { formatRelativeDate } from "@/utils/date";
 import { CAuthUser, CCourse, CLesson, CLessonProgress, COrder, CProgress, CReview, CSection, CTopic, CUserCourse } from "@/types/client";
 import { cn } from "@/lib/utils";
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 import CourseIdPageSkeleton from "./CourseId-Page-Skeleton";
-import { IInstructorStats } from "@/lib/getCachedCourse";
+import { IInstructorStats } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { CCreateReview, zodReviewSchema } from "@/utils/fieldsValidation/Client/reviewSchemaValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
-import { useProgressStore } from "@/lib/store/useProgressStore";
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
+import { useProgressStore } from "@/lib/store/usersStore/useProgressStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 
 type UserProgressResult = { currentProgress: CProgress; lessons: CLessonProgress[] };
 interface CourseIdPageCompProps {

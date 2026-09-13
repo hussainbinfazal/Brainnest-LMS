@@ -4,12 +4,13 @@ import { create } from "zustand";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner"
 import { CCourse, CCourseStore, CReview } from "@/types/client";
-import { CCategoryWithChildren } from "../getCachedCategory";
+import { CCategoryWithChildren } from "../../non-Admin-Cached/getCachedCategory";
 import { clientLogger } from "@/utils/logger/clientLogger";
 
 
 export const useCourseStore = create<CCourseStore>((set, get) => ({
     courses: [] as CCourse[],
+    
     cachedCurrentPageNumber: 1,
     cachedTotalPages: 1,
     cachedHasNextPage: false,

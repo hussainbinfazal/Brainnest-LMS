@@ -10,7 +10,7 @@ import axios from "axios";
 import { LiaShoppingCartSolid } from "react-icons/lia";
 import { MdDelete } from "react-icons/md";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

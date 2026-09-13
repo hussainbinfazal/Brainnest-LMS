@@ -1,6 +1,6 @@
 import LikedCoursesPageComp from "@/app/components/LikedCourseComp/LikedCourseComp";
 import { getSession } from "@/dev/auth-helper";
-import { getUserLikedCoursesWithCache } from "@/lib/getCachedCourse";
+import { getUserLikedCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { CCourse } from "@/types/client";
 import { IGetLikedCourseByParamsResponse } from "@/types/server";
 import { logger } from "@repo/shared";

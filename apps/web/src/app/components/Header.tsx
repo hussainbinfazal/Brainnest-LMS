@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store/useAuthStore";
-import { useChatStore } from "@/lib/store/useChatStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
+import { useChatStore } from "@/lib/store/usersStore/useChatStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Scroller from "./Scroller";
 import { LiaShoppingCartSolid } from "react-icons/lia";
@@ -24,7 +24,7 @@ import { User } from "next-auth";
 import { CAuthUser, CChatMessage } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AiOutlineSend } from "react-icons/ai";

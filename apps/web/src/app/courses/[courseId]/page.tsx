@@ -3,15 +3,15 @@ import CourseIdPage from "@/app/components/CourseIDComp/CourseIdPageComp";
 import { connectDB, logger, Progress } from "@repo/shared";
 import { JSX } from "react/jsx-runtime";
 import { notFound } from "next/navigation";
-import { getCourseByIdWithCache, getInstructorOtherCoursesWithCache, getInstructorStatsWithCache, getReleatedCoursesWithCache, getUserCourseWithCache, IInstructorStats } from "@/lib/getCachedCourse";
-import { getCourseReviewsWithCache } from "@/lib/getCachedReviews";
-import { buildCategoryTree, buildCourseCategoryTree, CCategoryWithChildren, getCategoriesWithCache } from "@/lib/getCachedCategory";
-import {getUserProgressByIdWithCache } from "@/lib/getCachedUserProgress";
+import { getCourseByIdWithCache, getInstructorOtherCoursesWithCache, getInstructorStatsWithCache, getReleatedCoursesWithCache, getUserCourseWithCache, IInstructorStats } from "@/lib/non-Admin-Cached/getCachedCourse";
+import { getCourseReviewsWithCache } from "@/lib/non-Admin-Cached/getCachedReviews";
+import { buildCategoryTree, buildCourseCategoryTree, CCategoryWithChildren, getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
+import {getUserProgressByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserProgress";
 import { auth } from "@/auth";
 import { getUserCourseByIdWithCache } from "@/lib/getCachedUserCourse";
-import { getCachedTopic } from "@/lib/getCachedTopic";
-import { getLessonsByIdWithCache } from "@/lib/getCachedLessons";
-import { getSectionsByIdWithCache } from "@/lib/getCachedSections";
+import { getCachedTopic } from "@/lib/non-Admin-Cached/getCachedTopic";
+import { getLessonsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedLessons";
+import { getSectionsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedSections";
 import { getSession } from "@/dev/auth-helper";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {

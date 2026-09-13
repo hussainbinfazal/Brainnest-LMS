@@ -127,6 +127,13 @@ const courseSchema = new mongoose.Schema<ICourse>({
     type: String,
     enum: ['free', 'sequential', 'drip-by-date'],
     default: 'free'
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date
   }
 
 

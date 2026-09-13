@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 
-import { useAuthStore } from "@/lib/store/useAuthStore";
-import { useCourseStore } from "@/lib/store/useCourseStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
+import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
 import axios from 'axios'
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -44,14 +44,14 @@ import { CCategory, CCourse, CReview, CUserCourse, CUserLocation } from "@/types
 import { formatRelativeDate } from "@/utils/date";
 import { ReviewSortOption, sortedReviews } from "@/lib/helpers/sortReviews";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { getCategoryCourses, getRandomCourses } from "@/lib/helpers/sortCourses";
 import { getPopularCategories } from "@/lib/helpers/sortCategories";
 
 import CategoryChipsSkeleton from "../skeletons/Category-Chips-Skeleton";
 import { cn } from "@/lib/utils";
 import HomePageSkeleton from "./homepage-skeleton";
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 
 export interface HomeProps {
   initialCourses: CCourse[];

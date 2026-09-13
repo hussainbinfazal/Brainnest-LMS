@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { logger } from "@/utils/logger/logger.node";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 
 const page = (): JSX.Element => {
   const [token, setToken] = useState<string | null>(null);

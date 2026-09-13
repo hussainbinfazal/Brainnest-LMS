@@ -1,4 +1,4 @@
-import { fetchServerCourses } from "@/lib/fetchCourse";
+import { fetchServerCourses } from "@/lib/non-Admin-Cached/fetchCourse";
 import HomePage from "./components/Homepage";
 import { Course } from "@/types/client";
 // import HomePage2 from "./components/Homepage2";

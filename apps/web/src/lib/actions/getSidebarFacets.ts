@@ -1,6 +1,6 @@
 "use server"
-import { CCategoryWithChildren, getCategoriesWithCache } from "../getCachedCategory";
-import { getCachedFacets } from "../getCachedFacets";
+import { CCategoryWithChildren, getCategoriesWithCache } from "../non-Admin-Cached/getCachedCategory";
+import { getCachedFacets } from "../non-Admin-Cached/getCachedFacets";
 import { logger } from "@repo/shared";
 import { CFacets } from "@/types/client";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";

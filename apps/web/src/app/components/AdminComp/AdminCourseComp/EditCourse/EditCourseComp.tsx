@@ -24,7 +24,7 @@ import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import Image from "next/image";
 import { RxCrossCircled } from "react-icons/rx";
 import Tiptap from "@/components/Tiptap";

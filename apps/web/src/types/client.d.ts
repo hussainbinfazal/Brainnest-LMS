@@ -2,7 +2,7 @@ import React, { ReactNode } from "react";
 import { ICourse, IUser } from "./model";
 import { LucideIcon } from "lucide-react";
 import mongoose from "mongoose";
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 
 export interface CCertificate {
   _id: string;
@@ -252,7 +252,7 @@ export interface CCourse {
   level: 'beginner' | 'intermediate' | 'expert';
   totalEnrolledCount: number,
   language: string;
-  status: 'draft' | 'published';
+  status: "draft" | "published" | "archived" | "deleted";
   topic: CTopic[];
   totalReviews: number;
   ratingDistribution: number[];
@@ -267,8 +267,8 @@ export interface CCourse {
   dripType: string,
   category: CCategory;
   totalDurationInSeconds: number;
-  published?: boolean
-  purchased?: boolean;
+  isDeleted: boolean;
+  deletedAt: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -289,7 +289,7 @@ export interface CCourseManage {
   level: 'beginner' | 'intermediate' | 'expert';
   totalEnrolledCount: number,
   language: string;
-  status: 'draft' | 'published';
+  status: "draft" | "published" | "archived" | "deleted";
   topics: CTopic[];
   lessons: CLesson[];
   totalReviews: number;
@@ -304,7 +304,6 @@ export interface CCourseManage {
   tags?: string[];
   category: CCategory;
   totalDurationInSeconds: number;
-  published?: boolean
   purchased?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -578,7 +577,7 @@ export interface CChatStore {
   addMessage?: (message: ChatMessage) => void;
   clearChat?: () => void;
 }
-interface CCourseStore {
+export interface CCourseStore {
   courses: CCourse[];
   cachedPaginatedCourses: CCourse[];
   cachedCurrentPageNumber: number;

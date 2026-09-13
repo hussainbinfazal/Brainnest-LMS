@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
 import { signIn } from "next-auth/react";

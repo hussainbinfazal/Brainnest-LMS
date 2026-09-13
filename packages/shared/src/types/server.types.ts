@@ -1,3 +1,4 @@
+import { ICourse } from "./model.types";
 
 export interface ISessionUser {
   id: string;
@@ -35,5 +36,14 @@ interface OtpEntry {
 }
 declare global {
   var otpStore: Record<string, OtpEntry> | undefined;
+}
+
+export type InstructorCoursesResponse = {
+  paginatedInstructorCourses: ICourse[];
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalInstructorCourses: number;
 }
 

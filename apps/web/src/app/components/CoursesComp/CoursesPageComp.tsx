@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FaRegHeart } from "react-icons/fa";
 import axios from "axios";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { IoMdHeart } from "react-icons/io";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -27,11 +27,11 @@ import { BiSolidCategoryAlt } from "react-icons/bi";
 import { CAuthUser, CCourse, CFacets } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
 import { cn } from "@/lib/utils";
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
-import { useCourseStore } from "@/lib/store/useCourseStore";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
+import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";
 import CoursesPageSkeleton from "./CoursesPage-skeleton";
 
@@ -225,9 +225,13 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
     try {
       // console.log("3. This is the try block of the like course function")
       // console.log("This is the should Like state",shouldLike)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+      });
       const response = shouldLike
-        ? await axios.post(`/api/likeCourse/${courseId}`)
-        : await axios.delete(`/api/dislikeCourse/${courseId}`);
+        ? await axios.post(`/api/likeCourse/${courseId}?${params.toString()}`)
+        : await axios.delete(`/api/dislikeCourse/${courseId}?${params.toString()}`);
       const updatedUserCourse = response.data.userCourse
       setUserCourseById(courseId as string, updatedUserCourse)
       toast.success(`${shouldLike ? "Course liked! You'll find it in your Liked Courses." : "Course disliked!"}`);

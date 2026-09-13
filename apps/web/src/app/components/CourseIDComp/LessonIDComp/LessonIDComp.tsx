@@ -3,7 +3,7 @@
 import React from "react";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useCourseStore } from "@/lib/store/useCourseStore";
+import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
 import axios from "axios";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Button } from "@/components/ui/button";

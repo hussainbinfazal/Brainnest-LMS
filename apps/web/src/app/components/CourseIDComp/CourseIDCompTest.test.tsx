@@ -3,17 +3,17 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store/useAuthStore";
-import { useCourseStore } from "@/lib/store/useCourseStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
+import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
 import { toast } from "sonner";
 import type { CCourse, CCategory, CReview } from "@/types/client";
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 import "@testing-library/jest-dom";
 import axios from "axios";
 import CourseIdPageComp from "./CourseIdPageComp";
-import { useCartStore } from "@/lib/store/useCartStore";
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
-import { useProgressStore } from "@/lib/store/useProgressStore";
+import { useCartStore } from "@/lib/store/usersStore/useCartStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
+import { useProgressStore } from "@/lib/store/usersStore/useProgressStore";
 
 // --------------------------------------------------
 // MOCKS

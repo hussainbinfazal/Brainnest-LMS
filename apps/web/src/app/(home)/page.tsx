@@ -1,9 +1,9 @@
 import HomePage from "../components/home/Homepage";
 import { JSX } from "react/jsx-runtime";
 import { CCategory, CCourse, CReview } from "@/types/client";
-import { getCoursesWithCache } from "@/lib/getCachedCourse";
-import { getReviewsWithCache } from "@/lib/getCachedReviews";
-import { getCategoriesWithCache } from "@/lib/getCachedCategory";
+import { getCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
+import { getReviewsWithCache } from "@/lib/non-Admin-Cached/getCachedReviews";
+import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { getSession } from "@/dev/auth-helper";
 import { logger } from "@repo/shared";
 import { getAllUserCourseByIdWithCache } from "@/lib/getCachedUserCourse";

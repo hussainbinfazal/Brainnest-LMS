@@ -3,8 +3,8 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import axios from "axios";
 import LikedCoursesPageComp from "./LikedCourseComp";
-import { useUserCourseStore } from "@/lib/store/useUserCourseStore";
-import { useAuthStore } from "@/lib/store/useAuthStore";
+import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 
 jest.mock("axios"); // mock axios with all its methods (post/delete/put);
 

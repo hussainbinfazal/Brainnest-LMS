@@ -4,11 +4,11 @@ import userEvent from "@testing-library/user-event";
 import HomePage, { HomeProps } from "./Homepage"; 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/store/useAuthStore";
-import { useCourseStore } from "@/lib/store/useCourseStore";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
+import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
 import { toast } from "sonner";
 import type { CCourse, CCategory, CReview } from "@/types/client";
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 
 // ---------- Mocks ----------
 

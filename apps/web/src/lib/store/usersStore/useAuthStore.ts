@@ -5,7 +5,7 @@ import { persist, PersistOptions } from "zustand/middleware";
 import axios from "axios";
 import { CAuthStore, CAuthUser, CUserLocation } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
-import { fetchUserLocation } from "../helpers/getUserLocation";
+import { fetchUserLocation } from "../../helpers/getUserLocation";
 
 export const useAuthStore = create<CAuthStore>((set, get) => ({
   authUser: null,

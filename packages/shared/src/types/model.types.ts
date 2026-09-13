@@ -13,7 +13,7 @@ export interface ICourse {
   totalLessons: number;
   coverImage: string;
   tags: string[];
-  status: "draft" | "published";
+  status: "draft" | "published" | "archived" | "deleted";
   isPaid: boolean;
   discount: number;
   totalDurationInSeconds: number;
@@ -33,6 +33,8 @@ export interface ICourse {
   sections: ISection[];
   dripType: string;
   totalEnrolledCount: number;
+  isDeleted: boolean;
+  deletedAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }

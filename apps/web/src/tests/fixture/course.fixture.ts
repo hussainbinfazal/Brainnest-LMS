@@ -1,4 +1,4 @@
-import { CCategoryWithChildren } from "@/lib/getCachedCategory";
+import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { CCourse } from "@/types/client";
 
 ///shared fake course objects

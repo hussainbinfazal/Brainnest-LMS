@@ -1,9 +1,9 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { JSX } from "react/jsx-runtime";
 import { logger, COURSES_ALL } from "@repo/shared";
-import { getCourseByParamsWithCache, getCoursesWithCache } from "@/lib/getCachedCourse";
+import { getCourseByParamsWithCache, getCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import CoursesPageComp from "../components/CoursesComp/CoursesPageComp";
-import { getCategoriesWithCache } from "@/lib/getCachedCategory";
+import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { getSidebarFacets } from "@/lib/actions/getSidebarFacets";
 import { getSession } from "@/dev/auth-helper";
 

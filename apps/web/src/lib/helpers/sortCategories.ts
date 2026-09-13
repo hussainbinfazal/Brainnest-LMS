@@ -1,5 +1,5 @@
 import { CCourse } from "@/types/client";
-import { CCategoryWithChildren } from "../getCachedCategory";
+import { CCategoryWithChildren } from "../non-Admin-Cached/getCachedCategory";
 
 
   export function getPopularCategories(categories: CCategoryWithChildren[]): CCategoryWithChildren[] {
