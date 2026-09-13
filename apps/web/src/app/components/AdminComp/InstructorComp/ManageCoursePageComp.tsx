@@ -21,6 +21,10 @@ import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 import { set } from "mongoose";
+import CoursesPageSkeleton from "../../CoursesComp/CoursesPage-skeleton";
+import ManageCoursePageSkeleton from "./ManageCoursePage-Skeleton";
+import { convertToTotalHours } from "@repo/shared";
+import { formatRatingNumber } from "@/utils/timeFormat";
 const MotionButton = motion.create(Button);
 
 interface ManageCoursePageProps {
@@ -187,13 +191,13 @@ const ManageCoursePageComponent = ({
         return (): void => clearTimeout(timer);
     }, [searchTerm]);
     if (isLoading) {
-        return <CoursesPageSkeleton />;
+        return <ManageCoursePageSkeleton />;
     }
     return (
         <div className="min-h-screen w-full  flex flex-col  justify-start items-center  px-4 mt-0 mb-8 relative">
-            {loading && (
+            {isLoading && (
                 <div className="w-full relative">
-                    <LoadingBarLoader isLoading={loading} />
+                    <LoadingBarLoader isLoading={isLoading} />
                 </div>
             )}
             <div className="w-[95%] lg:w-4/5 h-full flex flex-col items-start gap-4 justify-center pt-4">
@@ -283,7 +287,7 @@ const ManageCoursePageComponent = ({
                     </span>
                 </span>
                 <div className="flex flex-col w-full justify-center sm:justify-start">
-                    {loading ? (
+                    {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 w-full mt-4 justify-items-center">
                             {Array.from({ length: courses.length || 3 }).map((_, index) => (
                                 <Card key={index} className="w-75 h-100 p-4 space-y-4 ">
