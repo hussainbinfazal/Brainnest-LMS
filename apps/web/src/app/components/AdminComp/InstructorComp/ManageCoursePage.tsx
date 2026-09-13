@@ -276,17 +276,17 @@ const ManageCoursePageComponent = ({ fetchedCourses }: { fetchedCourses: CCourse
                                                                 {course.title}
                                                             </p>
                                                             <p className="text-sm text-muted-foreground">
-                                                                {course?.instructor?.name}
+                                                                {course?.instructorId?.name}
                                                             </p>
                                                             <div className="flex gap-2">
                                                                 <Badge className='' variant="outline">
-                                                                    {course?.rating &&
-                                                                        formatRatingNumber(course.rating)}
+                                                                    {course?.averageRating &&
+                                                                        formatRatingNumber(course.averageRating)}
                                                                 </Badge>
                                                                 <Badge variant='default' className="outline flex gap-2">
                                                                     <>
-                                                                        {course?.duration &&
-                                                                            convertToTotalHours(course.duration)}
+                                                                        {course?.totalDurationInSeconds &&
+                                                                            convertToTotalHours(course.totalDurationInSeconds)}
                                                                     </>{" "}
                                                                     hours
                                                                 </Badge>

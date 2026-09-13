@@ -1,5 +1,5 @@
 import React from "react";
-import ManageCoursePageComponent from "./components/ManageCoursePage/ManageCoursePage";
+import ManageCoursePageComponent from "../../../components/AdminComp/InstructorComp/ManageCoursePage";
 import { connectDB, logger } from "@repo/shared";
 import { JSX } from "react/jsx-runtime";
 import { auth } from "@/auth";
