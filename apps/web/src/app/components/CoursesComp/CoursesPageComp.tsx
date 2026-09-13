@@ -58,7 +58,7 @@ type CCoursesFilter = {
   languages: string[],
   levels: string[]
 }
-export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, initialFacetsCategories, initialFacetsLanguages, initialFacetsLevels, className }: CoursesPageCompProps): React.JSX.Element => {
+const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, initialFacetsCategories, initialFacetsLanguages, initialFacetsLevels, className }: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
   const [courses, setCourses] = useState<CCourse[] |
   []>(pagCourses.paginatedCourses);
@@ -147,7 +147,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   const fetchAllCourses = useCallback(async (): Promise<void> => {
 
     try {
-      await fetchPaginatedCourses({ page, itemsPerPage, category: filters.category, childCategory: filters.subCategory, languages: filters.languages, levels: filters.levels });
+      await fetchPaginatedCourses({ page: currentPage, itemsPerPage, category: filters.category, childCategory: filters.subCategory, languages: filters.languages, levels: filters.levels });
       setCourses(useCourseStore.getState().cachedPaginatedCourses);
       setCurrentPage(useCourseStore.getState().cachedCurrentPageNumber);
       setTotalPages(useCourseStore.getState().cachedTotalPages);
@@ -161,7 +161,7 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
     } finally {
       setIsLoading(false)
     }
-  }, [page, itemsPerPage, filters.category, filters.subCategory, filters.languages, filters.levels,]);
+  }, [currentPage, itemsPerPage, filters.category, filters.subCategory, filters.languages, filters.levels,]);
 
   //Sidebar Logic
   const handleCategoryClick = (categoryId: string) => {
@@ -587,4 +587,5 @@ export const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCou
   );
 };
 
-;
+export default CoursesPageComp
+  ;
