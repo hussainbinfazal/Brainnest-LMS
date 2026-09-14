@@ -20,11 +20,11 @@ import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
-import { set } from "mongoose";
-import CoursesPageSkeleton from "../../CoursesComp/CoursesPage-skeleton";
 import ManageCoursePageSkeleton from "./ManageCoursePage-Skeleton";
 import { convertToTotalHours } from "@repo/shared";
 import { formatRatingNumber } from "@/utils/timeFormat";
+import PaginationSection from "../../sections/PaginationSection";
+import { usePageState } from "@/hooks/usePageState";
 const MotionButton = motion.create(Button);
 
 interface ManageCoursePageProps {
@@ -38,7 +38,6 @@ const ManageCoursePageComponent = ({
     const [courses, setCourses] = useState<CCourse[]>(
         paginatedInstructorCourses || []
     );
-
     ///Store states
     const authUser = useAuthStore((state) => state.authUser);
     const setAuthUser = useAuthStore((state) => state.setAuthUser);
@@ -56,7 +55,7 @@ const ManageCoursePageComponent = ({
     const itemsPerPage: number = 6; //This is limit;
     const [debouncedSearchTerm, setDebouncedSearchTerm] =
         useState<string>(searchTerm);
-    const [currentPage, setCurrentPage] = useState<number>(1);
+    const { currentPage, setCurrentPage, handlePageChange } = usePageState(totalPages);
     const [page, setPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(0);
     const [totalInstructorCourses, setTotalInstructorCourses] =
@@ -395,6 +394,14 @@ const ManageCoursePageComponent = ({
                     )}
                 </div>
             </div>
+            <PaginationSection
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasNextPage={hasNextPage}
+                hasPrevPage={hasPrevPage}
+                maxVisiblePages={maxVisiblePages}
+                handlePageChange={handlePageChange}
+            />
         </div>
     );
 };
