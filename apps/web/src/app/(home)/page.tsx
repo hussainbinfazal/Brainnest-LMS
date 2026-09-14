@@ -6,7 +6,7 @@ import { getReviewsWithCache } from "@/lib/non-Admin-Cached/getCachedReviews";
 import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { getSession } from "@/dev/auth-helper";
 import { logger } from "@repo/shared";
-import { getAllUserCourseByIdWithCache } from "@/lib/getCachedUserCourse";
+import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
 
 
 export default async function Home(): Promise<JSX.Element> {

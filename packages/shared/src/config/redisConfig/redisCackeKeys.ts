@@ -385,7 +385,26 @@ export const UPLOAD_SESSION = {
   description: "File upload session data (chunks, metadata, progress)",
   usedIn: ["Course Content Upload", "Video Upload"],
 };
+// ============================================================================
+// USER SESSION CACHE KEYS
+// ============================================================================
 
+/**
+ * namespace: "authUser"
+ * id: userId (MongoDB ObjectId)
+ * ttl: MEDIUM (15min)
+ * Usage: User's shopping cart with selected courses
+ * Set by: apps/web/src/app/cart/page.tsx
+ * Used by: Authentication
+ * Full Key: auth:userId
+ */
+export const AUTH_USER = {
+  namespace: "auth",
+  id: "userId",
+  ttl: "SMALL",
+  description: "User's authentication session",
+  usedIn: ["Authentication"],
+};
 // ============================================================================
 // QUEUE/JOB KEYS (BullMQ)
 // ============================================================================

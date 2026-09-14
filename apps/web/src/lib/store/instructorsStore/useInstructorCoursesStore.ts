@@ -43,8 +43,9 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
                 page: page.toString(),
                 limit: itemsPerPage.toString(),
             });
+            console.log("These are the params instructor courses", params);
             const response = await axios.get(
-                `/api/admin/course/${instructorId.toString()}?${params.toString()}`
+                `/api/admin/course/instructor/${instructorId.toString()}?${params.toString()}`
             );
             const {
                 paginatedInstructorCourses,
@@ -54,6 +55,7 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
                 hasPrevPage,
                 totalInstructorCourses,
             } = response.data.data;
+            console.log("These are the courses by the instructor ", paginatedInstructorCourses);
             const totalCourses = totalInstructorCourses;
             const newPaginatedInstructorCourses = paginatedInstructorCourses;
             get().setPaginatedInstructorCourses(newPaginatedInstructorCourses, hasNextPage, hasPrevPage, currentPage, totalPages, totalCourses);

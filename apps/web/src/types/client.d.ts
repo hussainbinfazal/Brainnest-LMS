@@ -513,7 +513,7 @@ export interface CAuthStore {
   clearAuthUser: () => void;
   setAuthLoading: (loading: boolean) => void;
   setUserLocation: (location: CUserLocation) => void;
-  fetchUser: () => Promise<void>;
+  fetchAuthUser: () => Promise<void>;
   saveUserGeography: () => Promise<void>;
 }
 interface CProgressStore {

@@ -25,6 +25,7 @@ import { CAuthUser, CChatMessage } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
+import { clientLogger } from "@/utils/logger/clientLogger";
 
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
@@ -32,6 +33,8 @@ export default function Header({ className }: { className?: string }): React.JSX
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState<boolean>(false);
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
+  const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser)
+  console.log("This is the authUser in header", authUser)
   const sessionUser = session?.user
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const enrolledCourses = useUserCourseStore((state) => state.enrolledCourseIds);
@@ -43,19 +46,6 @@ export default function Header({ className }: { className?: string }): React.JSX
   const [chatAlreadyExists, setChatAlreadyExists] = useState<boolean>(false);
   const [cartItemsCount, setCartItemsCount] = useState<number>(0);
   console.log("This is the seession user in header", sessionUser, session, status)
-  const fetchUser = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios("/api/users/me");
-      if (response.data.user) {
-        setAuthUser(response.data.user);
-      }
-    } catch (err) {
-      // console.error("Failed to fetch user:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [authUser?._id]);
 
 
   const handleLogout = async () => {
@@ -110,17 +100,17 @@ export default function Header({ className }: { className?: string }): React.JSX
   }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser])
-  useEffect(() => {
-    if (authUser) {
-      const timer = setTimeout(() => {
-        fetchExistingChat();
-        fetchCartCount();
-      }, 500); // Add slight delay
-      return () => clearTimeout(timer);
-    }
-  }, [authUser, fetchExistingChat, fetchCartCount]);
+    fetchAuthUser();
+  }, [fetchAuthUser])
+  // useEffect(() => {
+  //   if (authUser) {
+  //     const timer = setTimeout(() => {
+  //       fetchExistingChat();
+  //       fetchCartCount();
+  //     }, 500); // Add slight delay
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [authUser, fetchExistingChat, fetchCartCount]);
 
   // useEffect(() => {
   //   // console.log("This is the status", status);

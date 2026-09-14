@@ -15,7 +15,7 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
   isAuthLoading: true,
   userLocation: null,
   setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
-  fetchUser: async () => {
+  fetchAuthUser: async () => {
     const { setAuthLoading } = get();
     setAuthLoading(true);
     try {
@@ -44,6 +44,6 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
         const location = await fetchUserLocation();
         set({ userLocation: location });
       }
-    } catch (error: unknown) {}
+    } catch (error: unknown) { }
   },
 }));

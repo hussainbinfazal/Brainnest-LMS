@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+
 import type { Session } from "next-auth";
 import { logger } from "@/utils/logger/logger.node";
 import { getSession } from "@/dev/auth-helper";

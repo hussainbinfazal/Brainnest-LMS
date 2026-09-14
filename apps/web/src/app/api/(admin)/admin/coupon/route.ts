@@ -3,7 +3,7 @@ import { connectDB } from "@repo/shared";
 import { Coupon, ICoupon, ISessionUser, validateMongooseId } from "@repo/shared";
 import { getDataFromToken } from "@/utils/getDataFromToken";
 import { logger } from "@/utils/logger/logger.node";
-import { CustomNextRequest } from "../../../../types/server";
+import { CustomNextRequest } from "../../../../../types/server";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);

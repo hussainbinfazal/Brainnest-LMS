@@ -21,7 +21,7 @@ import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 import ManageCoursePageSkeleton from "./ManageCoursePage-Skeleton";
-import { convertToTotalHours } from "@repo/shared";
+import { convertToTotalHours } from "@/utils/timeFormat";
 import { formatRatingNumber } from "@/utils/timeFormat";
 import PaginationSection from "../../sections/PaginationSection";
 import { usePageState } from "@/hooks/usePageState";
@@ -55,9 +55,9 @@ const ManageCoursePageComponent = ({
     const itemsPerPage: number = 6; //This is limit;
     const [debouncedSearchTerm, setDebouncedSearchTerm] =
         useState<string>(searchTerm);
+    const [totalPages, setTotalPages] = useState<number>(0);
     const { currentPage, setCurrentPage, handlePageChange } = usePageState(totalPages);
     const [page, setPage] = useState<number>(1);
-    const [totalPages, setTotalPages] = useState<number>(0);
     const [totalInstructorCourses, setTotalInstructorCourses] =
         useState<number>(0);
     const [hasNextPage, setHasNextPage] = useState<boolean>(false);
