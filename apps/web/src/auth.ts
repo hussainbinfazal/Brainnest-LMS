@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
 import { JWT } from "next-auth/jwt";
 import type { User as NextAuthUser, Account, Profile } from "next-auth";
-import { connectDB, User, UserDocument } from "@repo/shared";
+import { AuthenticatedUser, connectDB, logger, User, UserDocument } from "@repo/shared";
 import { IUser } from "@repo/shared";
 
 
@@ -27,22 +27,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { type: "email" },
         password: { type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials: Partial<Record<string, unknown>>, request): Promise<AuthUser | null> {
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
+        if (!email || !password) return null;
         const user = await authenticateUser({
-          email: credentials.email as string,
-          password: credentials.password as string
+          email,
+          password,
         });
 
-        if (!user) return null;
+        if (!user || !user.id) return null;
 
         return {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: user.role ,
           phoneNumber: user.phoneNumber,
           profileImage: user.profileImage,
-        } as any;
+        };
       },
     }),
   ],
@@ -83,8 +86,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           return true;
         } catch (error: unknown) {
-          // console.error("OAuth sign in error:", error);
-          return true; // Allow sign in even if DB fails
+          logger.error("Error in OAuth sign in:", { error });
+          //Reject session if DB fails
+
+          return false; // Allow sign in even if DB fails
         }
       }
       return true;
@@ -97,7 +102,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.email = user.email;
         token.phoneNumber = user.phoneNumber;
         token.role = user.role;
-        token.profileImage = user.profileImage;
+        token.profileImage = user.profileImage as string;
 
       }
       return token;

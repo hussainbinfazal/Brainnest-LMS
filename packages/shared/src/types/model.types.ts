@@ -229,6 +229,7 @@ export interface ILessonProgress {
   progressPercentage: number;
   completedAt: Date;
 }
+export type UserRole = "student" | "admin" | "instructor";
 export interface IUser {
   _id: Types.ObjectId;
   name: string;
@@ -236,7 +237,7 @@ export interface IUser {
   password: string;
   phoneNumber: string;
   profileImage: string;
-  role: 'student' | 'admin' | 'instructor';
+  role: UserRole;
   isVerified: boolean;
 
   createdAt: Date;

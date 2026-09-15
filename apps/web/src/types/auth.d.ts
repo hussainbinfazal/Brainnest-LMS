@@ -1,3 +1,5 @@
+import { UserRole } from "@repo/shared";
+
 interface Credentials {
   email: string;
   password: string;
@@ -8,7 +10,6 @@ export interface AuthenticatedUser {
   name: string;
   email: string;
   phoneNumber?: string;
-  role: string;
-  profile?: string;
+  role: UserRole;
   profileImage?: string;
 }

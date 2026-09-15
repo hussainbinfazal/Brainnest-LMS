@@ -1,3 +1,5 @@
+import type { UserRole } from "./model.types";
+
 interface Credentials {
   email: string;
   password: string;
@@ -8,7 +10,7 @@ export interface AuthenticatedUser {
   name: string;
   email: string;
   phoneNumber?: string;
-  role: string;
+  role: UserRole;
   profile?: string;
   profileImage?: string;
 }

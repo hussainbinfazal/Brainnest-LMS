@@ -33,11 +33,11 @@ export async function authenticateUser(credentials: Credentials): Promise<Authen
       email: user.email,
       phoneNumber: user.phoneNumber,
       role: user.role,
-      profile: user.profileImage,
+      profileImage: user.profileImage,
 
     };
-  } catch (error: any) {
-    logger.error("Auth error:", error);
+  } catch (error: unknown) {
+    logger.error("Auth error:", {error});
     return null;
   }
 }
