@@ -8,13 +8,13 @@ export async function middleware(req: NextRequest) {
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
 
-  const BYPASS_AUTH = process.env.BYPASS_AUTH === 'true';
-  if (BYPASS_AUTH) {
-    const res = NextResponse.next();
-    res.headers.set("X-Request-ID", requestId);
-    res.headers.set("X-Dev-Bypass", "true");
-    return res;
-  }
+  // const BYPASS_AUTH = process.env.BYPASS_AUTH === 'true';
+  // if (BYPASS_AUTH) {
+  //   const res = NextResponse.next();
+  //   res.headers.set("X-Request-ID", requestId);
+  //   res.headers.set("X-Dev-Bypass", "true");
+  //   return res;
+  // }
   const token: JWT | null = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,

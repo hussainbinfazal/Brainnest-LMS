@@ -1,12 +1,13 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { connectDB, ILessonProgress, ISessionUser, logger, Progress, PROGRESS_BY_USER_COURSE, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { LessonProgress } from "@repo/shared";
 import { NextResponse } from "next/server";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 
 
@@ -21,8 +22,11 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     if (!courseId || !lessonId) {
         logger.error("Invalid course or lesson ID in progress route");
         return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
-    }
-    const user: ISessionUser | null = await getDataFromToken(request);
+    };
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const user: ISessionUser | null = authSession?.user;
+
     if (!user || !user.id) {
         logger.info("Unauthorized access", { ip: request.ip });
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })

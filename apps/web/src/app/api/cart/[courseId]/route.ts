@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CartDocument, connectDB, logger, validateMongooseId } from "@repo/shared";
 import { Course, Cart, ISessionUser, ICart, ICourse } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
+import { CustomNextRequest } from "@/types/server";
 
-export async function POST(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
+export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     try {
-        const sessionUser: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const sessionUser: ISessionUser | null = authSession?.user;
+
         if (!sessionUser) return NextResponse.json({ message: "User not found" }, { status: 403 });
         const { courseId } = await context.params;
         if (validateMongooseId({ courseId: courseId }) ||
             validateMongooseId({ userId: sessionUser.id })) return NextResponse.json({ message: "Course id and user id should be valid" }, { status: 400 });
 
         if (!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+        await connectDB(process.env.MONGODB_URI!);
         const [courseDB, cartDB] = await Promise.all([
             Course.findById(courseId).select("title price discount").lean(),
             Cart.findOne({ user: sessionUser.id }).lean()
@@ -29,7 +34,7 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
             const tax: number = parseFloat(((subtotal - discountAmount) * 0.1).toFixed(2));
             const total: number = parseFloat((subtotal - discountAmount + tax).toFixed(2));
 
-            const newCart: CartDocument | null = new Cart({
+            const newCart: CartDocument = new Cart({
                 user: sessionUser.id,
                 courses: [courseDB._id],
                 subTotal: subtotal,
@@ -76,10 +81,12 @@ export async function POST(request: NextRequest, context: { params: { courseId: 
 
 };
 
-export async function DELETE(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB();
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         const userId: string | null = user?.id || "";
         if (!user) return NextResponse.json({ message: "User not found" }, { status: 403 });
         const isUserIdValid = validateMongooseId({ userId });
@@ -96,6 +103,7 @@ export async function DELETE(request: NextRequest, context: { params: { courseId
         cart.courses.filter((item) => item._id.toString() !== course._id.toString());
         // cart.courses.pull(course._id);
         await cart.save();
+        logger.info("Course removed from cart successfully");
         return NextResponse.json({ message: "Course removed from cart successfully", course }, { status: 200 });
 
     } catch (error: unknown) {

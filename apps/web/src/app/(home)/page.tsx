@@ -1,16 +1,15 @@
 import HomePage from "../components/home/Homepage";
 import { JSX } from "react/jsx-runtime";
-import { CCategory, CCourse, CReview } from "@/types/client";
 import { getCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { getReviewsWithCache } from "@/lib/non-Admin-Cached/getCachedReviews";
 import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
-import { getSession } from "@/dev/auth-helper";
 import { logger } from "@repo/shared";
 import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
+import { auth } from "@/auth";
 
 
 export default async function Home(): Promise<JSX.Element> {
-  const userSession = await getSession() //Replace it with actual next auth getSession
+  const userSession = await auth()
   console.log("This is user session on server", userSession);
   if (!userSession?.user?.id) {
     logger.warn("User not authenticated");

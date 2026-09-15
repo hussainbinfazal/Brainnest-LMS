@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@repo/shared";
 import { Coupon, ICoupon, ISessionUser, validateMongooseId } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "../../../../../types/server";
+import { auth } from "@/auth";
+import { Session } from "next-auth";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const session: Session | null = await auth()
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = session?.user;
         if (!user) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
 
         const userId: string = user?.id;
@@ -32,10 +35,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const session: Session | null = await auth()
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = session?.user;
         if (!user) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        await connectDB(process.env.MONGODB_URI!);
         const coupons: ICoupon[] | null = await Coupon.find().populate("createdBy", "name email").exec();
         logger.info("Coupons retrieved successfully");
         return NextResponse.json(coupons, { status: 200 });
@@ -49,11 +54,13 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
 export async function DELETE(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        await connectDB(process.env.MONGODB_URI!);
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const session: Session | null = await auth()
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = session?.user;
         if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
         const userId: string = user?.id;
         const { couponId, } = await request.json();
+        await connectDB(process.env.MONGODB_URI!);
         const [isValidCouponId, isUserValid] = await Promise.all([
             validateMongooseId({ couponId: couponId }),
             validateMongooseId({ userId: userId })
@@ -72,18 +79,20 @@ export async function DELETE(request: CustomNextRequest): Promise<NextResponse> 
 }
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
     try {
         const { couponId, data } = await request.json();
-        if (!couponId || !validateMongooseId({ couponId })) return NextResponse.json({ message: "Coupon id is required and should be valid" }, { status: 400 });
-        const user: ISessionUser | null = await getDataFromToken(request);
-        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
-        const userId: string = user?.id;
-        if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required and should be valid" }, { status: 400 });
         const { code, discountValue, discountType, expiresAt, isActive, maxUses } = data;
         if (!code || !discountValue || !discountType || !expiresAt || !maxUses || !isActive) {
             return NextResponse.json({ message: "All fields are required" }, { status: 400 });
         }
+        if (!couponId || !validateMongooseId({ couponId })) return NextResponse.json({ message: "Coupon id is required and should be valid" }, { status: 400 });
+        const session: Session | null = await auth()
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = session?.user;
+        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const userId: string = user?.id;
+        if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required and should be valid" }, { status: 400 });
+        await connectDB(process.env.MONGODB_URI!);
         const updatedCoupon: ICoupon | null = await Coupon.findByIdAndUpdate(couponId, { code, discountValue, expiresAt, discountType, maxUses, isActive }, { new: true });
         logger.info("Coupon updated successfully");
         return NextResponse.json({ message: "Coupon updated successfully", updatedCoupon }, { status: 200 });

@@ -1,12 +1,13 @@
 
 import type { Session } from "next-auth";
 import { logger } from "@/utils/logger/logger.node";
-import { getSession } from "@/dev/auth-helper";
+import { auth } from "@/auth";
 
+
+// Helper Function for Auth Middleware
 export const getDataFromToken = async (request: Request): Promise<Session["user"] | null> => {
     try {
-        // const session = await auth(); // Use auth() to get the session in production
-        const session = await getSession() // Use getSession() to get the session in development
+        const session: Session | null = await auth()
         logger.info("This is the Session in the getToken", { user: session?.user });
         return session?.user || null;
     } catch (error: unknown) {

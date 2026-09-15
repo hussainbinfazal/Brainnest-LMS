@@ -5,7 +5,7 @@ import { getCourseByParamsWithCache, getCoursesWithCache } from "@/lib/non-Admin
 import CoursesPageComp from "../components/CoursesComp/CoursesPageComp";
 import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { getSidebarFacets } from "@/lib/actions/getSidebarFacets";
-import { getSession } from "@/dev/auth-helper";
+import { auth } from "@/auth";
 
 
 type CoursesPageProps = {
@@ -24,7 +24,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps): P
   const skip: number = (page - 1) * limit;
 
   // const userSession = await auth();
-  const userSession = await getSession()
+  const userSession = await auth()
   // console.log("This is user session on server", userSession);
   if (!userSession?.user?.id) {
     logger.warn("User not authenticated");

@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import Order from "@/models/Cart/orderModel";
 import { connectDB } from "@/config/mongoDB/db";
-import { getDataFromToken } from "@/utils/getDataFromToken";
-import Cart from "@/models/Cart/cartModel";
-import { ISessionUser } from "@/types/server";
-import { ICart, ICourse } from "@/types/model";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
-export async function POST(request: NextRequest): Promise<NextResponse> {
+import { Session } from "next-auth";
+import { auth } from "@/auth";
+import { Cart, ICart, ICourse, Order } from "@repo/shared";
+export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB();
 
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user) {
             return NextResponse.json({ message: "User not found" }, { status: 403 });
         }

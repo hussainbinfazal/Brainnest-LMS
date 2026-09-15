@@ -2,10 +2,10 @@ import React from "react";
 import ManageCoursePageComponent from "@/app/components/AdminComp/InstructorComp/ManageCoursePageComp";
 import { ISessionUser, logger, validateMongooseId } from "@repo/shared";
 import { JSX } from "react/jsx-runtime";
-import { getSession } from "@/dev/auth-helper";
 import { notFound } from "next/navigation";
 import { Session } from "next-auth";
 import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
+import { auth } from "@/auth";
 
 type ManageCoursesPageProps = {
   searchParams: Promise<{
@@ -15,7 +15,7 @@ type ManageCoursesPageProps = {
 }
 async function ManageInstructorsCoursesPage({ searchParams }: ManageCoursesPageProps): Promise<JSX.Element> {
   try {
-    const session: Session | null = await getSession() // replace actual next auth in prod
+    const session: Session | null = await auth() // replace actual next auth in prod
     if (!session?.user) {
       return notFound()
     }

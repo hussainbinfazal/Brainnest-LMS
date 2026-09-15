@@ -1,27 +1,29 @@
 import { User, Order, Course, connectDB, validateMongooseId, logger, Enrollment, Payment } from '@repo/shared';
-import { getDataFromToken } from '@/utils/getDataFromToken';
 import { NextRequest, NextResponse } from 'next/server';
 import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
-import { ICourse, IOrder, IUser } from '@/types/model';
+
 import { PaymentService, RazorpayService } from '@repo/payment';
 import mongoose from 'mongoose';
+import { Session } from 'next-auth';
+import { auth } from '@/auth';
 
 const razorpayService = new RazorpayService()
 const paymentService = new PaymentService()
 
-export async function POST(req: CustomNextRequest): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+  const authSession: Session | null = await auth()
+  if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+  const user: ISessionUser | null = authSession?.user;
+  const userId: string | null = user?.id || '';
+  if (!user || !validateMongooseId({ userId })) {
+    logger.warn(`Unauthorized access attempt from IP: ${request.ip}`);
+    return NextResponse.json({ message: "User not found" }, { status: 403 })
+  };
   await connectDB(process.env.MONGDB_URI!);
   const session = await mongoose.startSession();
 
   try {
-    const { courseId, amount } = await req.json();
-
-    const user: ISessionUser | null = await getDataFromToken(req);
-    const userId: string | null = user?.id || '';
-    if (!user || !validateMongooseId({ userId })) {
-      logger.warn(`Unauthorized access attempt from IP: ${req.ip}`);
-      return NextResponse.json({ message: "User not found" }, { status: 403 })
-    };
+    const { courseId, amount } = await request.json();
     if (!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
     if (!amount || amount < 1) return NextResponse.json({ message: "Invalid amount" }, { status: 400 });
     const [courseDB, userDB, existingOrder] = await Promise.all([
@@ -55,18 +57,18 @@ export async function POST(req: CustomNextRequest): Promise<NextResponse> {
       Payment.findOneAndUpdate({
         paymentBy: userId,
         paymentStatus: 'Pending'
-      },{
+      }, {
         amount,
         paymentBy: userId,
         paymentId: razorpayOrder.id,
         paymentOnModel: 'Course',
         paymentStatus: 'Pending'
-      
-      },{
-        upsert:true,
-        new:true
+
+      }, {
+        upsert: true,
+        new: true
       }).session(session),
-      
+
       Order.findOneAndUpdate({
         user: userId,
         status: 'pending'
@@ -100,7 +102,7 @@ export async function POST(req: CustomNextRequest): Promise<NextResponse> {
       }).session(session)
     ])
     pendingPayment.paymentOf = newOrder._id
-    await pendingPayment.save({session})
+    await pendingPayment.save({ session })
 
 
 

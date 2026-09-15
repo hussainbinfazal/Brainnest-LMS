@@ -1,14 +1,17 @@
-import { getAllUserCourseByIdWithCache } from "@/lib/getCachedUserCourse";
+import { auth } from "@/auth";
+import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
 import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { ISessionUser, logger, USER_COURSE_LIST } from "@repo/shared";
 import { getCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { Session } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
-    const user: ISessionUser | null = await getDataFromToken(request);
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const user: ISessionUser | null = authSession?.user;
     if (!user) {
         logger.info("Unauthorized access", { ip: request.ip });
         return NextResponse.json({ message: "Unauthorized", data: [] }, { status: 401 })

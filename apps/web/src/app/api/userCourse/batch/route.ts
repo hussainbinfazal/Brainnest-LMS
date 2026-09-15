@@ -1,15 +1,18 @@
 import { CustomNextRequest } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
-import { ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from "@repo/shared";
+import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from "@repo/shared";
 import { NextRequest, NextResponse } from "next/server";
 import { userCourse as UserCourse } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CUserCourse } from "@/types/client";
 import { serializeUserCourse, serializeUserCourses } from "@/utils/serializer/userCourse.Serializer";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user) {
             logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
@@ -37,7 +40,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         // (the actual hits, already have the data)
         const cachedResult: CUserCourse[] = cacheCheck.filter(Boolean) as CUserCourse[];
-
+        await connectDB(process.env.MONGODB_URI)
         let fetchedResults: IUserCourse[] = [];
         if (uncachedCourseIds.length > 0) {
             fetchedResults = await UserCourse.find({ userId: userId, courseId: { $in: uncachedCourseIds } }).lean().exec();

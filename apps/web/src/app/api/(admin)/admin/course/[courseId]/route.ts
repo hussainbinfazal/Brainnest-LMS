@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
-import {Section,Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";  
+import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 import { diffDocuments } from "@/lib/helpers/genericDiff";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
     try {
-
-        const user: ISessionUser | null = await getDataFromToken(request);
-
+        const session: Session | null = await auth()
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = session?.user;
         if (!user || user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         const { courseId } = context.params;
         logger.info("This is the courseId for the admin in the edit route", { courseId: courseId })
         if (!courseId || !validateMongooseId({ courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
+        await connectDB(process.env.MONGODB_URI!);
         const course: ICourse | null = await Course.findById(courseId).lean();
 
         if (!course) {
@@ -117,14 +118,16 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 
 
 export async function DELETE(request: CustomNextRequest, { params }: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
     try {
         const { courseId } = params;
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         if (!courseId || !validateMongooseId({ courseId })) {
             return NextResponse.json({ message: "Course id is required" }, { status: 400 });
         }
+        await connectDB(process.env.MONGODB_URI!);
         const course: ICourse | null = await Course.findByIdAndDelete(courseId);
 
         if (!course) {
@@ -155,7 +158,9 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             whatYouWillLearn,
             ...courseFields
         } = body;
-        const sessionUser: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const sessionUser: ISessionUser | null = authSession?.user;
 
         if (sessionUser?.role !== "instructor") {
             logger.warn("Unauthorized access attempt in admin course update route");
@@ -175,7 +180,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
 
         await session.withTransaction(async () => {
             const existingLessons: ILesson[] = await Lesson.find({ course: course._id }).lean()
-            const lessonDiff= diffDocuments(existingLessons, body.lessons, ["name", "videoUrl", "durationInSeconds", "description", "isPreview", "isPreviewVideo", "order"]);
+            const lessonDiff = diffDocuments(existingLessons, body.lessons, ["name", "videoUrl", "durationInSeconds", "description", "isPreview", "isPreviewVideo", "order"]);
             const categoryToBeUpdate: ICategory = body.category;
             const subCategoryToBeUpdate = body.subCategory;
             if (lessonDiff.toInsert.length) {
@@ -199,7 +204,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
                     }
                 }, { session })
             }
-            const existingSections : ISection[] = await Section.find({ courseId: course._id }).session(session);
+            const existingSections: ISection[] = await Section.find({ courseId: course._id }).session(session);
             const sectionsDiff = diffDocuments(existingSections, body.sections, ["title", "description", "order"]);
             if (sectionsDiff.toInsert.length) {
                 await Section.insertMany(sectionsDiff.toInsert, { session });
@@ -230,6 +235,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             if (Object.keys(coursePayload).length) {
                 await Course.updateOne(
                     { _id: courseId },
+
                     { $set: coursePayload },
                     { session }
                 );

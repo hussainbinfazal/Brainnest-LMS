@@ -1,5 +1,4 @@
 import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
@@ -7,9 +6,18 @@ import { userCourse as UserCourse } from "@repo/shared";
 import { LessonProgress } from "@repo/shared";
 import { CACHE_TTL, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string, sectionId: string, lessonId: string } }) {
-    await connectDB(process.env.MONGODB_URI);
 
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const user: ISessionUser | null = authSession?.user;
+
+    if (!user) {
+        logger.info("Unauthorized access", { ip: request.ip });
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+    };
     try {
         const params = await context.params;
         const courseId = Array.isArray(params.courseId)
@@ -22,11 +30,6 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             logger.error("Invalid course or lesson ID in progress route");
             return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
         }
-        const user: ISessionUser | null = await getDataFromToken(request);
-        if (!user) {
-            logger.info("Unauthorized access", { ip: request.ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-        }
         const userId: string = user?.id;
         if (!courseId || !lessonId) {
             return NextResponse.json({ message: "Course and lesson IDs are required" }, { status: 400 });
@@ -36,9 +39,9 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
         };
         //Invalidate Cached Progress for the course 
-        await invalidateCached(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`);
 
 
+        await connectDB(process.env.MONGODB_URI);
         //Find the course, lesson and user in the database
         let [lessonDB, courseDB, userDB] = await Promise.all([
             Lesson.findOne({ _id: lessonId, courseId: courseId }).lean(),
@@ -121,6 +124,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         const allLessonProgress: ILessonProgress[] =
             await LessonProgress.find({ userId, courseId }).lean();
 
+        await invalidateCached(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`);
         let cachedFormat = {
             progress: progressDB,
             completedLessons: allLessonProgress,

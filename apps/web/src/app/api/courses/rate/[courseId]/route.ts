@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Course, User, connectDB, logger, Review,validateMongooseId } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+import { Course, User, connectDB, logger, Review, validateMongooseId } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
@@ -10,7 +11,9 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     session.startTransaction();
     try {
         const { courseId } = context.params;
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.error("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "You are not logged in" }, { status: 401 })
@@ -34,7 +37,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             await session.abortTransaction();
             return NextResponse.json({ message: "Already reviewed" }, { status: 400 });
         };
-        
+
         // if(user.reviewCountInLastHour > 5){ //// maintain this with the redis
         //     await session.abortTransaction();
         //     return NextResponse.json({ message: "Too many reviews" }, { status: 400 });
@@ -76,7 +79,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             await session.abortTransaction();
             return NextResponse.json({ message: "Error in adding review" }, { status: 500 });
         }
-        
+
 
         await session.commitTransaction();
         session.endSession();
@@ -99,7 +102,9 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-        const authenticatedUser: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const authenticatedUser: ISessionUser | null = authSession?.user;
         if (!authenticatedUser || !authenticatedUser.id) {
             logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -168,7 +173,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
         }
 
         // update review
-        
+
         await session.commitTransaction();
         session.endSession();
         logger.info("Review updated successfully");

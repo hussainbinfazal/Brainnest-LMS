@@ -1,17 +1,22 @@
-import Order from "@/models/Cart/orderModel";
-import { IOrder } from "@/types/model";
-import { ISessionUser } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+
+import { auth } from "@/auth";
+import { CustomNextRequest, ISessionUser } from "@/types/server";
+import { connectDB, IOrder, Order } from "@repo/shared";
+import { Session } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function PUT(request: NextRequest): Promise<NextResponse> {
+export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
     try {
 
         const { orderId, status } = await request.json();
 
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
+
         const userId: string | null = user?.id || '';
+        await connectDB(process.env.MONGODB_URI!)
         const order: IOrder | null = await Order.findById(orderId);
 
         if (!order) {

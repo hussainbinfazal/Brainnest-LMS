@@ -2,18 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from '@/services/emailOtpService';
 import { ISessionUser } from '@/types/server';
-import { getDataFromToken } from '@/utils/getDataFromToken';
 import { logger } from '@/utils/logger/logger.node';
 import { validateMongooseId } from '@/utils/fieldsValidation/idValidator/idValidator';
 import { emailOtpQueue } from '@/lib/queue/emailQueue';
+import { Session } from 'next-auth';
+import { auth } from '@/auth';
 interface CustomNextRequest extends NextRequest {
     ip: string;
 }
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        const body = await request.json().catch(() => null);
-        const user: ISessionUser | null = await getDataFromToken(request);
+        // const body = await request.json().catch(() => null);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { route: "send-otp", ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })

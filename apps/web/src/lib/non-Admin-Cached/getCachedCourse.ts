@@ -5,8 +5,8 @@ import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Ser
 import mongoose from "mongoose";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { IGetCourseByParamsResponse, IGetLikedCourseByParamsResponse } from "@/types/server";
-import { getSession } from "@/dev/auth-helper";
 import UserCourse from "@repo/shared/models/User/userCourse";
+import { auth } from "@/auth";
 
 /**
  * Single source of truth for fetching courses with Redis caching.
@@ -280,7 +280,7 @@ export async function getUserLikedCoursesWithCache(userId: string, page: number,
         logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
         throw new Error("Invalid parameters for fetching courses");
     };
-    const session = await getSession();
+    const session = await auth();
     if (!session?.user) {
         logger.error("User is not logged in");
         return {

@@ -1,16 +1,19 @@
-import mongoose, { QueryFilter } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
-import { COURSES_FILTERED_BY_PARAMS, Course, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared";
+import { COURSES_FILTERED_BY_PARAMS, Course, ISessionUser, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared";
 import { ICourse } from "@repo/shared";
 import { CustomNextRequest, IGetCourseByParamsResponse, IGetLikedCourseByParamsResponse } from "@/types/server";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const user = await getDataFromToken(request);
+
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const user: ISessionUser | null = authSession?.user;
     if (!user) {
         logger.info("Unauthorized access", { ip: request.ip });
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })

@@ -1,4 +1,4 @@
-import { getSession } from "@/dev/auth-helper";
+import { auth } from "@/auth";
 import { CCourse } from "@/types/client";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
 import { connectDB, Course, COURSES_ALL, ICourse, INSTRUCTOR_COURSES_ALL, ISessionUser, logger, validateMongooseId } from "@repo/shared";
@@ -20,7 +20,7 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
     totalPages: number,
     totalInstructorCourses: number
 }> {
-    const session: Session | null = await getSession()
+    const session: Session | null = await auth()
     if (!session?.user) {
         logger.warn("Unauthorized", { user: session?.user })
         return {

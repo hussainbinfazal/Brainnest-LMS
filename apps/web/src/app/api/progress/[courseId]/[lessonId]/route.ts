@@ -1,14 +1,11 @@
 import { connectDB, ILessonProgress, IProgress, Progress } from "@repo/shared";
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { logger } from "@/utils/logger/logger.node";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
-import mongoose from "mongoose";
-import { NextRequest, NextResponse } from "next/server";
-import { serializeProgress } from "@/utils/serializer/progress.Serializer";
-import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
-import { CProgress } from "@/types/client";
+
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 // export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
 //     const user: ISessionUser | null = await getDataFromToken(request);
@@ -82,11 +79,13 @@ import { CProgress } from "@/types/client";
 //     }
 // }
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
+    // await connectDB(process.env.MONGODB_URI!);
     try {
         const { courseId } = context.params;
 
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
@@ -107,12 +106,14 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     }
 }
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
+    // await connectDB(process.env.MONGODB_URI!);
 
     try {
         const { courseId, lessonId } = context.params;
         const { progressValue } = await request.json();
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user) {
             logger.info("unauthorised access", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })

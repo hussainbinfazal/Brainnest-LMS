@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import {userCourse} from "@repo/shared";
+import { userCourse } from "@repo/shared";
 import mongoose from "mongoose";
 import { logger } from "@repo/shared";
 import { validateMongooseId } from "@repo/shared";
+import { auth } from "@/auth";
+import { Session } from "next-auth";
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: request.ip });
             return NextResponse.json({ message: "unauthorized" }, { status: 401 });

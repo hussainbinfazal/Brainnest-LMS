@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDataFromToken, ISessionUser, User, UserToken } from "@repo/shared";
+import { ISessionUser, User, UserToken } from "@repo/shared";
 import { connectDB } from "@repo/shared";
-import { IUser } from "@/types/model";
 import { logger } from "@/utils/logger/logger.node";
-import { IUserToken } from "@/types/model";
 import { CustomNextRequest } from "@/types/server";
 import crypto from "crypto";
 

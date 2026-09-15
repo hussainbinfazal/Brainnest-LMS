@@ -1,17 +1,18 @@
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, LIKED_COURSES_BY_USER } from "@repo/shared";
-import mongoose from "mongoose";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CUserCourse } from "@/types/client";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    await connectDB(process.env.MONGODB_URI!);
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         const { courseId } = await context.params;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: request.ip });
@@ -30,6 +31,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         const limit = parseInt(searchParams?.get('limit') || '5') || 5;
         const skip = Number((page - 1)) * limit;
 
+        await connectDB(process.env.MONGODB_URI!);
         // Update UserCourse record to mark as not liked
         const updatedUserCourse = await userCourse.findOneAndUpdate(
             {

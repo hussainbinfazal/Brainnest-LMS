@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import cloudinary from "../../../../../../../packages/shared/src/config/cloudinary/cloudinary";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { logger } from "@/utils/logger/logger.node";
 import { redisClient } from "@/config/redis/redis";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        const authUser: ISessionUser | null = await getDataFromToken(request)
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const authUser: ISessionUser | null = authSession?.user;
         if (!authUser) {
             logger.warn(`Unauthorized access attempt from IP: ${request.ip}`);
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -12,7 +12,6 @@ import { getUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUser
 import { getCachedTopic } from "@/lib/non-Admin-Cached/getCachedTopic";
 import { getLessonsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedLessons";
 import { getSectionsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedSections";
-import { getSession } from "@/dev/auth-helper";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {
   await connectDB(process.env.MONGODB_URI!);
@@ -22,7 +21,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
     return notFound();
   }
   // const userSession = await auth();
-  const userSession = await getSession()
+  const userSession = await auth()
   console.log("This is user session on server", userSession);
   if (!userSession?.user?.id) {
     logger.warn("User not authenticated", { courseId });

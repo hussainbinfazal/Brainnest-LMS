@@ -1,16 +1,19 @@
 import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from "@repo/shared";
 import { NextResponse } from "next/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CAuthUser } from "@/types/client";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 //Look into this 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
   try {
-    const authUser: ISessionUser | null = await getDataFromToken(request);
-
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const authUser: ISessionUser | null = authSession?.user;
     if (!authUser) {
       logger.warn("Unauthorized access attempt", { ip: request.ip });
       return NextResponse.json({ message: "Missing User Details" }, { status: 401 });
@@ -23,7 +26,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
       return NextResponse.json({ message: "User fetched successfully", user: cached[0] }, { status: 200 });
     }
     await connectDB(process.env.MONGODB_URI!);
-    // Get user basic info
+    // user basic info
     const userDb: IUser | null = await User.findById(authUser?.id)
       .select('-password')
       .exec();

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import {Topic,Section,Lesson, connectDB,Course, Category} from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
+import { Topic, Section, Lesson, connectDB, Course, Category } from "@repo/shared";
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose, { ObjectId, Types } from "mongoose";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 interface CreateCourseBody {
     title: string;
@@ -45,7 +46,9 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             logger.warn("Validation failed: Missing required fields", { title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory });
             return NextResponse.json({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, { status: 400 });
         }
-        const userInSession: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const userInSession: ISessionUser | null = authSession?.user;
         if (!userInSession || !validateMongooseId({ userId: userInSession.id })) {
             logger.warn("Unauthorized access attempt to create course", { ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -70,15 +73,15 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         let topicIds: Types.ObjectId[] = [];
 
-        const topicNames : string[] = topics.map((t: ITopic) => t.name.trim().toLowerCase())
+        const topicNames: string[] = topics.map((t: ITopic) => t.name.trim().toLowerCase())
         let existingTopics = await Topic.find({ name: { $in: topicNames } });
-        const existingTopicNames : Map<string, ITopic> = new Map(existingTopics.map((t: ITopic) => [t.name, t]));
-        const newTopics : ITopic[] = topics.filter((t: ITopic) => !existingTopicNames.has(t.name.trim().toLowerCase()))
+        const existingTopicNames: Map<string, ITopic> = new Map(existingTopics.map((t: ITopic) => [t.name, t]));
+        const newTopics: ITopic[] = topics.filter((t: ITopic) => !existingTopicNames.has(t.name.trim().toLowerCase()))
             .map((t: ITopic) => ({ name: t.name.trim().toLowerCase(), description: t.description, slug: t.name.trim().toLowerCase().replace(/\s+/g, '-'), isActive: true }));
 
 
-        const createdTopics : ITopic[] = await Topic.insertMany(newTopics, { session });
-        const allTopics : ITopic[] = [...existingTopics, ...createdTopics];
+        const createdTopics: ITopic[] = await Topic.insertMany(newTopics, { session });
+        const allTopics: ITopic[] = [...existingTopics, ...createdTopics];
         topicIds = allTopics.map(t => t._id as Types.ObjectId);
 
 
@@ -106,14 +109,14 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         },).save({ session });
 
 
-        const sectionDocs : ISection[] = sections.map((section: ISection) => ({
+        const sectionDocs: ISection[] = sections.map((section: ISection) => ({
             courseId: createdCourse._id,
             title: section.title,
             description: section.description,
             order: section.order
         }));
-        const createdSections : ISection[] = await Section.insertMany(sectionDocs, { session });
-        const lessonDocs : ILesson[] = lessons.map((lesson: ILesson, index: number) => ({
+        const createdSections: ISection[] = await Section.insertMany(sectionDocs, { session });
+        const lessonDocs: ILesson[] = lessons.map((lesson: ILesson, index: number) => ({
             courseId: createdCourse._id,
             name: lesson.name,
             videoUrl: lesson.videoUrl,
@@ -125,7 +128,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             order: lesson.order
         }));
         await Lesson.insertMany(lessonDocs, { session });
-        const totalLessons : number  = lessonDocs.length
+        const totalLessons: number = lessonDocs.length
         createdCourse.totalLessons = totalLessons;
         await createdCourse.save({ session });
 
@@ -140,7 +143,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         logger.error("Error in creating course", { error: error instanceof Error ? error.message : 'Unknown error' });
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ message: `Error in creating course: ${message}` }, { status: 500 });
-    }finally{
+    } finally {
         await session.endSession();
     }
 

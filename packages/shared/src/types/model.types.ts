@@ -290,6 +290,7 @@ export interface ICategory {
 }
 
 export interface ISection {
+  _id: mongoose.Types.ObjectId;
   courseId: mongoose.Types.ObjectId;
   title: string;
   description?: string;

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
-import {Review} from "@repo/shared";
+import { Review } from "@repo/shared";
 import { connectDB, Course } from "@repo/shared";
 import { validateMongooseId } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     await connectDB(process.env.MONGDB_URI!);
@@ -99,8 +100,11 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         if (!courseId) {
             logger.warn("Course Id is required");
             return NextResponse.json({ message: "Course Id is required" }, { status: 400 });
-        }
-        const user: ISessionUser | null = await getDataFromToken(request);
+        };
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
+
         if (!user || !user.id) {
             logger.error("Unauthorized access", { ip: request.ip });
             session.endSession();

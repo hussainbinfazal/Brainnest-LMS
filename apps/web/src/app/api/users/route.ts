@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDataFromToken, ISessionUser, IUserToken, User, UserToken } from "@repo/shared";
+import { ISessionUser, IUserToken, User, UserToken } from "@repo/shared";
 import { connectDB } from "@repo/shared";
 
 import { logger } from "@repo/shared";
@@ -7,6 +7,8 @@ import { CustomNextRequest } from "@/types/server";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { sendEmail } from "@/lib/helpers/mailer";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 
 
@@ -16,6 +18,9 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const session = await mongoose.startSession();
     try {
         const { email } = await request.json();
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const sessionUser: ISessionUser | null = authSession?.user;
         const existingUser = await User.findOne({ email }).select("_id email").exec();
         // const { userId } = await request.json();
         if (!existingUser) {

@@ -3,11 +3,12 @@
 import { NextResponse } from "next/server";
 import { connectDB, INSTRUCTOR_COURSES_ALL, InstructorCoursesResponse } from "@repo/shared";
 import { Course, ICourse, validateMongooseId } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
 import { getCached, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
+import { Session } from "next-auth";
+import { auth } from "@/auth";
 
 
 
@@ -18,8 +19,9 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
     const limit = parseInt(searchParams?.get('limit') || '5') || 5;
     const skip = Number((page - 1)) * limit;
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
-        //For Cache Keys        
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user; //For Cache Keys        
 
         if (!user) {
             logger.info("Unauthorized access", { ip: request.ip });
@@ -109,7 +111,9 @@ export async function DELETE(request: CustomNextRequest, context: { params: { In
     const courseId: string = searchParams?.get('courseId') || '';
     const skip: number = Number((page - 1)) * limit;
     try {
-        const user: ISessionUser | null = await getDataFromToken(request);
+        const authSession: Session | null = await auth()
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        const user: ISessionUser | null = authSession?.user;
         if (!user || user.role !== "instructor" || !user.id) {
             logger.warn("Unauthorized access", { user, ip: request.ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })

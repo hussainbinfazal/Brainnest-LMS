@@ -1,15 +1,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { Course, User, connectDB } from "@repo/shared";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { CustomNextRequest, ISessionUser } from "../../../../types/server";
 import { ICertificate, ICourse, IProgress, IUser, logger, Progress, Certificate, validateMongooseId } from "@repo/shared";
+import { auth } from "@/auth";
+import { Session } from "next-auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse | Response> {
   try {
     await connectDB(process.env.MONGODB_URI!);
-    const user: ISessionUser | null = await getDataFromToken(request);
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const user: ISessionUser | null = authSession?.user;
     const { courseId } = context.params;
     if (!user || !user.id) {
       logger.info("Unauthorized access", { ip: request.ip });
@@ -17,7 +20,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     }
     const userId: string = user.id;
     if (!courseId || !validateMongooseId({ userId, courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
-    
+
     const [courseDB, userDB,] = await Promise.all([
       Course.findById(courseId)
         .select("instructorId title")

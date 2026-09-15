@@ -1,14 +1,17 @@
+import { auth } from "@/auth";
 import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
-import { getDataFromToken } from "@/utils/getDataFromToken";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, userCourse, validateMongooseId } from "@repo/shared";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { Session } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request:
     CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const user: ISessionUser | null = await getDataFromToken(request);
+    const authSession: Session | null = await auth()
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    const user: ISessionUser | null = authSession?.user;
     if (!user) {
         logger.info("Unauthorized access", { ip: request.ip });
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
