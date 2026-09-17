@@ -37,12 +37,7 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signUpSchema>;
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
-    const [formType, setFormType] = useState<string>((): string => {
-        if (typeof window !== "undefined") {
-            return localStorage.getItem("authFormType") || "login";
-        }
-        return "";
-    });
+    const [formType, setFormType] = useState<string>("login");
     const [isShown, setIsShown] = useState<boolean>(false);
     const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
     const [isOtpVerified, setIsOtpVerified] = useState<boolean>(false);
@@ -152,9 +147,15 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     };
 
     useEffect(() => {
-        if (formType && typeof window !== "undefined") {
-            localStorage.setItem("authFormType", formType);
+        const savedFormType = localStorage.getItem("authFormType");
+
+        if (savedFormType === "login" || savedFormType === "signup") {
+            setFormType(savedFormType);
         }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("authFormType", formType);
     }, [formType]);
 
     const handleTabChange = (value: string): void => {
