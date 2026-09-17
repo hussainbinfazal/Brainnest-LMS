@@ -31,9 +31,10 @@ export default function Header({ className }: { className?: string }): React.JSX
   const router = useRouter();
   const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
   const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser)
+  const clearAuthUser = useAuthStore((state) => state.clearAuthUser)
   console.log("This is the authUser in header", authUser)
   const sessionUser = session?.user
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
@@ -100,8 +101,16 @@ export default function Header({ className }: { className?: string }): React.JSX
   }, []);
 
   useEffect(() => {
-    fetchAuthUser();
-  }, [fetchAuthUser])
+    if (status === "authenticated") {
+      setIsLoading(true);
+      fetchAuthUser();
+      setIsLoading(false);
+    };  //Explicit refresh of authUser
+    if (status === "unauthenticated") clearAuthUser();
+  }, [status, fetchAuthUser, clearAuthUser])
+
+
+
   // useEffect(() => {
   //   if (authUser) {
   //     const timer = setTimeout(() => {
@@ -122,7 +131,7 @@ export default function Header({ className }: { className?: string }): React.JSX
   return (
     <header className={cn("sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4", className)}>
       <Scroller />
-      {loading && (
+      {isLoading && (
         <div className="absolute bottom-0 left-0 w-full">
           <BarLoader
             color={theme === "dark" ? "#ffff3f" : "#2196f3"}
@@ -241,7 +250,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                       alt="User Avatar"
                       className="cursor-pointer"
                     />
-                    <AvatarFallback className="cursor-pointer">
+                    <AvatarFallback className="cursor-pointer dark:bg-neutral-400 dark:text-neutral-200">
                       {authUser?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>

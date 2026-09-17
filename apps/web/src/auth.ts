@@ -5,9 +5,14 @@ import Credentials from "next-auth/providers/credentials";
 import { authenticateUser } from "./utils/checkAuthenticationStatus";
 import { JWT } from "next-auth/jwt";
 import type { User as NextAuthUser, Account, Profile } from "next-auth";
-import { AuthenticatedUser, connectDB, logger, User, UserDocument } from "@repo/shared";
+import {
+  AuthenticatedUser,
+  connectDB,
+  logger,
+  User,
+  UserDocument,
+} from "@repo/shared";
 import { IUser } from "@repo/shared";
-
 
 type AuthUser = NextAuthUser;
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -19,7 +24,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
-
     }),
 
     Credentials({
@@ -27,7 +31,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { type: "email" },
         password: { type: "password" },
       },
-      async authorize(credentials: Partial<Record<string, unknown>>, request): Promise<AuthUser | null> {
+      async authorize(
+        credentials: Partial<Record<string, unknown>>,
+        request
+      ): Promise<AuthUser | null> {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
@@ -42,7 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role ,
+          role: user.role,
           phoneNumber: user.phoneNumber,
           profileImage: user.profileImage,
         };
@@ -56,11 +63,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signOut: "/",
   },
   callbacks: {
-    async signIn({ user, account }: { user: NextAuthUser; account?: Account | null; profile?: Profile | null; }): Promise<boolean> {
+    async signIn({
+      user,
+      account,
+    }: {
+      user: NextAuthUser;
+      account?: Account | null;
+      profile?: Profile | null;
+    }): Promise<boolean> {
       if (account?.provider === "github" || account?.provider === "google") {
         try {
           await connectDB(process.env.MONGODB_URI!);
-          let existingUser: IUser | null = await User.findOne({ email: user.email });
+          let existingUser: IUser | null = await User.findOne({
+            email: user.email,
+          });
 
           if (!existingUser) {
             const newUser: UserDocument = new User({
@@ -69,7 +85,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               role: "student",
               profile: user.profileImage || "",
               phoneNumber: user.phoneNumber || "",
-
             });
             existingUser = await newUser.save();
           }
@@ -82,8 +97,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.name = existingUser.name;
           user.email = existingUser.email;
 
-
-
           return true;
         } catch (error: unknown) {
           logger.error("Error in OAuth sign in:", { error });
@@ -95,7 +108,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user }: { token: JWT; user?: NextAuthUser }): Promise<JWT> {
+    async jwt({
+      token,
+      user,
+    }: {
+      token: JWT;
+      user?: NextAuthUser;
+    }): Promise<JWT> {
       if (user) {
         token.id = user.id;
         token.name = user.name;
@@ -103,7 +122,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.phoneNumber = user.phoneNumber;
         token.role = user.role;
         token.profileImage = user.profileImage as string;
-
       }
       return token;
     },
@@ -115,7 +133,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.role = token.role as string;
       session.user.profileImage = token.profileImage as string;
       session.user.cartId = token.cartId as string;
-
 
       return session;
     },
