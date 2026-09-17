@@ -1,7 +1,6 @@
 "use client";
 
-import { create, StateCreator } from "zustand";
-import { persist, PersistOptions } from "zustand/middleware";
+import { create } from "zustand";
 import axios from "axios";
 import { CAuthStore, CAuthUser, CUserLocation } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
@@ -31,19 +30,33 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
       let message = "Something went wrong";
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || error.message || message;
+
       } else if (error instanceof Error) {
         message = error.message;
       }
-      clientLogger.info(`Error in fetching user: ${message}`);
-      // console.log(error);
+      clientLogger.info(`Error in fetching user`, { message, error });
+      set({
+        authUser: null,
+        isAuthLoading: false,
+      })
+    } finally {
+      setAuthLoading(false);
+      set({
+        isAuthLoading: false
+      })
+
     }
   },
-  saveUserGeography: async () => {
+  saveUserGeography: async (): Promise<void> => {
     try {
       if (get().userLocation === null) {
         const location = await fetchUserLocation();
         set({ userLocation: location });
       }
-    } catch (error: unknown) { }
+    } catch (error: unknown) {
+      const message: string = error instanceof Error ? error.message : "Something went wrong";
+      clientLogger.error("Something went wrong, while fetching the user location", { message, error })
+
+    }
   },
 }));

@@ -31,11 +31,12 @@ import { loginSchema, signUpSchema } from "@/utils/fieldsValidation/Auth/ZodAuth
 import ProfileImageUpload from "../ProfileImageUpload";
 import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
 import { cn } from "@/lib/utils";
+import { clientLogger } from "@/utils/logger/clientLogger";
 
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signUpSchema>;
-export const AuthPageComp = ({className}: { className?: string }): JSX.Element => {
+export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
     const [formType, setFormType] = useState<string>((): string => {
         if (typeof window !== "undefined") {
             return localStorage.getItem("authFormType") || "login";
@@ -85,19 +86,16 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
             });
 
             if (res?.error) {
+                clientLogger.error("Something went wrong while login", { message: res.error });
                 toast.error("Invalid credentials");
                 return;
-            }
-
+            };
             toast.success("Log in successfull");
-            router.push("/");
-        } catch (error: any) {
-            // console.log(error);
-            const errorMessage =
-                error.response?.data?.message ||
-                "Something went wrong. Please try again.";
-
-            toast.error(errorMessage);
+            router.replace("/");
+        } catch (error: unknown) {
+            const message: string = error instanceof Error ? error.message : "Something went wrong";
+            clientLogger.error("Something went wrong, while fetching the user", { message });
+            // toast.error();
         }
     };
 
@@ -172,9 +170,9 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
             <Tabs
                 value={formType}
                 onValueChange={handleTabChange}
-                className="w-[300px] min-h-[280px] "
+                className="w-75 min-h-70 "
             >
-                <TabsList className="grid w-full grid-cols-2 h-[40px] rounded-full px-2">
+                <TabsList className="grid w-full grid-cols-2 h-10 rounded-full px-2">
                     <motion.div
                         whileTap={{ scale: 0.95 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -202,7 +200,7 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
                     <Form {...loginForm}>
                         <form
                             onSubmit={loginForm.handleSubmit(handleLoginSubmit)}
-                            className="space-y-8 py-4 pb-0 min-h-[500px] overflow-auto"
+                            className="space-y-8 py-4 pb-0 min-h-125 overflow-auto"
                         >
                             <FormField
                                 control={loginForm.control}
@@ -212,8 +210,8 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
                                         <FormLabel className=''>Email</FormLabel>
                                         <FormControl>
                                             <Input
-                                            className=''
-                                            type='' placeholder="Email" {...field} />
+                                                className=''
+                                                type='' placeholder="Email" {...field} />
                                         </FormControl>
 
                                         <FormMessage className='' />
@@ -254,7 +252,7 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
                                 )}
                             />
 
-                            <Button className='' variant='default' size='default' type="submit">Submit</Button>
+                            <Button className='' variant='default' size='default' type="submit">Log In</Button>
                             <Separator className="my-4" />
                             <div className="flex justify-center items-center gap-4 flex-col">
                                 <h2>Other Sign In options</h2>
@@ -291,7 +289,7 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
                     <Form {...signupForm}>
                         <form
                             onSubmit={signupForm.handleSubmit(handleSignupSubmit)}
-                            className="space-y-8  py-4 min-h-[500px]"
+                            className="space-y-8  py-4 min-h-125"
                         >
                             <FormField
                                 control={signupForm.control}
@@ -451,7 +449,7 @@ export const AuthPageComp = ({className}: { className?: string }): JSX.Element =
                                     </FormItem>
                                 )}
                             />
-                            <Button size='default' variant='default' className='' type="submit">Submit</Button>
+                            <Button size='default' variant='default' className='' type="submit">Sign In</Button>
                             <Separator className="my-4" />
                             <div className="flex justify-center items-center gap-4 flex-col">
                                 <h2>Other Sign In options</h2>
