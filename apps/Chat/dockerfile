@@ -1,0 +1,6 @@
+FROM node:alpine AS base
+WORKDIR /usr/src/app
+COPY ["package.json", "package-lock.json*","npm-shrinkwrap.json*","./"]
+
+
+

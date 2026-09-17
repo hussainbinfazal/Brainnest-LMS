@@ -43,12 +43,10 @@ export default function Header({ className }: { className?: string }): React.JSX
   const chat: CChatMessage[] | null = useChatStore((state) => state.chat);
   const setChat = useChatStore((state) => state.setChat);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const menuRef = useRef<HTMLDivElement>(null); // <-- Add this
+  const menuRef = useRef<HTMLDivElement>(null);
   const avatarRef = useRef<HTMLDivElement>(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState<boolean>(false);
   const [cartItemsCount, setCartItemsCount] = useState<number>(0);
-  console.log("This is the seession user in header", sessionUser, session, status)
-
 
   const handleLogout = async () => {
     await signOut();
@@ -56,7 +54,6 @@ export default function Header({ className }: { className?: string }): React.JSX
     toast.success("Logout successful");
 
   };
-
 
   const handleCloseMenu = useCallback(() => {
     setIsMenuOpen(false);
