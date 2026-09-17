@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { clientLogger } from "@/utils/logger/clientLogger";
+import { useClickOutSide } from "@/hooks/useClickOutside";
 
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
@@ -57,27 +58,15 @@ export default function Header({ className }: { className?: string }): React.JSX
   };
 
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(target) &&
-        avatarRef.current &&
-        !avatarRef.current.contains(target)
-      ) {
-        setIsMenuOpen(false);
-      }
-    };
+  const handleCloseMenu = useCallback(() => {
+    setIsMenuOpen(false);
+  }, []);
 
-    if (isMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isMenuOpen]);
+  useClickOutSide(
+    [menuRef, avatarRef],
+    handleCloseMenu,
+    isMenuOpen
+  );
 
   const fetchExistingChat = useCallback(async () => {
     try {

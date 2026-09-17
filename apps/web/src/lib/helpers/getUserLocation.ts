@@ -6,6 +6,7 @@ interface data {
     [key: string]: any;
 
 }
+
 export const fetchUserLocation = async (): Promise<data | undefined> => {
     try {
         const response = await axios.get("https://ipapi.co/json/");
