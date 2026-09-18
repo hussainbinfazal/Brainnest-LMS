@@ -32,10 +32,11 @@ import ProfileImageUpload from "../ProfileImageUpload";
 import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
 import { cn } from "@/lib/utils";
 import { clientLogger } from "@/utils/logger/clientLogger";
-import { error } from "node:console";
+import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
+    const router = useRouter();
     const [formType, setFormType] = useState<string>("login");
     const [isShown, setIsShown] = useState<boolean>(false);
     const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
@@ -43,9 +44,6 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const [isEmailOtpSent, setIsEmailOtpSent] = useState<boolean>(false);
     const [isEmailOtpVerified, setIsEmailOtpVerified] = useState<boolean>(false);
     const { setAuthUser } = useAuthStore();
-
-    const router = useRouter();
-
     const loginForm = useForm<z.infer<typeof loginSchema>>({
         resolver: zodResolver(loginSchema),
         defaultValues: { email: "", password: "" },
@@ -57,6 +55,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         defaultValues: {
             name: "",
             email: "",
+            username: "",
             password: "",
             confirmPassword: "",
             role: "USER",
@@ -64,6 +63,10 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             phoneNumber: 0,
         },
     });
+    const watchedUsername = signupForm.watch('username');
+    const usernameStatus = useUsernameAvailability(watchedUsername);
+
+
     const watchedPhone: number = signupForm.watch("phoneNumber");
     const isPhoneValid: boolean = /^\d{10}$/.test(watchedPhone.toString());
     const watchedEmail = signupForm.watch("email");
@@ -311,6 +314,23 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                 control={signupForm.control}
                                 name="name"
                                 render={({ field }: { field: ControllerRenderProps<z.infer<typeof signUpSchema>, "name"> }) => (
+                                    <FormItem className=''>
+                                        <FormLabel className=''>Name</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type='text'
+                                                className=''
+                                                placeholder="Name" {...field} />
+                                        </FormControl>
+
+                                        <FormMessage className='' />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={signupForm.control}
+                                name="username"
+                                render={({ field }: { field: ControllerRenderProps<z.infer<typeof signUpSchema>, "username"> }) => (
                                     <FormItem className=''>
                                         <FormLabel className=''>Username</FormLabel>
                                         <FormControl>
