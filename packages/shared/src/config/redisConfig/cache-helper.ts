@@ -20,7 +20,7 @@ export async function getCached<T>(
   const redisClient = getRedisClient()
   const key: string = buildKey(namespace, id)
   try {
-    const response = await redisClient.ping();
+    // const response = await redisClient.ping();
     const value = await redisClient.get<T>(key)
 
     logger.info(`[cache] getCached for key:`, { key: key, namespace: namespace })
@@ -185,3 +185,9 @@ export async function runCacheOps<T>(ops: CacheOp<T>[]): Promise<void> {
   logger.info("[cache] runCacheOps", { count: ops.length });
 }
 
+
+// await runCacheOps([
+//   { type: "del", namespace: "courses", id: 42 },
+//   { type: "set", namespace: "courses", id: 42, value: freshCourseData, ttlSeconds: CACHE_TTL.LONG },
+//   { type: "del", namespace: "userCourses", id: userId }, // different namespace, same batch
+// ]);
