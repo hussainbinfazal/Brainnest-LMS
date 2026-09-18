@@ -65,8 +65,6 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     });
     const watchedUsername = signupForm.watch('username');
     const usernameStatus = useUsernameAvailability(watchedUsername);
-
-
     const watchedPhone: number = signupForm.watch("phoneNumber");
     const isPhoneValid: boolean = /^\d{10}$/.test(watchedPhone.toString());
     const watchedEmail = signupForm.watch("email");
@@ -339,7 +337,15 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                                 className=''
                                                 placeholder="Username" {...field} />
                                         </FormControl>
-
+                                        {usernameStatus === "checking" && (
+                                            <p className="animate-pulse">Checking...</p>
+                                        )}
+                                        {usernameStatus === "available" && (
+                                            <p className="text-green-500">Available</p>
+                                        )}
+                                        {usernameStatus === 'taken' && (
+                                            <p className="text-red-500">Already Taken</p>
+                                        )}
                                         <FormMessage className='' />
                                     </FormItem>
                                 )}
