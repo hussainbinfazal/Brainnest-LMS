@@ -462,6 +462,9 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^2.12.0
         version: 2.27.2
+      '@types/murmurhash3js':
+        specifier: ^3.0.7
+        version: 3.0.7
       '@upstash/redis':
         specifier: ^1.35.6
         version: 1.38.0
@@ -3476,6 +3479,9 @@ packages:
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
+
+  '@types/murmurhash3js@3.0.7':
+    resolution: {integrity: sha512-jN3Z37nILIW1DZyP6N/NK+aw/zjFHPVb7hjrmdw7jx7FayrhKgkNpo6ZDwAsH8HSANjebBOxoXXtA39gKwyeGw==}
 
   '@types/next-server@9.0.0':
     resolution: {integrity: sha512-8PDYdAX0aDCiGJEL22UwvwT26b5+XFCtsuFprqIr9ISCRD/At2ndO4sylGq+pnuOEI40FEALzNg4aD2t+wi5Tg==}
@@ -10917,6 +10923,8 @@ snapshots:
       '@types/node': 25.9.5
 
   '@types/ms@2.1.0': {}
+
+  '@types/murmurhash3js@3.0.7': {}
 
   '@types/next-server@9.0.0(lru-cache@10.4.3)(react-dom@16.14.0(react@16.14.0))(react@16.14.0)(supports-color@8.1.1)':
     dependencies:

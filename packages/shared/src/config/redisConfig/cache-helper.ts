@@ -80,5 +80,66 @@ export async function invalidateCached(
     logger.error(`[cache] invalidateCached failed for namespace:`, { err: message, namespace: namespace })
   }
 }
+//Get Cache in Batch 
+// Fetch multiple keys under one namespace in a single round trip.
+export async function getCachedMany<T>(namespace: string, ids: (string | number)[]): Promise<Map<string | number, T | null>> {
+  const out = new Map<string | number, T | null>();
+  if (ids.length === 0) return out;
 
+  const keys = ids.map(id => buildKey(namespace, id));
+  const results = await runPipeline<T | null>(
+    (p) => keys.forEach((key) => p.get(key)),
+    { namespace: namespace, ids: ids }
+  );
+
+  ids.forEach((id, i) => {
+    out.set(id, results?.[i] ?? null);
+  });
+
+
+  logger.info("[cache] getCachedMany for keys:", { keys: keys, namespace: namespace })
+  return out
+
+};
+
+
+//Set Cached Many
+//Set multiple keys under one namespace in a single round trip.
+export async function setCachedMany<T>(
+  namespace: string,
+  entries: { id: string | number; value: T; ttlSeconds?: number }[]
+): Promise<void> {
+  if (entries.length === 0) return;
+  await runPipeline(
+    //Build pipeline of set commands
+    (p) => entries.forEach(({ id, value, ttlSeconds = CACHE_TTL.MEDIUM }) => p.set(buildKey(namespace, id), value, { ex: ttlSeconds })),
+
+    //Pass context
+    { namespace: namespace, entries: entries }
+
+  );
+  logger.info("[cache] setCachedMany for entries:", { count: entries.length, namespace: namespace })
+};
+
+
+
+
+///Set cache with redis pipeline
+export async function runPipeline<T = unknown>(
+  build: (pipeline: ReturnType<ReturnType<typeof getRedisClient>["pipeline"]>) => void,
+  context: Record<string, unknown>
+): Promise<T[] | null> {
+  const redisClient: ReturnType<typeof getRedisClient> = getRedisClient();
+  const pipeLine: ReturnType<ReturnType<typeof getRedisClient>["pipeline"]> = redisClient.pipeline();
+  build(pipeLine);
+
+  try {
+    const response = await pipeLine.exec();
+    return response as T[];
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error(`[cache] Pipeline exec failed:`, { error: message, context: context });
+    return null;
+  }
+}
 
