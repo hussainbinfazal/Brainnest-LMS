@@ -32,10 +32,9 @@ import ProfileImageUpload from "../ProfileImageUpload";
 import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
 import { cn } from "@/lib/utils";
 import { clientLogger } from "@/utils/logger/clientLogger";
+import { error } from "node:console";
 
 
-type LoginFormValues = z.infer<typeof loginSchema>;
-type SignupFormValues = z.infer<typeof signUpSchema>;
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
     const [formType, setFormType] = useState<string>("login");
     const [isShown, setIsShown] = useState<boolean>(false);
@@ -88,7 +87,13 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             toast.success("Log in successfull");
             router.replace("/");
         } catch (error: unknown) {
-            const message: string = error instanceof Error ? error.message : "Something went wrong";
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message = error.response?.data?.message || error.message || message;
+
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
             clientLogger.error("Something went wrong, while fetching the user", { message });
             // toast.error();
         }
@@ -108,17 +113,27 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         // }
         try {
             const response = await axios.post("/api/users/register", data);
-            // console.log(response);
-            setAuthUser(response.data.user);
+            const res = await signIn("credentials", {
+                email: data.email,
+                password: data.password,
+                redirect: false
+            })
+            if (res?.error) {
+                clientLogger.error("Singup secceded but automatic sign in failed"), { message: res.error, error: res.error }
+                toast.error("Something went wrong. Please try again.");
+                return
+            }
             toast.success("Signup successful");
-            router.push("/");
-        } catch (error: any) {
-            // console.log(error);
-            const errorMessage =
-                error.response?.data?.message ||
-                "Something went wrong. Please try again.";
+            router.replace("/");
+        } catch (error: unknown) {
+            let message = "Something went wrong";
+            if (axios.isAxiosError(error)) {
+                message = error.response?.data?.message || error.message || message;
 
-            toast.error(errorMessage);
+            } else if (error instanceof Error) {
+                message = error.message;
+            }
+            clientLogger.error("Something went wrong, while fetching the user", { message });
         }
     };
 
@@ -253,7 +268,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                 )}
                             />
 
-                            <Button className='' variant='default' size='default' type="submit">Log In</Button>
+                            <Button className='w-full' variant='default' size='default' type="submit">Log In</Button>
                             <Separator className="my-4" />
                             <div className="flex justify-center items-center gap-4 flex-col">
                                 <h2>Other Sign In options</h2>
@@ -450,7 +465,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                     </FormItem>
                                 )}
                             />
-                            <Button size='default' variant='default' className='' type="submit">Sign In</Button>
+                            <Button size='default' variant='default' className='w-full cursor-pointer' type="submit">Sign In</Button>
                             <Separator className="my-4" />
                             <div className="flex justify-center items-center gap-4 flex-col">
                                 <h2>Other Sign In options</h2>

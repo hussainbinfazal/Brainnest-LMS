@@ -7,7 +7,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { useChatStore } from "@/lib/store/usersStore/useChatStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +30,7 @@ import { useClickOutSide } from "@/hooks/useClickOutside";
 
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -135,6 +136,11 @@ export default function Header({ className }: { className?: string }): React.JSX
           <Link
             href="/"
             className="mr-6 flex items-center space-x-2 cursor-pointer"
+            onClick={(event) => {
+              if (pathname === "/") {
+                event.preventDefault();
+              }
+            }}
           >
             <span className="font-bold  text-3xl flex items-center gap-2">
               {" "}

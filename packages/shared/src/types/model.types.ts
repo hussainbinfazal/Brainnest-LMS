@@ -232,6 +232,7 @@ export interface ILessonProgress {
 export type UserRole = "student" | "admin" | "instructor";
 export interface IUser {
   _id: Types.ObjectId;
+  username: string,
   name: string;
   email: string;
   password: string;

@@ -20,6 +20,7 @@ export interface CCertificate {
 export interface CAuthUser {
   _id?: string;
   name: string;
+  username: string;
   email: string;
   password?: string;
   phoneNumber?: string;
@@ -328,6 +329,7 @@ export interface CProgress {
 export interface CUserCourse {
   _id: string;
   userId: string;
+
   courseId: string;
   isLiked: boolean;
   isEnrolled: boolean;

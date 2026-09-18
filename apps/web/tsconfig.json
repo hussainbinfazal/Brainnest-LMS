@@ -18,6 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": "./src",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
         "*"
@@ -33,7 +34,7 @@
       ],
       "@repo/payment/*": [
         "../../../packages/payment/src/*"
-      ]
+      ],
       
     },
     // "ignoreDeprecations": "6.0",

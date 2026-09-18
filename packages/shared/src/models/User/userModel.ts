@@ -9,6 +9,11 @@ export const userSchema: Schema<IUser> = new mongoose.Schema({
         trim: true
 
     },
+    username: {
+        type: "String",
+        required: true,
+        trim: true
+    },
     email: {
         type: 'String'
         , required: true
