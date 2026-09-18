@@ -82,22 +82,20 @@ export async function invalidateCached(
 }
 //Get Cache in Batch 
 // Fetch multiple keys under one namespace in a single round trip.
-export async function getCachedMany<T>(namespace: string, ids: (string | number)[]): Promise<Map<string | number, T | null>> {
+export async function getCachedMany<T>(entries: { namespace: string, id: string | number }[], namespace: string[], ids: (string | number)[]): Promise<Map<string | number, T | null>> {
   const out = new Map<string | number, T | null>();
   if (ids.length === 0) return out;
 
-  const keys = ids.map(id => buildKey(namespace, id));
+  const keys = entries.map(({ namespace, id }) => buildKey(namespace, id));
   const results = await runPipeline<T | null>(
     (p) => keys.forEach((key) => p.get(key)),
-    { namespace: namespace, ids: ids }
+    { count: entries.length, namespaces: [...new Set(entries.map((e) => e.namespace))] }
   );
 
-  ids.forEach((id, i) => {
+  ids.forEach((id: string | number, i: number) => {
     out.set(id, results?.[i] ?? null);
   });
-
-
-  logger.info("[cache] getCachedMany for keys:", { keys: keys, namespace: namespace })
+  logger.info("[cache] getCachedMany", { count: entries.length });
   return out
 
 };
@@ -106,19 +104,19 @@ export async function getCachedMany<T>(namespace: string, ids: (string | number)
 //Set Cached Many
 //Set multiple keys under one namespace in a single round trip.
 export async function setCachedMany<T>(
-  namespace: string,
-  entries: { id: string | number; value: T; ttlSeconds?: number }[]
+
+  entries: { namespace: string, id: string | number; value: T; ttlSeconds?: number }[]
 ): Promise<void> {
   if (entries.length === 0) return;
   await runPipeline(
     //Build pipeline of set commands
-    (p) => entries.forEach(({ id, value, ttlSeconds = CACHE_TTL.MEDIUM }) => p.set(buildKey(namespace, id), value, { ex: ttlSeconds })),
+    (p) => entries.forEach(({ namespace, id, value, ttlSeconds = CACHE_TTL.MEDIUM }) => p.set(buildKey(namespace, id), value, { ex: ttlSeconds })),
 
     //Pass context
-    { namespace: namespace, entries: entries }
+    { count: entries.length, namespaces: [...new Set(entries.map((e) => e.namespace))] }
 
   );
-  logger.info("[cache] setCachedMany for entries:", { count: entries.length, namespace: namespace })
+  logger.info("[cache] setCachedMany", { count: entries.length });
 };
 
 
