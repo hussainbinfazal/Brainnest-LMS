@@ -39,7 +39,7 @@ export const UserTokenSchema: Schema<IUserToken> = new mongoose.Schema({
     { timestamps: true }
 )
 
-
+UserTokenSchema.index({ userId: 1, type: 1 }, { unique: true });
 
 const UserToken: Model<IUserToken> = mongoose.models.UserToken || mongoose.model<IUserToken>('UserToken', UserTokenSchema);
 export default UserToken;

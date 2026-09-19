@@ -6,9 +6,9 @@ export function validateEmail(email: string): string | null {
   return null; // no error
 }
 
-export function validatePhoneNumber(phone: string): number | string | null {
+export function validatePhoneNumber(phone: string): boolean {
   const phoneRegex = /^\+?[0-9\s-]{10,15}$/;
-  if (!phone) return "Phone number is required";
-  if (!phoneRegex.test(phone)) return "Invalid phone number format";
-  return null; // no error
+  if (!phone) return false;
+  if (!phoneRegex.test(phone)) return false;
+  return true; // no error
 } 

@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { sendEmail } from '@/services/emailOtpService';
-import { ISessionUser } from '@/types/server';
+import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
 import { validateMongooseId } from '@/utils/fieldsValidation/idValidator/idValidator';
-import { emailOtpQueue } from '@/lib/queue/emailQueue';
+// import { emailOtpQueue } from '@/lib/queue/emailQueue';
 import { Session } from 'next-auth';
 import { auth } from '@/auth';
-interface CustomNextRequest extends NextRequest {
-    ip: string;
-}
+import { validateEmail } from '@repo/shared';
+
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
@@ -27,7 +26,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
         }
         // Validate email format
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (validateEmail(email)) {
             return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
         }
 
@@ -38,9 +37,9 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             specialChars: false,
         });
 
-       
 
-        // Send email via nodemailer
+
+        // Send email via nodemailer //use worker queue from the shared repo
         await emailOtpQueue.add("send-otp", {
             userId: user.id,
             email,
