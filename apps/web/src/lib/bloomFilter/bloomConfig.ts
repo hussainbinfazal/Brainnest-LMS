@@ -3,7 +3,7 @@ import { logger } from "@repo/shared";
 
 
 
-const META_KEY: string = "bloom:meta";
+const META_KEY: string = "bloom:usernames:meta";
 const CONFIG_CACHE_TTL_MS: number = 5 * 60 * 1000;  //re fetch bloom config every 5 minutes;
 
 

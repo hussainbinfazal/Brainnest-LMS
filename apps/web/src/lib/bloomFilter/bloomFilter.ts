@@ -5,7 +5,8 @@ import {
     CACHE_TTL,
     runPipeline,
 } from "@repo/shared/config/redisConfig/cache-helper";
-const BLOOM_KEY = "bloom:username";
+import { getActivateBloomConfig } from "./bloomConfig";
+// const BLOOM_KEY = "bloom:username";
 
 //Estimated Hash Function
 //  m = bit array size, k = number of hash functions.
@@ -32,17 +33,20 @@ function getHashPositions(username: string): number[] {
 //Function Call post user registration, to keep the filter in sync.
 
 export async function bloomAdd(username: string): Promise<void> {
+    const config = await getActivateBloomConfig();
     const positions = getHashPositions(username); //Get hash positions
     await runPipeline(
-        (p) => positions.forEach((pos) => p.setbit(BLOOM_KEY, pos, 1)),
+        (p) => positions.forEach((pos) => p.setbit(config.dataKey, pos, 1)),
         { username: username }
     );
 }
 
 
 export async function bloomMightContain(username: string) {
+    const config = await getActivateBloomConfig();
     const positions: number[] = getHashPositions(username);
-    const results: number[] | null = await runPipeline<number>((p) => positions.forEach((pos) => p.getbit(BLOOM_KEY, pos)), { username: username });
+    const results: number[] | null = await runPipeline<number>((p) => positions.forEach((pos) => p.getbit(config.dataKey, pos)), { username: username });
 
     return results?.every((bit) => bit === 1) ?? false; ///fail open → treat as "might be taken" so caller confirms via Mong
-}
+};
+

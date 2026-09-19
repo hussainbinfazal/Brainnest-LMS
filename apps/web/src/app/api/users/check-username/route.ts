@@ -1,4 +1,5 @@
 import { bloomMightContain } from "@/lib/bloomFilter/bloomFilter";
+import { recordBloomCheck } from "@/lib/bloomFilter/bloomStats";
 import { CustomNextRequest } from "@/types/server";
 import { connectDB, IUser, logger, User } from "@repo/shared";
 import mongoose, { Types } from "mongoose";
@@ -14,6 +15,7 @@ export async function GET(request: CustomNextRequest) {
         };
         //Bloom check
         const mightExist: boolean = await bloomMightContain(username);
+        recordBloomCheck(mightExist); //fire and forget
         if (!mightExist) {
             return NextResponse.json({ message: "Username is available", available: true }, { status: 200 });
         };
