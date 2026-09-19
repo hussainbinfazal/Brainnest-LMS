@@ -33,7 +33,8 @@ import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
 import { cn } from "@/lib/utils";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
-import { validatePhoneNumber } from "@repo/shared";
+import { validatePhoneNumber } from "@/utils/phoneValidators";
+import { validateEmail } from "@/utils/phoneValidators";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
@@ -67,9 +68,9 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const watchedUsername = signupForm.watch('username');
     const usernameStatus = useUsernameAvailability(watchedUsername);
     const watchedPhone: number = signupForm.watch("phoneNumber");
-    const isPhoneValid: boolean = validatePhoneNumber(watchedPhone);
+    const isPhoneValid: boolean = validatePhoneNumber(watchedPhone.toString());
     const watchedEmail = signupForm.watch("email");
-    const isEmailValid: boolean = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(watchedEmail);
+    const isEmailVazlid: boolean = validateEmail(watchedEmail);
     const password: string = signupForm.watch("password");
     const confirmPassword: string = signupForm.watch("confirmPassword");
 
