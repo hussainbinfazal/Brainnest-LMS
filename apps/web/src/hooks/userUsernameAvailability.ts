@@ -15,7 +15,7 @@ export function useUsernameAvailability(username: string): UsernameStatus {
             return;
         };
         setStatus("checking");
-        const timeout = setTimeout(async () => {
+        const timeout = setTimeout(async (): Promise<void> => {
             try {
                 const response = await axios.get(`/api/users/check-username?username=${username}`);
                 setStatus(response.data.available ? "available" : "taken");
