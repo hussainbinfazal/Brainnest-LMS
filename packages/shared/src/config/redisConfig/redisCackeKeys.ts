@@ -385,6 +385,28 @@ export const UPLOAD_SESSION = {
   description: "File upload session data (chunks, metadata, progress)",
   usedIn: ["Course Content Upload", "Video Upload"],
 };
+
+/**
+ * namespace: "email-otp-lock"
+ * id: userId (MongoDB ObjectId)
+ * ttl: MEDIUM (15min)
+ * Usage: To lock brute force attempts, in verification route
+ * Set by: apps/web/src/app/api/users/verifyemail/route.ts
+ * Used by: Email verification
+ * Full Key: email-otp-lock:userId
+ */
+export const EMAIL_OTP_LOCK = {
+  namespace: "upload",
+  id: "userId",
+  ttl: "MEDIUM",
+  description: "To lock brute force attempts, in verification route",
+  usedIn: ["User Verification"],
+};
+
+
+
+
+
 // ============================================================================
 // USER SESSION CACHE KEYS
 // ============================================================================

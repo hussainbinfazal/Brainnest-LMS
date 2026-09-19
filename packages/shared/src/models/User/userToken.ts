@@ -12,9 +12,12 @@ export const UserTokenSchema: Schema<IUserToken> = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['reset', 'verification', 'refresh'],
+        enum: ['reset', 'password-reset', 'email-verification', "number-verification", 'refresh'],
     },
-
+    attempts: {
+        type: Number,
+        default: 0
+    },
     token: {
         type: String,
         required: true

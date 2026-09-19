@@ -261,11 +261,12 @@ export interface ICertificate {
 }
 export interface IUserToken {
   userId: Types.ObjectId;
-  type: 'reset' | 'verification' | 'refresh';
+  type: 'reset' | 'verification' | 'refresh' | 'email-verification' | 'number-verification' | 'password-reset';
   token: string;
   expiresAt: Date;
   isVerified: boolean;
-  isUsed: boolean
+  isUsed: boolean;
+  attempts: number;
 }
 
 export interface IUserCourse {

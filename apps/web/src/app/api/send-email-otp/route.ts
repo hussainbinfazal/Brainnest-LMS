@@ -38,11 +38,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             specialChars: false,
         });
 
-        // Store OTP with expiry (5 minutes)
-        // otpStore[email] = {
-        //     otp,
-        //     expires: Date.now() + 5 * 60 * 1000
-        // };
+       
 
         // Send email via nodemailer
         await emailOtpQueue.add("send-otp", {
@@ -54,7 +50,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             message: 'OTP sent to email successfully',
             ...(process.env.NODE_ENV! === 'development' && { email })
         }, { status: 202 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Email OTP error:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ message: `Failed to send email OTP : ${message}` }, { status: 500 });
