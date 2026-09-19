@@ -70,7 +70,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const watchedPhone: number = signupForm.watch("phoneNumber");
     const isPhoneValid: boolean = validatePhoneNumber(watchedPhone.toString());
     const watchedEmail = signupForm.watch("email");
-    const isEmailVazlid: boolean = validateEmail(watchedEmail);
+    const isEmailValid: boolean = validateEmail(watchedEmail.toString());
     const password: string = signupForm.watch("password");
     const confirmPassword: string = signupForm.watch("confirmPassword");
 
