@@ -1,8 +1,8 @@
 import { getRedisClient } from "@repo/shared";
 import { logger } from "@repo/shared";
 
-const STATS_TOTAL_KEY = "bloom:stats:total";
-const STATS_FALLBACK_KEY = "bloom:stats:active";
+const STATS_TOTAL_KEY = "bloom:stats:total"; //how many checks happened at all
+const STATS_FALLBACK_KEY = "bloom:stats:active"; //how many of those were the expensive path
 
 //  Call once per check - username request, after calling bloomMightContain.
 //  * `fellThrough` = the value bloomMightContain returned(true = had to hit Mongo).
@@ -30,7 +30,7 @@ export async function getBloomStats(): Promise<{ total: number; fallback: number
 };
 
 
- //Call after a resize/rebuild so the ratio reflects the new filter, not the old one.
+//Call after a resize/rebuild so the ratio reflects the new filter, not the old one.
 export async function resetBloomStats(): Promise<void> {
     const redisClient: ReturnType<typeof getRedisClient> = getRedisClient();
     await redisClient.pipeline().del(STATS_TOTAL_KEY).del(STATS_FALLBACK_KEY).exec();
