@@ -80,6 +80,18 @@ export async function invalidateCached(
     logger.error(`[cache] invalidateCached failed for namespace:`, { err: message, namespace: namespace })
   }
 }
+
+
+
+//
+export async function setOnlyIfNotExist(namespace: string, id: string | number, value: string, ttlSeconds: number = CACHE_TTL.SHORT): Promise<boolean> {
+  const key = buildKey(namespace, id)
+  const result = await getRedisClient().set(key, value, { ex: ttlSeconds, nx: true }) //nx means only set if key doesn't exist
+  return result === "OK" //null when key already exists
+}
+
+
+
 //Get Cache in Batch 
 // Fetch multiple keys under one namespace in a single round trip.
 export async function getCachedMany<T>(entries: { namespace: string, id: string | number }[], namespace: string[], ids: (string | number)[]): Promise<Map<string | number, T | null>> {

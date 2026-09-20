@@ -5,61 +5,76 @@ import { toast } from "sonner";
 import { CEmailOtpSenderProps, CEmailOtpVerifierProps, COtpSenderProps, CResendOtpResponse, CSendOtpResponse, CVerifyOtpResponse } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { cn } from "@/lib/utils";
+import { validateEmail } from "@/utils/phoneValidators";
 
 
 
 //Right now this functionality is disabled
-export const phoneOtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent, className }: COtpSenderProps) => {
-  const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
-    try {
-      const response = await axios.post<CSendOtpResponse>("/api/send-otp", { phoneNumber });
-      // Show OTP in development mode
-      if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-        toast.success(`Development Mode - Your OTP is: ${response.data.otp || 'Check console'}`);
-        // logger.debug({ otp: response.data.otp }, "Generated OTP (development)");
-      }
-      toast.success(response.data.message || "OTP sent successfully");
-      onOtpSent(); // Notify parent
-      return response.data
-    } catch (error: any) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to send OTP";
-      clientLogger.error(errorMessage, error);
-      toast.error(error.response?.data?.message || "Failed to send OTP");
-    }
-  };
+// export const phoneOtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent, className }: COtpSenderProps) => {
+//   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
+//     try {
+//       const response = await axios.post<CSendOtpResponse>("/api/send-otp", { phoneNumber });
+//       // Show OTP in development mode
+//       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+//         toast.success(`Development Mode - Your OTP is: ${response.data.otp || 'Check console'}`);
+//         // logger.debug({ otp: response.data.otp }, "Generated OTP (development)");
+//       }
+//       toast.success(response.data.message || "OTP sent successfully");
+//       onOtpSent(); // Notify parent
+//       return response.data
+//     } catch (error: any) {
+//       const errorMessage = error instanceof Error ? error.message : "Failed to send OTP";
+//       clientLogger.error(errorMessage, error);
+//       toast.error(error.response?.data?.message || "Failed to send OTP");
+//     }
+//   };
 
-  return (
-    <div className="mb-4">
-      <button
-        onClick={handleSendOtp}
-        className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-      >
-        Send OTP
-      </button>
-    </div>
-  );
-};
+//   return (
+//     <div className="mb-4">
+//       <button
+//         onClick={handleSendOtp}
+//         className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+//       >
+//         Send OTP
+//       </button>
+//     </div>
+//   );
+// };
 
 ;
 
 // Email OTP Components
+
+///OTP Sender Component
 export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderProps) => {
+  const [isSending, setIsSending] = useState<boolean>(false);
+  const [isValidEmail, setIsValidEmail] = useState<boolean>(false);
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
+    if (!validateEmail(email) || isSending) return
+    setIsSending(true);
     try {
-      const response = await axios.post<CSendOtpResponse>("/api/send-email-otp", { email });
+      const { data } = await axios.post<CSendOtpResponse>("/api/sendEmailOTP", { email });
+      toast.success(data.message || "Email OTP sent successfully");
       // Show OTP in development mode
-      if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-        toast.success(`Development Mode - Your Email OTP is: ${response.data.otp || 'Check console'}`);
-        // logger.debug({ otp: response.data.otp }, "Generated Email OTP (development)");
-      }
-      toast.success(response.data.message || "Email OTP sent successfully");
-      onOtpSent(); // Notify parent
-      return response.data
+      // if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+      //   toast.success(`Development Mode - Your Email OTP is: ${response.data.otp || 'Check console'}`);
+      //   // logger.debug({ otp: response.data.otp }, "Generated Email OTP (development)");
+      // }
+      toast.success(data.message || "Email OTP sent successfully");
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to send email OTP";
+      let message = "Failed to send email OTP";
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message || message
+      } else if (error instanceof Error) {
+        message = error.message
+      }
       clientLogger.error(message, error);
       toast.error("Failed to send email OTP");
+      return
+    } finally {
+      setIsSending(false)
     }
+    onOtpSent(); // Notify parent
   };
 
   return (
@@ -68,7 +83,7 @@ export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderP
         onClick={handleSendOtp}
         className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
       >
-        Send Email OTP
+        {isSending ? "Sending..." : "Send Email OTP"}
       </button>
     </div>
   );
@@ -95,9 +110,17 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
       const response = await axios.post<CVerifyOtpResponse>("/api/verify-email-otp", { email, otp });
       toast.success(response.data.message || "Email OTP verified");
       onVerified(); // Notify parent
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let message = "Email OTP verification failed";
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message || message
+        clientLogger.error(error.message, { error });
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
       // console.error(error);
-      toast.error(error.response?.data?.message || "Email OTP verification failed");
+      clientLogger.error("Email OTP verification failed", { error, message });
+      toast.error("OTP verification failed");
     } finally {
       setIsVerifying(false);
     }
@@ -177,7 +200,7 @@ export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber, className
   const [resendCount, setResendCount] = useState<number>(0);
   const maxResendAttempts = 5;
 
-  React.useEffect(() => {
+  useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
       timer = setTimeout(() => setCountdown(countdown - 1), 1000);

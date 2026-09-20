@@ -1,59 +1,56 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
-import { sendEmail } from '@/services/emailOtpService';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
-import { validateMongooseId } from '@/utils/fieldsValidation/idValidator/idValidator';
-// import { emailOtpQueue } from '@/lib/queue/emailQueue';
 import { Session } from 'next-auth';
 import { auth } from '@/auth';
 import { validateEmail } from '@repo/shared';
+import { createHmac } from 'node:crypto';
+import { invalidateCached, setCached } from '@repo/shared/config/redisConfig/cache-helper';
 
+const OTP_TTL_SEC = 60;
+const RESEND_COOLDOWN_SEC = 60;
+
+function generateOTP(): string {
+    return otpGenerator.generate(6, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+    });
+}
+const hashOtp = (email: string, otp: string) => createHmac('sha256', process.env.OTP_SECRET_KEY!).update(`${email}:${otp}`).digest("hex")
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-
     ///If user is registering first time
+    const body = await request.json()
+    let email = body.email;
+    if (!email || !validateEmail(email.trim())) {
+        return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
+    };
+    const cooldownKey: string = `email-otp-cooldown`;
+    const otpKey: string = `${email}`;
     try {
-        // const body = await request.json().catch(() => null);
-        const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
-        const user: ISessionUser | null = authSession?.user;
-        if (!user || !user.id) {
-            logger.info("Unauthorized access", { route: "send-otp", ip: request.ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        //Atomic
+        const acquired = await setCached(cooldownKey, otpKey, 1, RESEND_COOLDOWN_SEC); //acquire lock
+        if (!acquired) {
+            return NextResponse.json({ message: 'Too many requests, please try again later' }, { status: 429, headers: { 'Retry-After': String(RESEND_COOLDOWN_SEC) } });
         }
-        const email = user.email;
-        if (!validateMongooseId({ userId: user.id })) {
-            logger.info("Invalid user id");
-            return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
-        }
-        // Validate email format
-        if (validateEmail(email)) {
-            return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
-        }
-
-        const otp = otpGenerator.generate(6, {
-            digits: true,
-            lowerCaseAlphabets: false,
-            upperCaseAlphabets: false,
-            specialChars: false,
-        });
-
-
-
-        // Send email via nodemailer //use worker queue from the shared repo
-        await emailOtpQueue.add("send-otp", {
-            userId: user.id,
-            email,
-            otp
-        });
+        //
+        // curl - i - X POST localhost: 3000 / api / send - email - otp - d '{"email":"a@x.com"}'
+        const otp = generateOTP();
+        await setCached(otpKey, hashOtp(email, otp), OTP_TTL_SEC);
+        // Send email via nodemailer //use worker queue from the shared repo, via http call to invoke the job in the job in queue
+        //  
         return NextResponse.json({
             message: 'OTP sent to email successfully',
-            ...(process.env.NODE_ENV! === 'development' && { email })
+            // ...(process.env.NODE_ENV! === 'development' && { email })
         }, { status: 202 });
     } catch (error: unknown) {
-        console.error('Email OTP error:', error);
+        // Don't leave the user locked in a cooldown for an email that was never sent
+        await invalidateCached(otpKey);
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ message: `Failed to send email OTP : ${message}` }, { status: 500 });
+        logger.error('Email OTP error:', { error, message });
+        return NextResponse.json({ message: `Failed to send email OTP` }, { status: 500 });
     }
 }

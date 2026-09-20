@@ -133,7 +133,6 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             let message = "Something went wrong";
             if (axios.isAxiosError(error)) {
                 message = error.response?.data?.message || error.message || message;
-
             } else if (error instanceof Error) {
                 message = error.message;
             }
