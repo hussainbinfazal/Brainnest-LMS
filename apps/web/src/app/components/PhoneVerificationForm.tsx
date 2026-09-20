@@ -6,7 +6,10 @@ import { CEmailOtpSenderProps, CEmailOtpVerifierProps, COtpSenderProps, CResendO
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { cn } from "@/lib/utils";
 
-export const OtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent,className }: COtpSenderProps) => {
+
+
+
+export const phoneOtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent, className }: COtpSenderProps) => {
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
     try {
       const response = await axios.post<CSendOtpResponse>("/api/send-otp", { phoneNumber });

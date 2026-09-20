@@ -13,7 +13,7 @@ interface UseSendEmailOtpResult {
     cooldownSeconds: number;
     sendOtp: () => Promise<void>;
 }
-const RESEND_COOLDOWN_SECONDS = 60; // must match the server's cooldown TTL
+const RESEND_COOLDOWN_SECONDS = 60; // server's cooldown TTL
 
 export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
     const [status, setStatus] = useState<OtpStatus>("idle");

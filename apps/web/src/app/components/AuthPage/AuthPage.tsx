@@ -35,6 +35,7 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";
+import { useSendEmailOtp } from "@/hooks/useSendEmailOtp";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
@@ -73,7 +74,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const isEmailValid: boolean = validateEmail(watchedEmail.toString());
     const password: string = signupForm.watch("password");
     const confirmPassword: string = signupForm.watch("confirmPassword");
-
+    const { status, error, cooldownSeconds, sendOtp } = useSendEmailOtp(signupForm.watch("email"));
     const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
         try {
             const res = await signIn("credentials", {
