@@ -1,4 +1,4 @@
-import { getRedisClient } from "@repo/shared";
+import { getRedisClient, User } from "@repo/shared";
 import { logger } from "@repo/shared";
 
 
@@ -51,8 +51,16 @@ export async function setActivateBloomConfig(config: BloomConfig): Promise<void>
 };
 
 
+export function estimateCurrentFalsePositiveRate(
+    currentItemCount: number,
+    config: { size: number; numHashes: number }
+): number {
+    const { size: m, numHashes: k } = config;
+    return Math.pow(1 - Math.exp((-k * currentItemCount) / m), k);
+}
 
-export async function getActivateBloomConfig(): Promise<BloomConfig> {
+
+export async function getActiveBloomConfig(): Promise<BloomConfig> {
     if (cached && Date.now() - cached.fetchedAt < CONFIG_CACHE_TTL_MS) {
         return cached.config;
     };
@@ -64,4 +72,13 @@ export async function getActivateBloomConfig(): Promise<BloomConfig> {
     const config: BloomConfig = typeof raw === "string" ? JSON.parse(raw) : raw;
     cached = { config, fetchedAt: Date.now() };
     return config;
+}
+
+const currentUserCount = await User.countDocuments();
+const config = await getActiveBloomConfig();
+const currentFpRate = estimateCurrentFalsePositiveRate(currentUserCount, config);
+if (currentFpRate > 0.03) { // 3x your original 1% target
+    logger.warn(`FP rate degraded to ${(currentFpRate * 100).toFixed(1)}% — resize needed`);
+    // trigger resizeBloomFilter.ts
+    //Trigger resize when the app is production and the current false positive rate is greater than 3x the target, dont over complicate everything now,
 }

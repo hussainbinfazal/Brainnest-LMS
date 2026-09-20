@@ -1,8 +1,5 @@
 import { x86 } from "murmurhash3js";
 import {
-    setCached,
-    getCached,
-    CACHE_TTL,
     runPipeline,
 } from "@repo/shared/config/redisConfig/cache-helper";
 import { getActivateBloomConfig } from "./bloomConfig";

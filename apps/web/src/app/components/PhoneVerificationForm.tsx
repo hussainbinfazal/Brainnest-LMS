@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 
 
-
+//Right now this functionality is disabled
 export const phoneOtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent, className }: COtpSenderProps) => {
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
     try {

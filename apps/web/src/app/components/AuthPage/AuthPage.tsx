@@ -77,7 +77,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const { status, error, cooldownSeconds, sendOtp } = useSendEmailOtp(signupForm.watch("email"));
     const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
         try {
-            const res = await signIn("credentials", {
+            const res = await signIn("credentials", { 
                 email: data.email,
                 password: data.password,
                 redirect: false,

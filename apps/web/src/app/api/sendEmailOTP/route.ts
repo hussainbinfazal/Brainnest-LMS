@@ -11,6 +11,8 @@ import { validateEmail } from '@repo/shared';
 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+
+    ///If user is registering first time
     try {
         // const body = await request.json().catch(() => null);
         const authSession: Session | null = await auth()
