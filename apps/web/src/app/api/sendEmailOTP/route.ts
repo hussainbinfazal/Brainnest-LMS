@@ -10,7 +10,8 @@ import { invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/con
 
 const OTP_TTL_SEC = 60;
 const RESEND_COOLDOWN_SEC = 60;
-
+const COOLDOWN_NS: string = `email-otp-cooldown`;
+const OTP_NS: string = `email-otp`;
 function generateOTP(): string {
     return otpGenerator.generate(6, {
         digits: true,
@@ -23,26 +24,25 @@ const hashOtp = (email: string, otp: string) => createHmac('sha256', process.env
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     ///If user is registering first time
-    const body = await request.json()
-    let email = body.email;
-    if (!email || !validateEmail(email.trim())) {
+    const body = await request.json().catch(() => null);
+    const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+    if (!email || !validateEmail(email)) {
         return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
-    };
-    const cooldownKey: string = `email-otp-cooldown`;
-    const otpKey: string = `${email}`;
+    }
+
     try {
         //Atomic
-        const acquired = await setOnlyIfNotExist(cooldownKey, otpKey, "1", RESEND_COOLDOWN_SEC); //acquire lock
+        const acquired = await setOnlyIfNotExist(COOLDOWN_NS, email, "1", RESEND_COOLDOWN_SEC); //acquire lock
         if (!acquired) {
             return NextResponse.json({ message: 'Too many requests, please try again later' }, { status: 429, headers: { 'Retry-After': String(RESEND_COOLDOWN_SEC) } });
         }
         //
         // curl - i - X POST localhost: 3000 / api / send - email - otp - d '{"email":"a@x.com"}'
         const otp = generateOTP();
-        await setCached(cooldownKey, otpKey, hashOtp(email, otp), OTP_TTL_SEC); //Set otp in redis, so that it can be verified in the next request in verify route.
+        await setCached(OTP_NS, email, hashOtp(email, otp), OTP_TTL_SEC); //Set otp in redis, so that it can be verified in the next request in verify route.
 
 
-        
+
         // Send email via nodemailer //use worker queue from the shared repo, via http call to invoke the job in the job in queue
         //  
         return NextResponse.json({
@@ -51,7 +51,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         }, { status: 202 });
     } catch (error: unknown) {
         // Don't leave the user locked in a cooldown for an email that was never sent
-        await invalidateCached(cooldownKey, otpKey);
+        await Promise.allSettled([
+            invalidateCached(COOLDOWN_NS, email),
+            invalidateCached(OTP_NS, email),
+        ]);
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Email OTP error:', { error, message });
         return NextResponse.json({ message: `Failed to send email OTP` }, { status: 500 });
