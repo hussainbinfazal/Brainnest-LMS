@@ -2,7 +2,7 @@ import { x86 } from "murmurhash3js";
 import {
     runPipeline,
 } from "@repo/shared/config/redisConfig/cache-helper";
-import { getActivateBloomConfig } from "./bloomConfig";
+import { getActiveBloomConfig } from "./bloomConfig";
 // const BLOOM_KEY = "bloom:username";
 
 //Estimated Hash Function
@@ -30,7 +30,7 @@ function getHashPositions(username: string): number[] {
 //Function Call post user registration, to keep the filter in sync.
 
 export async function bloomAdd(username: string): Promise<void> {
-    const config = await getActivateBloomConfig();
+    const config = await getActiveBloomConfig();
     const positions = getHashPositions(username); //Get hash positions
     await runPipeline(
         (p) => positions.forEach((pos) => p.setbit(config.dataKey, pos, 1)),
@@ -40,7 +40,7 @@ export async function bloomAdd(username: string): Promise<void> {
 
 
 export async function bloomMightContain(username: string) {
-    const config = await getActivateBloomConfig();
+    const config = await getActiveBloomConfig();
     const positions: number[] = getHashPositions(username);
     const results: number[] | null = await runPipeline<number>((p) => positions.forEach((pos) => p.getbit(config.dataKey, pos)), { username: username });
 
