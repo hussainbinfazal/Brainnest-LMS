@@ -24,7 +24,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     };
 
     const MAX_ATTEMPTS: number = 5;
-
+    const COOLDOWN :number = 60;
 
 
     const { otp } = await request.json();
