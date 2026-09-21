@@ -7,8 +7,9 @@ import crypto from "crypto";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
-import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
+///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const authSession: Session | null = await auth();
     const user = authSession?.user;
@@ -18,14 +19,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     };
     const isCachedLock = await getCached(EMAIL_OTP_LOCK.namespace, user.id);
     if (isCachedLock) {
-
         logger.info("Too many attempts, please try again later", { ip: request.ip });
         return NextResponse.json({ message: "Too many attempts, please try again later" }, { status: 429 });
     };
-
-    const MAX_ATTEMPTS: number = 5;
-    const COOLDOWN :number = 60;
-
+    const attempts = await incrementWithTtl(ATTEMPT_EMAIL.namespace, email, CACHE_TTL.MEDIUM, 1);
 
     const { otp } = await request.json();
     if (!otp)

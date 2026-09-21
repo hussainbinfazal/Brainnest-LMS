@@ -12,6 +12,7 @@ const OTP_TTL_SEC = 60;
 const RESEND_COOLDOWN_SEC = 60;
 const COOLDOWN_NS: string = `email-otp-cooldown`;
 const OTP_NS: string = `email-otp`;
+const ATTEMP_NS: string = `email-otp-attempt`;
 function generateOTP(): string {
     return otpGenerator.generate(6, {
         digits: true,
@@ -39,7 +40,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         //
         // curl - i - X POST localhost: 3000 / api / send - email - otp - d '{"email":"a@x.com"}'
         const otp = generateOTP();
-        await setCached(OTP_NS, email, hashOtp(email, otp), OTP_TTL_SEC); //Set otp in redis, so that it can be verified in the next request in verify route.
+        await Promise.allSettled([
+            setCached(OTP_NS, email, hashOtp(email, otp), OTP_TTL_SEC), //Set otp in redis, so that it can be verified in the next request in verify route.
+            setCached(ATTEMP_NS, email, "0", RESEND_COOLDOWN_SEC), ///Set Attempts to zero then increase them in the verify route on every request.
+        ])
 
 
 

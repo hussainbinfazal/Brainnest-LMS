@@ -427,9 +427,38 @@ export const AUTH_USER = {
   description: "User's authentication session",
   usedIn: ["Authentication"],
 };
+
 // ============================================================================
 // QUEUE/JOB KEYS (BullMQ)
 // ============================================================================
+
+
+
+// ============================================================================
+// JOB KEYS 
+// ============================================================================
+export const COOLDOWN_EMAIL = {
+  namespace: "email-otp-cooldown",
+  id: "email",
+  ttl: "SMALL",
+  description: "To lock brute force attempts, in verification route",
+  usedIn: ["User Verification"],
+};
+export const OTP_VERIFICATION_EMAIL = {
+  namespace: "email-otp-cooldown",
+  id: "email",
+  ttl: "SMALL",
+  description: "To verify email",
+  usedIn: ["User's Email Verification"],
+};
+export const ATTEMPT_EMAIL = {
+  namespace: "email-otp-attempt",
+  id: "email",
+  ttl: "SMALL",
+  description: "To lock brute force attempts, in verification route",
+  usedIn: ["User Verification"],
+};
+
 
 /**
  * Queue Names (Used in apps/Worker/src/queue/)

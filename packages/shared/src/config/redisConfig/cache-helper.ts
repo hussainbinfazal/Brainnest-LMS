@@ -90,7 +90,37 @@ export async function setOnlyIfNotExist(namespace: string, id: string | number, 
   return result === "OK" //null when key already exists
 }
 
+export async function incrementWithTtl(
+  namespace: string,
+  id: string | number,
+  ttlSeconds: number,
+  by = 1,
+): Promise<number> {
+  const key = buildKey(namespace, id);
+  const tx = getRedisClient().multi();
+  tx.incrby(key, by);
+  tx.expire(key, ttlSeconds, 'NX'); // TTL only if the key has none
+  const [count] = await tx.exec<[number, number]>();
+  return count;
+}
 
+// Decrement only if the key exists. A plain DECR on a missing key
+// creates -1 with no TTL, which is the same trap in reverse.
+const DECR_IF_EXISTS = `
+if redis.call('EXISTS', KEYS[1]) == 1 then
+  return redis.call('DECRBY', KEYS[1], ARGV[1])
+end
+return nil
+`;
+
+export async function decrementIfExists(
+  namespace: string,
+  id: string | number,
+  by = 1,
+): Promise<number | null> {
+  const key = buildKey(namespace, id);
+  return (await getRedisClient().eval(DECR_IF_EXISTS, [key], [String(by)])) as number | null;
+}
 
 //Get Cache in Batch 
 // Fetch multiple keys under one namespace in a single round trip.
