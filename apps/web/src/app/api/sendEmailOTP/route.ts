@@ -6,6 +6,7 @@ import { ATTEMPT_EMAIL_VERIFICATION, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATI
 import { createHmac } from 'node:crypto';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
 import z from 'zod';
+import { hashOtp } from '@/lib/OtpValidators';
 
 
 function generateOTP(): string {

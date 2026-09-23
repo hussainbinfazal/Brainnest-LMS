@@ -3,11 +3,12 @@ import { ATTEMPT_EMAIL_VERIFICATION, EMAIL_OTP_LOCK, ISessionUser, MAX_ATTEMPTS,
 import { connectDB } from "@repo/shared";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
-import crypto from "crypto";
+import crypto, { timingSafeEqual } from "crypto";
 
 import mongoose from "mongoose";
 import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import z from "zod";
+import { hashOtp } from "@/lib/OtpValidators";
 
 
 const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
@@ -26,7 +27,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     if (!email || !validateEmail(email)) {
         return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
     };
-    const stored = await getCached(OTP_VERIFICATION_EMAIL.namespace, email);
+    const stored = await getCached<string>(OTP_VERIFICATION_EMAIL.namespace, email);
     if (!stored) {
         logger.info("Otp is expired", { ip: request.ip });
         return NextResponse.json({ message: "Otp is expired" }, { status: 401 });
@@ -47,69 +48,23 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         setCached(EMAIL_OTP_LOCK.namespace, email, true, CACHE_TTL.MEDIUM);
         return NextResponse.json({ message: "Too many attempts. Request a new OTP." }, { status: 429 });
     };
+    //hex to buffer for fater comparisons
     const expected = Buffer.from(stored, "hex");
-    const actual = Buffer.from(otp, "hex");
+    const actual = Buffer.from(hashOtp(email, otp), "hex");
 
-    await connectDB(process.env.MONGODB_URI!);
+    const match = expected.length === actual.length && timingSafeEqual(expected, actual) //Creating buffers because hashing and comparing buffers is faster than hashing and comparing strings, timingSafeEqual makes both buffers equal length, so timingSafeEqual can't throw error
 
-    //Hash OTP
-    const hashedEmailOtp: string = crypto
-        .createHash("sha256")
-        .update(otp.trim())
-        .digest("hex");
-
-
-    //Find token and update atomically at the same time
-    const tokenDoc = await UserToken.findOneAndUpdate(
-        {
-            userId: user.id,
-            type: "email-verification",
-            attempts: { $lt: MAX_ATTEMPTS },
-            expiresAt: { $gt: new Date() },
-        },
-        {
-            $inc: {
-                attempts: 1,
-            },
-        },
-        { new: true }
-    ).exec();
-
-    //If token not found, check if user has too many attempts, if so, return 429
-    if (!tokenDoc) { //does a live token exist at all
-        const stillExists = await UserToken.exists({
-            userId: user.id,
-            type: "email-verification",
-            expiresAt: { $gt: new Date() },
-        }).exec();
-        // set the lock now so every subsequent brute-force request short-circuits above.
-        await setCached(EMAIL_OTP_LOCK.namespace, user.id, true, CACHE_TTL.MEDIUM);
-        const message = stillExists
-            ? "Too many attempts. Request a new OTP."
-            : "OTP expired or not found";
-        logger.info("Invalid or expired OTP", { message });
-        return NextResponse.json(
-            { message: "Invalid or expired OTP" },
-            { status: stillExists ? 429 : 400 }
-        );
-    };
-    ///Verify token and user entered OTP
-    if (tokenDoc.token !== hashedEmailOtp) {
-        logger.info("Invalid or expired OTP", { tokenDoc });
-        return NextResponse.json(
-            {
-                message: `Invalid OTP. ${MAX_ATTEMPTS - tokenDoc.attempts} attempt(s) left.`,
-            },
-            { status: 400 }
-        );
+    if (!match) {
+        return NextResponse.json({ message: `Invalid OTP. You have ${MAX_ATTEMPTS - attempts} attempts left.` }, { status: 401 });
     }
+    await connectDB(process.env.MONGODB_URI!);
     const session: mongoose.ClientSession = await mongoose.startSession();
     try {
         //Mark user verified and delete token 
         await session.withTransaction(async () => {
-            await UserToken.deleteOne({ _id: tokenDoc._id }, { session }).exec();
+            // await UserToken.deleteOne({ _id: tokenDoc._id }, { session }).exec();
             await User.updateOne(
-                { _id: user.id, isVerified: false },
+                { email: email, isVerified: false },
                 { $set: { isVerified: true } },
                 { session }
             ).exec();
@@ -117,8 +72,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
 
         //Update and delete the cached lock, when user verifies email or resend email attempted
-        await invalidateCached(EMAIL_OTP_LOCK.namespace, user.id);
-
+        await Promise.allSettled([
+            invalidateCached(ATTEMPT_EMAIL_VERIFICATION.namespace, email), //Remove redis lock for future request for this email;
+            invalidateCached(OTP_VERIFICATION_EMAIL.namespace, email),
+            invalidateCached(EMAIL_OTP_LOCK.namespace, email),//remove lock for future request
+            setCached("email-verified", email, "1", 15 * 60) ///use this flag while new user registration
+        ]);
         return NextResponse.json(
             {
                 message: "Email verified successfully",
