@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { EMAIL_OTP_LOCK, ISessionUser, User, UserToken } from "@repo/shared";
+import { ATTEMPT_EMAIL, EMAIL_OTP_LOCK, ISessionUser, MAX_ATTEMPTS, User, UserToken, validateEmail } from "@repo/shared";
 import { connectDB } from "@repo/shared";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
@@ -8,25 +8,37 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import mongoose from "mongoose";
 import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import z from "zod";
 
+
+const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
+    email: z.string().email(),
+    otp: z.string().trim().toLowerCase().email(),
+})
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const authSession: Session | null = await auth();
-    const user = authSession?.user;
-    if (!authSession?.user || !user?.id) {
-        logger.info("Unauthorized access attempt", { ip: request.ip });
-        return NextResponse.json({ message: "Unauthorized" });
+    const body = await request.json().catch(() => null);
+    const parsed = VerifyEmailbodySchema.safeParse(body);
+    if (!parsed.success) {
+        logger.info("Invalid Payload", { ip: request.ip });
+        return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
     };
-    const isCachedLock = await getCached(EMAIL_OTP_LOCK.namespace, user.id);
+    const { email, otp } = parsed.data;
+    if (!email || !validateEmail(email)) {
+        return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
+    };
+    const stored = await getCached(OTP_NS, email);
+    if (!otp)
+        return NextResponse.json({ message: "Otp is required" }, { status: 401 });
+    const isCachedLock = await getCached(EMAIL_OTP_LOCK.namespace, email);
     if (isCachedLock) {
         logger.info("Too many attempts, please try again later", { ip: request.ip });
         return NextResponse.json({ message: "Too many attempts, please try again later" }, { status: 429 });
     };
+
     const attempts = await incrementWithTtl(ATTEMPT_EMAIL.namespace, email, CACHE_TTL.MEDIUM, 1);
 
-    const { otp } = await request.json();
-    if (!otp)
-        return NextResponse.json({ message: "Otp is required" }, { status: 401 });
+
     await connectDB(process.env.MONGODB_URI!);
 
     //Hash OTP

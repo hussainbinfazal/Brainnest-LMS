@@ -396,8 +396,8 @@ export const UPLOAD_SESSION = {
  * Full Key: email-otp-lock:userId
  */
 export const EMAIL_OTP_LOCK = {
-  namespace: "upload",
-  id: "userId",
+  namespace: "email-otp-lock",
+  id: "email",
   ttl: "MEDIUM",
   description: "To lock brute force attempts, in verification route",
   usedIn: ["User Verification"],
@@ -437,21 +437,21 @@ export const AUTH_USER = {
 // ============================================================================
 // JOB KEYS 
 // ============================================================================
-export const COOLDOWN_EMAIL = {
+export const COOLDOWN_VERIFICATION_EMAIL = {
   namespace: "email-otp-cooldown",
   id: "email",
-  ttl: "SMALL",
+  ttl: "SHORT",
   description: "To lock brute force attempts, in verification route",
   usedIn: ["User Verification"],
 };
 export const OTP_VERIFICATION_EMAIL = {
-  namespace: "email-otp-cooldown",
+  namespace: "email-otp-verification",
   id: "email",
-  ttl: "SMALL",
+  ttl: "SHORT", //60 seconds
   description: "To verify email",
   usedIn: ["User's Email Verification"],
 };
-export const ATTEMPT_EMAIL = {
+export const ATTEMPT_EMAIL_VERIFICATION = {
   namespace: "email-otp-attempt",
   id: "email",
   ttl: "SMALL",
@@ -508,7 +508,7 @@ export const ALL_CACHE_KEYS = [
   TOPIC_BY_ID,
   CATEGORIES_ALL,
   REVIEWS_ALL_COURSES,
-  REVIEWS_BY_COURSE,
+  REVIEWS_BY_COURSE,  
   USER_COURSE_LIST,
   USER_COURSE_DETAIL,
   PROGRESS_BY_USER_COURSE,

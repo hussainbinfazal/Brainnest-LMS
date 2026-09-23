@@ -2,17 +2,12 @@ import { NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
-import { Session } from 'next-auth';
-import { auth } from '@/auth';
-import { validateEmail } from '@repo/shared';
+import { ATTEMPT_EMAIL_VERIFICATION, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL, validateEmail } from '@repo/shared';
 import { createHmac } from 'node:crypto';
-import { invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
+import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
+import z from 'zod';
 
-const OTP_TTL_SEC = 60;
-const RESEND_COOLDOWN_SEC = 60;
-const COOLDOWN_NS: string = `email-otp-cooldown`;
-const OTP_NS: string = `email-otp`;
-const ATTEMP_NS: string = `email-otp-attempt`;
+
 function generateOTP(): string {
     return otpGenerator.generate(6, {
         digits: true,
@@ -21,32 +16,47 @@ function generateOTP(): string {
         specialChars: false,
     });
 }
+
+
+const sendEmailOTPSchema: z.ZodType<{ email: string }> = z.object({
+    email: z.string().email(),
+})
 const hashOtp = (email: string, otp: string) => createHmac('sha256', process.env.OTP_SECRET_KEY!).update(`${email}:${otp}`).digest("hex")
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     ///If user is registering first time
     const body = await request.json().catch(() => null);
-    const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const parsed = sendEmailOTPSchema.safeParse(body);
+    if (!parsed.success) {
+        logger.info("Invalid Payload", { ip: request.ip });
+        return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
+    }
+    const { email } = parsed.data;
     if (!email || !validateEmail(email)) {
         return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
     }
 
     try {
         //Atomic
-        const acquired = await setOnlyIfNotExist(COOLDOWN_NS, email, "1", RESEND_COOLDOWN_SEC); //acquire lock
+        const acquired = await setOnlyIfNotExist(COOLDOWN_VERIFICATION_EMAIL.namespace, email, "1", CACHE_TTL.SHORT); //acquire lock
         if (!acquired) {
-            return NextResponse.json({ message: 'Too many requests, please try again later' }, { status: 429, headers: { 'Retry-After': String(RESEND_COOLDOWN_SEC) } });
+            return NextResponse.json({ message: 'Too many requests, please try again later' }, { status: 429, headers: { 'Retry-After': String(CACHE_TTL.SHORT) } });
         }
         //
         // curl - i - X POST localhost: 3000 / api / send - email - otp - d '{"email":"a@x.com"}'
         const otp = generateOTP();
         await Promise.allSettled([
-            setCached(OTP_NS, email, hashOtp(email, otp), OTP_TTL_SEC), //Set otp in redis, so that it can be verified in the next request in verify route.
-            setCached(ATTEMP_NS, email, "0", RESEND_COOLDOWN_SEC), ///Set Attempts to zero then increase them in the verify route on every request.
-        ])
+            setCached(OTP_VERIFICATION_EMAIL.namespace, email, hashOtp(email, otp), CACHE_TTL.SHORT), //Set otp in redis, so that it can be verified in the next request in verify route.
+            setCached(ATTEMPT_EMAIL_VERIFICATION.namespace, email, "0", CACHE_TTL.SHORT), ///Set Attempts to zero then increase them in the verify route on every request.
+        ]);
 
 
 
+
+
+
+
+        
         // Send email via nodemailer //use worker queue from the shared repo, via http call to invoke the job in the job in queue
         //  
         return NextResponse.json({
@@ -56,8 +66,8 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     } catch (error: unknown) {
         // Don't leave the user locked in a cooldown for an email that was never sent
         await Promise.allSettled([
-            invalidateCached(COOLDOWN_NS, email),
-            invalidateCached(OTP_NS, email),
+            invalidateCached(COOLDOWN_VERIFICATION_EMAIL.namespace, email),
+            invalidateCached(OTP_VERIFICATION_EMAIL.namespace, email),
         ]);
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Email OTP error:', { error, message });
