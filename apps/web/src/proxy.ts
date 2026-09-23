@@ -4,15 +4,33 @@ import { logger } from "@/utils/logger/logger.edge/logger.edge";
 import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
 import { getClientIp } from "@/lib/getClientIp";
+import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
+import { getRedisClient } from "@repo/shared";
 
 export async function middleware(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
   const ip = getClientIp(req.headers);
+  if (pathname.startsWith('/api')) {
+    const ip = getClientIp(req.headers);
+    try {
+      const r = await rateLimit(getRedisClient(), { 
+        key: `global:ip:${ip}`, max: 100, windowSec: 60,
+      });
+      if (!r.allowed) {
+        return NextResponse.json(
+          { message: 'Too many requests' },
+          { status: 429, headers: { 'Retry-After': String(r.retryAfterSec) } },
+        );
+      }
+    } catch (error) {
+      logger.error('Global limiter unavailable', { error });   // fail open
+    }
+    return NextResponse.next();
+  }
   try {
-
-    const r = await rateLimit(redis, { key: `global:ip:${ip}`, max: 100, windowSec: 60 });
+    const r = await rateLimit(getRedisClient(), { key: `global:ip:${ip}`, max: 100, windowSec: 60 });
     if (!r.allowed) {
       return NextResponse.json(
         { message: 'Too many requests' },
@@ -96,7 +114,7 @@ export const config = {
      * - favicon.ico (favicon file)
      * - reviews (static JSON files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|reviews|assets).*)',
+    '/((?!_next/static|_next/image|favicon.ico|reviews|assets).*)',
   ],
   runtime: 'nodejs',
 }

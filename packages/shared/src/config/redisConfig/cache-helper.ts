@@ -9,7 +9,7 @@ export const CACHE_TTL = {
 } as const
 
 
-function buildKey(namespace: string, id: string | number): string {
+export function buildKey(namespace: string, id: string | number): string {
   return `${namespace}:{${id}}` //Redis Cluster hashes only what's inside the first {}. Same content inside braces → same slot → same node → safe to use together in MULTI/EXEC or Lua. (Hash tags in Redis Cluster: force related keys onto the same node.)
 }
 
