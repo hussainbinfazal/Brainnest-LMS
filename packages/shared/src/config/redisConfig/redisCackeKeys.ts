@@ -444,6 +444,13 @@ export const COOLDOWN_VERIFICATION_EMAIL = {
   description: "To lock brute force attempts, in verification route",
   usedIn: ["User Verification"],
 };
+export const USER_VERIFIED_FLAG = {
+  namespace: "email-verified",
+  id: "email",
+  ttl: "SHORT",
+  description: "To lock brute force attempts, in verification route",
+  usedIn: ["User Verification"],
+};
 export const OTP_VERIFICATION_EMAIL = {
   namespace: "email-otp-verification",
   id: "email",
@@ -452,9 +459,9 @@ export const OTP_VERIFICATION_EMAIL = {
   usedIn: ["User's Email Verification"],
 };
 export const ATTEMPT_EMAIL_VERIFICATION = {
-  namespace: "email-otp-attempt",
+  namespace: "email-verified",
   id: "email",
-  ttl: "SMALL",
+  ttl: "MEDIUM", //15 minutes
   description: "To lock brute force attempts, in verification route",
   usedIn: ["User Verification"],
 };
@@ -508,7 +515,7 @@ export const ALL_CACHE_KEYS = [
   TOPIC_BY_ID,
   CATEGORIES_ALL,
   REVIEWS_ALL_COURSES,
-  REVIEWS_BY_COURSE,  
+  REVIEWS_BY_COURSE,
   USER_COURSE_LIST,
   USER_COURSE_DETAIL,
   PROGRESS_BY_USER_COURSE,

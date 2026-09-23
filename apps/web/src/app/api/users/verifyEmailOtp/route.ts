@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ATTEMPT_EMAIL_VERIFICATION, EMAIL_OTP_LOCK, ISessionUser, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, UserToken, validateEmail } from "@repo/shared";
+import { ATTEMPT_EMAIL_VERIFICATION, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, validateEmail } from "@repo/shared";
 import { connectDB } from "@repo/shared";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
-import crypto, { timingSafeEqual } from "crypto";
+import { timingSafeEqual } from "crypto";
 
 import mongoose from "mongoose";
 import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -76,7 +76,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             invalidateCached(ATTEMPT_EMAIL_VERIFICATION.namespace, email), //Remove redis lock for future request for this email;
             invalidateCached(OTP_VERIFICATION_EMAIL.namespace, email),
             invalidateCached(EMAIL_OTP_LOCK.namespace, email),//remove lock for future request
-            setCached("email-verified", email, "1", 15 * 60) ///use this flag while new user registration
+            setCached(COOLDOWN_VERIFICATION_EMAIL.namespace, email, "1", 15 * 60) ///use this flag while new user registration
         ]);
         return NextResponse.json(
             {
@@ -89,7 +89,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const message = error instanceof Error ? error.message : "Unknown error";
         logger.error("Email verification error:", { message });
         return NextResponse.json(
-            { message: `Error in verifying email ` },
+            { message: `Error in verifying email` },
             { status: 500 }
         );
     } finally {
