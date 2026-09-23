@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ATTEMPT_EMAIL, EMAIL_OTP_LOCK, ISessionUser, MAX_ATTEMPTS, User, UserToken, validateEmail } from "@repo/shared";
+import { ATTEMPT_EMAIL_VERIFICATION, EMAIL_OTP_LOCK, ISessionUser, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, UserToken, validateEmail } from "@repo/shared";
 import { connectDB } from "@repo/shared";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
 import crypto from "crypto";
-import { Session } from "next-auth";
-import { auth } from "@/auth";
+
 import mongoose from "mongoose";
 import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import z from "zod";
@@ -13,7 +12,7 @@ import z from "zod";
 
 const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
     email: z.string().email(),
-    otp: z.string().trim().toLowerCase().email(),
+    otp: z.string().regex(/^\d{6}$/),
 })
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
@@ -27,7 +26,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     if (!email || !validateEmail(email)) {
         return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
     };
-    const stored = await getCached(OTP_NS, email);
+    const stored = await getCached(OTP_VERIFICATION_EMAIL.namespace, email);
+    if (!stored) {
+        logger.info("Otp is expired", { ip: request.ip });
+        return NextResponse.json({ message: "Otp is expired" }, { status: 401 });
+    };
     if (!otp)
         return NextResponse.json({ message: "Otp is required" }, { status: 401 });
     const isCachedLock = await getCached(EMAIL_OTP_LOCK.namespace, email);
@@ -36,8 +39,16 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         return NextResponse.json({ message: "Too many attempts, please try again later" }, { status: 429 });
     };
 
-    const attempts = await incrementWithTtl(ATTEMPT_EMAIL.namespace, email, CACHE_TTL.MEDIUM, 1);
+    const attempts = await incrementWithTtl(ATTEMPT_EMAIL_VERIFICATION.namespace, email, CACHE_TTL.MEDIUM, 1);
 
+    if (attempts > MAX_ATTEMPTS) {
+        logger.info("Too many attempts, please try again later", { ip: request.ip });
+        invalidateCached(EMAIL_OTP_LOCK.namespace, email); //Remove redis lock for future request for this email;
+        setCached(EMAIL_OTP_LOCK.namespace, email, true, CACHE_TTL.MEDIUM);
+        return NextResponse.json({ message: "Too many attempts. Request a new OTP." }, { status: 429 });
+    };
+    const expected = Buffer.from(stored, "hex");
+    const actual = Buffer.from(otp, "hex");
 
     await connectDB(process.env.MONGODB_URI!);
 

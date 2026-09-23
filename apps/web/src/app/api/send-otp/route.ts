@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
-import otpStore from '@/lib/otpStore';
+import otpStore from '@/lib/OtpValidators';
 import twilio from 'twilio';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import { CustomNextRequest } from '@/types/server';

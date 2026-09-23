@@ -15,13 +15,13 @@ function generateOTP(): string {
         upperCaseAlphabets: false,
         specialChars: false,
     });
-}
+};
 
 
 const sendEmailOTPSchema: z.ZodType<{ email: string }> = z.object({
     email: z.string().email(),
-})
-const hashOtp = (email: string, otp: string) => createHmac('sha256', process.env.OTP_SECRET_KEY!).update(`${email}:${otp}`).digest("hex")
+});
+
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     ///If user is registering first time
@@ -56,7 +56,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
 
 
-        
+
         // Send email via nodemailer //use worker queue from the shared repo, via http call to invoke the job in the job in queue
         //  
         return NextResponse.json({
