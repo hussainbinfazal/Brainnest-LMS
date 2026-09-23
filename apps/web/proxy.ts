@@ -3,18 +3,28 @@ import { NextResponse, NextRequest } from "next/server"
 import { logger } from "@/utils/logger/logger.edge/logger.edge";
 import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
+import { getClientIp } from "@/lib/getClientIp";
+
 export async function middleware(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
+  const ip = getClientIp(req.headers);
+  try {
 
-  // const BYPASS_AUTH = process.env.BYPASS_AUTH === 'true';
-  // if (BYPASS_AUTH) {
-  //   const res = NextResponse.next();
-  //   res.headers.set("X-Request-ID", requestId);
-  //   res.headers.set("X-Dev-Bypass", "true");
-  //   return res;
-  // }
+    const r = await rateLimit(redis, { key: `global:ip:${ip}`, max: 100, windowSec: 60 });
+    if (!r.allowed) {
+      return NextResponse.json(
+        { message: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': String(r.retryAfterSec) } },
+      );
+    }
+  } catch (error: unknown) {
+    logger.error(error);
+    // fail OPEN: the OTP route fails closed, but a Redis outage
+    // should not take your whole API down
+  }
+
   const token: JWT | null = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -88,4 +98,5 @@ export const config = {
      */
     '/((?!api|_next/static|_next/image|favicon.ico|reviews|assets).*)',
   ],
+  runtime: 'nodejs',
 }

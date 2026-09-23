@@ -20,7 +20,7 @@ function generateOTP(): string {
 
 
 const sendEmailOTPSchema: z.ZodType<{ email: string }> = z.object({
-    email: z.string().email(),
+    email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
 });
 
 
@@ -33,10 +33,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
     }
     const { email } = parsed.data;
-    if (!email || !validateEmail(email)) {
-        return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
-    }
-
     try {
         //Atomic
         const acquired = await setOnlyIfNotExist(COOLDOWN_VERIFICATION_EMAIL.namespace, email, "1", CACHE_TTL.SHORT); //acquire lock
@@ -46,7 +42,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         //
         // curl - i - X POST localhost: 3000 / api / send - email - otp - d '{"email":"a@x.com"}'
         const otp = generateOTP();
-        await Promise.allSettled([
+        await Promise.all([
             setCached(OTP_VERIFICATION_EMAIL.namespace, email, hashOtp(email, otp), CACHE_TTL.SHORT), //Set otp in redis, so that it can be verified in the next request in verify route.
             setCached(ATTEMPT_EMAIL_VERIFICATION.namespace, email, "0", CACHE_TTL.SHORT), ///Set Attempts to zero then increase them in the verify route on every request.
         ]);
