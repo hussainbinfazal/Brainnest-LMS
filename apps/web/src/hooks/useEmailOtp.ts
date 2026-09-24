@@ -1,7 +1,7 @@
 import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateEmail } from "@/utils/phoneValidators";
+import { sendEmailBodySchema, verifyEmailBodySchema } from "@repo/shared";
 
 
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
@@ -51,7 +51,7 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
 
     }, [cooldownSeconds])
     const sendOtp = useCallback(async () => {
-        const parsed = sendEmailOTPSchema.parse({ email });
+        const parsed = sendEmailBodySchema.parse({ email });
         if (!parsed.success) return
         if (inFlightRef.current || status === "sending" || status === "cooldown") return
         inFlightRef.current = true;
@@ -80,8 +80,8 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
 
     return { status, error, cooldownSeconds, sendOtp };
 };
-export function useVerifyEmailOtp(email: string, otp: string): UseSendEmailOtpResult {
-    const [status, setStatus] = useState<OtpStatus>("idle");
+export function useVerifyEmailOtp(email: string, otp: string): UseVerifyEmailOtpResult {
+    const [status, setStatus] = useState<VerfiyStatus>("idle");
     const [error, setError] = useState<string | null>(null);
     const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
     const inFlightRef = useRef(false);
@@ -110,19 +110,13 @@ export function useVerifyEmailOtp(email: string, otp: string): UseSendEmailOtpRe
 
     }, [cooldownSeconds])
     const verifyOtp = useCallback(async () => {
-        if (!validateEmail(email)) {
-            setStatus("error");
-            setError("Invalid email format");
-            return;
-        };
-        if (otp.)
-            if (inFlightRef.current || status === "sending" || status === "cooldown") return
+        const parsed = verifyEmailBodySchema.parse({ email });
         inFlightRef.current = true;
-        setStatus("sending");
+        setStatus("verifying");
         setError(null);
         try {
-            await axios.post("/api/sendEmailOTP", { email });
-            setStatus("sent");
+            await axios.post("/api/users/verifyEmailOTP", { email });
+            setStatus("verified");
             setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
         } catch (error: unknown) {
             let message = "Something went wrong";
@@ -135,13 +129,13 @@ export function useVerifyEmailOtp(email: string, otp: string): UseSendEmailOtpRe
             clientLogger.error("Something went wrong, while fetching the user", { message });
             clientLogger.error("Error sending email OTP:", { error, message });
             setStatus("error");
-            setError("Error sending email OTP");
+            setError("Error verifying email OTP");
         } finally {
             inFlightRef.current = false;
         }
     }, [email, status]);
 
-    return { status, error, cooldownSeconds, sendOtp };
+    return { status, error, cooldownSeconds, verifyOtp };
 };
 
 

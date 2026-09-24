@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
-import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL, sendEmailOTPSchema } from '@repo/shared';
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL, sendEmailBodySchema } from '@repo/shared';
 import { createHmac } from 'node:crypto';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
 import { hashOtp } from '@/lib/OtpValidators';
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
     ///If user is registering first time
     const body = await request.json().catch(() => null);
-    const parsed = sendEmailOTPSchema.safeParse(body);
+    const parsed = sendEmailBodySchema.safeParse(body);
     if (!parsed.success) {
         logger.info("Invalid Payload", { ip: ip });
         return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });

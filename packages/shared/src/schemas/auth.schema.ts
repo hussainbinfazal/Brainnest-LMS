@@ -1,13 +1,13 @@
 import { validateEmail } from "src/validators"
 import { z } from "zod";
-const verifyEmailBodySchema = z.object({
+export const verifyEmailBodySchema = z.object({
     email: z.string().email().max(254).refine(validateEmail),
     otp: z.string().regex(/^\d{6}$/),
 })
-type VerifyEmailBody = z.infer<typeof verifyEmailBodySchema>
+export type VerifyEmailBody = z.infer<typeof verifyEmailBodySchema>
 
 
-export const sendEmailOTPSchema = z.object({
+export const sendEmailBodySchema = z.object({
     email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
 });
-type SendEmailBody = z.infer<typeof sendEmailOTPSchema>
+export type SendEmailBody = z.infer<typeof sendEmailBodySchema>
