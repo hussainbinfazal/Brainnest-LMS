@@ -54,7 +54,7 @@
     "src",
     "src/types/**/*",
     ".next/types/**/*.ts"
-, "../../packages/shared/src/config/cloudinary/cloudinary.ts", "jest.setup.ts"  ],
+, "../../packages/shared/src/config/cloudinary/cloudinary.ts", "jest.setup.ts", "../../packages/shared/src/config/redisConfig/rate-LimitIP.ts", "../../packages/shared/src/utils/getClientIp.ts"  ],
   "exclude": [
     "node_modules"
   ]

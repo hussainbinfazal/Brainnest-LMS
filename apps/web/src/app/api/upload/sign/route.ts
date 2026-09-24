@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";

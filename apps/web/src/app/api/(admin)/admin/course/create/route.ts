@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { Topic, Section, Lesson, connectDB, Course, Category } from "@repo/shared";
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from "@repo/shared";

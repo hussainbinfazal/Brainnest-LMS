@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { CustomNextRequest } from "@/types/server";
 import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from "@repo/shared";
 import { NextRequest, NextResponse } from "next/server";

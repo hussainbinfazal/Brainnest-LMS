@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { auth } from "@/auth";
 import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
 import { CUserCourse } from "@/types/client";

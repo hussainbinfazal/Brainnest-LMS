@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { User, Order, Course, connectDB, validateMongooseId, logger, Enrollment, Payment } from '@repo/shared';
 import { NextRequest, NextResponse } from 'next/server';
 import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';

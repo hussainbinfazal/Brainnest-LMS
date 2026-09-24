@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";

@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from "@repo/shared";
 import { NextResponse } from "next/server";
 

@@ -1,9 +1,11 @@
-import { getRedisClient, logger } from "@repo/shared";
-import { getClientIp } from "../getClientIp";
-import { RateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
-import { buildKey } from "@repo/shared/config/redisConfig/cache-helper";
+import { logger } from "src/logger/logger";
+import { getClientIp } from "src/utils/getClientIp";
+import { buildKey } from "./cache-helper";
+import { RateLimit } from "./rate-limiters/rate-limit";
+import { getRedisClient } from "./cache";
+import type { RequestHeaders } from "../../utils/getClientIp";
 
-export async function checkIp(request: Request, namespace: string, key: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, ip: string }> {
+export async function checkIp(request: { headers: RequestHeaders }, namespace: string, key: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, ip: string }> {
     const ip = getClientIp(request.headers);
     try {
         if (ip === 'unknown') logger.warn('OTP Helper: could not resolve client IP');

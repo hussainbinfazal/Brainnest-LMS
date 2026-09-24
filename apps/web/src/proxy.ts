@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from "next/server"
 import { logger } from "@/utils/logger/logger.edge/logger.edge";
 import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
 import { getRedisClient } from "@repo/shared";
 

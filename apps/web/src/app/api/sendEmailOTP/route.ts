@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
@@ -10,6 +10,7 @@ import z from 'zod';
 import { hashOtp } from '@/lib/OtpValidators';
 import { OTP_SEND_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
 import { checkIp } from "@/lib/helpers/rate-LimitIP";
+import axios from "axios";
 
 
 function generateOTP(): string {
@@ -58,8 +59,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         ]);
 
 
-        // Send email via nodemailer //use worker queue from the shared repo, via http call to invoke the job in the job in queue
+        // Send email via nodemailer //use worker queue from the shared repo, via http call to add the job in the job in queue
         //  
+        const response = await axios.post(
+            `${process.env.EMAIL_API_URL}/internal/email-otp`,
+            {
+                email,
+                otp,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-internal-secret': process.env.INTERNAL_AUTH_SECRET!,
+                },
+                timeout: 5000
+            }
+        );
+
+        // The worker responds with 201 when the email job is queued.
+        if (response.status < 200 || response.status >= 300) {
+            throw new Error(`Worker returned HTTP ${response.status}`);
+        }
+
         return NextResponse.json({
             message: 'OTP sent to email successfully',
             // ...(process.env.NODE_ENV! === 'development' && { email })
@@ -71,7 +92,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             invalidateCached(OTP_VERIFICATION_EMAIL.namespace, email),
         ]);
         const message = error instanceof Error ? error.message : 'Unknown error';
-        logger.error('Email OTP error:', { error, message });
-        return NextResponse.json({ message: `Failed to send email OTP` }, { status: 500 });
+        const isAxiosError = axios.isAxiosError(error);
+        const status = isAxiosError && error.code === 'ECONNABORTED' ? 504 : 502;
+        logger.error('Email OTP worker error', {
+            error,
+            message,
+            workerStatus: isAxiosError ? error.response?.status : undefined,
+        });
+        return NextResponse.json(
+            { message: 'Email service is temporarily unavailable' },
+            { status },
+        );
     }
 }

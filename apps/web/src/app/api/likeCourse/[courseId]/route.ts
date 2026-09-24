@@ -1,4 +1,4 @@
-import { getClientIp } from "@/lib/getClientIp";
+import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB, LIKED_COURSES_BY_USER, logger, USER_COURSE_DETAIL, USER_COURSE_LIST } from "@repo/shared";
