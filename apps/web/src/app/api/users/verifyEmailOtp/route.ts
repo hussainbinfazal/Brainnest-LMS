@@ -27,7 +27,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
         const key: string = buildKey(OTP_SEND_IP_KEY.namespace, ip);
         limit = await RateLimit(getRedisClient(), { key, ...OTP_SEND_IP });
-    } catch (error) {
+    } catch (error: unknown) {
         logger.error('Rate limiter unavailable', { error });
         // fail CLOSED: an open limiter means unlimited paid emails
         return NextResponse.json(
@@ -119,5 +119,5 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             { message: `Error in verifying email` },
             { status: 500 }
         );
-    } 
+    }
 }

@@ -1,4 +1,4 @@
-const OTP_SEND_IP = {
+export const OTP_SEND_IP = {
     max: 5,
     windowSec: 60,
 } as const;
@@ -12,4 +12,3 @@ export const OTP_SEND_IP_KEY = {
   usedIn: ["User Verification"],
 };
 
-export { OTP_SEND_IP };

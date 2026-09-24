@@ -32,6 +32,7 @@ export interface RateLimitResult {
 export async function RateLimit(
     runner: ScriptRunner,
     { key, max, windowSec }: RateLimitOptions,
+    request?: Request,
 ): Promise<RateLimitResult> {
     const [count, ttl] = (await runner.eval(
         SCRIPT, [`rl:${key}`], [windowSec * 1000]
@@ -44,6 +45,7 @@ export async function RateLimit(
         retryAfterSec: Math.max(0, Math.ceil(ttl / 1000))
     }
 }
+
 
 export const fromIoredis = (r: Redis): ScriptRunner => ({
     eval: (script, keys, args) => r.eval(script, keys.length, ...keys, ...args),
