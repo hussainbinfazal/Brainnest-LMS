@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { auth } from "@/auth";
 import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
@@ -9,11 +10,13 @@ import { NextResponse } from "next/server";
 
 export async function GET(request:
     CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
     const user: ISessionUser | null = authSession?.user;
     if (!user) {
-        logger.info("Unauthorized access", { ip: request.ip });
+        logger.info("Unauthorized access", { ip: ip });
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
 

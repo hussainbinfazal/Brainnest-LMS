@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { connectDB, ILessonProgress, IProgress, Progress } from "@repo/shared";
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -8,9 +9,11 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 // export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 //     const user: ISessionUser | null = await getDataFromToken(request);
 //     if (!user || !user.id) {
-//         logger.info("Unauthorized access", { ip: request.ip });
+//         logger.info("Unauthorized access", { ip: ip });
 //         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 //     }
 //     const userId: string = user.id;
@@ -20,7 +23,7 @@ import { auth } from "@/auth";
 //         const { courseId, lessonId } = context.params;
 //         const user: ISessionUser | null = await getDataFromToken(request);
 //         if (!user || !user.id) {
-//             logger.info("Unauthorized access", { ip: request.ip });
+//             logger.info("Unauthorized access", { ip: ip });
 //             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 //         }
 //         const userId: string = user.id;
@@ -79,15 +82,17 @@ import { auth } from "@/auth";
 //     }
 // }
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     // await connectDB(process.env.MONGODB_URI!);
     try {
         const { courseId } = context.params;
 
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
-            logger.info("Unauthorized access", { ip: request.ip });
+            logger.info("Unauthorized access", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const userId: string = user.id;
@@ -106,16 +111,18 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     }
 }
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     // await connectDB(process.env.MONGODB_URI!);
 
     try {
         const { courseId, lessonId } = context.params;
         const { progressValue } = await request.json();
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (!user) {
-            logger.info("unauthorised access", { ip: request.ip });
+            logger.info("unauthorised access", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const userId: string = user.id;

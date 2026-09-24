@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextResponse } from "next/server";
 import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -8,9 +9,11 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = session?.user;
         if (!user || user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         const { courseId } = context.params;
@@ -118,10 +121,12 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 
 
 export async function DELETE(request: CustomNextRequest, { params }: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const { courseId } = params;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
         if (!courseId || !validateMongooseId({ courseId })) {
@@ -144,6 +149,8 @@ export async function DELETE(request: CustomNextRequest, { params }: { params: {
 
 
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession()
     try {
@@ -159,7 +166,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             ...courseFields
         } = body;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const sessionUser: ISessionUser | null = authSession?.user;
 
         if (sessionUser?.role !== "instructor") {

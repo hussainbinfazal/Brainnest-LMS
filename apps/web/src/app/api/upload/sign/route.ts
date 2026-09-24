@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
@@ -6,18 +7,20 @@ import { auth } from "@/auth";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const authUser: ISessionUser | null = authSession?.user;
         if (!authUser) {
-            logger.warn(`Unauthorized access attempt from IP: ${request.ip}`);
+            logger.warn(`Unauthorized access attempt from IP: ${ip}`);
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const body = await request.json()
         const { type } = body
         if (type !== "image" && type !== "video") {
-            logger.warn(`Invalid file type upload attempt by user ${authUser.id} from IP: ${request.ip}`);
+            logger.warn(`Invalid file type upload attempt by user ${authUser.id} from IP: ${ip}`);
             return NextResponse.json({ error: "Invalid file type. Only 'image' and 'video' are allowed." }, { status: 400 });
         }
 
@@ -45,7 +48,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         const api_Secret: string = process.env.CLOUDINARY_API_SECRET!
         const signature = cloudinary.utils.api_sign_request(paramsToSign, api_Secret);
-        logger.info("Generated signature for user:", { name: authUser.id, type, ip: request.ip });
+        logger.info("Generated signature for user:", { name: authUser.id, type, ip: ip });
         return NextResponse.json({
             signature,
             timestamp,

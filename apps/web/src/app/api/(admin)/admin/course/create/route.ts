@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { Topic, Section, Lesson, connectDB, Course, Category } from "@repo/shared";
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from "@repo/shared";
@@ -34,6 +35,8 @@ interface CreateCourseBody {
 }
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction()
@@ -47,10 +50,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             return NextResponse.json({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, { status: 400 });
         }
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const userInSession: ISessionUser | null = authSession?.user;
         if (!userInSession || !validateMongooseId({ userId: userInSession.id })) {
-            logger.warn("Unauthorized access attempt to create course", { ip: request.ip });
+            logger.warn("Unauthorized access attempt to create course", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         logger.info("This is the user is attempting to create course ", { name: userInSession.name, id: userInSession.id });

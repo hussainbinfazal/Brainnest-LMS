@@ -20,7 +20,7 @@
 
 //     const user: ISessionUser | null = await getDataFromToken(request);
 //     if (!user || !user.id) {
-//       logger.error("Unautorized access", { ip: request.ip });
+//       logger.error("Unautorized access", { ip });
 //       return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
 //     }
 //     const formData = await request.formData();

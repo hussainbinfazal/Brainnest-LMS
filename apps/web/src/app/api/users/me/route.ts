@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from "@repo/shared";
 import { NextResponse } from "next/server";
 
@@ -9,13 +10,15 @@ import { auth } from "@/auth";
 
 //Look into this 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 
   try {
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
     const authUser: ISessionUser | null = authSession?.user;
     if (!authUser) {
-      logger.warn("Unauthorized access attempt", { ip: request.ip });
+      logger.warn("Unauthorized access attempt", { ip: ip });
       return NextResponse.json({ message: "Missing User Details" }, { status: 401 });
     }
 

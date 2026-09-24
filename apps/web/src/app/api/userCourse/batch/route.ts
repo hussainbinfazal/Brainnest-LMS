@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { CustomNextRequest } from "@/types/server";
 import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from "@repo/shared";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,12 +10,14 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (!user) {
-            logger.info("Unauthorized access", { ip: request.ip });
+            logger.info("Unauthorized access", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const userId: string = user.id;

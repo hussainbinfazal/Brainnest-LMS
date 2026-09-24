@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { Course, User, connectDB, logger, Review, validateMongooseId } from "@repo/shared";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -6,16 +7,18 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const { courseId } = context.params;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
-            logger.error("Unauthorized access", { ip: request.ip });
+            logger.error("Unauthorized access", { ip: ip });
             return NextResponse.json({ message: "You are not logged in" }, { status: 401 })
         };
         const userId: string = user.id;
@@ -98,15 +101,17 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
 
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const authenticatedUser: ISessionUser | null = authSession?.user;
         if (!authenticatedUser || !authenticatedUser.id) {
-            logger.info("Unauthorized access", { ip: request.ip });
+            logger.info("Unauthorized access", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         const userId: string = authenticatedUser.id;

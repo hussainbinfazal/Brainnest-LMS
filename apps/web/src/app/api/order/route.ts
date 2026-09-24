@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/mongoDB/db";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -6,11 +7,13 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { Cart, ICart, ICourse, Order } from "@repo/shared";
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB();
 
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (!user) {
             return NextResponse.json({ message: "User not found" }, { status: 403 });

@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@repo/shared";
 import { Coupon, ICoupon, ISessionUser, validateMongooseId } from "@repo/shared";
@@ -7,12 +8,14 @@ import { auth } from "@/auth";
 import { Session } from "next-auth";
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = session?.user;
-        if (!user) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!user) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
 
         const userId: string = user?.id;
         const { code, discountValue, discountType, expiresAt, maxUses, } = await request.json();
@@ -35,11 +38,13 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = session?.user;
-        if (!user) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!user) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         await connectDB(process.env.MONGODB_URI!);
         const coupons: ICoupon[] | null = await Coupon.find().populate("createdBy", "name email").exec();
         logger.info("Coupons retrieved successfully");
@@ -53,11 +58,13 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function DELETE(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = session?.user;
-        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const userId: string = user?.id;
         const { couponId, } = await request.json();
         await connectDB(process.env.MONGODB_URI!);
@@ -79,6 +86,8 @@ export async function DELETE(request: CustomNextRequest): Promise<NextResponse> 
 }
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const { couponId, data } = await request.json();
         const { code, discountValue, discountType, expiresAt, isActive, maxUses } = data;
@@ -87,9 +96,9 @@ export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
         }
         if (!couponId || !validateMongooseId({ couponId })) return NextResponse.json({ message: "Coupon id is required and should be valid" }, { status: 400 });
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = session?.user;
-        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const userId: string = user?.id;
         if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required and should be valid" }, { status: 400 });
         await connectDB(process.env.MONGODB_URI!);

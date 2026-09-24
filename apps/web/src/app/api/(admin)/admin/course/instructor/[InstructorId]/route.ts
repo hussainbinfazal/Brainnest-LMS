@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 
 
 import { NextResponse } from "next/server";
@@ -14,17 +15,19 @@ import { auth } from "@/auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { InstructorId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams?.get('page') || '1') || 1;
     const limit = parseInt(searchParams?.get('limit') || '5') || 5;
     const skip = Number((page - 1)) * limit;
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user; //For Cache Keys        
 
         if (!user) {
-            logger.info("Unauthorized access", { ip: request.ip });
+            logger.info("Unauthorized access", { ip: ip });
             return NextResponse.json({
                 message: "Unauthorized", data: {
                     paginatedInstructorCourses: [],
@@ -53,7 +56,7 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
             }, { status: 400 })
         }
         if (!InstructorId || !validateMongooseId({ userId: InstructorId })) {
-            logger.info("Invalid instructor id", { InstructorId, userId, ip: request.ip });
+            logger.info("Invalid instructor id", { InstructorId, userId, ip: ip });
             return NextResponse.json({
                 message: "Invalid instructor id", data: {
                     paginatedInstructorCourses: [],
@@ -66,7 +69,7 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
             }, { status: 400 })
         }
         if (user.role !== "instructor") {
-            logger.info("Unauthorized access", { user, ip: request.ip });
+            logger.info("Unauthorized access", { user, ip: ip });
             return NextResponse.json({
                 message: "Unauthorized", data: {
                     paginatedInstructorCourses: [],
@@ -105,6 +108,8 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { InstructorId: string } }) {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     const { searchParams } = new URL(request.url);
     const page: number = parseInt(searchParams?.get('page') || '1') || 1;
     const limit: number = parseInt(searchParams?.get('limit') || '5') || 5;
@@ -112,10 +117,10 @@ export async function DELETE(request: CustomNextRequest, context: { params: { In
     const skip: number = Number((page - 1)) * limit;
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         if (!user || user.role !== "instructor" || !user.id) {
-            logger.warn("Unauthorized access", { user, ip: request.ip });
+            logger.warn("Unauthorized access", { user, ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         };
         const cacheId = `${page}-${limit}-${skip}-${user.id}`;//Dynamic Conditional Cache Key
@@ -138,7 +143,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { In
             return NextResponse.json({ message: "Invalid user" }, { status: 400 })
         }
         if (InstructorId !== sessionInstructorId.toString()) {
-            logger.warn("Unauthorized access", { user, ip: request.ip });
+            logger.warn("Unauthorized access", { user, ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         };
         //Soft Delete the course not delete the course

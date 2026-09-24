@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from "@repo/shared";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -9,13 +10,15 @@ import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string, sectionId: string, lessonId: string } }) {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
     const user: ISessionUser | null = authSession?.user;
 
     if (!user) {
-        logger.info("Unauthorized access", { ip: request.ip });
+        logger.info("Unauthorized access", { ip: ip });
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     };
     try {

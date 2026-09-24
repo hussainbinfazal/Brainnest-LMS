@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { ISessionUser, IUserToken, User, UserToken } from "@repo/shared";
 import { connectDB } from "@repo/shared";
@@ -13,13 +14,15 @@ import { auth } from "@/auth";
 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     try {
         const { email } = await request.json();
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const sessionUser: ISessionUser | null = authSession?.user;
         const existingUser = await User.findOne({ email }).select("_id email").exec();
         // const { userId } = await request.json();

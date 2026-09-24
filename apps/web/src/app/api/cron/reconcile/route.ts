@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 // app/api/cron/reconcile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, Order, Payment, logger, OrderDocument } from '@repo/shared';
@@ -7,11 +8,13 @@ import { CustomNextRequest } from '@/types/server';
 const razorpayService = new RazorpayService();
 
 export async function GET(request: CustomNextRequest) {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 
     // ✅ Protect the cron endpoint
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        logger.info('Unauthorized', { ip: request.ip });
+        logger.info('Unauthorized', { ip: ip });
         return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

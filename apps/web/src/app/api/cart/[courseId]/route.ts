@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { CartDocument, connectDB, logger, validateMongooseId } from "@repo/shared";
 import { Course, Cart, ISessionUser, ICart, ICourse } from "@repo/shared";
@@ -6,9 +7,11 @@ import { auth } from "@/auth";
 import { CustomNextRequest } from "@/types/server";
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const sessionUser: ISessionUser | null = authSession?.user;
 
         if (!sessionUser) return NextResponse.json({ message: "User not found" }, { status: 403 });
@@ -82,10 +85,12 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 };
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB();
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         const userId: string | null = user?.id || "";
         if (!user) return NextResponse.json({ message: "User not found" }, { status: 403 });

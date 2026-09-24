@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 
 import { NextRequest, NextResponse } from "next/server";
 import { Course, User, connectDB } from "@repo/shared";
@@ -8,15 +9,17 @@ import { Session } from "next-auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse | Response> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
   try {
     await connectDB(process.env.MONGODB_URI!);
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
     const user: ISessionUser | null = authSession?.user;
     const { courseId } = context.params;
     if (!user || !user.id) {
-      logger.info("Unauthorized access", { ip: request.ip });
-      return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 })
+      logger.info("Unauthorized access", { ip: ip });
+      return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 })
     }
     const userId: string = user.id;
     if (!courseId || !validateMongooseId({ userId, courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });

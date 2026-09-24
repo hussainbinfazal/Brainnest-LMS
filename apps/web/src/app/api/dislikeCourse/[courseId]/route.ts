@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, LIKED_COURSES_BY_USER } from "@repo/shared";
@@ -9,13 +10,15 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         const { courseId } = await context.params;
         if (!user || !user.id) {
-            logger.info("Unauthorized access", { ip: request.ip });
+            logger.info("Unauthorized access", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         const userId: string = user.id;

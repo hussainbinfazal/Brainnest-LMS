@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
@@ -25,11 +26,13 @@ const sendEmailOTPSchema: z.ZodType<{ email: string }> = z.object({
 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     ///If user is registering first time
     const body = await request.json().catch(() => null);
     const parsed = sendEmailOTPSchema.safeParse(body);
     if (!parsed.success) {
-        logger.info("Invalid Payload", { ip: request.ip });
+        logger.info("Invalid Payload", { ip: ip });
         return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
     }
     const { email } = parsed.data;

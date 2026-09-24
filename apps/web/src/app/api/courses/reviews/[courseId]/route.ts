@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
@@ -9,6 +10,8 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGDB_URI!);
     try {
         const { courseId } = context.params;
@@ -91,6 +94,8 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI);
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -102,11 +107,11 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
             return NextResponse.json({ message: "Course Id is required" }, { status: 400 });
         };
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
 
         if (!user || !user.id) {
-            logger.error("Unauthorized access", { ip: request.ip });
+            logger.error("Unauthorized access", { ip: ip });
             session.endSession();
             return NextResponse.json({
                 message: "Unauthorized",

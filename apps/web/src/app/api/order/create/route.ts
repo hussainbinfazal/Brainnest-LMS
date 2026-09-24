@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { User, Order, Course, connectDB, validateMongooseId, logger, Enrollment, Payment } from '@repo/shared';
 import { NextRequest, NextResponse } from 'next/server';
 import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
@@ -11,12 +12,14 @@ const razorpayService = new RazorpayService()
 const paymentService = new PaymentService()
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
   const authSession: Session | null = await auth()
-  if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+  if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
   const user: ISessionUser | null = authSession?.user;
   const userId: string | null = user?.id || '';
   if (!user || !validateMongooseId({ userId })) {
-    logger.warn(`Unauthorized access attempt from IP: ${request.ip}`);
+    logger.warn(`Unauthorized access attempt from IP: ${ip}`);
     return NextResponse.json({ message: "User not found" }, { status: 403 })
   };
   await connectDB(process.env.MONGDB_URI!);

@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
@@ -12,6 +13,8 @@ import { auth } from "@/auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     const params = await context.params;
     const courseId = Array.isArray(params.courseId)
         ? params.courseId[0]
@@ -24,11 +27,11 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
     };
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
     const user: ISessionUser | null = authSession?.user;
 
     if (!user || !user.id) {
-        logger.info("Unauthorized access", { ip: request.ip });
+        logger.info("Unauthorized access", { ip: ip });
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
     }
     const userId: string = user.id;

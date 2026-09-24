@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
@@ -7,18 +8,20 @@ import { auth } from "@/auth";
 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const authUser: ISessionUser | null = authSession?.user;
         if (!authUser) {
-            logger.warn(`Unauthorized access attempt from IP: ${request.ip}`);
+            logger.warn(`Unauthorized access attempt from IP: ${ip}`);
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const body = await request.json()
         const { fileName, fileSize, type } = body
         if (type !== "image" && type !== "video") {
-            logger.warn(`Invalid file type upload attempt by user ${authUser.id} from IP: ${request.ip}`);
+            logger.warn(`Invalid file type upload attempt by user ${authUser.id} from IP: ${ip}`);
             return NextResponse.json({ error: "Invalid file type. Only 'image' and 'video' are allowed." }, { status: 400 });
         }
 
@@ -33,7 +36,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             createdAt: Date.now()
         }
         await redisClient.set(`upload:${uploadId}`, JSON.stringify(data) as string, { ex: 3600 }) // 1 hour expiration
-        logger.info(`Initialized upload session for user ${authUser.id} with uploadId: ${uploadId} from IP: ${request.ip}`);
+        logger.info(`Initialized upload session for user ${authUser.id} with uploadId: ${uploadId} from IP: ${ip}`);
         return NextResponse.json({
             uploadId
         }, { status: 200 })

@@ -1,3 +1,4 @@
+import { getClientIp } from "@/lib/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB, LIKED_COURSES_BY_USER, logger, USER_COURSE_DETAIL, USER_COURSE_LIST } from "@repo/shared";
@@ -12,11 +13,13 @@ import { Session } from "next-auth";
 
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    const ip = getClientIp(request.headers);
+    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
 
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: request.ip }, { status: 401 });
+        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
         const user: ISessionUser | null = authSession?.user;
         //For Cache Keys        
         const { searchParams } = new URL(request.url);
@@ -24,7 +27,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         const limit = parseInt(searchParams?.get('limit') || '5') || 5;
         const skip = Number((page - 1)) * limit;
         if (!user) {
-            logger.info("Unauthorized access", { ip: request.ip });
+            logger.info("Unauthorized access", { ip: ip });
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
         }
         const { courseId } = await context.params;
