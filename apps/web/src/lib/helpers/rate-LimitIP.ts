@@ -3,9 +3,9 @@ import { getClientIp } from "../getClientIp";
 import { RateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
 import { buildKey } from "@repo/shared/config/redisConfig/cache-helper";
 
-export async function checkIp(request: Request, namespace: string, key: string, max: number = 100, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number }> {
+export async function checkIp(request: Request, namespace: string, key: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, ip: string }> {
+    const ip = getClientIp(request.headers);
     try {
-        const ip = getClientIp(request.headers);
         if (ip === 'unknown') logger.warn('OTP Helper: could not resolve client IP');
 
         const fullKey: string = buildKey(namespace, key);
@@ -13,7 +13,8 @@ export async function checkIp(request: Request, namespace: string, key: string, 
         return {
             allowed: limit.allowed,
             remaining: limit.remaining,
-            retryAfterSec: limit.retryAfterSec
+            retryAfterSec: limit.retryAfterSec,
+            ip
         }
     } catch (error: unknown) {
         const message: string = error instanceof Error ? error.message : "Something went wrong, in check Ip for rate limiting helper"
@@ -21,7 +22,8 @@ export async function checkIp(request: Request, namespace: string, key: string, 
         return {
             allowed: false,
             remaining: 0,
-            retryAfterSec: 0
+            retryAfterSec: 0,
+            ip
         }
     }
 }

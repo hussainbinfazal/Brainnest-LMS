@@ -1,5 +1,5 @@
 import { getClientIp } from "@/lib/getClientIp";
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
@@ -8,6 +8,8 @@ import { createHmac } from 'node:crypto';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
 import z from 'zod';
 import { hashOtp } from '@/lib/OtpValidators';
+import { OTP_SEND_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
+import { checkIp } from "@/lib/helpers/rate-LimitIP";
 
 
 function generateOTP(): string {
@@ -25,9 +27,14 @@ const sendEmailOTPSchema: z.ZodType<{ email: string }> = z.object({
 });
 
 
-export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+export async function POST(request: NextRequest): Promise<NextResponse> {
+    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_SEND_EMAIL_IP_KEY.namespace, OTP_SEND_EMAIL_IP_KEY.id, OTP_SEND_EMAIL_IP_KEY.max, OTP_SEND_EMAIL_IP_KEY.windowSec);
+    if (!allowed) {
+        return NextResponse.json(
+            { message: 'Too many requests, please try again later' },
+            { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+        );
+    }
     ///If user is registering first time
     const body = await request.json().catch(() => null);
     const parsed = sendEmailOTPSchema.safeParse(body);
@@ -49,12 +56,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             setCached(OTP_VERIFICATION_EMAIL.namespace, email, hashOtp(email, otp), CACHE_TTL.SHORT), //Set otp in redis, so that it can be verified in the next request in verify route.
             setCached(ATTEMPT_EMAIL_VERIFICATION.namespace, email, "0", CACHE_TTL.SHORT), ///Set Attempts to zero then increase them in the verify route on every request.
         ]);
-
-
-
-
-
-
 
 
         // Send email via nodemailer //use worker queue from the shared repo, via http call to invoke the job in the job in queue

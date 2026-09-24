@@ -7,10 +7,8 @@ import { timingSafeEqual } from "crypto";
 import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import z from "zod";
 import { hashOtp } from "@/lib/OtpValidators";
-import { getClientIp } from "@/lib/getClientIp";
-import { OTP_SEND_IP, OTP_SEND_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
-import { buildKey } from "@repo/shared/config/redisConfig/cache-helper";
-import { RateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
+import { OTP_VERIFY_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
+import { checkIp } from "@/lib/helpers/rate-LimitIP";
 
 
 const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
@@ -19,26 +17,11 @@ const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.objec
 })
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
-
-    // 1. IP limit FIRST: one Redis call, rejects abusers before any other work
-    let limit;
-    try {
-        const key: string = buildKey(OTP_SEND_IP_KEY.namespace, ip);
-        limit = await RateLimit(getRedisClient(), { key, ...OTP_SEND_IP });
-    } catch (error: unknown) {
-        logger.error('Rate limiter unavailable', { error });
-        // fail CLOSED: an open limiter means unlimited paid emails
-        return NextResponse.json(
-            { message: 'Service temporarily unavailable' },
-            { status: 503, headers: { 'Retry-After': '30' } },
-        );
-    }
-    if (!limit.allowed) {
+    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.id, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
+    if (!allowed) {
         return NextResponse.json(
             { message: 'Too many requests, please try again later' },
-            { status: 429, headers: { 'Retry-After': String(limit.retryAfterSec) } },
+            { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
         );
     }
 
