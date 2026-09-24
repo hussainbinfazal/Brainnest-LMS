@@ -35,7 +35,7 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";
-import { useSendEmailOtp } from "@/hooks/useSendEmailOtp";
+import { useSendEmailOtp } from "@/hooks/useEmailOtp";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
@@ -123,7 +123,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                 redirect: false
             })
             if (res?.error) {
-                clientLogger.error("Singup secceded but automatic sign in failed"), { message: res.error, error: res.error }
+                clientLogger.error("Singup secceded but automatic sign in failed", { message: res.error, error: res.error })
                 toast.error("Something went wrong. Please try again.");
                 return
             }

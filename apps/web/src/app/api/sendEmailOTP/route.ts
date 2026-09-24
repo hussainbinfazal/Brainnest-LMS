@@ -3,13 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
-import { ATTEMPT_EMAIL_VERIFICATION, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL, validateEmail } from '@repo/shared';
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL, sendEmailOTPSchema } from '@repo/shared';
 import { createHmac } from 'node:crypto';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
-import z from 'zod';
 import { hashOtp } from '@/lib/OtpValidators';
 import { OTP_SEND_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
-import { checkIp } from "@/lib/helpers/rate-LimitIP";
 import axios from "axios";
 
 
@@ -23,9 +21,7 @@ function generateOTP(): string {
 };
 
 
-const sendEmailOTPSchema: z.ZodType<{ email: string }> = z.object({
-    email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
-});
+
 
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
