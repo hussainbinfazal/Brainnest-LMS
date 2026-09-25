@@ -14,7 +14,7 @@ export async function proxy(req: NextRequest) {
   if (pathname.startsWith('/api')) {
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
     try {
-      if (allowed) {
+      if (!allowed) {
         return NextResponse.json(
           { message: 'Too many requests' },
           { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
