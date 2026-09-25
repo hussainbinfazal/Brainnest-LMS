@@ -5,17 +5,19 @@ import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
-import { getRedisClient } from "@repo/shared";
+import { checkIp, getRedisClient, GLOBAL_IP_KEY } from "@repo/shared";
 
 export async function middleware(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
-  const ip = getClientIp(req.headers);
+  const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
+
   if (pathname.startsWith('/api')) {
-    const ip = getClientIp(req.headers);
+
     try {
-      const r = await rateLimit(getRedisClient(), { 
+
+      const r = await rateLimit(getRedisClient(), {
         key: `global:ip:${ip}`, max: 100, windowSec: 60,
       });
       if (!r.allowed) {
@@ -29,20 +31,6 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.next();
   }
-  try {
-    const r = await rateLimit(getRedisClient(), { key: `global:ip:${ip}`, max: 100, windowSec: 60 });
-    if (!r.allowed) {
-      return NextResponse.json(
-        { message: 'Too many requests' },
-        { status: 429, headers: { 'Retry-After': String(r.retryAfterSec) } },
-      );
-    }
-  } catch (error: unknown) {
-    logger.error(error);
-    // fail OPEN: the OTP route fails closed, but a Redis outage
-    // should not take your whole API down
-  }
-
   const token: JWT | null = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,

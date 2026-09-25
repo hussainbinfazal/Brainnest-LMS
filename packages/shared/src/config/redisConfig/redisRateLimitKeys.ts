@@ -29,4 +29,12 @@ export const INTERNAL_AUTH_IP_KEY = {
   description: 'Guards worker routes against secret brute-forcing from a given IP',
   usedIn: ['Authentication'],
 } as const;
+export const GLOBAL_IP_KEY = {
+  namespace: 'internal-auth:ip',
+  id: 'ip',
+  max: 50,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Guards worker routes against secret brute-forcing from a given IP',
+  usedIn: ['Authentication'],
+} as const;
 

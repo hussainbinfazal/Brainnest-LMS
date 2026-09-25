@@ -1,4 +1,4 @@
-import { getClientIp } from "@repo/shared/utils/getClientIp";
+
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
@@ -25,7 +25,8 @@ function generateOTP(): string {
 
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_SEND_EMAIL_IP_KEY.namespace, OTP_SEND_EMAIL_IP_KEY.id, OTP_SEND_EMAIL_IP_KEY.max, OTP_SEND_EMAIL_IP_KEY.windowSec);
+
+    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_SEND_EMAIL_IP_KEY.namespace, OTP_SEND_EMAIL_IP_KEY.max, OTP_SEND_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
         return NextResponse.json(
             { message: 'Too many requests, please try again later' },

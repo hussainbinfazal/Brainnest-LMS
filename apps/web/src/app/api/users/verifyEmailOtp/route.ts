@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from "@repo/shared";
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getClientIp, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from "@repo/shared";
 import { connectDB } from "@repo/shared";
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
@@ -17,7 +17,8 @@ const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.objec
 })
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.id, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
+    const userIp = getClientIp(request.headers);
+    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
         return NextResponse.json(
             { message: 'Too many requests, please try again later' },
