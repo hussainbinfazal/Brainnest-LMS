@@ -1,4 +1,4 @@
-import { validateEmail } from "src/validators"
+import { validateEmail } from ".././validators"
 import { z } from "zod";
 export const verifyEmailBodySchema = z.object({
     email: z.string().email().max(254).refine(validateEmail),

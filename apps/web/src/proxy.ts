@@ -6,7 +6,7 @@ import type { JWT } from "next-auth/jwt"
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
 import { checkIp, GLOBAL_IP_KEY } from "@repo/shared";
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
