@@ -32,6 +32,7 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
     useEffect(() => {
         setStatus("idle");
         setError(null);
+        setCooldownSeconds(0)
     }, [email]);
 
     //Local countdown so the button stays disabled without polling the server every second

@@ -31,87 +31,42 @@ export const emailOtpSenderSchema = z.object({
 const verifyEmailForm = useForm<z.infer<typeof verifyEmailOTPSchema>>({ resolver: zodResolver(verifyEmailOTPSchema), defaultValues: { otp: "" } });
 const sendEmailForm = useForm<z.infer<typeof emailOtpSenderSchema>>({ resolver: zodResolver(emailOtpSenderSchema), defaultValues: { email: "" } });
 
-//Right now this functionality is disabled
-// export const phoneOtpSender = ({ phoneNumber, setPhoneNumber, onOtpSent, className }: COtpSenderProps) => {
-//   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
-//     try {
-//       const response = await axios.post<CSendOtpResponse>("/api/send-otp", { phoneNumber });
-//       // Show OTP in development mode
-//       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-//         toast.success(`Development Mode - Your OTP is: ${response.data.otp || 'Check console'}`);
-//         // logger.debug({ otp: response.data.otp }, "Generated OTP (development)");
-//       }
-//       toast.success(response.data.message || "OTP sent successfully");
-//       onOtpSent(); // Notify parent
-//       return response.data
-//     } catch (error: any) {
-//       const errorMessage = error instanceof Error ? error.message : "Failed to send OTP";
-//       clientLogger.error(errorMessage, error);
-//       toast.error(error.response?.data?.message || "Failed to send OTP");
-//     }
-//   };
-
-//   return (
-//     <div className="mb-4">
-//       <button
-//         onClick={handleSendOtp}
-//         className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-//       >
-//         Send OTP
-//       </button>
-//     </div>
-//   );
-// };
-
-;
-
-// Email OTP Components
-
 ///OTP Sender Component
 export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderProps) => {
-  // const {
-  //   status: sendStatus,
-  //   error: sendError,
-  //   cooldownSeconds: sendCooldown,
-  //   sendOtp,
-  // } = useSendEmailOtp(.watch("email"));
-  const [isSending, setIsSending] = useState<boolean>(false);
-  const [isValidEmail, setIsValidEmail] = useState<boolean>(false);
+  const {
+    status: sendStatus,
+    cooldownSeconds: sendCooldown,
+    sendOtp,
+  } = useSendEmailOtp(email);
   const handleSendOtp = async (): Promise<CSendOtpResponse | void> => {
-    if (!validateEmail(email) || isSending) return
-    setIsSending(true);
     try {
-      const { data } = await axios.post<CSendOtpResponse>("/api/sendEmailOTP", { email });
-      toast.success(data.message || "Email OTP sent successfully");
-      // Show OTP in development mode
-      // if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-      //   toast.success(`Development Mode - Your Email OTP is: ${response.data.otp || 'Check console'}`);
-      //   // logger.debug({ otp: response.data.otp }, "Generated Email OTP (development)");
-      // }
-      toast.success(data.message || "Email OTP sent successfully");
+      await sendOtp()
+      toast.success("Email OTP sent successfully");
+      onOtpSent(); // Notify parent
     } catch (error: unknown) {
-      let message = "Failed to send email OTP";
-      if (axios.isAxiosError(error)) {
-        message = error.response?.data?.message || error.message || message
-      } else if (error instanceof Error) {
-        message = error.message
-      }
-      clientLogger.error(message, error);
-      toast.error("Failed to send email OTP");
-      return
-    } finally {
-      setIsSending(false)
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message ?? error.message
+        : error instanceof Error
+          ? error.message
+          : "Failed to send email OTP";
+      clientLogger.error(message, { error });
+      toast.error(message);
     }
-    onOtpSent(); // Notify parent
   };
 
   return (
     <div className={cn("mb-4", className)}>
       <button
+        type="button"
+        disabled={sendCooldown > 0 || sendStatus === "sending" || sendStatus === "sent" || sendStatus === "error"}
         onClick={handleSendOtp}
-        className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+        className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:cursor-not-allowed"
       >
-        {isSending ? "Sending..." : "Send Email OTP"}
+        {sendStatus === "sending"
+          ? "Sending..."
+          : sendCooldown > 0
+            ? `Send Email OTP (${sendCooldown}s)`
+            : "Send Email OTP"}
       </button>
     </div>
   );
@@ -190,7 +145,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
               type="button"
               onClick={onChangeEmail}
               disabled={verifyStatus === "verifying" || verifyStatus === "verified"}
-              className="text-purple-500 text-sm hover:underline"
+              className="text-purple-500 text-sm hover:underline disabled:cursor-not-allowed"
             >
               Change Email
             </button>
