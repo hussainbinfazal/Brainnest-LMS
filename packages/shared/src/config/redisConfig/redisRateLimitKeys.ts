@@ -30,11 +30,11 @@ export const INTERNAL_AUTH_IP_KEY = {
   usedIn: ['Authentication'],
 } as const;
 export const GLOBAL_IP_KEY = {
-  namespace: 'internal-auth:ip',
+  namespace: 'global:ip',
   id: 'ip',
-  max: 50,          // generous ceiling for legitimate service-to-service traffic
+  max: 100,          // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Guards worker routes against secret brute-forcing from a given IP',
-  usedIn: ['Authentication'],
+  description: 'Guard api routes against brute-forcing from a given IP',
+  usedIn: ['Global Rate Limiting'],
 } as const;
 
