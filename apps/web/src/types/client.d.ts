@@ -425,8 +425,6 @@ export interface COtpSenderProps {
 export interface CEmailOtpVerifierProps {
   email: string;
   className?: string;
-
-  phoneNumber: string;
   onVerified: () => void;
   onChangeNumber: () => void;
   onChangeEmail: () => void;

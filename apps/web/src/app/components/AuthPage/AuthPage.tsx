@@ -74,19 +74,6 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const isEmailValid: boolean = validateEmail(watchedEmail.toString());
     const password: string = signupForm.watch("password");
     const confirmPassword: string = signupForm.watch("confirmPassword");
-    const {
-        status: sendStatus,
-        error: sendError,
-        cooldownSeconds: sendCooldown,
-        sendOtp,
-    } = useSendEmailOtp(signupForm.watch("email"));
-
-    const {
-        status: verifyStatus,
-        error: verifyError,
-        cooldownSeconds: verifyCooldown,
-        verifyOtp,
-    } = useVerifyEmailOtp(signupForm.watch("email"), signupForm.watch("emailOtp"));
     const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
         try {
             const res = await signIn("credentials", {
@@ -384,7 +371,6 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                             ) : isEmailOtpSent ? (
                                 <EmailOtpVerifier
                                     email={signupForm.watch("email")}
-                                    phoneNumber={signupForm.watch("phoneNumber").toString()}
                                     onVerified={onEmailVerified}
                                     onChangeEmail={(): void => {
                                         setIsEmailOtpSent(false);

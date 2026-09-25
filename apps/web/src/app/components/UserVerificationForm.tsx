@@ -119,16 +119,10 @@ export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderP
 
 export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }: CEmailOtpVerifierProps) => {
   const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    watch,
-    setValue,
     formState: { errors: verifyEmailFormErrors },
   } = verifyEmailForm;
   const {
-    status: VerifyStatus,
+    status: verifyStatus,
     error: verifyError,
     cooldownSeconds: verifyCooldown,
     verifyOtp,
@@ -149,26 +143,19 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
 
   const handleVerifyOtp = async (): Promise<void> => {
     try {
-      const validation = verifyEmailOTPSchema.safeParse({ otp: watchOtp });
-      if (!validation.success) {
-        const errorMessage = validation.error.errors.map((error: any) => error.message).join("\n");
-        toast.error(errorMessage);
-        return
-      }
+
       await verifyOtp();
       toast.success("Email OTP verified");
       onVerified(); // Notify parent
     } catch (error: unknown) {
-      let message = "Email OTP verification failed";
-      if (axios.isAxiosError(error)) {
-        message = error.response?.data?.message || error.message || message
-        clientLogger.error(error.message, { error });
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-      // console.error(error);
-      clientLogger.error("Email OTP verification failed", { error, message });
-      toast.error("OTP verification failed");
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message ?? error.message
+        : error instanceof Error
+          ? error.message
+          : "Email OTP verification failed";
+      clientLogger.error(message, { error });
+      toast.error(message);
+
     }
   };
 
@@ -202,6 +189,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
             <button
               type="button"
               onClick={onChangeEmail}
+              disabled={verifyStatus === "verifying" || verifyStatus === "verified"}
               className="text-purple-500 text-sm hover:underline"
             >
               Change Email
@@ -236,7 +224,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
             disabled={watchOtp.length !== 6}
             className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {VerifyStatus}
+            {verifyStatus}
           </Button>
 
           <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
@@ -247,7 +235,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
           <button
             type="button"
             onClick={handleResendOtp}
-            disabled={resendCooldown > 0 || resendCount >= maxResendAttempts}
+            disabled={resendCooldown > 0 || resendCount >= maxResendAttempts || verifyStatus === 'verifying' || verifyStatus === 'verified'}
             className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {resendCooldown > 0 ? `Resend Email OTP after (${resendCooldown}s)` : 'Resend Email OTP'}
@@ -258,98 +246,6 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
   );
 };
 
-export const OtpVerifier = ({ phoneNumber, onVerified, onChangeNumber, className }: CEmailOtpVerifierProps) => {
-  const [otp, setOtp] = useState<number | string>("");
-  const [countdown, setCountdown] = useState<number>(50); // Start with 50 seconds after first OTP
-  const [resendCount, setResendCount] = useState<number>(0);
-  const maxResendAttempts = 5;
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [countdown]);
-
-  const handleVerifyOtp = async (): Promise<CVerifyOtpResponse | void> => {
-    try {
-      const response = await axios.post<CVerifyOtpResponse>("/api/verify-otp", { phoneNumber, otp });
-      toast.success(response.data.message || "OTP verified");
-      onVerified(); // Notify parent
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "OTP verification failed");
-    }
-  };
-
-  const handleResendOtp = async (): Promise<CResendOtpResponse | void> => {
-    if (resendCount >= maxResendAttempts) {
-      toast.error(`Maximum ${maxResendAttempts} resend attempts reached`);
-      return;
-    }
-
-    try {
-      const response = await axios.post<CResendOtpResponse>("/api/send-otp", { phoneNumber });
-
-      // Show OTP in development mode
-      if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-        toast.success(`Development Mode - Your OTP is: ${response.data.otp || 'Check console'}`);
-        // logger.debug({ otp: response.data.otp }, "Resent OTP (development)");
-      }
-
-      toast.success("OTP resent successfully");
-      setCountdown(50); // 50 seconds countdown
-      setResendCount(resendCount + 1);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to resend OTP";
-      clientLogger.error(message, error);
-      toast.error("Failed to resend OTP");
-    }
-  };
-
-  return (
-    <div className={cn("mb-4", className)}>
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-gray-600">OTP sent to: {phoneNumber}</span>
-        <button
-          onClick={onChangeNumber}
-          className="text-blue-500 text-sm hover:underline"
-        >
-          Change Number
-        </button>
-      </div>
-
-      <input
-        type="text"
-        placeholder="Enter OTP"
-        value={otp}
-        onChange={(e) => setOtp(e.target.value)}
-        className="w-full border px-3 py-2 rounded mb-2"
-      />
-      <button
-        type="button"
-        onClick={handleVerifyOtp}
-        className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2"
-      >
-        Verify OTP
-      </button>
-
-      <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
-        <span>Resend attempts: {resendCount}/{maxResendAttempts}</span>
-        {countdown > 0 && <span>Resend in {countdown}s</span>}
-      </div>
-
-      <button
-        type="button"
-        onClick={handleResendOtp}
-        disabled={countdown > 0 || resendCount >= maxResendAttempts}
-        className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-      >
-        {countdown > 0 ? `Resend OTP (${countdown}s)` : 'Resend OTP'}
-      </button>
-    </div>
-  );
-};
 
 
