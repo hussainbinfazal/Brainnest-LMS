@@ -80,7 +80,7 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
 
     return { status, error, cooldownSeconds, sendOtp };
 };
-export function useVerifyEmailOtp(email: string, otp: string): UseVerifyEmailOtpResult {
+export function useVerifyEmailOtp(otp: string): UseVerifyEmailOtpResult {
     const [status, setStatus] = useState<VerfiyStatus>("idle");
     const [error, setError] = useState<string | null>(null);
     const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
@@ -91,7 +91,7 @@ export function useVerifyEmailOtp(email: string, otp: string): UseVerifyEmailOtp
     useEffect(() => {
         setStatus("idle");
         setError(null);
-    }, [email, otp]);
+    }, [otp]);
 
     //Local countdown so the button stays disabled without polling the server every second
     useEffect(() => {
@@ -110,12 +110,12 @@ export function useVerifyEmailOtp(email: string, otp: string): UseVerifyEmailOtp
 
     }, [cooldownSeconds])
     const verifyOtp = useCallback(async () => {
-        const parsed = verifyEmailBodySchema.parse({ email });
+        const parsed = verifyEmailBodySchema.parse({ otp });
         inFlightRef.current = true;
         setStatus("verifying");
         setError(null);
         try {
-            await axios.post("/api/users/verifyEmailOTP", { email });
+            await axios.post("/api/users/verifyEmailOTP", { otp });
             setStatus("verified");
             setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
         } catch (error: unknown) {
@@ -133,7 +133,7 @@ export function useVerifyEmailOtp(email: string, otp: string): UseVerifyEmailOtp
         } finally {
             inFlightRef.current = false;
         }
-    }, [email, status]);
+    }, [otp, status]);
 
     return { status, error, cooldownSeconds, verifyOtp };
 };

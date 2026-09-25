@@ -29,13 +29,13 @@ import axios from "axios";
 import { JSX } from "react/jsx-runtime";
 import { loginSchema, signUpSchema } from "@/utils/fieldsValidation/Auth/ZodAuthSchema";
 import ProfileImageUpload from "../ProfileImageUpload";
-import { EmailOtpSender, EmailOtpVerifier } from "../PhoneVerificationForm";
+import { EmailOtpSender, EmailOtpVerifier } from "../UserVerificationForm";
 import { cn } from "@/lib/utils";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";
-import { useSendEmailOtp } from "@/hooks/useEmailOtp";
+import { useSendEmailOtp, useVerifyEmailOtp } from "@/hooks/useEmailOtp";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
@@ -74,10 +74,22 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const isEmailValid: boolean = validateEmail(watchedEmail.toString());
     const password: string = signupForm.watch("password");
     const confirmPassword: string = signupForm.watch("confirmPassword");
-    const { status, error, cooldownSeconds, sendOtp } = useSendEmailOtp(signupForm.watch("email"));
+    const {
+        status: sendStatus,
+        error: sendError,
+        cooldownSeconds: sendCooldown,
+        sendOtp,
+    } = useSendEmailOtp(signupForm.watch("email"));
+
+    const {
+        status: verifyStatus,
+        error: verifyError,
+        cooldownSeconds: verifyCooldown,
+        verifyOtp,
+    } = useVerifyEmailOtp(signupForm.watch("email"), signupForm.watch("emailOtp"));
     const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
         try {
-            const res = await signIn("credentials", { 
+            const res = await signIn("credentials", {
                 email: data.email,
                 password: data.password,
                 redirect: false,

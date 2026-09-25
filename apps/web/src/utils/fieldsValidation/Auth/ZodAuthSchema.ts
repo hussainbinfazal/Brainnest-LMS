@@ -1,3 +1,4 @@
+import { validateEmail } from "@/utils/phoneValidators";
 import { z } from "zod";
 
 export const loginSchema = z.object({
@@ -7,7 +8,7 @@ export const loginSchema = z.object({
 
 export const signUpSchema = z.object({
   name: z.string(),
-  email: z.string().email("Invalid email"),
+  email: z.string().email("Invalid email").refine(validateEmail),
   username:z.string().min(5, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
