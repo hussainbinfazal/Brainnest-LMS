@@ -3,31 +3,26 @@ import { NextResponse, NextRequest } from "next/server"
 import { logger } from "@/utils/logger/logger.edge/logger.edge";
 import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
-import { checkIp, getRedisClient, GLOBAL_IP_KEY } from "@repo/shared";
+import { checkIp, GLOBAL_IP_KEY } from "@repo/shared";
 
 export async function middleware(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
-  const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
 
   if (pathname.startsWith('/api')) {
-
+    const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
     try {
-
-      const r = await rateLimit(getRedisClient(), {
-        key: `global:ip:${ip}`, max: 100, windowSec: 60,
-      });
-      if (!r.allowed) {
+      if (allowed) {
         return NextResponse.json(
           { message: 'Too many requests' },
-          { status: 429, headers: { 'Retry-After': String(r.retryAfterSec) } },
+          { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
         );
       }
-    } catch (error) {
-      logger.error('Global limiter unavailable', { error });   // fail open
+    } catch (error: unknown) {
+      logger.error('Global limiter unavailable', { error, ip: ip });
+      // fail open
     }
     return NextResponse.next();
   }
