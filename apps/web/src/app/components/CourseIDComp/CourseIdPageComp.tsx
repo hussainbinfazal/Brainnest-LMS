@@ -90,9 +90,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const courseId = Array.isArray(params.courseId)
     ? params.courseId[0]
     : params.courseId;  //Store States
-  if (!courseId) {
-    return notFound();
-  }
+
   const user: CAuthUser | null = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
@@ -160,7 +158,9 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     (state) => state.fetchCourseProgress
   );
   const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = form
-
+  if (!courseId) {
+    return notFound();
+  }
   const onSubmit = async (data: CCreateReview): Promise<void> => {
     setLoading(true);
     try {
@@ -597,7 +597,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       }
     };
     checkLessons();
-  }, [course?.lessons, user]);
+  }, [userLessonsProgress, user]);
 
 
   useEffect((): void => {
@@ -630,6 +630,7 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       setUserCourseById(courseId, userCourseStats);
     }
   }, [courseId, userCourseStats, setUserCourseById]);
+
   if (isLoading) {
     return <CourseIdPageSkeleton />;
   }

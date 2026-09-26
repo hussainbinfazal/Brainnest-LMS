@@ -28,11 +28,12 @@ export const emailOtpSenderSchema = z.object({
   email: z.string().email().max(254).refine(validateEmail),
 
 })
-const verifyEmailForm = useForm<z.infer<typeof verifyEmailOTPSchema>>({ resolver: zodResolver(verifyEmailOTPSchema), defaultValues: { otp: "" } });
-const sendEmailForm = useForm<z.infer<typeof emailOtpSenderSchema>>({ resolver: zodResolver(emailOtpSenderSchema), defaultValues: { email: "" } });
+
 
 ///OTP Sender Component
 export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderProps) => {
+  const sendEmailForm = useForm<z.infer<typeof emailOtpSenderSchema>>({ resolver: zodResolver(emailOtpSenderSchema), defaultValues: { email: "" } });
+
   const {
     status: sendStatus,
     cooldownSeconds: sendCooldown,
@@ -55,7 +56,8 @@ export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderP
   };
 
   return (
-    <div className={cn("mb-4", className)}>
+    <div className={cn("mb-4 relative", className)}>
+
       <button
         type="button"
         disabled={sendCooldown > 0 || sendStatus === "sending" || sendStatus === "sent" || sendStatus === "error"}
@@ -66,13 +68,14 @@ export const EmailOtpSender = ({ email, onOtpSent, className }: CEmailOtpSenderP
           ? "Sending..."
           : sendCooldown > 0
             ? `Send Email OTP (${sendCooldown}s)`
-            : "Send Email OTP"}
+            : "Verify Email"}
       </button>
     </div>
   );
 };
 
 export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }: CEmailOtpVerifierProps) => {
+  const verifyEmailForm = useForm<z.infer<typeof verifyEmailOTPSchema>>({ resolver: zodResolver(verifyEmailOTPSchema), defaultValues: { otp: "" } });
   const {
     formState: { errors: verifyEmailFormErrors },
   } = verifyEmailForm;

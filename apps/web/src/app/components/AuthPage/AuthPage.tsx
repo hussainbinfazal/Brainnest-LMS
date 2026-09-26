@@ -35,7 +35,6 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";
-import { useSendEmailOtp, useVerifyEmailOtp } from "@/hooks/useEmailOtp";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {

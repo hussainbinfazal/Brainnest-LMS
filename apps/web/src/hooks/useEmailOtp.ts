@@ -1,9 +1,13 @@
 import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { sendEmailBodySchema, verifyEmailBodySchema } from "@repo/shared";
+import { validateEmail } from "@/utils/phoneValidators";
+import z from "zod";
 
-
+export const verifyEmailBodySchema = z.object({
+    email: z.string().email().max(254).refine(validateEmail),
+    otp: z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code"),
+})
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";
 
@@ -52,8 +56,6 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
 
     }, [cooldownSeconds])
     const sendOtp = useCallback(async () => {
-        const parsed = sendEmailBodySchema.parse({ email });
-        if (!parsed.success) return
         if (inFlightRef.current || status === "sending" || status === "cooldown") return
         inFlightRef.current = true;
         setStatus("sending");
