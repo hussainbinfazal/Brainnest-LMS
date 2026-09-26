@@ -4,7 +4,6 @@ import otpGenerator from 'otp-generator';
 import { CustomNextRequest, ISessionUser } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
 import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL, sendEmailBodySchema } from '@repo/shared';
-import { createHmac } from 'node:crypto';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
 import { hashOtp } from '@/lib/OtpValidators';
 import { OTP_SEND_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
@@ -19,8 +18,6 @@ function generateOTP(): string {
         specialChars: false,
     });
 };
-
-
 
 
 

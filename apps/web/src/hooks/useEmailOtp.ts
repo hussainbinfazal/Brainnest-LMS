@@ -8,6 +8,9 @@ export const verifyEmailBodySchema = z.object({
     email: z.string().email().max(254).refine(validateEmail),
     otp: z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code"),
 })
+export const sendEmailBodySchema = z.object({
+    email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
+});
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";
 
@@ -56,6 +59,11 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
 
     }, [cooldownSeconds])
     const sendOtp = useCallback(async () => {
+        const parsed = sendEmailBodySchema.safeParse({ email });
+        if (!parsed.success) {
+            clientLogger.info("Invalid Payload");
+            return
+        }
         if (inFlightRef.current || status === "sending" || status === "cooldown") return
         inFlightRef.current = true;
         setStatus("sending");
@@ -113,7 +121,8 @@ export function useVerifyEmailOtp(otp: string): UseVerifyEmailOtpResult {
 
     }, [cooldownSeconds])
     const verifyOtp = useCallback(async () => {
-        const parsed = verifyEmailBodySchema.parse({ otp });
+        const parsed = verifyEmailBodySchema.safeParse({ otp });
+        if (!parsed.success) return;
         inFlightRef.current = true;
         setStatus("verifying");
         setError(null);
