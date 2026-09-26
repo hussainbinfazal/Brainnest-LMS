@@ -1,6 +1,6 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { Course, User, connectDB, logger, Review, validateMongooseId } from "@repo/shared";
+import { Course, User, connectDB, logger, Review, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
 import { Session } from "next-auth";

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Course, connectDB, logger } from "@repo/shared";
+import { Course, connectDB, logger } from '@repo/shared/server';
 import mongoose from "mongoose";
-import { ICourse, IReview } from "@/types/model";
+import { ICourse, IReview } from '@repo/shared/server';
 import { CourseAggregationResult } from "@/types/aggregation/aggregation";
-import { validateMongooseId } from "@repo/shared";
+import { validateMongooseId } from '@repo/shared/server';
 
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {

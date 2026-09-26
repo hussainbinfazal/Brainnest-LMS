@@ -4,7 +4,7 @@ import { MongoClient } from "mongodb";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { Document } from "@langchain/core/documents";
 import { embeddings } from "../Embeddings/embeddings";
-import { connectDB } from "@repo/shared"
+import { connectDB } from '@repo/shared/server'
 
 // This is prod with mongo db atlas search
 // export async function getVectorStore(): Promise<MongoDBAtlasVectorSearch> {

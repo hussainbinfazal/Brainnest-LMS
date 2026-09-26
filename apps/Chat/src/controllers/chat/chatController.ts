@@ -1,8 +1,7 @@
 import { Request as ExpressRequest, Response } from "express";
-import { connectDB } from '@repo/shared';
-import {User,Course, logger ,Chat,IChat,Message} from '@repo/shared';
-import mongoose from "mongoose";
-import { validateMongooseId } from "@repo/shared";
+import { connectDB } from '@repo/shared/server';
+import { logger, Chat, IChat, Message } from '@repo/shared/server';
+import { validateMongooseId } from '@repo/shared/server';
 interface AuthRequest extends ExpressRequest {
     user?: {
         id: string;
@@ -19,11 +18,11 @@ export async function getChat(request: ExpressRequest, response: Response): Prom
     try {
         const { Id: userId } = request.params as { Id: string };
         // console.log("This is the user Id", userId);
-        if(!validateMongooseId({ userId })) {
+        if (!validateMongooseId({ userId })) {
             return response.json({ message: "Invalid user id", status: 400 });
         }
         const chat: IChat | null = await Chat.findOne({ sender: userId }).lean();
-        if (!chat) return response.json({ message: "Chat not found" , status: 404});
+        if (!chat) return response.json({ message: "Chat not found", status: 404 });
         return response.json({
             message: "Chat found successfully",
             chat,
@@ -32,9 +31,9 @@ export async function getChat(request: ExpressRequest, response: Response): Prom
         });
 
     } catch (error: unknown) {
-        logger.info("Error in finding chat",{error});
+        logger.info("Error in finding chat", { error });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return response.json({ error: `Error in finding chat: ${message}`,  status: 400  });
+        return response.json({ error: `Error in finding chat: ${message}`, status: 400 });
 
 
     }
@@ -43,7 +42,7 @@ export async function getChat(request: ExpressRequest, response: Response): Prom
 export async function getAllChat(request: AuthRequest, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-        
+
         const session = request.user; // authorize user on the socket handshake from the frontend
         if (!session?.id) {
             return response.json({ message: "Unauthorized", status: 401 });
@@ -51,17 +50,17 @@ export async function getAllChat(request: AuthRequest, response: Response): Prom
         const userId: string = session.id;
 
         const chat: IChat[] = await Chat.find({ sender: userId }).populate('sender', '_id name profileImage').populate('receiver', '_id name profileImage').populate('allMessages').lean();
-        if (!chat) return response.json({ message: "Chat not found",status: 404 },);
+        if (!chat) return response.json({ message: "Chat not found", status: 404 },);
         logger.info("Chat found successfully");
         return response.json({
             message: "Chat found successfully",
-            chat,status: 200
+            chat, status: 200
         });
 
     } catch (error: unknown) {
-        logger.error("Error in finding chat ",{error});
+        logger.error("Error in finding chat ", { error });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return response.json({ error: `Failed to find chat: ${message}`,status: 400 });
+        return response.json({ error: `Failed to find chat: ${message}`, status: 400 });
 
 
     }
@@ -74,8 +73,8 @@ export async function createChat(request: ExpressRequest, response: Response): P
         let { sender, receiver } = await request.body;
         const existingChat = await Chat.find({ sender, receiver });
         if (existingChat.length > 0)
-            return response.json({ message: "Chat already Initialized",status: 400 });
-        logger.info("This is the sender and receiver of chat",{ sender, receiver });
+            return response.json({ message: "Chat already Initialized", status: 400 });
+        logger.info("This is the sender and receiver of chat", { sender, receiver });
         const chat = new Chat({ sender, receiver });
         await chat.save();
         logger.info("Chat created successfully");
@@ -86,9 +85,9 @@ export async function createChat(request: ExpressRequest, response: Response): P
         },);
 
     } catch (error: unknown) {
-        logger.error("Error in creating chat",{error});
+        logger.error("Error in creating chat", { error });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return response.json({ error: `Error in creating chat: ${message}`,status: 400 },);
+        return response.json({ error: `Error in creating chat: ${message}`, status: 400 },);
 
     }
 }
@@ -123,50 +122,50 @@ export async function createChat(request: ExpressRequest, response: Response): P
 export async function deleteChat(request: ExpressRequest, response: Response): Promise<Response> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-            const { chatId } = request.body;
-       if (!chatId) {
-        logger.warn("Chat ID is required");
-      return response.status(400).json({
-        success: false,
-        message: "Chat ID is required",
-      });
-    }
+        const { chatId } = request.body;
+        if (!chatId) {
+            logger.warn("Chat ID is required");
+            return response.status(400).json({
+                success: false,
+                message: "Chat ID is required",
+            });
+        }
 
-  
-    if (!validateMongooseId({ chatId })) {
-        logger.warn("Invalid chat ID");
-      return response.status(400).json({
-        success: false,
-        message: "Invalid chat ID",
-      });
-    }
 
-   
-    const deletedChat = await Chat.findOneAndDelete({
-      _id: chatId,
-      
-    });
+        if (!validateMongooseId({ chatId })) {
+            logger.warn("Invalid chat ID");
+            return response.status(400).json({
+                success: false,
+                message: "Invalid chat ID",
+            });
+        }
 
-    if (!deletedChat) {
-      logger.warn("Chat not found", { chatId });
 
-      return response.status(404).json({
-        success: false,
-        message: "Chat not found",
-      });
-    }
+        const deletedChat = await Chat.findOneAndDelete({
+            _id: chatId,
 
-    logger.info("Chat deleted successfully", {
-      chatId,
-    });
+        });
 
-    return response.status(200).json({
-      success: true,
-      message: "Chat deleted successfully",
-    });
+        if (!deletedChat) {
+            logger.warn("Chat not found", { chatId });
+
+            return response.status(404).json({
+                success: false,
+                message: "Chat not found",
+            });
+        }
+
+        logger.info("Chat deleted successfully", {
+            chatId,
+        });
+
+        return response.status(200).json({
+            success: true,
+            message: "Chat deleted successfully",
+        });
     } catch (error: unknown) {
-        logger.error("Error in deleting chat",{error});
+        logger.error("Error in deleting chat", { error });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return response.json({ error: `Failed to delete chat:${message}`,status: 400 });
+        return response.json({ error: `Failed to delete chat:${message}`, status: 400 });
     }
 }

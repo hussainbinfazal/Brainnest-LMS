@@ -1,6 +1,6 @@
 import {Server,Socket} from "socket.io";
 import jwt from  "jsonwebtoken";
-import {logger } from "@repo/shared";
+import {logger } from "@repo/shared/server";
 
 
 interface JwtPayload {

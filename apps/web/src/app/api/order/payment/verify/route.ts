@@ -1,9 +1,10 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument, reconcileQueue } from '@repo/shared';
-import { ICourse, IOrder, IPayments, IUser } from '@/types/model';
+import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument, } from '@repo/shared/server';
+import { ICourse, IOrder, IPayments, IUser } from '@repo/shared/server';
 import mongoose from 'mongoose';
 import { markPaymentCompleted, PaymentService } from '@repo/payment';
+import axios from 'axios';
 const paymentService: PaymentService = new PaymentService();
 export async function POST(request: NextRequest): Promise<NextResponse> {
   await connectDB(process.env.MONGODB_URI!);
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
     }
 
-    const courseIds: mongoose.Types.ObjectId[] = pendingOrder.orderItems.map(item => item.course);
+    const courseIds: mongoose.Types.ObjectId[] = pendingOrder.orderItems.map((item: { course: mongoose.Types.ObjectId }) => item.course);
 
     if (!courseIds.length) {
       await session.abortTransaction();
@@ -176,10 +177,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error: unknown) {
     if (session.inTransaction()) await session.abortTransaction();
-    
-    await reconcileQueue.add('reconcile-single', {
-      razorpayPaymentId: razorpayPaymentID // ✅ matches job.data.razorpayPaymentId
-    });
+    ///complete this one 
+    await axios.post('/api/queue/reconcile', { razorpayPaymentId: razorpayPaymentID, });
+    // await reconcileQueue.add('reconcile-single', {
+    //   razorpayPaymentId: razorpayPaymentID // ✅ matches job.data.razorpayPaymentId
+    // });
     // Try to mark order as failed if possible
     const message: string = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Error verifying payment', { message });

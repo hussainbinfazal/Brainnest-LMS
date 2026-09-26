@@ -1,8 +1,8 @@
 import nodemailer, { SentMessageInfo } from 'nodemailer';
 import bcryptjs from 'bcryptjs';
-import {User} from '@repo/shared'
-import { connectDB } from '@repo/shared';
-import { logger } from '@repo/shared';
+import {User} from '@repo/shared/server'
+import { connectDB } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 export type EmailType = "RESET" | "VERIFY";
 
 export const sendEmail = async (email: string, emailType: EmailType = "RESET", userId: string): Promise<SentMessageInfo> => {

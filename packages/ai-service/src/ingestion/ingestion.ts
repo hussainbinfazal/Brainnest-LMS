@@ -1,7 +1,7 @@
 import { configDotenv } from "dotenv";
 
 configDotenv({ path: [".env", "../../.env"] });
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 import { chunkText } from "../Scrapper/chunker";
 import { ScrapedPage, scrapePage } from "../Scrapper/scrapper";
 import { addChunks } from "../VectorDB/vectorDb";

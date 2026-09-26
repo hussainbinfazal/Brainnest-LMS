@@ -1,6 +1,6 @@
 import { IFacets } from "@/types/server";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { connectDB, Course, COURSES_FACETS, ICategory, logger } from "@repo/shared";
+import { connectDB, Course, COURSES_FACETS, ICategory, logger } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 

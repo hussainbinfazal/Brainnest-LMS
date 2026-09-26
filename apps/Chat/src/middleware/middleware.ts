@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 
 export interface AuthRequest extends Request {
   user?: {

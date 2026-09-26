@@ -1,4 +1,4 @@
-import { UserRole } from "@repo/shared";
+import { UserRole } from '@repo/shared/server';
 
 interface Credentials {
   email: string;

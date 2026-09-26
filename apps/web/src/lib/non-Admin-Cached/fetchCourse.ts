@@ -1,6 +1,6 @@
 import axios from "axios";
 import { CCourse, CReview } from "@/types/client";
-import { ICourse } from "@repo/shared";
+import { ICourse } from '@repo/shared/server';
 import { logger } from "@/utils/logger/logger.node";
 
 

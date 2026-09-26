@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { Request, Response } from 'express';
-import { connectDB, Payment, reconcileQueue } from '@repo/shared';
-import { User, Course, Message, Chat, IChat } from '@repo/shared';
-import { logger } from "@repo/shared";
+import { connectDB, Payment, reconcileQueue } from '@repo/shared/server';
+import { User, Course, Message, Chat, IChat } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 import mongoose from 'mongoose';
 import { markPaymentCompleted, PaymentService } from '@repo/payment';
 const paymentService = new PaymentService();

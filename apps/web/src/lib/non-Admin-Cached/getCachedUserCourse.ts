@@ -1,6 +1,6 @@
 import { CUserCourse } from "@/types/client";
 import { serializeUserCourse, serializeUserCourses } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, IUserCourse, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, userCourse, validateMongooseId } from "@repo/shared";
+import { connectDB, IUserCourse, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, userCourse, validateMongooseId } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 export async function getUserCourseByIdWithCache(userId: string, courseId: string): Promise<CUserCourse | null> {

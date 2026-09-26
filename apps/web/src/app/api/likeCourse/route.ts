@@ -1,7 +1,7 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { COURSES_FILTERED_BY_PARAMS, Course, ISessionUser, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared";
-import { ICourse } from "@repo/shared";
+import { COURSES_FILTERED_BY_PARAMS, Course, ISessionUser, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from '@repo/shared/server';
+import { ICourse } from '@repo/shared/server';
 import { CustomNextRequest, IGetCourseByParamsResponse, IGetLikedCourseByParamsResponse } from "@/types/server";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";

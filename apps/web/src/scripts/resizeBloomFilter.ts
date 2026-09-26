@@ -7,7 +7,7 @@
 
 import { computeBloomSizing, setActivateBloomConfig } from "@/lib/bloomFilter/bloomConfig";
 import { resetBloomStats } from "@/lib/bloomFilter/bloomStats";
-import { connectDB, User } from "@repo/shared";
+import { connectDB, User } from '@repo/shared/server';
 import { runPipeline } from "@repo/shared/config/redisConfig/cache-helper";
 import { x86 } from "murmurhash3js";
 

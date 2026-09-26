@@ -1,8 +1,8 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { CustomNextRequest } from "@/types/server";
-import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from "@repo/shared";
+import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from '@repo/shared/server';
 import { NextRequest, NextResponse } from "next/server";
-import { userCourse as UserCourse } from "@repo/shared";
+import { userCourse as UserCourse } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CUserCourse } from "@/types/client";
 import { serializeUserCourse, serializeUserCourses } from "@/utils/serializer/userCourse.Serializer";

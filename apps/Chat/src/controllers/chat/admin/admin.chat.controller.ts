@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { connectDB, IUser, logger, User, Chat, validateMongooseId } from '@repo/shared';
+import { connectDB, IUser, logger, User, Chat, validateMongooseId } from '@repo/shared/server';
 
 export async function getChatOfAdmin(request: Request, response: Response): Promise<Response> {
     try {

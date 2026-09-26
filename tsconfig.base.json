@@ -1,5 +1,7 @@
 {
     "compilerOptions":{
+        "moduleResolution":"bundler",
+        "module":"esnext",
         "baseUrl":".",
         "paths": {
             // Add only reusable packages

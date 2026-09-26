@@ -1,4 +1,4 @@
-import { COURSES_ALL, COURSES_FILTERED_BY_PARAMS, COURSE_BY_ID, Course, ICourse, INSTRUCTOR_OTHER_COURSES, INSTRUCTOR_STATS, IUserCourse, LIKED_COURSES_BY_USER, RELATED_COURSES, USER_COURSE_LIST, connectDB, logger, userCourse, validateMongooseId } from "@repo/shared"
+import { COURSES_ALL, COURSES_FILTERED_BY_PARAMS, COURSE_BY_ID, Course, ICourse, INSTRUCTOR_OTHER_COURSES, INSTRUCTOR_STATS, IUserCourse, LIKED_COURSES_BY_USER, RELATED_COURSES, USER_COURSE_LIST, connectDB, logger, userCourse, validateMongooseId } from '@repo/shared/server'
 import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
 import { CCourse, CUserCourse } from "@/types/client";
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";

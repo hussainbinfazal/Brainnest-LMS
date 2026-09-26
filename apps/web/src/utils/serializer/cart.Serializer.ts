@@ -1,6 +1,6 @@
 import { CCart, CChat } from "@/types/client";
 import { serializeDocument } from "./serializeDocument";
-import { ICart, IChat } from "@repo/shared";
+import { ICart, IChat } from '@repo/shared/server';
 
 export function serializeCart(cart: ICart): CCart {
     return serializeDocument(cart) as unknown as CCart;

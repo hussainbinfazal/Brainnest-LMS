@@ -1,9 +1,9 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 import { NextRequest, NextResponse } from "next/server";
-import { Course, User, connectDB } from "@repo/shared";
+import { Course, User, connectDB } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "../../../../types/server";
-import { ICertificate, ICourse, IProgress, IUser, logger, Progress, Certificate, validateMongooseId } from "@repo/shared";
+import { ICertificate, ICourse, IProgress, IUser, logger, Progress, Certificate, validateMongooseId } from '@repo/shared/server';
 import { auth } from "@/auth";
 import { Session } from "next-auth";
 

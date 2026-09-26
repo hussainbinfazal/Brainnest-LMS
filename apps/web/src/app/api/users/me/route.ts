@@ -1,5 +1,5 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
-import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from "@repo/shared";
+import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from '@repo/shared/server';
 import { NextResponse } from "next/server";
 
 import { CustomNextRequest, ISessionUser } from "@/types/server";

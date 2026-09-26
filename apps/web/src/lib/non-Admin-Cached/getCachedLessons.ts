@@ -1,6 +1,6 @@
 import { CLesson } from "@/types/client";
 import { serializeLessons } from "@/utils/serializer/lesson.serializer";
-import { connectDB, ILesson, Lesson, LESSONS_BY_COURSE, logger } from "@repo/shared";
+import { connectDB, ILesson, Lesson, LESSONS_BY_COURSE, logger } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 

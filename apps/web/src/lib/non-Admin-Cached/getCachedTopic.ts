@@ -1,5 +1,5 @@
 import { CCourse, CTopic } from "@/types/client";
-import { connectDB, Course, COURSE_BY_ID, ICourse, ITopic, logger, Topic, TOPIC_BY_ID, validateMongooseId } from "@repo/shared";
+import { connectDB, Course, COURSE_BY_ID, ICourse, ITopic, logger, Topic, TOPIC_BY_ID, validateMongooseId } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 
 

@@ -4,7 +4,7 @@ import { logger } from "@/utils/logger/logger.edge/logger.edge";
 import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
-import { checkIp, GLOBAL_IP_KEY } from "@repo/shared";
+import { checkIp, GLOBAL_IP_KEY } from '@repo/shared/server';
 
 export async function proxy(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl

@@ -1,7 +1,7 @@
 import { CCategory, CReview } from "@/types/client";
-import { IReview } from "@repo/shared";
+import { IReview } from '@repo/shared/server';
 import { serializeDocument } from "./serializeDocument";
-import { ICategory } from "@repo/shared";
+import { ICategory } from '@repo/shared/server';
 
 
 export function serializeReview(review: IReview): CReview {

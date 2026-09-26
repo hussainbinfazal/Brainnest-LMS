@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
 import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
-import { ISessionUser, logger, USER_COURSE_LIST } from "@repo/shared";
+import { ISessionUser, logger, USER_COURSE_LIST } from '@repo/shared/server';
 import { getCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { Session } from "next-auth";
 import { NextResponse } from "next/server";

@@ -1,10 +1,10 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
-import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from "@repo/shared";
+import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from '@repo/shared/server';
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
-import { userCourse as UserCourse } from "@repo/shared";
-import { LessonProgress } from "@repo/shared";
+import { userCourse as UserCourse } from '@repo/shared/server';
+import { LessonProgress } from '@repo/shared/server';
 import { CACHE_TTL, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { Session } from "next-auth";

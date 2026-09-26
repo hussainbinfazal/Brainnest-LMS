@@ -1,4 +1,4 @@
-import { Cart, CART_BY_USER, ICart, logger } from "@repo/shared";
+import { Cart, CART_BY_USER, ICart, logger } from '@repo/shared/server';
 import { JSX } from "react/jsx-runtime";
 import CartPageComp from "../components/CartComp/CartComp";
 import { auth } from "@/auth";

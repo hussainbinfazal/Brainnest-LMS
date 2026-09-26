@@ -32,7 +32,7 @@
 import bcrypt from "bcryptjs";
 
 // ---- Adjust these import paths to match your monorepo structure ----
-import { CouponUsage, Coupon, Payment, userCourse as UserCourse, UserToken, Review, Progress, Enrollment, User, Category, Topic, Course, Section, Lesson, Certificate } from "../src/index";
+import { CouponUsage, Coupon, Payment, userCourse as UserCourse, UserToken, Review, Progress, Enrollment, User, Category, Topic, Course, Section, Lesson, Certificate } from "../src/server";
 import mongoose from "mongoose";
 
 const SEED_CONFIRM = "yes"

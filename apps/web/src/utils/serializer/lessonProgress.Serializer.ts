@@ -1,4 +1,4 @@
-import { ILessonProgress } from "@repo/shared";
+import { ILessonProgress } from '@repo/shared/server';
 import { serializeDocument } from "./serializeDocument";
 import { CLessonProgress, CProgress } from "@/types/client";
 

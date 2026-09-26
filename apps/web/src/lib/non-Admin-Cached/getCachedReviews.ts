@@ -1,4 +1,4 @@
-import { IReview, REVIEWS_ALL_COURSES, REVIEWS_BY_COURSE, Review, connectDB, logger } from "@repo/shared";
+import { IReview, REVIEWS_ALL_COURSES, REVIEWS_BY_COURSE, Review, connectDB, logger } from '@repo/shared/server';
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 import { CReview } from "@/types/client";
 import { serializeReviews } from "@/utils/serializer/review.Serializer";

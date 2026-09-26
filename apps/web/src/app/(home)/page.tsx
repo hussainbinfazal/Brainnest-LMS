@@ -3,7 +3,7 @@ import { JSX } from "react/jsx-runtime";
 import { getCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { getReviewsWithCache } from "@/lib/non-Admin-Cached/getCachedReviews";
 import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
 import { auth } from "@/auth";
 

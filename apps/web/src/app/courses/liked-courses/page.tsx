@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { getUserLikedCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { CCourse } from "@/types/client";
 import { IGetLikedCourseByParamsResponse } from "@/types/server";
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 import { JSX } from "react/jsx-runtime";
 
 type LikeCoursesPageProps = {

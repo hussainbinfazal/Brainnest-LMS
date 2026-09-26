@@ -1,5 +1,5 @@
 // import { NextRequest, NextResponse } from "next/server";
-// import { Cart, Order, connectDB, User, logger, Course, validateMongooseId } from "@repo/shared";
+// import { Cart, Order, connectDB, User, logger, Course, validateMongooseId } from '@repo/shared/server';
 // import {
 //     RazorpayService,
 //     PaymentService

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { logger, UPLOAD_SESSION } from "@repo/shared";
+import { logger, UPLOAD_SESSION } from '@repo/shared/server';
 import { CustomNextRequest } from "@/types/server";
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 

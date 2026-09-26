@@ -11,8 +11,8 @@ import {
   logger,
   User,
   UserDocument,
-} from "@repo/shared";
-import { IUser } from "@repo/shared";
+} from '@repo/shared/server';
+import { IUser } from '@repo/shared/server';
 
 type AuthUser = NextAuthUser;
 export const { handlers, signIn, signOut, auth } = NextAuth({

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { User } from "@repo/shared";
-import { connectDB } from "@repo/shared";
+import { User } from '@repo/shared/server';
+import { connectDB } from '@repo/shared/server';
 import bcrypt from "bcryptjs";
-import { IUser } from "@repo/shared";
-import { logger } from "@repo/shared";
+import { IUser } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 import { HydratedDocument } from "mongoose";
 export async function POST(request: NextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);

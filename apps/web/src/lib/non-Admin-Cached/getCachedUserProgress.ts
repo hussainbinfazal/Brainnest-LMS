@@ -2,7 +2,7 @@ import { CLessonProgress, CProgress } from "@/types/client";
 import { serializeLessonsProgress } from "@/utils/serializer/lessonProgress.Serializer";
 import { serializeProgress } from "@/utils/serializer/progress.Serializer";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, ILessonProgress, IProgress, IUserCourse, logger, Progress, PROGRESS_BY_LESSON, PROGRESS_BY_USER_COURSE, userCourse, validateMongooseId } from "@repo/shared";
+import { connectDB, ILessonProgress, IProgress, IUserCourse, logger, Progress, PROGRESS_BY_LESSON, PROGRESS_BY_USER_COURSE, userCourse, validateMongooseId } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import lessonProgress from "@repo/shared/models/Course/lessonProgressModel";
 

@@ -1,4 +1,4 @@
-import { logger, initializeRedis } from '@repo/shared'
+import { logger, initializeRedis } from '@repo/shared/server'
 import { Redis as UpstashRedis } from '@upstash/redis'
 
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB, validateMongooseId } from "@repo/shared";
-import { Chat, Message } from "@repo/shared";
-import { IChat, IMessage } from "@/types/model";
+import { connectDB, validateMongooseId } from '@repo/shared/server';
+import { Chat, Message } from '@repo/shared/server';
+import { IChat, IMessage } from '@repo/shared/server';
 import mongoose from "mongoose";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

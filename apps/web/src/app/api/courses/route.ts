@@ -1,7 +1,7 @@
 import mongoose, { QueryFilter } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
-import { COURSES_FILTERED_BY_PARAMS, Course, connectDB, logger } from "@repo/shared";
-import { ICourse } from "@repo/shared";
+import { COURSES_FILTERED_BY_PARAMS, Course, connectDB, logger } from '@repo/shared/server';
+import { ICourse } from '@repo/shared/server';
 import { CustomNextRequest, IGetCourseByParamsResponse } from "@/types/server";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";

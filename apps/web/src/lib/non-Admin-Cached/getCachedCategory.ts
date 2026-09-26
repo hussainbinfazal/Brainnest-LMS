@@ -1,4 +1,4 @@
-import { CATEGORIES_ALL, Category, connectDB, Course, ICategory, logger } from "@repo/shared";
+import { CATEGORIES_ALL, Category, connectDB, Course, ICategory, logger } from '@repo/shared/server';
 import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
 import { CCategory } from "@/types/client";
 import { serializeCategories } from "@/utils/serializer/review.Serializer";

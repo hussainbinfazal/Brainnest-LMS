@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { CCourse } from "@/types/client";
 import { serializeCourses } from "@/utils/serializer/course.Serializer";
-import { connectDB, Course, COURSES_ALL, ICourse, INSTRUCTOR_COURSES_ALL, ISessionUser, logger, validateMongooseId } from "@repo/shared";
+import { connectDB, Course, COURSES_ALL, ICourse, INSTRUCTOR_COURSES_ALL, ISessionUser, logger, validateMongooseId } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { Session } from "next-auth";
 export type InstructorCoursesResponse = {

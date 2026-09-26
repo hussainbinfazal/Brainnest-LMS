@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Course, connectDB, logger, ICourse } from "@repo/shared";
+import { Course, connectDB, logger, ICourse } from '@repo/shared/server';
 import { CustomNextRequest } from "@/types/server";
 import mongoose from "mongoose";
 import { getCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";

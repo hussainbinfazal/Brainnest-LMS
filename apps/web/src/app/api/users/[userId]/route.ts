@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { User, connectDB, IUser, logger, validateMongooseId, UserDocument } from "@repo/shared";  // Ensure the path is correct
+import { User, connectDB, IUser, logger, validateMongooseId, UserDocument } from '@repo/shared/server';  // Ensure the path is correct
 import bcrypt from "bcryptjs";
 import { CustomNextRequest } from "@/types/server";
  

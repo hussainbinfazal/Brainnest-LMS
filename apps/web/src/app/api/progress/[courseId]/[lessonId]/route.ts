@@ -1,5 +1,5 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
-import { connectDB, ILessonProgress, IProgress, Progress } from "@repo/shared";
+import { connectDB, ILessonProgress, IProgress, Progress } from '@repo/shared/server';
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";

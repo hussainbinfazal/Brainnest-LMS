@@ -1,4 +1,4 @@
-import { ILesson } from "@repo/shared";
+import { ILesson } from '@repo/shared/server';
 import { serializeDocument } from "./serializeDocument";
 import { CLesson } from "@/types/client";
 

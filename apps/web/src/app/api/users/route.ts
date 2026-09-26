@@ -1,9 +1,9 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { ISessionUser, IUserToken, User, UserToken } from "@repo/shared";
-import { connectDB } from "@repo/shared";
+import { ISessionUser, IUserToken, User, UserToken } from '@repo/shared/server';
+import { connectDB } from '@repo/shared/server';
 
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 import { CustomNextRequest } from "@/types/server";
 import crypto from "crypto";
 import mongoose from "mongoose";

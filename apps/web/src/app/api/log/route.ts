@@ -1,5 +1,5 @@
 import { CustomNextRequest } from "@/types/server";
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 import { Ilogger } from "@repo/shared/logger/logger";
 import { NextResponse } from "next/server";
 

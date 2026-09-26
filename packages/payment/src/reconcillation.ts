@@ -1,5 +1,5 @@
 // @repo/payment/src/reconcilePayment.ts
-import { logger, Order, Payment, Enrollment, userCourse, OrderDocument, PaymentsDocument, Chat, ChatDocument } from "@repo/shared";
+import { logger, Order, Payment, Enrollment, userCourse, OrderDocument, PaymentsDocument, Chat, ChatDocument } from '@repo/shared/server';
 import mongoose, { ClientSession } from "mongoose";
 import { RazorpayService } from "./razorpay.service";
 

@@ -1,4 +1,4 @@
-import { ISection } from "@repo/shared";
+import { ISection } from '@repo/shared/server';
 import { serializeDocument } from "./serializeDocument";
 import { CSection } from "@/types/client";
 

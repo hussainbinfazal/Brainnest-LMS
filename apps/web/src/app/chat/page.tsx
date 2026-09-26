@@ -4,7 +4,7 @@
 // import { serializeChats } from "@/utils/serializer/chat.Serializer";
 // import { auth } from "@/auth";
 // import { logger } from "@/utils/logger/logger.node";
-// import { Chat, connectDB, IChat } from "@repo/shared";
+// import { Chat, connectDB, IChat } from '@repo/shared/server';
 
 // export default async function ChatPage(): Promise<JSX.Element> {
 

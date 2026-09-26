@@ -1,10 +1,10 @@
 
 import { Request, Response } from "express";
-import { connectDB, validateMongooseId } from '@repo/shared';
-import { User, Chat, Course, Message, Payment } from "@repo/shared";
-import { RazorpayCreateOrderRequest } from '@repo/shared';
-import { IPaymentsByUser } from '@repo/shared';
-import { logger } from "@repo/shared";
+import { connectDB, validateMongooseId } from '@repo/shared/server';
+import { User, Chat, Course, Message, Payment } from '@repo/shared/server';
+import { RazorpayCreateOrderRequest } from '@repo/shared/server';
+import { IPaymentsByUser } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 import mongoose from 'mongoose';
 import {
     RazorpayService,
@@ -82,7 +82,7 @@ export async function createChatPaymentOrder(request: Request, response: Respons
                     amount,
                     razorpayOrderId:
                         razorpayOrder.id
-                },{ session }).save()
+                }, { session }).save()
 
 
             ])

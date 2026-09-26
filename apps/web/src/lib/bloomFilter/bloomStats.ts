@@ -1,5 +1,5 @@
-import { getRedisClient } from "@repo/shared";
-import { logger } from "@repo/shared";
+import { getRedisClient } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 
 const STATS_TOTAL_KEY = "bloom:stats:total"; //how many checks happened at all
 const STATS_FALLBACK_KEY = "bloom:stats:active"; //how many of those were the expensive path

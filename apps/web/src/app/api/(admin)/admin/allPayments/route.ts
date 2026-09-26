@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '@repo/shared';
-import {Payment, IPayments} from '@repo/shared';
+import { connectDB } from '@repo/shared/server';
+import {Payment, IPayments} from '@repo/shared/server';
 import { logger } from '@/utils/logger/logger.node';
 
 export async function GET(): Promise<NextResponse> {

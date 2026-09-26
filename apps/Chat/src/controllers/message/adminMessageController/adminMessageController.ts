@@ -1,6 +1,6 @@
 // import { NextRequest, NextResponse } from "next/server";
-// import { connectDB } from "@repo/shared";
-// import {Chat,Message,IChat, IMessage} from "@repo/shared";
+// import { connectDB } from '@repo/shared/server';
+// import {Chat,Message,IChat, IMessage} from '@repo/shared/server';
 // import mongoose from "mongoose";
 
 // export async function POST(request: Request, response: Response): Promise<Response> {

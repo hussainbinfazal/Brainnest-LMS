@@ -2,8 +2,8 @@ import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 
 import { NextResponse } from "next/server";
-import { connectDB, INSTRUCTOR_COURSES_ALL, InstructorCoursesResponse } from "@repo/shared";
-import { Course, ICourse, validateMongooseId } from "@repo/shared";
+import { connectDB, INSTRUCTOR_COURSES_ALL, InstructorCoursesResponse } from '@repo/shared/server';
+import { Course, ICourse, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
 import { getCached, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";

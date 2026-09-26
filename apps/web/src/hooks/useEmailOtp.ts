@@ -2,15 +2,16 @@ import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateEmail } from "@/utils/phoneValidators";
+import { sendEmailBodySchema, verifyEmailBodySchema } from "@repo/shared/client"
 import z from "zod";
 
-export const verifyEmailBodySchema = z.object({
-    email: z.string().email().max(254).refine(validateEmail),
-    otp: z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code"),
-})
-export const sendEmailBodySchema = z.object({
-    email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
-});
+// export const verifyEmailBodySchema = z.object({
+//     email: z.string().email().max(254).refine(validateEmail),
+//     otp: z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code"),
+// })
+// export const sendEmailBodySchema = z.object({
+//     email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
+// });
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";
 

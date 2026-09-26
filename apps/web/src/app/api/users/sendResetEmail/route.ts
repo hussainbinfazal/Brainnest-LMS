@@ -1,5 +1,5 @@
 import { sendEmail } from "@/lib/helpers/mailer";
-import { logger } from "@repo/shared";
+import { logger } from '@repo/shared/server';
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

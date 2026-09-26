@@ -2,7 +2,7 @@ import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 import { auth } from "@/auth";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { connectDB, IOrder, Order } from "@repo/shared";
+import { connectDB, IOrder, Order } from '@repo/shared/server';
 import { Session } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 

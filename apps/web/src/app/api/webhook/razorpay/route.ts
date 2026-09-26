@@ -1,7 +1,7 @@
 // app/api/webhook/razorpay/route.ts
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, Order, Payment, Enrollment, userCourse, logger } from '@repo/shared';
+import { connectDB, Order, Payment, Enrollment, userCourse, logger } from '@repo/shared/server';
 import { reconcilePayment } from '@repo/payment';
 import mongoose from 'mongoose';
 import { CustomNextRequest } from '@/types/server';

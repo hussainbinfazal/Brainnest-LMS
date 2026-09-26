@@ -1,6 +1,6 @@
 // import crypto from 'crypto';
 // import { NextRequest, NextResponse } from 'next/server';
-// import { connectDB, User, userCourse, Order, Course, Payment, Cart } from '@repo/shared';
+// import { connectDB, User, userCourse, Order, Course, Payment, Cart } from '@repo/shared/server';
 // import { ICourse, IOrder, IUser } from '@/types/model';
 // import mongoose from 'mongoose';
 // import { logger } from "@/utils/logger/logger.node";

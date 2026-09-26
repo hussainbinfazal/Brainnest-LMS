@@ -1,5 +1,5 @@
 import { ClientSession } from "mongoose";
-import {PaymentsDocument } from "@repo/shared";
+import {PaymentsDocument } from '@repo/shared/server';
 
 
 export async function markPaymentCompleted({

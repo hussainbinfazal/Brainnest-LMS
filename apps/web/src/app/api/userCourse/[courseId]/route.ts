@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, userCourse, validateMongooseId } from "@repo/shared";
+import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, userCourse, validateMongooseId } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { Session } from "next-auth";
 import { NextResponse } from "next/server";

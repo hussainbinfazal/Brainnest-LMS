@@ -1,6 +1,6 @@
 import React from "react";
 import ManageCoursePageComponent from "@/app/components/AdminComp/InstructorComp/ManageCoursePageComp";
-import { ISessionUser, logger, validateMongooseId } from "@repo/shared";
+import { ISessionUser, logger, validateMongooseId } from '@repo/shared/server';
 import { JSX } from "react/jsx-runtime";
 import { notFound } from "next/navigation";
 import { Session } from "next-auth";

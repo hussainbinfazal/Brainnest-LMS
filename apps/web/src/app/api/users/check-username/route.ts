@@ -1,7 +1,7 @@
 import { bloomMightContain } from "@/lib/bloomFilter/bloomFilter";
 import { recordBloomCheck } from "@/lib/bloomFilter/bloomStats";
 import { CustomNextRequest } from "@/types/server";
-import { connectDB, IUser, logger, User } from "@repo/shared";
+import { connectDB, IUser, logger, User } from '@repo/shared/server';
 import mongoose, { Types } from "mongoose";
 import { NextResponse } from "next/server";
 

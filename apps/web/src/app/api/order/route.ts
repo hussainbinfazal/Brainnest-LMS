@@ -5,7 +5,7 @@ import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
-import { Cart, ICart, ICourse, Order } from "@repo/shared";
+import { Cart, ICart, ICourse, logger, Order } from '@repo/shared/server';
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');

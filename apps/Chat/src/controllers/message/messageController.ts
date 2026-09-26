@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { Request, response, Response } from "express";
-import { ChatDocument, connectDB, IMessage, logger, MessageDocument, validateMongooseId } from "@repo/shared";
-import { Chat, Message } from "@repo/shared";
+import { ChatDocument, connectDB, IMessage, logger, MessageDocument, validateMongooseId } from '@repo/shared/server';
+import { Chat, Message } from '@repo/shared/server';
 
 
 export async function generateNewMessage(request: Request, response: Response): Promise<Response> {

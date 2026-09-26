@@ -1,6 +1,6 @@
 import CourseIdPage from "@/app/components/CourseIDComp/CourseIdPageComp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
-import { connectDB, logger, Progress } from "@repo/shared";
+import { connectDB, logger, Progress } from '@repo/shared/server';
 import { JSX } from "react/jsx-runtime";
 import { notFound } from "next/navigation";
 import { getCourseByIdWithCache, getInstructorOtherCoursesWithCache, getInstructorStatsWithCache, getReleatedCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";

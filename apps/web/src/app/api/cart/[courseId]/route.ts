@@ -1,7 +1,7 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { CartDocument, connectDB, logger, validateMongooseId } from "@repo/shared";
-import { Course, Cart, ISessionUser, ICart, ICourse } from "@repo/shared";
+import { CartDocument, connectDB, logger, validateMongooseId } from '@repo/shared/server';
+import { Course, Cart, ISessionUser, ICart, ICourse } from '@repo/shared/server';
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { CustomNextRequest } from "@/types/server";

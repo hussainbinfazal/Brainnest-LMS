@@ -1,7 +1,7 @@
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { Topic, Section, Lesson, connectDB, Course, Category } from "@repo/shared";
-import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from "@repo/shared";
+import { Topic, Section, Lesson, connectDB, Course, Category } from '@repo/shared/server';
+import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose, { ObjectId, Types } from "mongoose";

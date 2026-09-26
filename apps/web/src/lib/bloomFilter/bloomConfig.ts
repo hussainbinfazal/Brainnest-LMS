@@ -1,5 +1,5 @@
-import { getRedisClient, User } from "@repo/shared";
-import { logger } from "@repo/shared";
+import { getRedisClient, User } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 
 
 

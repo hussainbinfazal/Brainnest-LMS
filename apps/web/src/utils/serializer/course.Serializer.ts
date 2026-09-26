@@ -1,6 +1,6 @@
 import { CCourse } from "@/types/client";
 import { serializeDocument } from "./serializeDocument";
-import { ICourse } from "@repo/shared";
+import { ICourse } from '@repo/shared/server';
 
 
 export function serializeCourse(course: ICourse): CCourse {
