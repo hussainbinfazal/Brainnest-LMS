@@ -8,13 +8,14 @@ import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } f
 import z from "zod";
 import { hashOtp } from "@/lib/OtpValidators";
 import { OTP_VERIFY_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
+import { verifyEmailBodySchema } from "@repo/shared/client";
 
 
 
-const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
-    email: z.string().email().max(254).refine(validateEmail),
-    otp: z.string().regex(/^\d{6}$/),
-})
+// const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
+//     email: z.string().email().max(254).refine(validateEmail),
+//     otp: z.string().regex(/^\d{6}$/),
+// })
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const userIp = getClientIp(request.headers);
@@ -27,7 +28,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     }
 
     const body = await request.json().catch(() => null);
-    const parsed = VerifyEmailbodySchema.safeParse(body);
+    const parsed = verifyEmailBodySchema.safeParse(body);
     if (!parsed.success) {
         logger.info("Invalid Payload", { ip });
         return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });

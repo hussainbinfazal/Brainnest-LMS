@@ -2,10 +2,9 @@
 
 
 import { cn } from "@/lib/utils";
-import { CProfileImageUploadProps } from "@/types/client";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
-
+import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 
 const CIRCLE_SIZE = 128;
 const OUTPUT_SIZE = 200;
@@ -17,9 +16,11 @@ const MAX_FILE_SIZE_MB = 5;
 type Transform = {
   position: { x: number, y: number };
   scale: number;
-  rotation: number
+  rotation: number,
+  flipX: boolean;   // NEW
+  flipY: boolean;   // NEW
 }
-const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileImageUploadProps) => {
+function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className }: { field: ControllerRenderProps<TFieldValues, Path<TFieldValues> & "profileImage">; className?: string }) {
   const [image, setImage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -33,7 +34,8 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
   const imageRef = useRef<HTMLImageElement>(null);
   const startPosRef = useRef<{ x: number; y: number }>(null);
   const { uploadFile } = useUpload() ///TO manage the upload of Image
-
+  const [flipX, setFlipX] = useState(false);
+  const [flipY, setFlipY] = useState(false);
   //Decoded image is cached here once per upload instead of being re-created with new Image() on every wheel tick/drag end.
   const decodedImgRef = useRef<HTMLImageElement | null>(null);
   // Latest cropped output, kept as a Blob (not base64) so Save can hand it
@@ -53,6 +55,7 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
     };
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) { //Check if the file is under 5MB
       setError(`Image must be under ${MAX_FILE_SIZE_MB}`)
+      return
     };
     const reader: FileReader = new FileReader();
     reader.onerror = () => setError("Could not read that file. Try another one.") //Catch any errors
@@ -62,7 +65,7 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
       img.onload = () => {
         decodedImgRef.current = img; //Cache the decoded image
         setImage(result);
-        const reset: Transform = { position: { x: 0, y: 0 }, scale: 1, rotation: 0 }
+        const reset: Transform = { position: { x: 0, y: 0 }, scale: 1, rotation: 0, flipX: false, flipY: false };
         setPosition(reset.position);
         setScale(reset.scale);
         setRotation(reset.rotation);
@@ -79,6 +82,8 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
   const renderPreview = useCallback((imgSrc: string, transform: Transform) => { //Render the preview
     const img = decodedImgRef.current; // Get the cached image first
     if (!img) return;
+
+
     const canvas = document.createElement("canvas"); // Create a canvas, which will hold the transformed image
     canvas.width = OUTPUT_SIZE; // Set the width of the canvas
     canvas.height = OUTPUT_SIZE; // Set the height of the canvas
@@ -93,10 +98,12 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
     ctx.fillStyle = "#f0f0f0"; // Set the fill color to white
     ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the canvas with white
 
-    const { position, scale, rotation } = transform; ///Destructure the transform object, which contains the position, scale, and rotation of the image
+    const { position, scale, rotation, flipX, flipY } = transform; ///Destructure the transform object, which contains the position, scale, and rotation of the image
     const imgWidth = img.width; // Get the width of the image
     const imgHeight = img.height // Get the height of the image
 
+    const displayW = imageRef.current?.offsetWidth || img.width; //how big the <img> is actually rendered on screen right now (CSS/layout pixels)
+    const ratio = img.width / displayW; //ratio of natural pixels to displayed pixels
     const tempCanvas = document.createElement("canvas") ///Create a temporary canvas to apply transformations to the original image
     const tempCtx = tempCanvas.getContext("2d");
     if (!tempCtx) return;
@@ -106,14 +113,19 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
     tempCanvas.height = maxDimension;
     tempCtx.translate(maxDimension / 2, maxDimension / 2); ///Center, scale, and rotate in the temp canvas
     tempCtx.rotate((rotation * Math.PI) / 180); /// Rotate the temp canvas by the rotation amount
-    tempCtx.scale(scale, scale);
+    tempCtx.scale(flipX ? -scale : scale, flipY ? -scale : scale);
     tempCtx.drawImage(img, -imgWidth / 2, -imgHeight / 2, imgWidth, imgHeight); ///Draw the original image in the temp canvas
+    const scaledCircle = CIRCLE_SIZE * ratio; //Convert the on-screen circle diameter into natural-image-pixel terms using the ratio
+    // Convert the on-screen drag offset into natural-image-pixel terms using the same ratio
+    const offsetX = transform.position.x * ratio;
+    const offsetY = transform.position.y * ratio;
+    // Copy a square region OUT of tempCanvas(the source) and stretch it to fill the final canvas
     ctx.drawImage(
       tempCanvas, // Source Image Variables to Draw the transformed image on the canvas
-      maxDimension / 2 - position.x - CIRCLE_SIZE / 2, // Source image variable to set the horizontal position of the source image
-      maxDimension / 2 - position.y - CIRCLE_SIZE / 2, // Set the y(vertical) position of the source image
-      CIRCLE_SIZE, // width of the source slice
-      CIRCLE_SIZE, // height of the  source slice
+      maxDimension / 2 - offsetX - scaledCircle / 2, // Source image variable to set the horizontal position of the source image
+      maxDimension / 2 - offsetY - scaledCircle / 2, // Set the y(vertical) position of the source image
+      scaledCircle, // width of the source slice
+      scaledCircle, // height of the  source slice
       0, /// destination x coordinate
       0, /// destination y coordinate
       OUTPUT_SIZE, // destination width to scale the image to the desired size
@@ -130,7 +142,7 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
 
 
   }, [])
-  const currentTransform = (): Transform => ({ position, scale, rotation });
+  const currentTransform = (): Transform => ({ position, scale, rotation, flipX, flipY });
   const handleSaveCroppedImage = async () => {
     if (!croppedBlobRef.current) return
     setIsUploading(true);
@@ -138,10 +150,8 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
     try {
       const file = new File([croppedBlobRef.current], "profile.jpg", { type: "image/jpeg" }); ///Create file from the cropped blob
       const url = await uploadFile(file); //Upload file to cloudinary
-      if (setValue) {
-        setValue("profileImage", url); //Populate the value with the url
-        if (typeof trigger === "function") trigger("profileImage") //Trigger the validation
-      }
+      field.onChange(url);
+      field.onBlur()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setError(message);
@@ -228,117 +238,19 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
     const delta = e.deltaY * -0.01;
     const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale + delta));
     setScale(newScale);
-    renderPreview(image, { position, scale: newScale, rotation });
+    renderPreview(image, { position, scale: newScale, rotation, flipX, flipY });
   };
 
 
   const handleRotate = (angle: number): void => {
     const newRotation = rotation + angle;
     setRotation(newRotation);
-    if (image) renderPreview(image, { position, scale, rotation: newRotation }); //use updated rotation
+    if (image) renderPreview(image, { position, scale, rotation: newRotation, flipX, flipY }); //use updated rotation
   };
 
-  const updatePreview = () => {
-    if (!image || !imageRef.current) return;
 
-    // Get container and selection circle dimensions
-    const container = containerRef.current;
-    if (!container) return;
-    const containerRect = container.getBoundingClientRect();
-    const circleSize = 128; // This matches the w-32 class (32 * 4px = 128px)
 
-    // Calculate the center point of the container
-    const centerX = containerRect.width / 2;
-    const centerY = containerRect.height / 2;
 
-    const canvas = document.createElement("canvas");
-    const outputSize = 200; // Size of the output image
-    canvas.width = outputSize;
-    canvas.height = outputSize;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw a circular clipping path
-    ctx.beginPath();
-    ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-
-    // Draw background
-    ctx.fillStyle = "#f0f0f0";
-    ctx.fillRect(0, 0, outputSize, outputSize);
-
-    const img = new Image();
-    img.src = image;
-
-    const drawCroppedImage = () => {
-      // Calculate the transformation for the visible area in the circle
-      const imgWidth = img.width;
-      const imgHeight = img.height;
-
-      // Create a temporary canvas to apply transformations to the original image
-      const tempCanvas = document.createElement("canvas");
-      const tempCtx = tempCanvas.getContext("2d");
-
-      // Make temp canvas large enough to handle rotations
-      const maxDimension = Math.max(imgWidth, imgHeight) * 2;
-      tempCanvas.width = maxDimension;
-      tempCanvas.height = maxDimension;
-
-      if (!tempCtx) return;
-      // Center, scale, and rotate in the temp canvas
-      tempCtx.translate(maxDimension / 2, maxDimension / 2);
-      tempCtx.rotate((rotation * Math.PI) / 180);
-      tempCtx.scale(scale, scale);
-      tempCtx.drawImage(
-        img,
-        -imgWidth / 2,
-        -imgHeight / 2,
-        imgWidth,
-        imgHeight
-      );
-
-      // Calculate where the circle is relative to the transformed image
-      // The position state represents how much the image has moved from center
-      const scaledCircleSize = circleSize;
-
-      // Draw the properly positioned and transformed image to the final canvas
-      ctx.drawImage(
-        tempCanvas,
-        maxDimension / 2 - position.x - scaledCircleSize / 2,
-        maxDimension / 2 - position.y - scaledCircleSize / 2,
-        scaledCircleSize,
-        scaledCircleSize,
-        0,
-        0,
-        outputSize,
-        outputSize
-      );
-
-      // Set the preview URL
-      const base64Image = canvas.toDataURL("image/jpeg", 0.6);
-      setPreviewUrl(base64Image);
-      if (setValue) {
-        setValue("profileImage", base64Image);
-        if (typeof trigger === "function") trigger("profileImage"); // Re-validate the field
-      }
-    };
-
-    if (img.complete) {
-      drawCroppedImage();
-    } else {
-      img.onload = drawCroppedImage;
-    }
-  };
-
-  useEffect(() => {
-    if (image) {
-      updatePreview();
-    }
-  }, [image]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -372,9 +284,12 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
       container.removeEventListener("wheel", preventScroll);
     };
   }, [isDragging]);
+  useEffect(() => {
+    if (image) renderPreview(image, currentTransform());
+  }, [image]);
 
   return (
-    <div className={cn("flex flex-col gap-4 items-center justify-start", className)}>
+    <div className={cn(" flex flex-col  w-full min-w-0 max-w-full gap-4 items-center justify-start", className)}>
       <input
         type="file"
         accept="image/*"
@@ -391,47 +306,75 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
       </button>
       {error && <p className="text-sm text-red-500">{error}</p>}
       {image && (
-        <div className="w-full max-w-md mt-4">
+        <div className="w-full mt-4">
           <h3 className="text-lg font-medium mb-2">Edit Your Image:</h3>
-          <div className="flex gap-2 mb-4">
+          <div className="flex flex-wrap gap-4 mb-4">
             <button
-              className="px-3 py-0 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
+              type="button"
+              className="px-4 py-2 dark:bg-black dark:border dark:border-neutral-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
               onClick={() => {
                 const newScale = Math.min(MAX_SCALE, scale + 0.1);
                 setScale(newScale)
-                renderPreview(image, { position, scale: newScale, rotation });
+                renderPreview(image, { position, scale: newScale, rotation, flipX, flipY });
               }
               }
             >
               Zoom In
             </button>
             <button
-              className="px-23 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
+              type="button"
+              className="px-4 py-2 dark:bg-black dark:border dark:border-neutral-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
               onClick={() => {
                 const newScale = Math.min(MAX_SCALE, scale - 0.1);
                 setScale(newScale)
-                renderPreview(image, { position, scale: newScale, rotation });
+                renderPreview(image, { position, scale: newScale, rotation, flipX, flipY });
               }}
             >
               Zoom Out
             </button>
             <button
-              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
+              type="button"
+              className="px-4 py-2 dark:bg-black dark:border dark:border-neutral-700  bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
               onClick={() => handleRotate(-90)}
             >
               Rotate Left
             </button>
             <button
-              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
+              type="button"
+              className="px-4 py-2 dark:bg-black dark:border dark:border-neutral-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
               onClick={() => handleRotate(90)}
             >
               Rotate Right
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 dark:bg-black dark:border dark:border-neutral-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
+              onClick={() => {
+                const newFlipY = !flipY;
+                setFlipY(newFlipY);
+                renderPreview(image, { position, scale, rotation, flipX, flipY: newFlipY });
+              }}
+
+            >
+              Invert Top
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 dark:bg-black dark:border dark:border-neutral-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors text-sm"
+              onClick={() => {
+                const newFlipX = !flipX;
+                setFlipX(newFlipX);
+                renderPreview(image, { position, scale, rotation, flipX: newFlipX, flipY });
+              }
+              }
+            >
+              Invert
             </button>
           </div>
 
           <div
             ref={containerRef}
-            className="relative overflow-hidden w-full h-64 bg-gray-100 rounded-md cursor-move border-2 border-gray-300"
+            className="relative overflow-hidden w-full h-64 dark:bg-black bg-gray-100 rounded-md cursor-move border-2 border-gray-300 dark:border-neutral-700"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -443,7 +386,7 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
             <div
               className="absolute inset-0 flex items-center justify-center pointer-events-none"
               style={{
-                transform: `translate(${position.x}px, ${position.y}px) scale(${scale}) rotate(${rotation}deg)`,
+                transform: `translate(${position.x}px, ${position.y}px) scale(${flipX ? -scale : scale}, ${flipY ? -scale : scale}) rotate(${rotation}deg)`,
                 transformOrigin: "center",
               }}
             >
@@ -451,7 +394,7 @@ const ProfileImageUpload = ({ control, setValue, trigger, className }: CProfileI
                 ref={imageRef}
                 src={image}
                 alt="Upload"
-                className="max-w-full max-h-full"
+                className="block max-w-full max-h-full object-contain"
               />
             </div>
 

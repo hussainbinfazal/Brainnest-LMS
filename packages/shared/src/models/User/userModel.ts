@@ -11,8 +11,10 @@ export const userSchema: Schema<IUser> = new mongoose.Schema({
     },
     username: {
         type: "String",
+        index: true,
         required: true,
-        trim: true
+        trim: true,
+        lowercase: true
     },
     email: {
         type: 'String'

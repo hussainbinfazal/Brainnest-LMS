@@ -81,7 +81,6 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
             } else if (error instanceof Error) {
                 message = error.message;
             }
-            clientLogger.error("Something went wrong, while fetching the user", { message });
             clientLogger.error("Error sending email OTP:", { error, message });
             setStatus("error");
             setError("Error sending email OTP");

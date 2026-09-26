@@ -451,12 +451,7 @@ export interface CResendOtpResponse {
 }
 
 
-export interface CProfileImageUploadProps {
-  setValue?: (field: string, value: any) => void;
-  trigger?: (field: string) => void;
-  control?: any;
-  className?: string;
-}
+
 
 export interface CCourseRatingProps {
   courseId: string;

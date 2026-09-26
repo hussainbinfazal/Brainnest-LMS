@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
     role?: string;
     phoneNumber?: string;
     profileImage?: string;
-  }={};
+  };
 }
 
 export const authMiddleware = (

@@ -140,7 +140,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
   return (
     <div className={cn("mb-4", className)}>
       <Form {...verifyEmailForm}>
-        <form onSubmit={verifyEmailForm.handleSubmit(handleVerifyOtp)}>
+        <div >
           <div className="flex justify-between items-center mb-2"
           >
             <span className="text-sm text-gray-600">OTP sent to: {email}</span>
@@ -178,7 +178,8 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
           <Button
             size='default'
             variant='default'
-            type='submit'
+            type='button'
+            onClick={verifyEmailForm.handleSubmit(handleVerifyOtp)}  // manually trigger validation + submit handler
             disabled={watchOtp.length !== 6}
             className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
@@ -198,7 +199,7 @@ export const EmailOtpVerifier = ({ email, onVerified, onChangeEmail, className }
           >
             {resendCooldown > 0 ? `Resend Email OTP after (${resendCooldown}s)` : 'Resend Email OTP'}
           </button>
-        </form>
+        </div>
       </Form>
     </div>
   );

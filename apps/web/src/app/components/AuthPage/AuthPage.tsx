@@ -187,7 +187,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             <Tabs
                 value={formType}
                 onValueChange={handleTabChange}
-                className="w-75 min-h-70 "
+                className="w-90 min-h-70 relative"
             >
                 <TabsList className="grid w-full grid-cols-2 h-10 rounded-full px-2">
                     <motion.div
@@ -306,7 +306,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                     <Form {...signupForm}>
                         <form
                             onSubmit={signupForm.handleSubmit(handleSignupSubmit)}
-                            className="space-y-8  py-4 min-h-125"
+                            className="space-y-8  py-4 min-h-125 "
                         >
                             <FormField
                                 control={signupForm.control}
@@ -476,13 +476,12 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                 control={signupForm.control}
                                 name="profileImage"
                                 render={({ field }: { field: ControllerRenderProps<z.infer<typeof signUpSchema>, "profileImage"> }) => (
-                                    <FormItem className=''>
+                                    <FormItem className='w-full min-w-0 relative'>
                                         <FormLabel className=''>Upload Profile Picture</FormLabel>
-                                        <FormControl>
+                                        <FormControl >
                                             <ProfileImageUpload
-                                                control={signupForm.control}
-                                                setValue={signupForm.setValue as (field: string, value: any) => void}
-                                                trigger={signupForm.trigger as (field: string) => void}
+                                                field={field}
+                                                className="w-full min-w-0"
                                             />
                                         </FormControl>
 

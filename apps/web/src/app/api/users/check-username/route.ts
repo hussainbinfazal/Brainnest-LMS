@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: CustomNextRequest) {
     try {
+        console.log("readyState at route entry:", mongoose.connection.readyState, "cached.conn:", !!global.mongooseCache?.conn);
         const { searchParams } = new URL(request.url);
         const username = searchParams.get("username")?.trim();
         if (!username || username.length < 3) {
@@ -27,7 +28,7 @@ export async function GET(request: CustomNextRequest) {
         const message: string = error instanceof Error ? error.message : "Unknown error";
         logger.error(
             "Error in checking username:",
-            { message }
+            { error, message }
         );
         return NextResponse.json({ message, available: false }, { status: 500 });
     }

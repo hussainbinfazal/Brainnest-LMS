@@ -3,7 +3,7 @@ import { logger } from '@repo/shared/server';
 
 
 
-const META_KEY: string = "bloom:usernames:meta";
+const META_KEY: string = "bloom:usernames:meta"; //a fixed, single key that never changes name
 const CONFIG_CACHE_TTL_MS: number = 5 * 60 * 1000;  //re fetch bloom config every 5 minutes;
 
 
@@ -66,19 +66,25 @@ export async function getActiveBloomConfig(): Promise<BloomConfig> {
     };
     const redisClient = getRedisClient();
     const raw = await redisClient.get<string>(META_KEY);
-    if (!raw) {
-        throw new Error("[bloom] no active config found — run scripts/populateBloomFilter.ts first");
-    };
+    // if (!raw) {
+    //     throw new Error("[bloom] no active config found — run scripts/populateBloomFilter.ts first");
+    // };
     const config: BloomConfig = typeof raw === "string" ? JSON.parse(raw) : raw;
     cached = { config, fetchedAt: Date.now() };
     return config;
 }
-
-const currentUserCount = await User.countDocuments();
-const config = await getActiveBloomConfig();
-const currentFpRate = estimateCurrentFalsePositiveRate(currentUserCount, config);
-if (currentFpRate > 0.03) { // 3x your original 1% target
-    logger.warn(`FP rate degraded to ${(currentFpRate * 100).toFixed(1)}% — resize needed`);
-    // trigger resizeBloomFilter.ts
-    //Trigger resize when the app is production and the current false positive rate is greater than 3x the target, dont over complicate everything now,
+export async function checkAndMaybeResize() {
+    try {
+        const currentUserCount = await User.countDocuments();
+        const config = await getActiveBloomConfig();
+        const currentFpRate = estimateCurrentFalsePositiveRate(currentUserCount, config);
+        if (currentFpRate > 0.03) { // 3x your original 1% target
+            logger.warn(`FP rate degraded to ${(currentFpRate * 100).toFixed(1)}% — resize needed`);
+            // trigger resizeBloomFilter.ts
+            //Trigger resize when the app is production and the current false positive rate is greater than 3x the target, dont over complicate everything now,
+        }
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : error;
+        logger.error(`[cache] checkAndMaybeResize failed for key :`, { key: META_KEY, err: message });
+    }
 }

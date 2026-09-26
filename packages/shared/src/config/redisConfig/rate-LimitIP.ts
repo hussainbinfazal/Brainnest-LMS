@@ -12,6 +12,9 @@ export async function checkIp(request: { headers: RequestHeaders }, namespace: s
         const isKey = ip
         const fullKey: string = buildKey(namespace, isKey);
         const limit = await RateLimit(getRedisClient(), { key: fullKey, max, windowSec });
+        const t0 = Date.now();
+        const result = await getRedisClient().get(fullKey);         // time this
+        console.log('redis.get in check IP function ', Date.now() - t0);
         return {
             allowed: limit.allowed,
             remaining: limit.remaining,
