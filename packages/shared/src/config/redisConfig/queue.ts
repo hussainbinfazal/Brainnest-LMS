@@ -46,9 +46,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 export async function closeRedisConnections(): Promise<void> {
     const client = globalThis.__ioredisConnection ?? _connection;
+
     if (!client) return /// never connected, nothing to close
+
     await client.quit();
+
     globalThis.__ioredisConnection = undefined;
+    
     _connection = undefined;
 }
 
