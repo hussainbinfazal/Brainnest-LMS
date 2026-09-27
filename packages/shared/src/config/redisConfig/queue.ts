@@ -26,14 +26,29 @@ function createIORedisConnection(REDIS_URL?: string): IORedisClient {
     client.on('connect', () => logger.info('[ioredis] connected'));
     return client
 }
+export function getRedisConnection(): IORedisClient {
+    if (globalThis.__ioredisConnection) {
+        return globalThis.__ioredisConnection;
+    }
+    if (_connection) return _connection;
+    _connection = createIORedisConnection(process.env.REDIS_URL)
+    if (process.env.NODE_ENV !== 'production') {
+        globalThis.__ioredisConnection = _connection
+    }
+    return _connection
+}
+let _connection: IORedisClient | undefined;
 
-export const connection: IORedisClient = globalThis.__ioredisConnection ?? createIORedisConnection(process.env.REDIS_URL)
 if (process.env.NODE_ENV !== 'production') {
-    globalThis.__ioredisConnection = connection
+    globalThis.__ioredisConnection = _connection
 }
 
 export async function closeRedisConnections(): Promise<void> {
-    await connection.quit()
+    const client = globalThis.__ioredisConnection ?? _connection;
+    if (!client) return /// never connected, nothing to close
+    await client.quit();
+    globalThis.__ioredisConnection = undefined;
+    _connection = undefined;
 }
 
 
