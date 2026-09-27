@@ -1,13 +1,14 @@
-import IORedis, { Redis as IORedisClient } from "ioredis";
+
+console.log("QUEUE.TS EVALUATED, cwd at this moment:", process.cwd());
 import { logger } from "../../logger/logger";
+import IORedis, { Redis as IORedisClient } from "ioredis";
 
 declare global {
     var __ioredisConnection: IORedisClient | undefined
-}
+};
 
 function createIORedisConnection(REDIS_URL?: string): IORedisClient {
-
-    console.log("RAW REDIS_URL PARAM:", REDIS_URL); // add this line
+    // console.log("RAW REDIS_URL PARAM:", REDIS_URL); // add this line
 
     if (!REDIS_URL) {
         throw new Error("Missing Redis environment variables")
@@ -28,12 +29,13 @@ function createIORedisConnection(REDIS_URL?: string): IORedisClient {
 }
 // module-scoped singleton 
 let _connection: IORedisClient | undefined;
-export function getIORedisClient(): IORedisClient {
+export function getIORedisClient(REDIS_URL?: string): IORedisClient {
+
     if (globalThis.__ioredisConnection) {
         return globalThis.__ioredisConnection;
     }
     if (_connection) return _connection;
-    _connection = createIORedisConnection(process.env.REDIS_URL)
+    _connection = createIORedisConnection(REDIS_URL);
     if (process.env.NODE_ENV !== 'production') {
         globalThis.__ioredisConnection = _connection
     }
@@ -52,7 +54,7 @@ export async function closeRedisConnections(): Promise<void> {
     await client.quit();
 
     globalThis.__ioredisConnection = undefined;
-    
+
     _connection = undefined;
 }
 

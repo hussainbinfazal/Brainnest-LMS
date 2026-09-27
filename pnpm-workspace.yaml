@@ -6,6 +6,8 @@ overrides:
   "@langchain/community>mongodb": "7.2.0"
   "mongoose": "^9.6.2"
   "mongodb": "7.2.0"
+  "ioredis": "5.11.1"
+
 allowBuilds:
   '@prisma/client': true
   '@prisma/engines': true
