@@ -1,33 +1,25 @@
 import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateEmail } from "@/utils/phoneValidators";
 import { sendEmailBodySchema, verifyEmailBodySchema } from "@repo/shared/client"
-import z from "zod";
-
-// export const verifyEmailBodySchema = z.object({
-//     email: z.string().email().max(254).refine(validateEmail),
-//     otp: z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code"),
-// })
-// export const sendEmailBodySchema = z.object({
-//     email: z.string().trim().toLowerCase().email().max(254).refine(validateEmail),
 // });
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";
 
-interface UseSendEmailOtpResult {
+export interface UseSendEmailOtpResult {
     status: OtpStatus;
     error: string | null;
     cooldownSeconds: number;
     sendOtp: () => Promise<void>;
 }
-interface UseVerifyEmailOtpResult {
+export interface UseVerifyEmailOtpResult {
     status: VerfiyStatus;
     error: string | null;
     cooldownSeconds: number;
     verifyOtp: () => Promise<void>;
 }
 const RESEND_COOLDOWN_SECONDS = 60; // server's cooldown TTL
+
 
 export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
     const [status, setStatus] = useState<OtpStatus>("idle");
@@ -74,13 +66,15 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
             setStatus("sent");
             setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
         } catch (error: unknown) {
-            let message = "Something went wrong";
+            console.log("This is the error in the catch block of send Email Otp Hook", error);
+            let message: string = "Failed to send email OTP";
             if (axios.isAxiosError(error)) {
                 message = error.response?.data?.message || error.message || message;
 
             } else if (error instanceof Error) {
                 message = error.message;
             }
+            console.log("This is the error in the catch block of send Email Otp Hook", error);
             clientLogger.error("Error sending email OTP:", { error, message });
             setStatus("error");
             setError("Error sending email OTP");

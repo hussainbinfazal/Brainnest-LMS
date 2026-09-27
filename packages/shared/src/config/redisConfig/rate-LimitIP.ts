@@ -1,8 +1,8 @@
 import { logger } from "../../logger/logger";
 import { getClientIp } from "../../utils/getClientIp";
 import { buildKey } from "./cache-helper";
-import { RateLimit } from "./rate-limiters/rate-limit";
-import { getRedisClient } from "./cache";
+import { fromIoredis, RateLimit } from "./rate-limiters/rate-limit";
+import { getIORedisClient } from "./queue";
 import type { RequestHeaders } from "../../utils/getClientIp";
 
 export async function checkIp(request: { headers: RequestHeaders }, namespace: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, ip: string }> {
@@ -12,7 +12,7 @@ export async function checkIp(request: { headers: RequestHeaders }, namespace: s
         console.log("This is the IP of the User", ip)
         const isKey = ip
         const fullKey: string = buildKey(namespace, isKey);
-        const limit = await RateLimit(getRedisClient(), { key: fullKey, max, windowSec });
+        const limit = await RateLimit(fromIoredis(getIORedisClient()), { key: fullKey, max, windowSec });
         const t0 = Date.now();
         // const result = await getRedisClient().get(fullKey);         // time this
         // console.log('redis.get in check IP function ', Date.now() - t0);

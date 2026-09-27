@@ -38,6 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
     }
     const { email } = parsed.data;
+    console.log("URL of the worker in the sendEmail route", `${process.env.EMAIL_API_URL}/internal/email-otp`);
     try {
         //Atomic
         const acquired = await setOnlyIfNotExist(COOLDOWN_VERIFICATION_EMAIL.namespace, email, "1", CACHE_TTL.SHORT); //acquire lock
@@ -80,6 +81,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             // ...(process.env.NODE_ENV! === 'development' && { email })
         }, { status: 202 });
     } catch (error: unknown) {
+        console.log("This is the error in the catch block of send Email Otp route", error);
+
         // Don't leave the user locked in a cooldown for an email that was never sent
         await Promise.allSettled([
             invalidateCached(COOLDOWN_VERIFICATION_EMAIL.namespace, email),
@@ -89,9 +92,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const isAxiosError = axios.isAxiosError(error);
         const status = isAxiosError && error.code === 'ECONNABORTED' ? 504 : 502;
         logger.error('Email OTP worker error', {
+            ip,
+            email,
+            errorCode: isAxiosError ? error.code : undefined,
+            workerStatus: isAxiosError ? error.response?.status : error instanceof Error ? error.message : undefined,
+            workerBody: isAxiosError ? error.response?.data : undefined,   // <-- you're missing this
             error,
             message,
-            workerStatus: isAxiosError ? error.response?.status : undefined,
         });
         return NextResponse.json(
             { message: 'Email service is temporarily unavailable' },
