@@ -26,6 +26,8 @@ function createIORedisConnection(REDIS_URL?: string): IORedisClient {
     client.on('connect', () => logger.info('[ioredis] connected'));
     return client
 }
+// module-scoped singleton 
+let _connection: IORedisClient | undefined;
 export function getIORedisClient(): IORedisClient {
     if (globalThis.__ioredisConnection) {
         return globalThis.__ioredisConnection;
@@ -37,7 +39,6 @@ export function getIORedisClient(): IORedisClient {
     }
     return _connection
 }
-let _connection: IORedisClient | undefined;
 
 if (process.env.NODE_ENV !== 'production') {
     globalThis.__ioredisConnection = _connection
