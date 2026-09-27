@@ -26,7 +26,7 @@ function createIORedisConnection(REDIS_URL?: string): IORedisClient {
     client.on('connect', () => logger.info('[ioredis] connected'));
     return client
 }
-export function getRedisConnection(): IORedisClient {
+export function getIORedisClient(): IORedisClient {
     if (globalThis.__ioredisConnection) {
         return globalThis.__ioredisConnection;
     }
