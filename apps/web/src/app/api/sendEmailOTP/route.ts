@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { logger } from '@/utils/logger/logger.node';
-import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL } from '@repo/shared/server';
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, getErrorMessage, OTP_VERIFICATION_EMAIL } from '@repo/shared/server';
 import { sendEmailBodySchema } from '@repo/shared/client';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
 import { hashOtp } from '@/lib/OtpValidators';
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             invalidateCached(COOLDOWN_VERIFICATION_EMAIL.namespace, email),
             invalidateCached(OTP_VERIFICATION_EMAIL.namespace, email),
         ]);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        const message: string = getErrorMessage(error, "Email service is temporary Unavailable");
         const isAxiosError = axios.isAxiosError(error);
         const status = isAxiosError && error.code === 'ECONNABORTED' ? 504 : 502;
         logger.error('Email OTP worker error', {
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             message,
         });
         return NextResponse.json(
-            { message: 'Email service is temporarily unavailable' },
+            { message },
             { status },
         );
     }

@@ -12,4 +12,3 @@ export * from "./config/index.export";
 export * from "./config/mongoDB/db";
 export * from './utils/getClientIp';
 export * from "./schemas/auth.schema"
-export * from "./helper/getErrorMessage"

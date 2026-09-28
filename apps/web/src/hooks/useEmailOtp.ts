@@ -2,7 +2,7 @@ import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sendEmailBodySchema, verifyEmailBodySchema } from "@repo/shared/client"
-import { getErrorMessage } from "@repo/shared/server";
+import { getErrorMessage } from "@repo/shared";
 // });
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";

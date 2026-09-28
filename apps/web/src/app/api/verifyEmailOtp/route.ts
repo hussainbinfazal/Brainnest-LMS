@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getClientIp, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from '@repo/shared/server';
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getClientIp, getErrorMessage, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from '@repo/shared/server';
 import { connectDB } from '@repo/shared/server';
 import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
@@ -8,14 +8,13 @@ import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } f
 import z from "zod";
 import { hashOtp } from "@/lib/OtpValidators";
 import { OTP_VERIFY_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
-import { verifyEmailBodySchema } from "@repo/shared/client";
+import { verifyEmailBodySchema } from "@repo/shared/server";
 
 
 
 
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const userIp = getClientIp(request.headers);
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
         return NextResponse.json(
@@ -92,7 +91,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             { status: 200 }
         );
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
+        const message = getErrorMessage(error, "Email Verification Failed")
         logger.error("Email verification error:", { message });
         return NextResponse.json(
             { message: `Error in verifying email` },
