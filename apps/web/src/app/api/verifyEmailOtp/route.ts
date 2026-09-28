@@ -12,17 +12,14 @@ import { verifyEmailBodySchema } from "@repo/shared/client";
 
 
 
-// const VerifyEmailbodySchema: z.ZodType<{ email: string; otp: string }> = z.object({
-//     email: z.string().email().max(254).refine(validateEmail),
-//     otp: z.string().regex(/^\d{6}$/),
-// })
+
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const userIp = getClientIp(request.headers);
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
         return NextResponse.json(
-            { message: 'Too many requests, please try again later' },
+            { message: `Too many requests, please try again later after ${retryAfterSec}` },
             { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
         );
     }
@@ -34,9 +31,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
     };
     const { email, otp } = parsed.data;
-    if (!email || !validateEmail(email)) {
-        return NextResponse.json({ message: 'Invalid email format' }, { status: 400 });
-    };
     const stored = await getCached<string>(OTP_VERIFICATION_EMAIL.namespace, email);
     if (!stored) {
         logger.info("Otp is expired", { ip });
@@ -69,17 +63,17 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         await connectDB(process.env.MONGODB_URI!);
 
 
-        //Mark user verified and delete token 
+        //Mark email verified and set in redis to Update user verfication flog on registeration
         // await UserToken.deleteOne({ _id: tokenDoc._id }, { session }).exec();
-        let result = await User.updateOne(
-            { email: email, isVerified: false },
-            { $set: { isVerified: true } },
-            {}
-        ).exec();
-        if (result.matchedCount === 0) {
-            logger.info("User not found", { email });
-            return NextResponse.json({ message: "User not found" }, { status: 404 });
-        }
+        // let result = await User.updateOne(
+        //     { email: email, isVerified: false },
+        //     { $set: { isVerified: true } },
+        //     {}
+        // ).exec();
+        // if (result.matchedCount === 0) {
+        //     logger.info("User not found", { email });
+        //     return NextResponse.json({ message: "User not found" }, { status: 404 });
+        // }
 
 
 

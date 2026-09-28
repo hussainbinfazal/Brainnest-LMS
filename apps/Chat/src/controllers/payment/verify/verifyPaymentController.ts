@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { Request, Response } from 'express';
-import { connectDB, Payment, reconcileQueue } from '@repo/shared/server';
+import { connectDB, Payment } from '@repo/shared/server';
 import { User, Course, Message, Chat, IChat } from '@repo/shared/server';
 import { logger } from '@repo/shared/server';
 import mongoose from 'mongoose';

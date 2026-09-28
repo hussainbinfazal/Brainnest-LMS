@@ -2,24 +2,29 @@ import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { sendEmailBodySchema, verifyEmailBodySchema } from "@repo/shared/client"
+import { getErrorMessage } from "@repo/shared/server";
 // });
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";
 
+export type ActionResult<TFail = {}> =
+    | { ok: true }
+    | ({ ok: false; message: string } & TFail);
+type SendResult = ActionResult<{ retryAfterSeconds?: number }>
+type VerfiyResult = ActionResult
 export interface UseSendEmailOtpResult {
     status: OtpStatus;
     error: string | null;
     cooldownSeconds: number;
-    sendOtp: () => Promise<void>;
+    sendOtp: () => Promise<SendResult>;
 }
 export interface UseVerifyEmailOtpResult {
     status: VerfiyStatus;
     error: string | null;
     cooldownSeconds: number;
-    verifyOtp: () => Promise<void>;
+    verifyOtp: () => Promise<VerfiyResult>;
 }
 const RESEND_COOLDOWN_SECONDS = 60; // server's cooldown TTL
-
 
 export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
     const [status, setStatus] = useState<OtpStatus>("idle");
@@ -51,13 +56,16 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
         return () => clearInterval(id);
 
     }, [cooldownSeconds])
-    const sendOtp = useCallback(async () => {
+    const sendOtp = useCallback(async (): Promise<SendResult> => {
+        if (inFlightRef.current || status === "sending" || status === "cooldown") {
+            return { ok: false, message: "Request in progress" }
+        }
         const parsed = sendEmailBodySchema.safeParse({ email });
         if (!parsed.success) {
+            const message: string = parsed?.error?.issues[0]?.message ?? "Invalid Email"
             clientLogger.info("Invalid Payload");
-            return;
+            return { ok: false, message: "Invalid Email" };
         }
-        if (inFlightRef.current || status === "sending" || status === "cooldown") return
         inFlightRef.current = true;
         setStatus("sending");
         setError(null);
@@ -65,23 +73,18 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
             await axios.post("/api/sendEmailOTP", { email });
             setStatus("sent");
             setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
+            return { ok: true }
         } catch (error: unknown) {
-            console.log("This is the error in the catch block of send Email Otp Hook", error);
-            let message: string = "Failed to send email OTP";
-            if (axios.isAxiosError(error)) {
-                message = error.response?.data?.message || error.message || message;
-
-            } else if (error instanceof Error) {
-                message = error.message;
-            }
-            console.log("This is the error in the catch block of send Email Otp Hook", error);
-            clientLogger.error("Error sending email OTP:", { error, message });
+            // console.log("This is the error in the catch block of send Email Otp Hook", error);
+            let message: string = getErrorMessage(error, "Failed to send email OTP");
+            clientLogger.error("Error sending email OTP:", { message });
             setStatus("error");
-            setError("Error sending email OTP");
+            setError(message);
+            return { ok: false, message }
         } finally {
             inFlightRef.current = false;
         }
-    }, [email, status]);
+    }, [email]);
 
     return { status, error, cooldownSeconds, sendOtp };
 };
@@ -114,35 +117,35 @@ export function useVerifyEmailOtp(email: string, otp: string,): UseVerifyEmailOt
         return () => clearInterval(id);
 
     }, [cooldownSeconds])
-    const verifyOtp = useCallback(async () => {
+    const verifyOtp = useCallback(async (): Promise<VerfiyResult> => {
+        if (inFlightRef.current) return { ok: false, message: "Verification in progress" };
         const parsed = verifyEmailBodySchema.safeParse({ email, otp });
         if (!parsed.success) {
+            const message = parsed.error.issues[0]?.message ?? "Invalid OTP"
+            setStatus('error');
+            setError(message)
             clientLogger.warn("Invalid Payload");
-            return;
+            return { ok: false, message };
         };
         inFlightRef.current = true;
         setStatus("verifying");
         setError(null);
         try {
-            await axios.post("/api/verifyEmailOTP", { email, otp });
+            await axios.post("/api/verifyEmailOtp", { email, otp });
             setStatus("verified");
             setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
+            return { ok: true }
         } catch (error: unknown) {
-            let message = "Something went wrong";
-            if (axios.isAxiosError(error)) {
-                message = error.response?.data?.message || error.message || message;
-
-            } else if (error instanceof Error) {
-                message = error.message;
-            }
-            clientLogger.error("Something went wrong, while fetching the user", { message });
-            clientLogger.error("Error sending email OTP:", { error, message });
+            // console.log("This is the error in verify Route", error)
+            const message: string = getErrorMessage(error, "Email OTP verification failed");
+            clientLogger.error("Error sending email OTP:", { message });
             setStatus("error");
-            setError("Error verifying email OTP");
+            setError(message);
+            return { ok: false, message }
         } finally {
             inFlightRef.current = false;
         }
-    }, [otp, status]);
+    }, [email, otp]);
 
     return { status, error, cooldownSeconds, verifyOtp };
 };

@@ -127,8 +127,9 @@ export const EmailOtpVerifier = ({
     try {
       await verifyOtp();
       toast.success("Email OTP verified");
-      onVerified(); // Notify parent
+      // onVerified(); // Notify parent
     } catch (error: unknown) {
+      console.log("This is the error in verify OTP component ")
       const message = axios.isAxiosError(error)
         ? (error.response?.data?.message ?? error.message)
         : error instanceof Error
@@ -136,6 +137,8 @@ export const EmailOtpVerifier = ({
           : "Email OTP verification failed";
       clientLogger.error(message, { error });
       toast.error(message);
+    } finally {
+      onVerified()
     }
   };
 

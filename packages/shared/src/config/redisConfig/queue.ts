@@ -1,5 +1,5 @@
 
-console.log("QUEUE.TS EVALUATED, cwd at this moment:", process.cwd());
+// console.log("QUEUE.TS EVALUATED, cwd at this moment:", process.cwd());
 import { logger } from "../../logger/logger";
 import IORedis, { Redis as IORedisClient } from "ioredis";
 
