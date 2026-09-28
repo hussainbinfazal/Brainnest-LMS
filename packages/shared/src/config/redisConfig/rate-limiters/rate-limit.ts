@@ -28,7 +28,13 @@ export interface RateLimitResult {
     retryAfterSec: number
 };
 
-
+// / Fixed-window rate limiter: `max` requests allowed per `windowSec`, backed
+// by the atomic INCR+PEXPIRE script above so the count and its expiry can
+// never drift apart. Note this is fixed-window, not sliding-window — a
+// client can burst up to 2x `max` right at the boundary between two windows
+// (e.g. max requests at 0:59, then max more at 1:00). Fine for most abuse
+// protection; switch to a sliding-window/token-bucket script later if you
+// ever need to close that gap.
 export async function RateLimit(
     runner: ScriptRunner,
     { key, max, windowSec }: RateLimitOptions,
