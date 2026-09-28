@@ -64,7 +64,7 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
         if (!parsed.success) {
             const message: string = parsed?.error?.issues[0]?.message ?? "Invalid Email"
             clientLogger.info("Invalid Payload");
-            return { ok: false, message: "Invalid Email" };
+            return { ok: false, message };
         }
         inFlightRef.current = true;
         setStatus("sending");

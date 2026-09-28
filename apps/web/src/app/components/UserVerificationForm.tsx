@@ -27,6 +27,8 @@ import {
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
+////Schema for ZOD Form
 export const verifyEmailOTPFormSchema = z.object({
   otp: z.string().regex(/^\d{6}$/, "OTP must be a 6-digit code"),
 });
@@ -124,21 +126,12 @@ export const EmailOtpVerifier = ({
   const handleVerifyOtp = async (): Promise<void> => {
 
     console.log("Handle Verify OTP Called in verification Component", watchOtp);
-    try {
-      await verifyOtp();
-      toast.success("Email OTP verified");
-      // onVerified(); // Notify parent
-    } catch (error: unknown) {
-      console.log("This is the error in verify OTP component ")
-      const message = axios.isAxiosError(error)
-        ? (error.response?.data?.message ?? error.message)
-        : error instanceof Error
-          ? error.message
-          : "Email OTP verification failed";
-      clientLogger.error(message, { error });
-      toast.error(message);
-    } finally {
+    const result = await verifyOtp();
+    if (result.ok) {
+      toast.success("Email OTP Verified");
       onVerified()
+    } else {
+      toast.error(result.message);
     }
   };
 
@@ -147,20 +140,15 @@ export const EmailOtpVerifier = ({
       toast.error(`Maximum ${maxResendAttempts} resend attempts reached`);
       return;
     }
-    try {
-      await resendOtp();
-      toast.success("Email OTP resent successfully");
-      setResendCount((c) => c + 1);
-      verifyEmailForm.resetField("otp");
-    } catch (error: unknown) {
-      const message = axios.isAxiosError(error)
-        ? (error.response?.data?.message ?? error.message)
-        : error instanceof Error
-          ? error.message
-          : "Failed to resend email OTP";
-      clientLogger.error(message, { error });
-      toast.error(message);
-    }
+    const result = await resendOtp();
+    if (result.ok) {
+      setResendCount((c) => c + 1) //Prev count  + 1
+      verifyEmailForm.resetField("otp")
+      toast.success("Email OTP resent successfully")
+    } else {
+      clientLogger.error(result.message)
+      toast.error(result.message)
+    };
   };
 
   return (
@@ -239,6 +227,9 @@ export const EmailOtpVerifier = ({
               ? `Resend Email OTP after (${resendCooldown}s)`
               : "Resend Email OTP"}
           </button>
+          {resendError && (
+            <p role="alert" className="text-sm text-red-500">{resendError}</p>
+          )}
         </div>
       </Form>
     </div>
