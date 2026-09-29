@@ -16,12 +16,16 @@ export interface UseSendEmailOtpResult {
     status: OtpStatus;
     error: string | null;
     cooldownSeconds: number;
+    isLocked?: boolean,
+    unlock?: () => void,
     sendOtp: () => Promise<SendResult>;
 }
 export interface UseVerifyEmailOtpResult {
     status: VerfiyStatus;
     error: string | null;
     cooldownSeconds: number;
+    isLocked: boolean,
+    unlock: () => void,
     verifyOtp: () => Promise<VerfiyResult>;
 }
 const RESEND_COOLDOWN_SECONDS = 60; // server's cooldown TTL
@@ -90,11 +94,18 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
 };
 export function useVerifyEmailOtp(email: string, otp: string,): UseVerifyEmailOtpResult {
     const [status, setStatus] = useState<VerfiyStatus>("idle");
+    const [locked, setLocked] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
     const inFlightRef = useRef(false);
 
 
+    useEffect(() => {
+        if (locked) return;
+        setStatus("idle");
+        setError(null);
+    }, [email, otp, locked]);
+    useEffect(() => setLocked(false), [email]);
     //Reset stale "verfiy/error" state if the user edits the email after a previous attempt
     useEffect(() => {
         setStatus("idle");
@@ -118,6 +129,7 @@ export function useVerifyEmailOtp(email: string, otp: string,): UseVerifyEmailOt
 
     }, [cooldownSeconds])
     const verifyOtp = useCallback(async (): Promise<VerfiyResult> => {
+        if (locked) return { ok: false, message: "Too many attempts. Request a new OTP." };
         if (inFlightRef.current) return { ok: false, message: "Verification in progress" };
         const parsed = verifyEmailBodySchema.safeParse({ email, otp });
         if (!parsed.success) {
@@ -147,7 +159,7 @@ export function useVerifyEmailOtp(email: string, otp: string,): UseVerifyEmailOt
         }
     }, [email, otp]);
 
-    return { status, error, cooldownSeconds, verifyOtp };
+    return { status, error, isLocked: locked, unlock: () => setLocked(false), cooldownSeconds, verifyOtp };
 };
 
 

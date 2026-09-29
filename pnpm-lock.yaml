@@ -188,9 +188,6 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.8.1
         version: 0.8.1(@trivago/prettier-plugin-sort-imports@6.0.2(prettier@3.9.6)(supports-color@8.1.1))(prettier@3.9.6)
-      server-only:
-        specifier: ^0.0.1
-        version: 0.0.1
       tsx:
         specifier: ^4.23.12
         version: 4.23.15

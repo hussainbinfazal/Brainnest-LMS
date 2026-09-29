@@ -109,6 +109,8 @@ export const EmailOtpVerifier = ({
     error: verifyError,
     cooldownSeconds: verifyCooldown,
     verifyOtp,
+    isLocked,
+    unlock
   } = useVerifyEmailOtp(email, verifyEmailForm.watch("otp"));
   const {
     status: resendStatus,
@@ -144,6 +146,7 @@ export const EmailOtpVerifier = ({
     if (result.ok) {
       setResendCount((c) => c + 1) //Prev count  + 1
       verifyEmailForm.resetField("otp")
+      unlock() ///Allow user to add otp in the otp Input
       toast.success("Email OTP resent successfully")
     } else {
       clientLogger.error(result.message)
@@ -199,7 +202,7 @@ export const EmailOtpVerifier = ({
             variant="default"
             type="button"
             onClick={verifyEmailForm.handleSubmit(handleVerifyOtp)} // manually trigger validation + submit handler
-            disabled={watchOtp.length !== 6}
+            disabled={watchOtp.length !== 6 || isLocked || verifyStatus === "verifying" || !watchOtp}
             className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {verifyStatus === "verifying" ? "Verifying..." : "Verify OTP"}

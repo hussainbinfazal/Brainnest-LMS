@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
 import { logger } from '@/utils/logger/logger.node';
-import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, getErrorMessage, OTP_VERIFICATION_EMAIL } from '@repo/shared/server';
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL } from '@repo/shared/server';
+import { getErrorMessage } from "@repo/shared"
 import { sendEmailBodySchema } from '@repo/shared/client';
 import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo/shared/config/redisConfig/cache-helper';
 import { hashOtp } from '@/lib/OtpValidators';
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             // ...(process.env.NODE_ENV! === 'development' && { email })
         }, { status: 202 });
     } catch (error: unknown) {
-        console.log("This is the error in the catch block of send Email Otp route", error);
+        // console.log("This is the error in the catch block of send Email Otp route", error);
 
         // Don't leave the user locked in a cooldown for an email that was never sent
         await Promise.allSettled([
