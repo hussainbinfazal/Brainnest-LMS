@@ -269,7 +269,7 @@ export interface CCourse {
   category: CCategory;
   totalDurationInSeconds: number;
   isDeleted: boolean;
-  deletedAt: Date;
+  deletedAt?: Date | null;
   createdAt?: Date;
   updatedAt?: Date;
 }

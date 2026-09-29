@@ -133,8 +133,10 @@ const courseSchema = new mongoose.Schema<ICourse>({
     default: false
   },
   deletedAt: {
-    type: Date
-  }
+    type: Date,
+    default: null,
+    required: false
+  },
 
 
 

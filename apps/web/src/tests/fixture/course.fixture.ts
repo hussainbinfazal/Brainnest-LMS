@@ -44,6 +44,8 @@ export const mockCourse = {
         slug: "development",
         parent: null,
     },
+    isDeleted: false,
+    deletedAt: null,
     certificate: true,
     dripType: "free",
     totalDurationInSeconds: 0,

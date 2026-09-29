@@ -65,6 +65,7 @@ describe('CoursesPageComp', () => {
         mockAuthStore({
             authUser: {
                 _id: "user-1",
+                username: "testuser",
                 name: "Test User",
                 email: "test@example.com",
                 role: "student",

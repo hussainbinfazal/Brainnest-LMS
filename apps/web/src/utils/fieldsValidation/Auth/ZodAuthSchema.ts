@@ -2,14 +2,14 @@ import { validateEmail } from "@/utils/phoneValidators";
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email"),
+  email: z.string().email("Invalid email").refine(validateEmail),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export const signUpSchema = z.object({
-  name: z.string(),
+  name: z.string().min(1),
   email: z.string().email("Invalid email").refine(validateEmail),
-  username:z.string().min(5, "Username must be at least 3 characters"),
+  username: z.string().min(5, "Username must be at least 3 characters"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   role: z.enum(["USER", "INSTRUCTOR", "ADMIN"]),
