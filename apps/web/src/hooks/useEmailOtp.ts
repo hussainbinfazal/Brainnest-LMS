@@ -7,11 +7,11 @@ import { getErrorMessage } from "@repo/shared";
 type OtpStatus = "idle" | "sending" | "error" | "sent" | "cooldown";
 type VerfiyStatus = "idle" | "verifying" | "error" | "verified";
 
-export type ActionResult<TFail = {}> =
+export type EmailActionResult<TFail = {}> =
     | { ok: true }
     | ({ ok: false; message: string } & TFail);
-type SendResult = ActionResult<{ retryAfterSeconds?: number }>
-type VerfiyResult = ActionResult
+type SendResult = EmailActionResult<{ retryAfterSeconds?: number }>
+type VerfiyResult = EmailActionResult
 export interface UseSendEmailOtpResult {
     status: OtpStatus;
     error: string | null;
