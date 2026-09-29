@@ -5,11 +5,12 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { getErrorMessage } from "@repo/shared";
 
 
-type UsernameStatus = "idle" | "checking" | "available" | "taken";
+type UsernameStatus = "idle" | "checking" | "available" | "taken" | "error";
 
 
-export function useUsernameAvailability(username: string) {
+export function useUsernameAvailability(username: string): { status: UsernameStatus, error: string | null } {
     const [status, setStatus] = useState<UsernameStatus>("idle");
+    const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         if (!username || username.length < 3) {
             setStatus("idle");
@@ -31,11 +32,12 @@ export function useUsernameAvailability(username: string) {
                 const message: string = getErrorMessage(error, "Failed to check username");
                 clientLogger.error("Error checking username availability:", { message });
                 setStatus("idle");
+                setError(message)
             }
         }, 400);
 
         return () => { clearTimeout(timeout); controller.abort() };
     }, [username]);
-    return status;
+    return { status, error };
 
 }

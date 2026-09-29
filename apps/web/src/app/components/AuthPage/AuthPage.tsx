@@ -35,11 +35,14 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";
+import { getErrorMessage } from "@repo/shared";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
     const router = useRouter();
-    const [formType, setFormType] = useState<string>("login");
+    const searchParams = new URLSearchParams();
+    const formType = searchParams.get("tab") === "signup" ? "signup" : "login";
+    // const [formType, setFormType] = useState<string>("login");
     const [isShown, setIsShown] = useState<boolean>(false);
     const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
     const [isOtpVerified, setIsOtpVerified] = useState<boolean>(false);
@@ -60,16 +63,17 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             username: "",
             password: "",
             confirmPassword: "",
-            role: "USER",
             profileImage: "",
-            phoneNumber: 0,
         },
     });
     const watchedUsername = signupForm.watch('username');
-    const usernameStatus = useUsernameAvailability(watchedUsername);
-    const watchedPhone: number = signupForm.watch("phoneNumber");
-    const isPhoneValid: boolean = validatePhoneNumber(watchedPhone.toString());
+    const { status: usernameStatus, error: usernameError } = useUsernameAvailability(watchedUsername);
+    // const watchedPhone: number = signupForm.watch("phoneNumber");
+    // const isPhoneValid: boolean = validatePhoneNumber(watchedPhone.toString());
     const watchedEmail = signupForm.watch("email");
+    const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+    const normalized = watchedEmail.trim().toLowerCase();
+    const isEmailVerified = verifiedEmail === normalized;
     const isEmailValid: boolean = validateEmail(watchedEmail.toString());
     const password: string = signupForm.watch("password");
     const confirmPassword: string = signupForm.watch("confirmPassword");
@@ -89,19 +93,21 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             toast.success("Log in successfull");
             router.replace("/");
         } catch (error: unknown) {
-            let message = "Something went wrong";
-            if (axios.isAxiosError(error)) {
-                message = error.response?.data?.message || error.message || message;
-
-            } else if (error instanceof Error) {
-                message = error.message;
-            }
-            clientLogger.error("Something went wrong, while fetching the user", { message });
+            let message: string = getErrorMessage(error, "Something went wrong");
+            clientLogger.error("Something went wrong, while Login the user", { message });
             // toast.error();
         }
     };
 
     const handleSignupSubmit = async (data: z.infer<typeof signUpSchema>) => {
+        if (!isEmailVerified) return toast.error("Please verify your email address");
+        if (usernameStatus === 'checking') {
+            toast.error("Checking username availability")
+            return
+        }
+        if (usernameStatus === 'taken') {
+            return toast.error("Choose an available username")
+        }
         if (!isEmailOtpVerified) {
             return toast.error("Please verify your email address");
         }
@@ -115,41 +121,37 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         // }
         try {
             const response = await axios.post("/api/users/register", data);
-            const res = await signIn("credentials", {
-                email: data.email,
-                password: data.password,
-                redirect: false
-            })
-            if (res?.error) {
-                clientLogger.error("Singup secceded but automatic sign in failed", { message: res.error, error: res.error })
-                toast.error("Something went wrong. Please try again.");
-                return
-            }
-            toast.success("Signup successful");
-            router.replace("/");
         } catch (error: unknown) {
-            let message = "Something went wrong";
-            if (axios.isAxiosError(error)) {
-                message = error.response?.data?.message || error.message || message;
-            } else if (error instanceof Error) {
-                message = error.message;
-            }
-            clientLogger.error("Something went wrong, while fetching the user", { message });
+            let message: string = getErrorMessage(error, "Something went wrong");
+            clientLogger.error("Something went wrong, while Sign up the user", { message });
+            toast.error(message)
         }
+        const res = await signIn("credentials", {
+            email: data.email,
+            password: data.password,
+            redirect: false
+        })
+        if (res?.error) {
+            clientLogger.error("Singup secceded but automatic sign in failed", { message: res.error, error: res.error })
+            toast.error("Something went wrong, while signing you up. Please try again.");
+            return
+        }
+        toast.success("Signup successful");
+        router.replace("/");
     };
 
-    const onOtpSent = () => {
-        // console.log("OTP sent successfully!");
-        toast.success("OTP sent successfully!");
-        setIsOtpSent(true);
-    };
+    // const onOtpSent = () => {
+    //     // console.log("OTP sent successfully!");
+    //     toast.success("OTP sent successfully!");
+    //     setIsOtpSent(true);
+    // };
 
-    const onVerified = () => {
-        // console.log("OTP verified successfully!");
-        toast.success("OTP verified successfully!");
-        setIsOtpSent(false);
-        setIsOtpVerified(true);
-    };
+    // const onVerified = () => {
+    //     // console.log("OTP verified successfully!");
+    //     toast.success("OTP verified successfully!");
+    //     setIsOtpSent(false);
+    //     setIsOtpVerified(true);
+    // };
 
     const onEmailOtpSent = (): void => {
         toast.success("Email OTP sent successfully!");
@@ -160,33 +162,34 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         toast.success("Email OTP verified successfully!");
         setIsEmailOtpSent(false);
         setIsEmailOtpVerified(true);
+        setVerifiedEmail(normalized);
     };
 
-    useEffect(() => {
-        const savedFormType = localStorage.getItem("authFormType");
+    // useEffect(() => {
+    //     const savedFormType = localStorage.getItem("authFormType");
 
-        if (savedFormType === "login" || savedFormType === "signup") {
-            setFormType(savedFormType);
-        }
-    }, []);
+    //     if (savedFormType === "login" || savedFormType === "signup") {
+    //         setFormType(savedFormType);
+    //     }
+    // }, []);
+    useEffect(() => { setIsEmailOtpSent(false) }, [normalized])
+    // useEffect(() => {
+    //     localStorage.setItem("authFormType", formType);
+    // }, [formType]);
 
-    useEffect(() => {
-        localStorage.setItem("authFormType", formType);
-    }, [formType]);
-
-    const handleTabChange = (value: string): void => {
-        setFormType(value);
-        // When changing tabs manually, update localStorage
-        if (typeof window !== "undefined") {
-            localStorage.setItem("authFormType", value);
-        }
-    };
+    // const handleTabChange = (value: string): void => {
+    //     setFormType(value);
+    //     // When changing tabs manually, update localStorage
+    //     if (typeof window !== "undefined") {
+    //         localStorage.setItem("authFormType", value);
+    //     }
+    // };
 
     return (
         <div className={cn("flex justify-center items-center min-h-screen gap-4 overflow-auto pt-8", className)}>
             <Tabs
                 value={formType}
-                onValueChange={handleTabChange}
+                onValueChange={(v) => router.replace(`?tab=${v}`, { scroll: false })}
                 className="w-90 min-h-70 relative"
             >
                 <TabsList className="grid w-full grid-cols-2 h-10 rounded-full px-2">
@@ -252,6 +255,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsShown(!isShown)}
+                                                    aria-label={isShown ? "Hide password" : "Show password"}
                                                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                                                     tabIndex={-1} // prevents tab focus
                                                 >
@@ -346,6 +350,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                         {usernameStatus === 'taken' && (
                                             <p className="text-red-500">Already Taken</p>
                                         )}
+                                        {usernameStatus === "error" && <p className="text-red-500">{usernameError}</p>}
                                         <FormMessage className='' />
                                     </FormItem>
                                 )}
@@ -365,7 +370,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                     </FormItem>
                                 )}
                             />
-                            {isEmailOtpVerified ? (
+                            {isEmailVerified ? (
                                 <div className="w-full flex justify-end">Email Verified! ✅</div>
                             ) : isEmailOtpSent ? (
                                 <EmailOtpVerifier
@@ -489,7 +494,12 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                     </FormItem>
                                 )}
                             />
-                            <Button size='default' variant='default' className='w-full cursor-pointer' type="submit">Sign In</Button>
+                            <Button size='default' variant='default' className='w-full cursor-pointer' type="submit" disabled={
+                                signupForm.formState.isSubmitting ||
+                                !isEmailVerified ||
+                                usernameStatus === "checking" ||
+                                usernameStatus === "taken"
+                            }>Sign In</Button>
                             <Separator className="my-4" />
                             <div className="flex justify-center items-center gap-4 flex-col">
                                 <h2>Other Sign In options</h2>
