@@ -17,24 +17,24 @@ export function useUsernameAvailability(username: string) {
         };
         setStatus("checking");
         const controller = new AbortController()//Kills the request if the component unmounts
-        const timeout = setTimeout(async () => {
+        const timeout = setTimeout(async (): Promise<void> => {
             try {
                 const params = new URLSearchParams(
                     {
                         username: username.trim()
                     }
                 );
-                const { data } = await axios.get(`/api/users/check-username`, { signal: controller.signal, params: params.toString() });
+                const { data } = await axios.get(`/api/users/check-username?${params.toString()}`, { signal: controller.signal });
                 setStatus(data.available ? "available" : "taken");
             } catch (error: unknown) {
-                if (axios.isCancel(error)) return;
+                if (axios.isCancel(error)) return
                 const message: string = getErrorMessage(error, "Failed to check username");
                 clientLogger.error("Error checking username availability:", { message });
                 setStatus("idle");
             }
         }, 400);
 
-        return () => { clearTimeout(timeout); controller.abort(); };
+        return () => { clearTimeout(timeout); controller.abort() };
     }, [username]);
     return status;
 
