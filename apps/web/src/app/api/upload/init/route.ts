@@ -19,6 +19,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOAD_INIT_IP_KEY.namespace, UPLOAD_INIT_IP_KEY.max, UPLOAD_INIT_IP_KEY.windowSec); /// rate limit
         ip = requestIp
         if (!allowed) {
+            logger.info(`Rate limit exceeded for IP: ${ip}`);
             return failResponse(
                 `Too many requests. Try again in ${retryAfterSec} seconds.`,
                 429, "RATE_LIMITED", { "Retry-After": String(retryAfterSec) },
@@ -31,13 +32,17 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             return failResponse("Unauthorized", 401, "UNAUTHORIZED");
         }
         const authUser: ISessionUser | null = authSession?.user; /// check if user is authenticated
-        if (!userId || !validateMongooseId({ userId })) return failResponse("Unauthorized", 401, "UNAUTHORIZED");
+        if (!userId || !validateMongooseId({ userId })) {
+            logger.warn(`Unauthorized access attempt from IP: ${ip}`);
+            return failResponse("Unauthorized", 401, "UNAUTHORIZED");
+        }
         if (!authUser) { /// check if user is authenticated
             logger.warn(`Unauthorized access attempt from IP: ${ip}`); /// log
             return failResponse("Unauthorized", 401, "UNAUTHORIZED");
         }
         const userLimit = await checkUser(authUser.id, UPLOAD_INIT_USER_KEY.namespace, UPLOAD_INIT_USER_KEY.max, UPLOAD_INIT_USER_KEY.windowSec);
         if (!userLimit.allowed) {
+            logger.info(`Rate limit exceeded for user`, { user: authUser.id, ip });
             return failResponse(
                 `Too many requests. Try again in ${userLimit.retryAfterSec} seconds.`,
                 429, "RATE_LIMITED", { "Retry-After": String(userLimit.retryAfterSec) },
@@ -51,11 +56,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         }
         const { fileName, fileSize, type } = (body ?? {}) as Record<string, string>; /// get file name, file size and type
         if (type !== "image" && type !== "video") { /// check if file type is valid
-            logger.warn(`Invalid file type upload attempt by user ${authUser.id} from IP: ${ip}`);
+            logger.warn(`Invalid file type upload attempt by user`, { user: authUser.id, ip });
             return failResponse("Invalid file type. Only 'image' and 'video' are allowed.", 400);
         }
         if (typeof fileName !== "string" || !fileName.trim() || fileName.length > MAX_FILENAME_LENGTH) {
-            return failResponse("Invalid file name.", 400);
+            return failResponse("Invalid file name.", 400, "INVALID_FILE_NAME");
         }
         if (typeof fileSize !== "number" || !Number.isInteger(fileSize) || fileSize <= 0 || fileSize > MAX_FILE_SIZE) {
             return failResponse("Invalid file size. Maximum size is 100 MB.", 400);
@@ -95,14 +100,15 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         await redisClient.expire(activeKey, SESSION_TTL_SEC); ////Expire the active session key
         logger.info(` Upload session created`, { userId, uploadId, type, fileSize, ip }); // Log
         return successResponse(
-            uploadId
-            , 200, "Upload session created")
+            uploadId //data
+            , 200,
+            "Upload session created")
 
     } catch (error: unknown) {
         logger.error("Upload init fail Responseed", {
             ip,
             error: error instanceof Error ? error.message : "unknown",
         });
-        return failResponse("Could not start the upload. Please try again.", 500); // generic message to the client
+        return failResponse("Could not start the upload. Please try again.", 500, "SERVER_ERROR"); // generic message to the client
     }
 }

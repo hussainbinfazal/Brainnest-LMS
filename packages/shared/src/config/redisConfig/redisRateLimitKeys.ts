@@ -3,6 +3,8 @@
 //   windowSec: 60,
 // } as const;
 
+import { id } from "zod/v4/locales";
+
 export const OTP_SEND_EMAIL_IP_KEY = {
   namespace: 'otp-send:ip',
   id: 'ip',
@@ -62,16 +64,38 @@ export const UPLOAD_SIGN_IP_KEY = {
 //Generate Signature route rate limit config
 export const UPLOAD_SIGN_USER_KEY = {
   namespace: 'upload-sign:user',
+  id:'userId',
   max: 15,
   windowSec: 60,
   description: 'Limits Cloudinary signature requests per authenticated user',
-  usedIn: ['Upload Signature Rate Limiting'],
+  usedIn: ['Upload Signature User Rate Limiting'],
 } as const;
 export const UPLOAD_INIT_USER_KEY = {
   namespace: 'upload-init:user',
+  id:'userId',
   max: 15,
   windowSec: 60,
   description: 'Limits Cloudinary signature requests per authenticated user',
-  usedIn: ['Upload Signature Rate Limiting'],
+  usedIn: ['Upload Init User Rate Limiting'],
 } as const;
+
+///Rate limit config for upload complete route
+export const UPLOAD_COMPLETE_IP_KEY = {
+  namespace: 'upload-complete:ip',
+  id: 'ip',
+  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of upload session complete from one IP',
+  usedIn: ['Upload Complete Rate Limiting'],
+} as const;
+
+export const UPLOAD_COMPLETE_USER_KEY = {
+  namespace: 'upload-complete:user',
+  id:'userId',
+  max: 15,
+  windowSec: 60,
+  description: 'Limits Cloudinary signature requests per authenticated user',
+  usedIn: ['Upload Complete User Rate Limiting'],
+} as const;
+
 
