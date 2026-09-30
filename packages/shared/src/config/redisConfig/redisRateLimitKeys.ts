@@ -37,6 +37,9 @@ export const GLOBAL_IP_KEY = {
   description: 'Guard api routes against brute-forcing from a given IP',
   usedIn: ['Global Rate Limiting'],
 } as const;
+
+
+//Init Route rate limit config
 export const UPLOAD_INIT_IP_KEY = {
   namespace: 'upload-init:ip',
   id: 'ip',
@@ -44,5 +47,24 @@ export const UPLOAD_INIT_IP_KEY = {
   windowSec: 60,
   description: 'Backstop against anonymous spam of upload session creation from one IP',
   usedIn: ['Upload Init Rate Limiting'],
+} as const;
+
+///Geneate Signature route rate limit config
+export const UPLOAD_SIGN_IP_KEY = {
+  namespace: 'upload-sign:ip',
+  id: 'ip',
+  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of upload session creation from one IP',
+  usedIn: ['Upload Init Rate Limiting'],
+} as const;
+
+//Generate Signature route rate limit config
+export const UPLOAD_SIGN_USER_KEY = {
+  namespace: 'upload-sign:user',
+  max: 15,
+  windowSec: 60,
+  description: 'Limits Cloudinary signature requests per authenticated user',
+  usedIn: ['Upload Signature Rate Limiting'],
 } as const;
 

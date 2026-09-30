@@ -1,4 +1,3 @@
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
@@ -6,7 +5,7 @@ import { redisClient } from "@/config/redis/redis";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { buildKey, CACHE_TTL, checkIp, invalidateCached, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId } from "@repo/shared/server";
-import { failResponse } from "@/lib/helpers/failResponseHelper";
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // import from shared config, same value as the client
@@ -86,12 +85,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         }
         await redisClient.expire(activeKey, SESSION_TTL_SEC); ////Expire the active session key
         logger.info(` Upload session created`, { userId, uploadId, type, fileSize, ip }); // Log
-        return NextResponse.json({
+        return successResponse(
             uploadId
-        }, { status: 200 })
+            , "Upload session created", 200)
 
     } catch (error: unknown) {
-        logger.error("Upload init failResponseed", {
+        logger.error("Upload init fail Responseed", {
             ip,
             error: error instanceof Error ? error.message : "unknown",
         });

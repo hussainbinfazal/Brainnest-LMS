@@ -16,7 +16,8 @@ function loadSaved(key: string): SavedUpload | null {
         return null;
     }
 };
-function saveState(key: string, state: SavedUpload) {;
+function saveState(key: string, state: SavedUpload) {
+    ;
 
     try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* quota / private mode */ }
 }
@@ -47,7 +48,7 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
         }
         const generatedSignature = await getSignatureFromBackend(type);  /// Get the signature from backend
         if (!generatedSignature) throw new Error("Failed to get signature from backend.");
-        const { signature, timestamp, cloudName, apiKey, folder } = generatedSignature; /// Extract the signature, timestamp, cloudName, apiKey, and folder from the signature
+        const { signature, timestamp, cloudName, apiKey, folder, allowedFormats } = generatedSignature/// Extract the signature, timestamp, cloudName, apiKey, and folder from the signature
         try {
             // const statusRes = await axios.get(`/api/upload/progress/status/${uploadId}`);  /// Get the status of the upload
             // const serverData = statusRes.data; /// Extract the data from the response
@@ -65,7 +66,8 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
             formData.append("api_key", apiKey);/// Append the apiKey to the FormData
             formData.append("timestamp", timestamp.toString());/// Append the timestamp to the FormData
             formData.append("folder", folder); /// Append the folder to the FormData
-            formData.append("signature", signature); /// Append the signature to the FormData
+            formData.append("signature", signature); /// Append the signature to the FormData;
+            formData.append("allowed_formats", allowedFormats);
 
             const headers: any = {
                 "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
