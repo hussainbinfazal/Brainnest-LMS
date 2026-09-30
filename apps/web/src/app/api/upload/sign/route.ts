@@ -78,7 +78,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             resourceType: paramsToSign.resource_type,
             allowedFormats: paramsToSign.allowed_formats
         }
-        return successResponse(data, "Signature generated successfully", 200)
+        return successResponse(data, 200, "Signature generated successfully")
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "An unknown error occurred";
