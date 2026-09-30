@@ -385,6 +385,13 @@ export const UPLOAD_SESSION = {
   description: "File upload session data (chunks, metadata, progress)",
   usedIn: ["Course Content Upload", "Video Upload"],
 };
+export const UPLOAD_SESSION_ACTIVE = {
+  namespace: "upload:active",
+  id: "userId",
+  ttl: "LONG",
+  description: "File upload session data (chunks, metadata, progress)",
+  usedIn: ["Course Content Upload", "Video Upload"],
+};
 
 /**
  * namespace: "email-otp-lock"

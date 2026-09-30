@@ -37,4 +37,12 @@ export const GLOBAL_IP_KEY = {
   description: 'Guard api routes against brute-forcing from a given IP',
   usedIn: ['Global Rate Limiting'],
 } as const;
+export const UPLOAD_INIT_IP_KEY = {
+  namespace: 'upload-init:ip',
+  id: 'ip',
+  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of upload session creation from one IP',
+  usedIn: ['Upload Init Rate Limiting'],
+} as const;
 

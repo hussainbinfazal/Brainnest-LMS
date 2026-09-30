@@ -17,7 +17,7 @@ function loadSaved(key: string): SavedUpload | null {
     }
 };
 function saveState(key: string, state: SavedUpload) {;
-    
+
     try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* quota / private mode */ }
 }
 
@@ -35,6 +35,7 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
             const res = await axios.post("/api/upload/init", {   //// Initialize the upload session
                 fileName: file.name,
                 fileSize: file.size,
+                type
 
             }, {
                 signal: opts?.signal, //Pass the signal;
@@ -94,21 +95,7 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
                 result: isLast ? finalResponse : null
 
             });
-
-            // await axios.post("/api/upload/progress", { //Update progress in backend
-
-            //     uploadId,
-            //     uploadedBytes,
-            //     index: i + 1,
-
-            // }, {
-            //     headers: {
-            //         "Content-Type": "application/json"
-            //     }
-            // }).catch((error: unknown) => {
-            //     clientLogger.warn("Error updating upload progress", { error: getErrorMessage(error, "Error updating upload progress") });
-            // });
-
+            ///Clean up backend progress route also 
             opts?.onProgress?.(Math.round((end / file.size) * 100));
             clientLogger.info(`Chunk ${i + 1} uploaded successfully`, { uploadedBytes, totalBytes: file.size });
 
