@@ -2,26 +2,27 @@ import { getRedisClient } from "../cache";
 import { buildKey } from "../cache-helper";
 
 const redisClient: ReturnType<typeof getRedisClient> = getRedisClient(); //// globalThis.__redisClient
-export async function acquireSlot(namespace: string, id: string, userId: string, max: number, ttlSec: number): Promise<boolean> {
+export async function acquireSlot(key: string, id: string, max: number, ttlSec: number): Promise<boolean> {
 
-    const finalKey = buildKey(namespace, String(id));
     const now: number = Date.now();
     const res = await redisClient
         .multi() /// Batch commands
-        .zremrangebyscore(finalKey, 0, now - ttlSec * 1000) /// remove expired keys
-        .zadd(finalKey, { score: now, member: userId }) /// add new key
-        .zcard(finalKey) //// count active keys 
-        .expire(finalKey, ttlSec) /// set ttl
+        .zremrangebyscore(key, 0, now - ttlSec * 1000) /// remove expired keys
+        .zadd(key, { score: now, member: id }) /// add new key
+        .zcard(key) //// count active keys 
+        .expire(key, ttlSec) /// set ttl
         .exec<[number, number | null, number, number]>(); /// get results
 
     if (res[2] > max) { // too many keys
-        await redisClient.zrem(finalKey, id); // roll back our own add
+        await redisClient.zrem(key, id); // roll back our own add
         return false;
     }
-    return true;
+    return true; ///Success means session is available for this key till now
 }
 
-export const releaseSlot = (key: string, id: string) => redisClient.zrem(key, id);
+export const releaseSlot = (key: string, id: string) => {
+    redisClient.zrem(key, id);
+}
 
 
 

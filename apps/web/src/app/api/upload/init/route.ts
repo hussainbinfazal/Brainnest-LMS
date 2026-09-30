@@ -4,7 +4,7 @@ import { logger } from "@/utils/logger/logger.node";
 import { redisClient } from "@/config/redis/redis";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
-import { buildKey, CACHE_TTL, checkIp, checkUser, invalidateCached, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_INIT_USER_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId } from "@repo/shared/server";
+import { acquireSlot, buildKey, CACHE_TTL, checkIp, checkUser, invalidateCached, releaseSlot, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_INIT_USER_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId } from "@repo/shared/server";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import z from "zod";
@@ -22,8 +22,12 @@ const uploadInitRequestBodySchema = z
         type: z.enum(["image", "video"]),
     })
     .strict();
+
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     let ip = "unknown"
+    let activeKey = ""
+    let sessionKey = ""
+    let userId: string | null = null
     try {
         const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOAD_INIT_IP_KEY.namespace, UPLOAD_INIT_IP_KEY.max, UPLOAD_INIT_IP_KEY.windowSec); /// rate limit
         ip = requestIp
@@ -38,7 +42,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         //Auth
         const authSession: Session | null = await auth() //  check user session
-        const userId = authSession?.user?.id; /// check if user is authenticated 
+        userId = authSession?.user?.id ? authSession.user.id : null; /// check if user is authenticated 
         if (!userId || !validateMongooseId({ userId }) || !authSession) {
             logger.warn(`Unauthorized access attempt from IP: ${ip}`);
             return failResponse("Unauthorized", 401, "UNAUTHORIZED");
@@ -59,8 +63,8 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const { fileName, fileSize, type } = body.data; /// get file name, file size and type
         const uploadId: string = crypto.randomUUID(); /// Generate a unique uploadId
         const now = Date.now() // Get the current timestamp
-        const sessionKey = buildKey(UPLOAD_SESSION.namespace, uploadId) ///Build session key
-        const activeKey = buildKey(UPLOAD_SESSION_ACTIVE.namespace, userId)  //Build active session key
+        sessionKey = buildKey(UPLOAD_SESSION.namespace, uploadId) ///Build session key
+        activeKey = buildKey(UPLOAD_SESSION_ACTIVE.namespace, userId)  //Build active session key
         const data = {
             uploadId, ///Store upload id, for further validation 
             userId, //Store user id, for ownership checks in /progress and /complete depends on this 
@@ -74,24 +78,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         };
         await setCached(UPLOAD_SESSION.namespace, uploadId, JSON.stringify(data) as string, SESSION_TTL_SEC) // 1 hour expiration
 
-        
-        /// Update the active session set
-        const results = await redisClient.multi() ///Mulit for batch requests
-            .zremrangebyscore(activeKey, 0, now - SESSION_TTL_SEC * 1000) ///results [0] = count of elements removed, [1] = array of removed elements
-            .zadd(activeKey, { score: now, member: uploadId }) /// /// results[1] : number added
-            .zcard(activeKey) /// results[2] : number of elements in the set
-            .expire(activeKey, SESSION_TTL_SEC) // [3] 1 = TTL set
-            .exec<[number, number | null, number, number]>()
-        const activeCount = results[2];
-        /// Check if the user has reached the maximum number of active sessions
-        if (activeCount > MAX_ACTIVE_SESSIONS) {
-            await Promise.all([
-                invalidateCached(UPLOAD_SESSION.namespace, uploadId), /// Remove the uploadId from the cache
-                redisClient.zrem(activeKey, uploadId), /// Remove the uploadId from the set
-            ])
-            logger.warn("Active upload quota hit", { userId, ip })
-            return failResponse("Active upload quota hit", 429)
-        }
+
+        /// Check active session limit
+        const ok = await acquireSlot(activeKey, userId, MAX_ACTIVE_SESSIONS, SESSION_TTL_SEC);
+        if (!ok) return failResponse("Finish your current request first.", 429, "QUOTA_EXCEEDED", { "Retry-After": String(SESSION_TTL_SEC) });
+
         logger.info(` Upload session created`, { userId, uploadId, type, fileSize, ip }); // Log
         return successResponse(
             uploadId //data
@@ -104,5 +95,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             error: error instanceof Error ? error.message : "unknown",
         });
         return failResponse("Could not start the upload. Please try again.", 500, "SERVER_ERROR"); // generic message to the client
+    } finally {
+        if (userId) {
+            await releaseSlot(activeKey, userId); //Release slot if user was successfully resolved
+        }
+
     }
 }
