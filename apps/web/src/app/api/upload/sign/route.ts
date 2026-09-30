@@ -7,6 +7,15 @@ import { auth } from "@/auth";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { checkIp, checkUser, UPLOAD_SIGN_USER_KEY } from "@repo/shared/server";
+import z from "zod";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+
+export const uploadSignRequestBodySchema = z.object({
+    type: z.enum(['image', 'video'], {
+        error: 'Invalid file type. Only image and video are allowed.',
+        
+    }),
+}).strict();
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     let ip = "unknown";
     try {
@@ -32,13 +41,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
                 429, "RATE_LIMITED", { "Retry-After": String(userLimit.retryAfterSec) },
             );
         }
-        let body: unknown;
-        try {
-            body = await request.json();
-        } catch {
-            return failResponse("Invalid request body.", 400);
+        let body = await parseBody(request, uploadSignRequestBodySchema);
+        if (!body.ok) {
+            return body.response
         }
-        const { type } = (body ?? {}) as Record<string, unknown>;
+        const { type } = body.data
         if (type !== "image" && type !== "video") {
             logger.warn(`Invalid file type upload attempt by user ${authUser.id} from IP: ${ip}`);
             return failResponse("Invalid file type. Only 'image' and 'video' are allowed.", 400);
