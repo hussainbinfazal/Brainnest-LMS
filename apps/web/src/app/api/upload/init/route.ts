@@ -96,7 +96,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         logger.info(` Upload session created`, { userId, uploadId, type, fileSize, ip }); // Log
         return successResponse(
             uploadId
-            , "Upload session created", 200)
+            , 200, "Upload session created")
 
     } catch (error: unknown) {
         logger.error("Upload init fail Responseed", {
