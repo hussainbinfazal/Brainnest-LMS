@@ -2,6 +2,7 @@ import { clientLogger } from "@/utils/logger/clientLogger";
 import { getSignatureFromBackend } from "../getSignatureFromBackend/getSignatureFromBackend";
 import { CuploadResult, CuploadType } from "@/types/client";
 import axios from "axios";
+import { getErrorMessage } from "@repo/shared";
 
 
 export async function uploadDirectToCloudinary(file: File): Promise<CuploadResult> {
@@ -50,8 +51,8 @@ export async function uploadDirectToCloudinary(file: File): Promise<CuploadResul
 
 
 
-    } catch (error: any) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
+    } catch (error: unknown) {
+        const message = getErrorMessage(error, "Failed to upload file to Cloudinary");
         clientLogger.error('Direct Cloudinary upload error:', { error: message });
         throw new Error(message);
     }

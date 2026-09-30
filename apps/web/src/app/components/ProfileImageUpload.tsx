@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
+import { uploadFileClient } from "@/utils/upload/uploadFile";
 
 const CIRCLE_SIZE = 128;
 const OUTPUT_SIZE = 200;
@@ -143,13 +144,13 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className
 
   }, [])
   const currentTransform = (): Transform => ({ position, scale, rotation, flipX, flipY });
-  const handleSaveCroppedImage = async () => {
+  const handleSaveCroppedImage = async (): Promise<void> => {
     if (!croppedBlobRef.current) return
     setIsUploading(true);
     setError(null);
     try {
       const file = new File([croppedBlobRef.current], "profile.jpg", { type: "image/jpeg" }); ///Create file from the cropped blob
-      const url = await uploadFile(file); //Upload file to cloudinary
+      const url = await uploadFileClient(file, "image"); //Upload file to cloudinary
       field.onChange(url);
       field.onBlur()
     } catch (error: unknown) {

@@ -40,9 +40,7 @@ import { getErrorMessage } from "@repo/shared";
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
     const router = useRouter();
-    const searchParams = new URLSearchParams();
-    const formType = searchParams.get("tab") === "signup" ? "signup" : "login";
-    // const [formType, setFormType] = useState<string>("login");
+    const [formType, setFormType] = useState<string>("login");
     const [isShown, setIsShown] = useState<boolean>(false);
     const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
     const [isOtpVerified, setIsOtpVerified] = useState<boolean>(false);
@@ -140,18 +138,18 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         router.replace("/");
     };
 
-    // const onOtpSent = () => {
-    //     // console.log("OTP sent successfully!");
-    //     toast.success("OTP sent successfully!");
-    //     setIsOtpSent(true);
-    // };
+    const onOtpSent = () => {
+        // console.log("OTP sent successfully!");
+        toast.success("OTP sent successfully!");
+        setIsOtpSent(true);
+    };
 
-    // const onVerified = () => {
-    //     // console.log("OTP verified successfully!");
-    //     toast.success("OTP verified successfully!");
-    //     setIsOtpSent(false);
-    //     setIsOtpVerified(true);
-    // };
+    const onVerified = () => {
+        // console.log("OTP verified successfully!");
+        toast.success("OTP verified successfully!");
+        setIsOtpSent(false);
+        setIsOtpVerified(true);
+    };
 
     const onEmailOtpSent = (): void => {
         toast.success("Email OTP sent successfully!");
@@ -165,31 +163,31 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         setVerifiedEmail(normalized);
     };
 
-    // useEffect(() => {
-    //     const savedFormType = localStorage.getItem("authFormType");
+    useEffect(() => {
+        const savedFormType = localStorage.getItem("authFormType");
 
-    //     if (savedFormType === "login" || savedFormType === "signup") {
-    //         setFormType(savedFormType);
-    //     }
-    // }, []);
+        if (savedFormType === "login" || savedFormType === "signup") {
+            setFormType(savedFormType);
+        }
+    }, []);
     useEffect(() => { setIsEmailOtpSent(false) }, [normalized])
-    // useEffect(() => {
-    //     localStorage.setItem("authFormType", formType);
-    // }, [formType]);
+    useEffect(() => {
+        localStorage.setItem("authFormType", formType);
+    }, [formType]);
 
-    // const handleTabChange = (value: string): void => {
-    //     setFormType(value);
-    //     // When changing tabs manually, update localStorage
-    //     if (typeof window !== "undefined") {
-    //         localStorage.setItem("authFormType", value);
-    //     }
-    // };
+    const handleTabChange = (value: string): void => {
+        setFormType(value);
+        // When changing tabs manually, update localStorage
+        if (typeof window !== "undefined") {
+            localStorage.setItem("authFormType", value);
+        }
+    };
 
     return (
         <div className={cn("flex justify-center items-center min-h-screen gap-4 overflow-auto pt-8", className)}>
             <Tabs
                 value={formType}
-                onValueChange={(v) => router.replace(`?tab=${v}`, { scroll: false })}
+                onValueChange={handleTabChange}
                 className="w-90 min-h-70 relative"
             >
                 <TabsList className="grid w-full grid-cols-2 h-10 rounded-full px-2">
