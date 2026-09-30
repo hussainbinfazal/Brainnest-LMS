@@ -3,10 +3,11 @@ import { getSignatureFromBackend } from "../getSignatureFromBackend/getSignature
 import axios from "axios";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { uploadWithRetry } from "@/lib/helpers/retryHelper";
+import { getErrorMessage } from "@repo/shared";
 
 const CHUNK_SIZE: number = 5 * 1024 * 1024; // 5MB
 type SavedUpload = { uploadId: string; nextIndex: number; uploadedBytes: number; result?: any };
-
+// Local Storage getters and setters
 function loadSaved(key: string): SavedUpload | null {
     try {
         const raw = localStorage.getItem(key);
@@ -14,63 +15,68 @@ function loadSaved(key: string): SavedUpload | null {
     } catch {
         return null;
     }
+};
+function saveState(key: string, state: SavedUpload) {;
+    
+    try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* quota / private mode */ }
 }
+
 export async function uploadChunkedToCloudinary(file: File, type: CuploadType, opts?: { onProgress?: (percent: number) => void; signal?: AbortSignal }): Promise<CuploadResult> {
+    const key: string = `upload:${file.name}:${file.size}:${file.lastModified}`;
     try {
-        const key: string = `upload:${file.name}:${file.size}:${file.lastModified}`;
-        const saved = loadSaved(key);
-        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-        let uploadedBytes = saved?.uploadedBytes || 0;
-        let uploadId = saved?.uploadId
-        let startIndex = saved?.nextIndex || 0;
-        let finalResponse: any = saved?.result ?? null;
+        const saved = loadSaved(key); /// Load the saved state from local storage with the key
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE); /// Calculate the total number of chunks
+        let uploadedBytes = saved?.uploadedBytes || 0; /// Initialize the uploaded bytes, this is used to track the progress of how many bytes have been uploaded
+        let uploadId = saved?.uploadId /// Initialize the uploadId
+        let startIndex = saved?.nextIndex || 0; /// Initialize the startIndex
+        let finalResponse: any = saved?.result ?? null; /// Initialize the finalResponse
 
         if (!uploadId) {
-            const res = await axios.post("/api/upload/init", {
+            const res = await axios.post("/api/upload/init", {   //// Initialize the upload session
                 fileName: file.name,
                 fileSize: file.size,
 
             }, {
-                signal: opts?.signal,
-                headers: {
-                    "Content-Type": "application/json",
-                }
+                signal: opts?.signal, //Pass the signal;
+
             });
 
-            const data = res.data;
-            uploadId = data.uploadId as string;
+            const data = res.data; /// Extract the uploadId from the response
+            uploadId = data.uploadId as string; //// Set the uploadId
         }
-        const generatedSignature = await getSignatureFromBackend(type);
+        const generatedSignature = await getSignatureFromBackend(type);  /// Get the signature from backend
         if (!generatedSignature) throw new Error("Failed to get signature from backend.");
-        const { signature, timestamp, cloudName, apiKey, folder } = generatedSignature;
+        const { signature, timestamp, cloudName, apiKey, folder } = generatedSignature; /// Extract the signature, timestamp, cloudName, apiKey, and folder from the signature
         try {
-            const statusRes = await axios.get(`/api/upload/progress/status/${uploadId}`);
-            const serverData = statusRes.data;
-            startIndex = Math.max(startIndex, serverData.lastChunkIndex || 0);
-            uploadedBytes = Math.max(uploadedBytes, serverData.uploadedBytes || 0);
-        } catch (error: any) {
+            // const statusRes = await axios.get(`/api/upload/progress/status/${uploadId}`);  /// Get the status of the upload
+            // const serverData = statusRes.data; /// Extract the data from the response
+            // startIndex = Math.max(startIndex, serverData.lastChunkIndex || 0); /// Set the startIndex
+            // uploadedBytes = Math.max(uploadedBytes, serverData.uploadedBytes || 0); /// Set the uploadedBytes
+        } catch (error: unknown) {
             clientLogger.error("Error fetching upload progress status, starting from the beginning", { error: error instanceof Error ? error.message : "Unknown error" });
         }
         for (let i = startIndex; i < totalChunks; i++) {
-            let start = i * CHUNK_SIZE;
-            const end = Math.min(start + CHUNK_SIZE, file.size);
-            const chunk = file.slice(start, end);
-            const formData = new FormData();
-            formData.append("file", chunk);
-            formData.append("api_key", apiKey);
-            formData.append("timestamp", timestamp.toString());
-            formData.append("folder", folder);
-            formData.append("signature", signature);
+            let start = i * CHUNK_SIZE; /// Calculate the start position
+            const end = Math.min(start + CHUNK_SIZE, file.size); /// Calculate the end position 
+            const chunk = file.slice(start, end); /// Slice the file into chunks
+            const formData = new FormData();/// Create a new FormData object
+            formData.append("file", chunk);/// Append the chunk to the FormData
+            formData.append("api_key", apiKey);/// Append the apiKey to the FormData
+            formData.append("timestamp", timestamp.toString());/// Append the timestamp to the FormData
+            formData.append("folder", folder); /// Append the folder to the FormData
+            formData.append("signature", signature); /// Append the signature to the FormData
 
             const headers: any = {
-                "Content-Range": `bytes ${uploadedBytes}-${uploadedBytes + chunk.size - 1}/${file.size}`,
+                "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
                 "X-Unique-Upload-Id": uploadId
-            }
+            }; /// Set the headers
             const response = await uploadWithRetry(() => axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`, formData, {
-                headers
-            }), 3);
+
+                headers,
+                signal: opts?.signal
+            }), 3); //// Upload the chunk with retry upto 3 times
             const res = response.data;
-            if (res.error) {
+            if (res.error) { /// if there is an error 
                 clientLogger.error("Chunk upload failed", { status: res.status, response: res.data });
                 throw new Error(res.data.error?.message || "Cloudinary upload failed");
             }
@@ -78,40 +84,48 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
                 finalResponse = res;
             }
 
-            uploadedBytes += chunk.size;
-            localStorage.setItem(`upload-${file.name}--${file.size}`, JSON.stringify({
+            const isLast = i === totalChunks - 1;  ///Check if this is the last chunk
+            if (isLast) finalResponse = res; ///Set the finalResponse
+            uploadedBytes += chunk.size;  ///Update the uploaded bytes
+            saveState(key, { ///Save the state in localstorage
                 uploadId,
                 uploadedBytes,
-                index: i + 1,
+                nextIndex: i + 1,
+                result: isLast ? finalResponse : null
 
-            }) as string)
-
-            await axios.post("/api/upload/progress", {
-
-                uploadId,
-                uploadedBytes,
-                index: i + 1,
-
-            }, {
-                headers: {
-                    "Content-Type": "application/json"
-                }
             });
 
+            // await axios.post("/api/upload/progress", { //Update progress in backend
+
+            //     uploadId,
+            //     uploadedBytes,
+            //     index: i + 1,
+
+            // }, {
+            //     headers: {
+            //         "Content-Type": "application/json"
+            //     }
+            // }).catch((error: unknown) => {
+            //     clientLogger.warn("Error updating upload progress", { error: getErrorMessage(error, "Error updating upload progress") });
+            // });
+
+            opts?.onProgress?.(Math.round((end / file.size) * 100));
             clientLogger.info(`Chunk ${i + 1} uploaded successfully`, { uploadedBytes, totalBytes: file.size });
 
         }
-        await axios.post("/api/upload/complete", {
+
+        if (!finalResponse?.secure_url) { ///If the final response is not available
+            localStorage.removeItem(key); ///Remove the saved state
+            throw new Error("Cloudinary upload failed");
+        }
+        await axios.post("/api/upload/complete", { ///Complete the upload
 
             uploadId,
             url: finalResponse.secure_url,
 
-        }, {
-            headers: {
-                "Content-Type": "application/json",
-            },
         });
-        localStorage.removeItem(key);
+
+        localStorage.removeItem(key); ///Remove the saved state
         return {
             url: finalResponse.secure_url,
             public_id: finalResponse.public_id,
@@ -120,9 +134,13 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
             duration: finalResponse.duration
 
         }
-    } catch (error: any) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        clientLogger.error('Chunked Cloudinary upload error:', { error: message });
-        throw new Error(message);
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            const s = error.response?.status;
+            if (![401, 403, 429].includes(Number(s))) localStorage.removeItem(key);
+        }
+        const message = getErrorMessage(error, 'Chunked Cloudinary upload error');
+        // clientLogger.error('Chunked Cloudinary upload error:', { error: message });
+        throw error ///Throw the error
     }
-}
+};
