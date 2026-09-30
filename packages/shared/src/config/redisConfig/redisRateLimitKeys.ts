@@ -67,4 +67,11 @@ export const UPLOAD_SIGN_USER_KEY = {
   description: 'Limits Cloudinary signature requests per authenticated user',
   usedIn: ['Upload Signature Rate Limiting'],
 } as const;
+export const UPLOAD_INIT_USER_KEY = {
+  namespace: 'upload-init:user',
+  max: 15,
+  windowSec: 60,
+  description: 'Limits Cloudinary signature requests per authenticated user',
+  usedIn: ['Upload Signature Rate Limiting'],
+} as const;
 

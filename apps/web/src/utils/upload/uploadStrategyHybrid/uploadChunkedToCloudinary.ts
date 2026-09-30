@@ -68,6 +68,7 @@ export async function uploadChunkedToCloudinary(file: File, type: CuploadType, o
             formData.append("folder", folder); /// Append the folder to the FormData
             formData.append("signature", signature); /// Append the signature to the FormData;
             formData.append("allowed_formats", allowedFormats);
+            formData.append("resource_type", type);
 
             const headers: any = {
                 "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,

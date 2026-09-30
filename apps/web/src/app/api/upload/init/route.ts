@@ -4,7 +4,7 @@ import { logger } from "@/utils/logger/logger.node";
 import { redisClient } from "@/config/redis/redis";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
-import { buildKey, CACHE_TTL, checkIp, invalidateCached, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId } from "@repo/shared/server";
+import { buildKey, CACHE_TTL, checkIp, checkUser, invalidateCached, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_INIT_USER_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId } from "@repo/shared/server";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 
 
@@ -23,17 +23,26 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
                 `Too many requests. Try again in ${retryAfterSec} seconds.`,
                 429, "RATE_LIMITED", { "Retry-After": String(retryAfterSec) },
             );
-        }
-
+        };
         const authSession: Session | null = await auth() //  check user session
         const userId = authSession?.user?.id; /// check if user is authenticated 
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
-        if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) {
+            logger.warn(`Unauthorized access attempt from IP:`, { ip });
+            return failResponse("Unauthorized", 401, "UNAUTHORIZED");
+        }
         const authUser: ISessionUser | null = authSession?.user; /// check if user is authenticated
+        if (!userId || !validateMongooseId({ userId })) return failResponse("Unauthorized", 401, "UNAUTHORIZED");
         if (!authUser) { /// check if user is authenticated
             logger.warn(`Unauthorized access attempt from IP: ${ip}`); /// log
-            return failResponse("Unauthorized", 401);
+            return failResponse("Unauthorized", 401, "UNAUTHORIZED");
         }
+        const userLimit = await checkUser(authUser.id, UPLOAD_INIT_USER_KEY.namespace, UPLOAD_INIT_USER_KEY.max, UPLOAD_INIT_USER_KEY.windowSec);
+        if (!userLimit.allowed) {
+            return failResponse(
+                `Too many requests. Try again in ${userLimit.retryAfterSec} seconds.`,
+                429, "RATE_LIMITED", { "Retry-After": String(userLimit.retryAfterSec) },
+            );
+        };
         let body: unknown;
         try {
             body = await request.json();

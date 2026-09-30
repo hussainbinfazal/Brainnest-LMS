@@ -9,7 +9,7 @@ export async function checkIp(request: { headers: RequestHeaders }, namespace: s
     const ip = getClientIp(request.headers);
     try {
         // if (ip === 'unknown') logger.warn('OTP Helper: could not resolve client IP');
-        console.log("This is the IP of the User", ip)
+        // console.log("This is the IP of the User", ip)
         const isKey = ip //? `ip:${ip}` : 'ip';
         const fullKey: string = buildKey(namespace, isKey); // Full key for rate limiter
         const limit = await RateLimit(fromIoredis(getIORedisClient(process.env.REDIS_URL)), { key: fullKey, max, windowSec },); // time this too 
