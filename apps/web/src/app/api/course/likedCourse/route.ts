@@ -1,7 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from '@repo/shared/server';
+import { checkIp, COURSE_LIKED_IP_KEY, connectDB } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { userCourse } from '@repo/shared/server';
 import mongoose from "mongoose";
@@ -11,8 +10,8 @@ import { auth } from "@/auth";
 import { Session } from "next-auth";
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKED_IP_KEY.namespace, COURSE_LIKED_IP_KEY.max, COURSE_LIKED_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     try {
         const authSession: Session | null = await auth()

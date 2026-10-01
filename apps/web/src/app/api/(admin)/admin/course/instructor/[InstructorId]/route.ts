@@ -1,5 +1,4 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 
 import { NextResponse } from "next/server";
@@ -11,13 +10,14 @@ import { getCached, invalidateCached } from "@repo/shared/config/redisConfig/cac
 import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { ADMIN_INSTRUCTOR_COURSES_IP_KEY, checkIp } from "@repo/shared/server";
 
 
 
 
 export async function GET(request: CustomNextRequest, context: { params: { InstructorId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams?.get('page') || '1') || 1;
     const limit = parseInt(searchParams?.get('limit') || '5') || 5;
@@ -109,8 +109,8 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { InstructorId: string } }) {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const { searchParams } = new URL(request.url);
     const page: number = parseInt(searchParams?.get('page') || '1') || 1;
     const limit: number = parseInt(searchParams?.get('limit') || '5') || 5;

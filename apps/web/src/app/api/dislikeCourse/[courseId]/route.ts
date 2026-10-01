@@ -1,8 +1,7 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, LIKED_COURSES_BY_USER } from '@repo/shared/server';
+import { checkIp, COURSE_LIKE_IP_KEY, connectDB, userCourse, validateMongooseId, logger, USER_COURSE_DETAIL, USER_COURSE_LIST, LIKED_COURSES_BY_USER } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -11,8 +10,8 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKE_IP_KEY.namespace, COURSE_LIKE_IP_KEY.max, COURSE_LIKE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);

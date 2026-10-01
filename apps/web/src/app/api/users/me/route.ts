@@ -1,6 +1,5 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
-import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from '@repo/shared/server';
+import { AUTH_USER, checkIp, connectDB, IUser, IUserCourse, logger, User, USER_PROFILE_IP_KEY, userCourse, } from '@repo/shared/server';
 import { NextResponse } from "next/server";
 
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -11,8 +10,8 @@ import { auth } from "@/auth";
 
 //Look into this 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_PROFILE_IP_KEY.namespace, USER_PROFILE_IP_KEY.max, USER_PROFILE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
   try {
     const authSession: Session | null = await auth()

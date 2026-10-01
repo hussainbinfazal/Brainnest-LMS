@@ -1,9 +1,7 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
-
 import { auth } from "@/auth";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { connectDB, IOrder, Order } from '@repo/shared/server';
+import { checkIp, IOrder, ORDER_UPDATE_IP_KEY, Order } from '@repo/shared/server';
 import { Session } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,8 +12,8 @@ import { z } from "zod";
 const updateOrderBodySchema = z.object({ orderId: z.string(), status: z.string() });
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ORDER_UPDATE_IP_KEY.namespace, ORDER_UPDATE_IP_KEY.max, ORDER_UPDATE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
 
         const body = await parseBody(request, updateOrderBodySchema);

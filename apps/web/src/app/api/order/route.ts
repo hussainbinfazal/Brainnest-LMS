@@ -1,12 +1,11 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/mongoDB/db";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
-import { Cart, ICart, ICourse, logger, Order } from '@repo/shared/server';
+import { Cart, checkIp, ICart, ICourse, logger, ORDER_CREATE_CART_IP_KEY, Order } from '@repo/shared/server';
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
 
@@ -17,8 +16,8 @@ const createCartOrderBodySchema = z.object({
 }).passthrough();
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ORDER_CREATE_CART_IP_KEY.namespace, ORDER_CREATE_CART_IP_KEY.max, ORDER_CREATE_CART_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB();
 
     try {

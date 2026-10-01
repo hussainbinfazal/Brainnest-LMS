@@ -1,5 +1,4 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from '@repo/shared/server';
 import { Coupon, ICoupon, ISessionUser, validateMongooseId } from '@repo/shared/server';
@@ -9,6 +8,7 @@ import { auth } from "@/auth";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
+import { ADMIN_COUPON_IP_KEY, checkIp } from "@repo/shared/server";
 
 const createCouponBodySchema = z.object({
     code: z.string(),
@@ -30,8 +30,8 @@ const updateCouponBodySchema = z.object({
     }),
 });
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     try {
         const session: Session | null = await auth()
@@ -62,8 +62,8 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const session: Session | null = await auth()
         if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
@@ -82,8 +82,8 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function DELETE(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const session: Session | null = await auth()
         if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
@@ -112,8 +112,8 @@ export async function DELETE(request: CustomNextRequest): Promise<NextResponse> 
 }
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const body = await parseBody(request, updateCouponBodySchema);
         if (!body.ok) return body.response;

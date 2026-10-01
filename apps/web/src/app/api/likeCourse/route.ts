@@ -1,7 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { COURSES_FILTERED_BY_PARAMS, Course, ISessionUser, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from '@repo/shared/server';
+import { checkIp, COURSE_LIKES_LIST_IP_KEY, COURSES_FILTERED_BY_PARAMS, Course, ISessionUser, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from '@repo/shared/server';
 import { ICourse } from '@repo/shared/server';
 import { CustomNextRequest, IGetCourseByParamsResponse, IGetLikedCourseByParamsResponse } from "@/types/server";
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -12,8 +11,8 @@ import { auth } from "@/auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKES_LIST_IP_KEY.namespace, COURSE_LIKES_LIST_IP_KEY.max, COURSE_LIKES_LIST_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);

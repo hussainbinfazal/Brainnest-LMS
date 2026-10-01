@@ -1,5 +1,4 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { Topic, Section, Lesson, connectDB, Course, Category } from '@repo/shared/server';
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from '@repo/shared/server';
@@ -11,6 +10,7 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
+import { ADMIN_COURSE_CREATE_IP_KEY, checkIp } from "@repo/shared/server";
 
 const createCourseBodySchema = z.record(z.string(), z.any());
 
@@ -40,8 +40,8 @@ interface CreateCourseBody {
 }
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_CREATE_IP_KEY.namespace, ADMIN_COURSE_CREATE_IP_KEY.max, ADMIN_COURSE_CREATE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction()

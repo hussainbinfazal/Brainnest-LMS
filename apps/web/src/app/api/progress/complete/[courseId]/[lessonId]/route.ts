@@ -1,5 +1,4 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from '@repo/shared/server';
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -10,9 +9,10 @@ import { CACHE_TTL, invalidateCached, setCached } from "@repo/shared/config/redi
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { checkIp, PROGRESS_COMPLETE_IP_KEY } from '@repo/shared/server';
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string, sectionId: string, lessonId: string } }) {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COMPLETE_IP_KEY.namespace, PROGRESS_COMPLETE_IP_KEY.max, PROGRESS_COMPLETE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);

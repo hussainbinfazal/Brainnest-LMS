@@ -1,17 +1,16 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 import { NextRequest, NextResponse } from "next/server";
 import { Course, User, connectDB } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "../../../../types/server";
-import { ICertificate, ICourse, IProgress, IUser, logger, Progress, Certificate, validateMongooseId } from '@repo/shared/server';
+import { checkIp, CERTIFICATE_IP_KEY, ICertificate, ICourse, IProgress, IUser, logger, Progress, Certificate, validateMongooseId } from '@repo/shared/server';
 import { auth } from "@/auth";
 import { Session } from "next-auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse | Response> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CERTIFICATE_IP_KEY.namespace, CERTIFICATE_IP_KEY.max, CERTIFICATE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
   try {
     await connectDB(process.env.MONGODB_URI!);
     const authSession: Session | null = await auth()

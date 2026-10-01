@@ -1,5 +1,5 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
+import { checkIp, PROGRESS_LESSON_IP_KEY } from '@repo/shared/server';
 import { connectDB, ILessonProgress, IProgress, Progress } from '@repo/shared/server';
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -16,8 +16,6 @@ const updateProgressBodySchema = z.object({
 });
 
 // export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 //     const user: ISessionUser | null = await getDataFromToken(request);
 //     if (!user || !user.id) {
 //         logger.info("Unauthorized access", { ip: ip });
@@ -89,8 +87,8 @@ const updateProgressBodySchema = z.object({
 //     }
 // }
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     // await connectDB(process.env.MONGODB_URI!);
     try {
         const { courseId } = context.params;
@@ -118,8 +116,8 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     }
 }
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     // await connectDB(process.env.MONGODB_URI!);
 
     try {

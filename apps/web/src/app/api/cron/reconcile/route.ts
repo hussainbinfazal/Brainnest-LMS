@@ -1,16 +1,15 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 // app/api/cron/reconcile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, Order, Payment, logger, OrderDocument } from '@repo/shared/server';
+import { checkIp, connectDB, CRON_RECONCILE_IP_KEY, Order, Payment, logger, OrderDocument } from '@repo/shared/server';
 import { RazorpayService, reconcilePayment } from '@repo/payment';
 import { CustomNextRequest } from '@/types/server';
 
 const razorpayService = new RazorpayService();
 
 export async function GET(request: CustomNextRequest) {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CRON_RECONCILE_IP_KEY.namespace, CRON_RECONCILE_IP_KEY.max, CRON_RECONCILE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     // ✅ Protect the cron endpoint
     const authHeader = request.headers.get('authorization');

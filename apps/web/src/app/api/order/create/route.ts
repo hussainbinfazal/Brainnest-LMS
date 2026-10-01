@@ -1,6 +1,5 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
-import { User, Order, Course, connectDB, validateMongooseId, logger, Enrollment, Payment } from '@repo/shared/server';
+import { User, Order, Course, checkIp, connectDB, validateMongooseId, logger, Enrollment, ORDER_CREATE_COURSE_IP_KEY, Payment } from '@repo/shared/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
 
@@ -19,8 +18,8 @@ const createOrderBodySchema = z.object({
 });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ORDER_CREATE_COURSE_IP_KEY.namespace, ORDER_CREATE_COURSE_IP_KEY.max, ORDER_CREATE_COURSE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
   const authSession: Session | null = await auth()
   if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
   const user: ISessionUser | null = authSession?.user;

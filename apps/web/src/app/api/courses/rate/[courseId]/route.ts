@@ -1,7 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { Course, User, connectDB, logger, Review, validateMongooseId } from '@repo/shared/server';
+import { checkIp, COURSE_RATING_IP_KEY, Course, User, connectDB, logger, Review, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
 import { Session } from "next-auth";
@@ -20,8 +19,8 @@ const updateReviewBodySchema = z.object({
 });
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_RATING_IP_KEY.namespace, COURSE_RATING_IP_KEY.max, COURSE_RATING_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -116,8 +115,8 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
 
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_RATING_IP_KEY.namespace, COURSE_RATING_IP_KEY.max, COURSE_RATING_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     session.startTransaction();

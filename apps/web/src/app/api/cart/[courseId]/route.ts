@@ -1,15 +1,14 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { CartDocument, connectDB, logger, validateMongooseId } from '@repo/shared/server';
+import { CartDocument, checkIp, CART_COURSE_IP_KEY, connectDB, logger, validateMongooseId } from '@repo/shared/server';
 import { Course, Cart, ISessionUser, ICart, ICourse } from '@repo/shared/server';
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { CustomNextRequest } from "@/types/server";
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
@@ -86,8 +85,8 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 };
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB();
     try {
         const authSession: Session | null = await auth()

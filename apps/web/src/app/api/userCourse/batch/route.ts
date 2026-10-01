@@ -1,7 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { CustomNextRequest } from "@/types/server";
-import { connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, validateMongooseId } from '@repo/shared/server';
+import { checkIp, connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_BATCH_IP_KEY, USER_COURSE_DETAIL, validateMongooseId } from '@repo/shared/server';
 import { NextRequest, NextResponse } from "next/server";
 import { userCourse as UserCourse } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -17,8 +16,8 @@ const batchUserCoursesBodySchema = z.object({
 });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_COURSE_BATCH_IP_KEY.namespace, USER_COURSE_BATCH_IP_KEY.max, USER_COURSE_BATCH_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);

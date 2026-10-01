@@ -1,4 +1,3 @@
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@/utils/logger/logger.node";
@@ -6,7 +5,7 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { checkIp, checkUser, UPLOAD_SIGN_USER_KEY } from "@repo/shared/server";
+import { checkIp, checkUser, UPLOAD_SIGN_IP_KEY, UPLOAD_SIGN_USER_KEY } from "@repo/shared/server";
 import z from "zod";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 
@@ -19,7 +18,7 @@ export const uploadSignRequestBodySchema = z.object({
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     let ip = "unknown";
     try {
-        const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOAD_SIGN_USER_KEY.namespace, UPLOAD_SIGN_USER_KEY.max, UPLOAD_SIGN_USER_KEY.windowSec); /// rate limit
+        const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOAD_SIGN_IP_KEY.namespace, UPLOAD_SIGN_IP_KEY.max, UPLOAD_SIGN_IP_KEY.windowSec); /// rate limit
         ip = requestIp
         if (!allowed) {
             return failResponse(

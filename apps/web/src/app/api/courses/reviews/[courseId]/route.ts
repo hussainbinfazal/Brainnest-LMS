@@ -1,18 +1,16 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
-import { Review } from '@repo/shared/server';
-import { connectDB, Course } from '@repo/shared/server';
+import { checkIp, COURSE_REVIEW_LIST_IP_KEY, COURSE_REVIEW_MUTATION_IP_KEY, Review, Course, connectDB } from '@repo/shared/server';
 import { validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_REVIEW_LIST_IP_KEY.namespace, COURSE_REVIEW_LIST_IP_KEY.max, COURSE_REVIEW_LIST_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGDB_URI!);
     try {
         const { courseId } = context.params;
@@ -95,8 +93,8 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_REVIEW_MUTATION_IP_KEY.namespace, COURSE_REVIEW_MUTATION_IP_KEY.max, COURSE_REVIEW_MUTATION_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI);
     const session = await mongoose.startSession();
     session.startTransaction();

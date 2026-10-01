@@ -1,6 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
-import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getClientIp, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from '@repo/shared/server';
+import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from '@repo/shared/server';
 import { getErrorMessage } from "@repo/shared"
 import { connectDB } from '@repo/shared/server';
 import { logger } from "@/utils/logger/logger.node";

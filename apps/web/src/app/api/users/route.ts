@@ -1,7 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { ISessionUser, IUserToken, User, UserToken } from '@repo/shared/server';
+import { checkIp, ISessionUser, IUserToken, User, UserToken, USER_PASSWORD_RESET_IP_KEY } from '@repo/shared/server';
 import { connectDB } from '@repo/shared/server';
 
 import { logger } from '@repo/shared/server';
@@ -17,8 +16,8 @@ import { z } from "zod";
 const resetPasswordBodySchema = z.object({ email: z.string().email() });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_PASSWORD_RESET_IP_KEY.namespace, USER_PASSWORD_RESET_IP_KEY.max, USER_PASSWORD_RESET_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();

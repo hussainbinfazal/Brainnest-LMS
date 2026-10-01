@@ -1,15 +1,14 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
-import { Cart, connectDB, User, logger, validateMongooseId } from '@repo/shared/server';
+import { Cart, CART_IP_KEY, checkIp, connectDB, User, logger, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { auth } from "@/auth";
 import { Session } from "next-auth";
 ;
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CART_IP_KEY.namespace, CART_IP_KEY.max, CART_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     // logger.debug('Fetch cart controller called');
     try {

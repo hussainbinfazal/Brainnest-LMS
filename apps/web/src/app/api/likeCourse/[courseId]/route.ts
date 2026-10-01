@@ -1,5 +1,4 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB, LIKED_COURSES_BY_USER, logger, USER_COURSE_DETAIL, USER_COURSE_LIST } from '@repo/shared/server';
@@ -9,13 +8,14 @@ import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/
 import { CUserCourse } from "@/types/client";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import { auth } from "@/auth";
+import { checkIp, COURSE_LIKE_IP_KEY } from "@repo/shared/server";
 import { Session } from "next-auth";
 
 
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKE_IP_KEY.namespace, COURSE_LIKE_IP_KEY.max, COURSE_LIKE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
 
     try {
@@ -110,4 +110,3 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         return failResponse({ message: `Error liking course ${message}` }, 500, undefined, undefined, true);
     }
 }
-

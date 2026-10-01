@@ -1,5 +1,4 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
@@ -10,12 +9,13 @@ import { LessonProgress } from '@repo/shared/server';
 import { NextResponse } from "next/server";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { checkIp, PROGRESS_COURSE_IP_KEY } from '@repo/shared/server';
 
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    const ip = getClientIp(request.headers);
-    if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
+    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COURSE_IP_KEY.namespace, PROGRESS_COURSE_IP_KEY.max, PROGRESS_COURSE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const params = await context.params;
     const courseId = Array.isArray(params.courseId)
         ? params.courseId[0]
