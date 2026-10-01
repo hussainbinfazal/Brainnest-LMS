@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { connectDB, ILessonProgress, IProgress, Progress } from '@repo/shared/server';
 import { generateProgress, updateProgress } from "@/services/progressService";
@@ -7,6 +8,12 @@ import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValid
 
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const updateProgressBodySchema = z.object({
+    progressValue: z.number().min(0).max(100),
+});
 
 // export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
@@ -89,25 +96,25 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         const { courseId } = context.params;
 
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
         }
         const userId: string = user.id;
         if (!validateMongooseId({ userId, courseId })) {
             logger.info("Invalid IDs", { userId, courseId });
-            return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
+            return failResponse({ message: "Invalid IDs" }, 400, undefined, undefined, true);
         }
         await progressQueue.add("generate-progress", { userId, courseId });
         logger.info("Progress of the Lesson created in worker");
-        return NextResponse.json({ message: "Progress updated" }, { status: 202 });
+        return successResponse({ message: "Progress updated" }, 202, undefined, undefined, true);
     } catch (error: unknown) {
 
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Progress Generation Failed", { message });
-        return NextResponse.json({ message: `Failed to complete lesson :${message}` }, { status: 500 });
+        return failResponse({ message: `Failed to complete lesson :${message}` }, 500, undefined, undefined, true);
     }
 }
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
@@ -117,30 +124,32 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
 
     try {
         const { courseId, lessonId } = context.params;
-        const { progressValue } = await request.json();
+        const body = await parseBody(request, updateProgressBodySchema);
+        if (!body.ok) return body.response;
+        const { progressValue } = body.data;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         if (!user) {
             logger.info("unauthorised access", { ip: ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
         }
         const userId: string = user.id;
         if (!validateMongooseId({ userId, courseId, lessonId })) {
             logger.info("Invalid IDs", { userId, courseId, lessonId });
-            return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
+            return failResponse({ message: "Invalid IDs" }, 400, undefined, undefined, true);
         }
         if (typeof progressValue !== "number" || progressValue < 0 || progressValue > 100) {
             logger.info("Invalid progress value", { progressValue });
-            return NextResponse.json({ message: "Invalid progress value" }, { status: 400 });
+            return failResponse({ message: "Invalid progress value" }, 400, undefined, undefined, true);
         }
         //Integrate worker queue of other repo here 
         await progressQueue.add("update-progress", { userId, courseId, lessonId, progressValue });
         logger.info("Progress of the Lesson updated in worker");
-        return NextResponse.json({ message: "Progress updated" }, { status: 202 });
+        return successResponse({ message: "Progress updated" }, 202, undefined, undefined, true);
     } catch (error: unknown) {
         logger.error("Error updating progress:", { error });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ message: `Failed to complete lesson :${message}` }, { status: 500 });
+        return failResponse({ message: `Failed to complete lesson :${message}` }, 500, undefined, undefined, true);
     }
 }

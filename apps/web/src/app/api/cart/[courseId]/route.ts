@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { CartDocument, connectDB, logger, validateMongooseId } from '@repo/shared/server';
@@ -11,22 +12,22 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const sessionUser: ISessionUser | null = authSession?.user;
 
-        if (!sessionUser) return NextResponse.json({ message: "User not found" }, { status: 403 });
+        if (!sessionUser) return failResponse({ message: "User not found" }, 403, undefined, undefined, true);
         const { courseId } = await context.params;
         if (validateMongooseId({ courseId: courseId }) ||
-            validateMongooseId({ userId: sessionUser.id })) return NextResponse.json({ message: "Course id and user id should be valid" }, { status: 400 });
+            validateMongooseId({ userId: sessionUser.id })) return failResponse({ message: "Course id and user id should be valid" }, 400, undefined, undefined, true);
 
-        if (!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+        if (!courseId || !validateMongooseId({ courseId })) return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         await connectDB(process.env.MONGODB_URI!);
         const [courseDB, cartDB] = await Promise.all([
             Course.findById(courseId).select("title price discount").lean(),
             Cart.findOne({ user: sessionUser.id }).lean()
         ])
-        if (!courseDB) return NextResponse.json({ message: "Course not found" }, { status: 404 });
-        if (!cartDB) return NextResponse.json({ message: "Cart not found" }, { status: 404 });
+        if (!courseDB) return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
+        if (!cartDB) return failResponse({ message: "Cart not found" }, 404, undefined, undefined, true);
         let cart: CartDocument | null = await Cart.findOne({ user: sessionUser.id });
         if (!cart) {
             const coursePrice: number = courseDB.price;
@@ -55,7 +56,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
         } else {
             const isCourseExist = cart.courses.find((item) => item._id.toString() === courseDB._id.toString())
-            if (isCourseExist) return NextResponse.json({ message: "Course already exists in cart" }, { status: 400 });
+            if (isCourseExist) return failResponse({ message: "Course already exists in cart" }, 400, undefined, undefined, true);
 
             cart.courses.push(courseDB._id);
 
@@ -75,11 +76,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             await cart.save();
         }
 
-        return NextResponse.json({ message: "Course added to cart successfully", courseDB }, { status: 200 });
+        return successResponse({ message: "Course added to cart successfully", courseDB }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in adding course to cart", { error: message });
-        return NextResponse.json({ message: `Error in adding course to cart` }, { status: 500 });
+        return failResponse({ message: `Error in adding course to cart` }, 500, undefined, undefined, true);
     }
 
 };
@@ -90,30 +91,30 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
     await connectDB();
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         const userId: string | null = user?.id || "";
-        if (!user) return NextResponse.json({ message: "User not found" }, { status: 403 });
+        if (!user) return failResponse({ message: "User not found" }, 403, undefined, undefined, true);
         const isUserIdValid = validateMongooseId({ userId });
-        if (!isUserIdValid) return NextResponse.json({ message: "User id should be valid" }, { status: 400 });
+        if (!isUserIdValid) return failResponse({ message: "User id should be valid" }, 400, undefined, undefined, true);
         const { courseId } = await context.params;
 
-        if (!courseId || !validateMongooseId({ courseId })) return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+        if (!courseId || !validateMongooseId({ courseId })) return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         const course: ICourse | null = await Course.findById(courseId);
-        if (!course) return NextResponse.json({ message: "Course not found" }, { status: 404 });
+        if (!course) return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         const cart: CartDocument | null = await Cart.findOne({ user: userId });
-        if (!cart) return NextResponse.json({ message: "Cart not found" }, { status: 404 });
+        if (!cart) return failResponse({ message: "Cart not found" }, 404, undefined, undefined, true);
         const isCourseExist: boolean = cart.courses.some((item) => item._id.toString() === course._id.toString());
-        if (!isCourseExist) return NextResponse.json({ message: "Course not found in cart" }, { status: 400 });
+        if (!isCourseExist) return failResponse({ message: "Course not found in cart" }, 400, undefined, undefined, true);
         cart.courses.filter((item) => item._id.toString() !== course._id.toString());
         // cart.courses.pull(course._id);
         await cart.save();
         logger.info("Course removed from cart successfully");
-        return NextResponse.json({ message: "Course removed from cart successfully", course }, { status: 200 });
+        return successResponse({ message: "Course removed from cart successfully", course }, 200, undefined, undefined, true);
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in Deleting Course from cart", { error: message });
-        return NextResponse.json({ message: `Error in Deleting Course` }, { status: 500 });
+        return failResponse({ message: `Error in Deleting Course` }, 500, undefined, undefined, true);
     }
 }

@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
 import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, EMAIL_OTP_LOCK, getClientIp, getRedisClient, MAX_ATTEMPTS, OTP_VERIFICATION_EMAIL, User, USER_VERIFIED_FLAG, validateEmail } from '@repo/shared/server';
 import { getErrorMessage } from "@repo/shared"
@@ -6,10 +7,10 @@ import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "@/types/server";
 import { timingSafeEqual } from "crypto";
 import { CACHE_TTL, getCached, incrementWithTtl, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
-import z from "zod";
 import { hashOtp } from "@/lib/OtpValidators";
 import { OTP_VERIFY_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
 import { verifyEmailBodySchema } from "@repo/shared/server";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 
 
 
@@ -18,28 +19,24 @@ import { verifyEmailBodySchema } from "@repo/shared/server";
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
-        return NextResponse.json(
-            { message: `Too many requests, please try again later after ${retryAfterSec}` },
-            { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
-        );
+        return failResponse({ message: `Too many requests, please try again later after ${retryAfterSec}` }, 429, undefined, { 'Retry-After': String(retryAfterSec) }, true);
     }
 
-    const body = await request.json().catch(() => null);
-    const parsed = verifyEmailBodySchema.safeParse(body);
-    if (!parsed.success) {
+    const body = await parseBody(request, verifyEmailBodySchema);
+    if (!body.ok) {
         logger.info("Invalid Payload", { ip });
-        return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
+        return body.response;
     };
-    const { email, otp } = parsed.data;
+    const { email, otp } = body.data;
     const stored = await getCached<string>(OTP_VERIFICATION_EMAIL.namespace, email);
     if (!stored) {
         logger.info("Otp is expired", { ip });
-        return NextResponse.json({ message: "Otp is expired" }, { status: 400 });
+        return failResponse({ message: "Otp is expired" }, 400, undefined, undefined, true);
     };
     const isCachedLock = await getCached(EMAIL_OTP_LOCK.namespace, email);
     if (isCachedLock) {
         logger.info("Too many attempts, please try again later", { ip: ip });
-        return NextResponse.json({ message: "Too many attempts, please try again later" }, { status: 429 });
+        return failResponse({ message: "Too many attempts, please try again later" }, 429, undefined, undefined, true);
     };
 
     try {
@@ -49,7 +46,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             logger.info("Too many attempts, please try again later", { ip: ip });
             invalidateCached(EMAIL_OTP_LOCK.namespace, email); //Remove redis lock for future request for this email;
             setCached(EMAIL_OTP_LOCK.namespace, email, true, CACHE_TTL.MEDIUM);
-            return NextResponse.json({ message: "Too many attempts. Request a new OTP." }, { status: 429 });
+            return failResponse({ message: "Too many attempts. Request a new OTP." }, 429, undefined, undefined, true);
         };
         //hex to buffer for fater comparisons
         const expected = Buffer.from(stored, "hex");
@@ -58,7 +55,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const match = expected.length === actual.length && timingSafeEqual(expected, actual) //Creating buffers because hashing and comparing buffers is faster than hashing and comparing strings, timingSafeEqual makes both buffers equal length, so timingSafeEqual can't throw error
 
         if (!match) {
-            return NextResponse.json({ message: `Invalid OTP. You have ${MAX_ATTEMPTS - attempts} attempts left.` }, { status: 401 });
+            return failResponse({ message: `Invalid OTP. You have ${MAX_ATTEMPTS - attempts} attempts left.` }, 401, undefined, undefined, true);
         }
         await connectDB(process.env.MONGODB_URI!);
 
@@ -84,19 +81,13 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             invalidateCached(EMAIL_OTP_LOCK.namespace, email),//remove lock for future request
             setCached(USER_VERIFIED_FLAG.namespace, email, "1", 15 * 60) ///use this flag while new user registration
         ]);
-        return NextResponse.json(
-            {
+        return successResponse({
                 message: "Email verified successfully",
                 success: true,
-            },
-            { status: 200 }
-        );
+            }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = getErrorMessage(error, "Email Verification Failed")
         logger.error("Email verification error:", { message });
-        return NextResponse.json(
-            { message: `Error in verifying email` },
-            { status: 500 }
-        );
+        return failResponse({ message: `Error in verifying email` }, 500, undefined, undefined, true);
     }
 }

@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,19 +15,19 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         const { courseId } = await context.params;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);
         }
         const userId: string = user.id;
         if (
             !validateMongooseId({ userId, courseId })
         ) {
             logger.info("Invalid IDs", { userId, courseId });
-            return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
+            return failResponse({ message: "Invalid IDs" }, 400, undefined, undefined, true);
         }
 
         const { searchParams } = new URL(request.url);
@@ -57,7 +58,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
 
         if (!updatedUserCourse) {
             logger.info("Already unliked or not enrolled")
-            return NextResponse.json({ message: "Already unliked or not enrolled" }, { status: 404 });
+            return failResponse({ message: "Already unliked or not enrolled" }, 404, undefined, undefined, true);
         }
         await invalidateCached(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         await invalidateCached(USER_COURSE_LIST.namespace, `${userId}`);
@@ -65,11 +66,11 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         const serializedUserCourse = serializeUserCourse(updatedUserCourse);
         await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serializedUserCourse, CACHE_TTL.MEDIUM);
         logger.info("Course unliked successfully", { userId: userId, courseId });
-        return NextResponse.json({ message: "Course unliked successfully", userCourse: serializedUserCourse }, { status: 200 });
+        return successResponse({ message: "Course unliked successfully", userCourse: serializedUserCourse }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in unliking course", { error: message });
-        return NextResponse.json({ message }, { status: 500 });
+        return failResponse({ message }, 500, undefined, undefined, true);
     }
 
 }   

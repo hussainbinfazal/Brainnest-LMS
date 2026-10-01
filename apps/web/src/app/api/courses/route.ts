@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import mongoose, { QueryFilter } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import { COURSES_FILTERED_BY_PARAMS, Course, connectDB, logger } from '@repo/shared/server';
@@ -38,8 +39,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, cacheId);
     if (cached) {
         logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
-        return NextResponse.json(
-            {
+        return successResponse({
                 message: "Courses Fetched Successfully",
                 data: cached.paginatedCourses,
                 currentPage: cached.currentPage,
@@ -47,9 +47,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
                 hasPrevPage: cached.hasPrevPage,
                 totalPages: cached.totalPages,
                 totalCourses: cached.totalCourses
-            },
-            { status: 200 }
-        )
+            }, 200, undefined, undefined, true)
     };
     await connectDB(process.env.MONGODB_URI!);
     try {
@@ -66,7 +64,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
             logger.info("No courses matched filters ", {
                 page, limit, category, childCategories, languages, levels
             });
-            return NextResponse.json({
+            return successResponse({
                 message: "No courses Found",
                 data: [],
                 currentPage: page,
@@ -74,7 +72,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
                 hasPrevPage,
                 totalPages: 0,
                 totalCourses: 0
-            }, { status: 200 })
+            }, 200, undefined, undefined, true)
         }
         console.log("These are the courses on pagination/api------------------------------------->>>>>>>>>>>>>>>>>>>", courses)
         logger.info("Courses fetched successfully", { totalCourses, page, limit });
@@ -87,7 +85,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
             totalCourses: totalCourses
         };
         await setCached(COURSES_FILTERED_BY_PARAMS.namespace, cacheId, responseData, CACHE_TTL.MEDIUM);
-        return NextResponse.json({
+        return successResponse({
             message: "Courses Fetched Succesfully",
             data: serializeCourses(courses),
             currentPage: page,
@@ -96,11 +94,11 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
             totalPages,
             totalCourses
 
-        });
+        }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.log("This is the error on Fetch Paginated Courses", error, message);
         logger.error("Error fetching courses:", { error: message });
-        return NextResponse.json({ message: ` Error fetching courses` }, { status: 500 });
+        return failResponse({ message: ` Error fetching courses` }, 500, undefined, undefined, true);
     }
 }

@@ -37,7 +37,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         }
         const existing = await getCached<UploadSession>(UPLOAD_SESSION.namespace, uploadId);
         if (!existing) {
-            return NextResponse.json({ error: "Upload session not found" }, { status: 404 });
+            return failResponse({ error: "Upload session not found" }, 404, undefined, undefined, true);
         }
 
         const updated: UploadSession & { url: string } = {
@@ -53,6 +53,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "An unknown error occurred";
         logger.error("Error completing upload:", { error: message });
-        return NextResponse.json({ error: message }, { status: 500 })
+        return failResponse({ error: message }, 500, undefined, undefined, true)
     }
 }

@@ -7,12 +7,12 @@ export const loginSchema = z.object({
 });
 
 export const signUpBase = z.object({
-  name: z.string().min(1),
-  email: z.string().email("Invalid email").refine(validateEmail),
-  username: z.string().min(5, "Username must be at least 3 characters"),
+  name: z.string().trim().min(1, "Name is required").max(100),
+  email: z.string().trim().toLowerCase().email("Invalid email").refine(validateEmail, "Email not allowed"),
+  username: z.string().min(5, "Username must be at least 5 characters").max(30).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
-  profileImage: z.string(),
+  confirmPassword: z.string(),
+  profileImage: z.string().url().startsWith("http").optional(),
 });
 
 export const signUpSchema = signUpBase.refine(

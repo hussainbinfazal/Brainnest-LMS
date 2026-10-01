@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { COURSES_FILTERED_BY_PARAMS, Course, ISessionUser, IUserCourse, LIKED_COURSES_BY_USER, connectDB, logger, userCourse, validateMongooseId } from '@repo/shared/server';
@@ -15,11 +16,11 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
     if (!user) {
         logger.info("Unauthorized access", { ip: ip });
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
     };
     let userId = user?.id;
     const { searchParams } = new URL(request.url);
@@ -35,17 +36,17 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 
     if (!validateMongooseId({ userId: userId })) {
         logger.warn("Invalid user id", { userId });
-        return NextResponse.json({
+        return failResponse({
             message: "Unauthorized",
             likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
-        }, { status: 401 })
+        }, 401, undefined, undefined, true)
     }
     const cached = await getCached<IGetLikedCourseByParamsResponse>(LIKED_COURSES_BY_USER.namespace, cacheId);
     if (cached) {
         logger.info("User Liked Courses fetched Succesfully from Cache", {
             courseCount: cached.likedCourses.length
         })
-        return NextResponse.json({ message: "User Liked Courses fetched Succesfully from Cache", likedCourses: cached.likedCourses, currentPage: cached.currentPage, hasNextPage: cached.hasNextPage, hasPrevPage: cached.hasPrevPage, totalPages: cached.totalPages, totalCourses: cached.totalCourses, }, { status: 200 })
+        return successResponse({ message: "User Liked Courses fetched Succesfully from Cache", likedCourses: cached.likedCourses, currentPage: cached.currentPage, hasNextPage: cached.hasNextPage, hasPrevPage: cached.hasPrevPage, totalPages: cached.totalPages, totalCourses: cached.totalCourses, }, 200, undefined, undefined, true)
     }
     // await invaidateCached("Courses", "all")
     // console.log("This is the url of mongodb", process.env.MONGODB_URI)
@@ -93,11 +94,11 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         logger.info("Liked User Courses fetched Succesfully from DB", {
             courseCount: serialized.length
         });
-        return NextResponse.json({ message: "Liked User Courses fetched Succesfully from DB", likedCourses: serialized, hasNextPage, hasPrevPage, currentPage: page, totalPages: Math.ceil(totalCourseCount / limit), totalCourses: totalCourseCount }, { status: 200 });
+        return successResponse({ message: "Liked User Courses fetched Succesfully from DB", likedCourses: serialized, hasNextPage, hasPrevPage, currentPage: page, totalPages: Math.ceil(totalCourseCount / limit), totalCourses: totalCourseCount }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.log("This is the error on Fetch Paginated Courses", error, message);
         logger.error("Error fetching courses:", { error: message });
-        return NextResponse.json({ message: ` Error fetching courses` }, { status: 500 });
+        return failResponse({ message: ` Error fetching courses` }, 500, undefined, undefined, true);
     }
 }

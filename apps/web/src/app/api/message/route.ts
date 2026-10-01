@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/mongoDB/db";
 
@@ -5,14 +6,34 @@ import Chat from "@/models/Chat/chatModel";
 import Message from "@/models/Chat/messageModel";
 import { IChat, IMessage } from "@/types/model";
 ;
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const createMessageBodySchema = z.object({
+    messageData: z.object({
+        chatId: z.string().optional(),
+        message: z.string().optional(),
+        sender: z.string().optional(),
+        receiver: z.string().optional(),
+    }).passthrough(),
+});
+const deleteMessageBodySchema = z.object({ messageId: z.string() });
+const updateMessageBodySchema = z.object({
+    messageId: z.string(),
+    isRead: z.boolean().optional(),
+    isDeletedByReceiver: z.boolean().optional(),
+    isDeletedBySender: z.boolean().optional(),
+});
 
 export async function POST(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
     try {
         await connectDB(process);
-        const { messageData } = await request.json()
+        const body = await parseBody(request, createMessageBodySchema);
+        if (!body.ok) return body.response;
+        const { messageData } = body.data;
         const { chatId, message, sender, receiver } = messageData;
         if (!message || !sender || !receiver) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+            return failResponse({ error: "Missing required fields" }, 400, undefined, undefined, true);
         }
         const newMessage: IMessage | null = new Message({
             sender,
@@ -21,14 +42,14 @@ export async function POST(request: NextRequest, context: { params: { userId: st
         });
         const chatByMessage: IChat | null = await Chat.findById(chatId);
         if (!chatByMessage) {
-            return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+            return failResponse({ error: "Chat not found" }, 404, undefined, undefined, true);
         }
 
         if (chatByMessage.messageCount === chatByMessage.messageLimit) {
             chatByMessage.isLimitExceeded = true;
             chatByMessage.isActive = false;
 
-            return NextResponse.json({ message: "Message limit reached" }, { status: 400 });
+            return failResponse({ message: "Message limit reached" }, 400, undefined, undefined, true);
         }
         chatByMessage.messageCount += 1;
         chatByMessage.messageRemaining -= 1;
@@ -38,11 +59,11 @@ export async function POST(request: NextRequest, context: { params: { userId: st
 
         await chatByMessage.save();
 
-        return NextResponse.json({ message: "Message sent successfully" }, { status: 200 });
+        return successResponse({ message: "Message sent successfully" }, 200, undefined, undefined, true);
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error in message creation:${message}`);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return failResponse({ error: "Internal Server Error" }, 500, undefined, undefined, true);
     }
 }
 
@@ -53,41 +74,45 @@ export async function GET(request: NextRequest, context: { params: { skip: strin
         const skip: number = parseInt(context.params.skip) || 0;
         const limit: number = parseInt(context.params.limit) || 10;
         const messages: IMessage[] = await Message.find().skip(skip).limit(limit);
-        return NextResponse.json({ messages }, { status: 200 });
+        return successResponse({ messages }, 200, undefined, undefined, true);
 
 
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Internal Server Error:${message}`, error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return failResponse({ error: "Internal Server Error" }, 500, undefined, undefined, true);
     }
 }
 
 export async function DELETE(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
     try {
         await connectDB();
-        const { messageId } = await request.json();
+        const body = await parseBody(request, deleteMessageBodySchema);
+        if (!body.ok) return body.response;
+        const { messageId } = body.data;
         if (!messageId) {
-            return NextResponse.json({ error: "Message ID is required" }, { status: 400 });
+            return failResponse({ error: "Message ID is required" }, 400, undefined, undefined, true);
         }
         const deletedMessage: IMessage | null = await Message.findByIdAndDelete(messageId);
         if (!deletedMessage) {
-            return NextResponse.json({ error: "Message not found" }, { status: 404 });
+            return failResponse({ error: "Message not found" }, 404, undefined, undefined, true);
         }
-        return NextResponse.json({ message: "Message deleted successfully" }, { status: 200 });
+        return successResponse({ message: "Message deleted successfully" }, 200, undefined, undefined, true);
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error in DELETE :${message}`);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return failResponse({ error: "Internal Server Error" }, 500, undefined, undefined, true);
     }
 }
 
 export async function PUT(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
     try {
         await connectDB();
-        const { messageId, isRead, isDeletedByReceiver, isDeletedBySender } = await request.json();
+        const body = await parseBody(request, updateMessageBodySchema);
+        if (!body.ok) return body.response;
+        const { messageId, isRead, isDeletedByReceiver, isDeletedBySender } = body.data;
         if (!messageId) {
-            return NextResponse.json({ error: "Message ID is required" }, { status: 400 });
+            return failResponse({ error: "Message ID is required" }, 400, undefined, undefined, true);
         }
         const updatedMessage: IMessage | null = await Message.findByIdAndUpdate(
             messageId,
@@ -95,11 +120,11 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
             { new: true }
         );
         if (!updatedMessage) {
-            return NextResponse.json({ error: "Message not found" }, { status: 404 });
+            return failResponse({ error: "Message not found" }, 404, undefined, undefined, true);
         }
-        return NextResponse.json({ message: "Message updated successfully", updatedMessage }, { status: 200 });
+        return successResponse({ message: "Message updated successfully", updatedMessage }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ error: `Internal Server Error : ${message}` }, { status: 500 });
+        return failResponse({ error: `Internal Server Error : ${message}` }, 500, undefined, undefined, true);
     }
 }

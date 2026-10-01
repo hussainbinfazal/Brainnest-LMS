@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/config/mongoDB/db";
@@ -6,6 +7,15 @@ import mongoose from "mongoose";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { Cart, ICart, ICourse, logger, Order } from '@repo/shared/server';
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const createCartOrderBodySchema = z.object({
+    shippingAddress: z.record(z.string(), z.unknown()),
+    paymentMethod: z.string(),
+    paymentResult: z.record(z.string(), z.unknown()).optional(),
+}).passthrough();
+
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
@@ -13,22 +23,23 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         if (!user) {
-            return NextResponse.json({ message: "User not found" }, { status: 403 });
+            return failResponse({ message: "User not found" }, 403, undefined, undefined, true);
         }
 
         const cart: ICart | null = await Cart.findOne({ user: user?.id }).populate("cartItems");
         if (!cart || cart.courses.length === 0) {
-            return NextResponse.json({ message: "Cart is empty" }, { status: 400 });
+            return failResponse({ message: "Cart is empty" }, 400, undefined, undefined, true);
         }
 
-        const body = await request.json();
-        const { shippingAddress, paymentMethod, paymentResult } = body;
+        const parsedBody = await parseBody(request, createCartOrderBodySchema);
+        if (!parsedBody.ok) return parsedBody.response;
+        const { shippingAddress, paymentMethod, paymentResult } = parsedBody.data;
 
         if (!shippingAddress || !paymentMethod) {
-            return NextResponse.json({ message: "Shipping and payment info required" }, { status: 400 });
+            return failResponse({ message: "Shipping and payment info required" }, 400, undefined, undefined, true);
         }
 
         const orderItems = cart.courses.map((courseId: mongoose.Types.ObjectId | ICourse) => ({
@@ -49,10 +60,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         await order.save();
         await Cart.findOneAndDelete({ user: user.id });
 
-        return NextResponse.json({ message: "Order created successfully", order }, { status: 200 });
+        return successResponse({ message: "Order created successfully", order }, 200, undefined, undefined, true);
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         console.error(`Order creation failed:`, error);
-        return NextResponse.json({ message: `Server error:${message}` }, { status: 500 });
+        return failResponse({ message: `Server error:${message}` }, 500, undefined, undefined, true);
     }
 }

@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { AUTH_USER, connectDB, IUser, IUserCourse, logger, User, userCourse, } from '@repo/shared/server';
 import { NextResponse } from "next/server";
@@ -15,18 +16,18 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
   try {
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const authUser: ISessionUser | null = authSession?.user;
     if (!authUser) {
       logger.warn("Unauthorized access attempt", { ip: ip });
-      return NextResponse.json({ message: "Missing User Details" }, { status: 401 });
+      return failResponse({ message: "Missing User Details" }, 401, undefined, undefined, true);
     }
 
     const cached = await getCached<CAuthUser[]>(AUTH_USER.namespace, authUser.id);
 
     if (cached) {
       logger.info("User fetched from cache");
-      return NextResponse.json({ message: "User fetched successfully", user: cached[0] }, { status: 200 });
+      return successResponse({ message: "User fetched successfully", user: cached[0] }, 200, undefined, undefined, true);
     }
     await connectDB(process.env.MONGODB_URI!);
     // user basic info
@@ -34,14 +35,14 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
       .select('-password')
       .exec();
 
-    if (!userDb) return NextResponse.json({ message: "User not found", user: {} }, { status: 404 });
+    if (!userDb) return failResponse({ message: "User not found", user: {} }, 404, undefined, undefined, true);
     logger.info("User fetched successfully", { userId: authUser?.id });
     await setCached(AUTH_USER.namespace, authUser.id, [userDb], CACHE_TTL.MEDIUM);
-    return NextResponse.json({ message: "User fetched successfully", user: userDb }, { status: 200 });
+    return successResponse({ message: "User fetched successfully", user: userDb }, 200, undefined, undefined, true);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     logger.error(`Error in getting user`, { error: error, message });
-    return NextResponse.json({ message: `Error in getting` }, { status: 500 });
+    return failResponse({ message: `Error in getting` }, 500, undefined, undefined, true);
   }
 
 

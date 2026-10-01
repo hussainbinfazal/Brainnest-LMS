@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
@@ -9,6 +10,7 @@ import { CACHE_TTL, invalidateCached, setCached, setOnlyIfNotExist } from '@repo
 import { hashOtp } from '@/lib/OtpValidators';
 import { OTP_SEND_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
 import axios from "axios";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 
 
 function generateOTP(): string {
@@ -26,25 +28,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_SEND_EMAIL_IP_KEY.namespace, OTP_SEND_EMAIL_IP_KEY.max, OTP_SEND_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
-        return NextResponse.json(
-            { message: 'Too many requests, please try again later' },
-            { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
-        );
+        return failResponse({ message: 'Too many requests, please try again later' }, 429, undefined, { 'Retry-After': String(retryAfterSec) }, true);
     }
     ///If user is registering first time
-    const body = await request.json().catch(() => null);
-    const parsed = sendEmailBodySchema.safeParse(body);
-    if (!parsed.success) {
+    const body = await parseBody(request, sendEmailBodySchema);
+    if (!body.ok) {
         logger.info("Invalid Payload", { ip: ip });
-        return NextResponse.json({ message: "Invalid Payload" }, { status: 400 });
+        return body.response;
     }
-    const { email } = parsed.data;
+    const { email } = body.data;
     console.log("URL of the worker in the sendEmail route", `${process.env.EMAIL_API_URL}/internal/email-otp`);
     try {
         //Atomic
         const acquired = await setOnlyIfNotExist(COOLDOWN_VERIFICATION_EMAIL.namespace, email, "1", CACHE_TTL.SHORT); //acquire lock
         if (!acquired) {
-            return NextResponse.json({ message: 'Too many requests, please try again later' }, { status: 429, headers: { 'Retry-After': String(CACHE_TTL.SHORT) } });
+            return failResponse({ message: 'Too many requests, please try again later' }, 429, undefined, { 'Retry-After': String(CACHE_TTL.SHORT) }, true);
         }
         //
         // curl - i - X POST localhost: 3000 / api / send - email - otp - d '{"email":"a@x.com"}'
@@ -77,10 +75,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             throw new Error(`Worker returned HTTP ${response.status}`);
         }
 
-        return NextResponse.json({
+        return successResponse({
             message: 'OTP sent to email successfully',
             // ...(process.env.NODE_ENV! === 'development' && { email })
-        }, { status: 202 });
+        }, 202, undefined, undefined, true);
     } catch (error: unknown) {
         // console.log("This is the error in the catch block of send Email Otp route", error);
 
@@ -101,9 +99,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             error,
             message,
         });
-        return NextResponse.json(
-            { message },
-            { status },
-        );
+        return successResponse({ message }, 200, undefined, undefined, true);
     }
 }

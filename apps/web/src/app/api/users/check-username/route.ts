@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { bloomMightContain } from "@/lib/bloomFilter/bloomFilter";
 import { recordBloomCheck } from "@/lib/bloomFilter/bloomStats";
 import { CustomNextRequest } from "@/types/server";
@@ -11,25 +12,25 @@ export async function GET(request: CustomNextRequest) {
         const { searchParams } = new URL(request.url);
         const username = searchParams.get("username")?.trim();
         if (!username || username.length < 3) {
-            return NextResponse.json({ message: "too_short", available: false }, { status: 400 });
+            return failResponse({ message: "too_short", available: false }, 400, undefined, undefined, true);
 
         };
         //Bloom check
         const mightExist: boolean = await bloomMightContain(username);
         recordBloomCheck(mightExist); //fire and forget
         if (!mightExist) {
-            return NextResponse.json({ message: "Username is available", available: true }, { status: 200 });
+            return successResponse({ message: "Username is available", available: true }, 200, undefined, undefined, true);
         };
         //final Source of truth(DB)
         await connectDB(process.env.MONGODB_URI!);
         const exists: { _id: Types.ObjectId } | null = await User.exists({ userName: username });
-        return NextResponse.json({ available: !exists }, { status: 200 });
+        return successResponse({ available: !exists }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message: string = error instanceof Error ? error.message : "Unknown error";
         logger.error(
             "Error in checking username:",
             { error, message }
         );
-        return NextResponse.json({ message, available: false }, { status: 500 });
+        return failResponse({ message, available: false }, 500, undefined, undefined, true);
     }
 }

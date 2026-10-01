@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { connectDB, Progress, Course, User, Lesson, logger, IUser, ILessonProgress, PROGRESS_BY_USER_COURSE } from '@repo/shared/server';
 import { NextResponse } from "next/server";
@@ -14,12 +15,12 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
 
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
 
     if (!user) {
         logger.info("Unauthorized access", { ip: ip });
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
     };
     try {
         const params = await context.params;
@@ -31,15 +32,15 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             : params.lessonId;  //Store States
         if (!courseId || !lessonId) {
             logger.error("Invalid course or lesson ID in progress route");
-            return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
+            return failResponse({ message: "Invalid course or lesson ID" }, 400, undefined, undefined, true);
         }
         const userId: string = user?.id;
         if (!courseId || !lessonId) {
-            return NextResponse.json({ message: "Course and lesson IDs are required" }, { status: 400 });
+            return failResponse({ message: "Course and lesson IDs are required" }, 400, undefined, undefined, true);
         }
         if (!validateMongooseId({ userId, courseId, lessonId })) {
             logger.info("Invalid IDs", { userId, courseId, lessonId });
-            return NextResponse.json({ message: "Invalid IDs" }, { status: 400 });
+            return failResponse({ message: "Invalid IDs" }, 400, undefined, undefined, true);
         };
         //Invalidate Cached Progress for the course 
 
@@ -60,15 +61,15 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         ])
         if (!lessonDB) {
             logger.info("Lesson not found", { lessonId });
-            return NextResponse.json({ message: "Lesson not found" }, { status: 404 });
+            return failResponse({ message: "Lesson not found" }, 404, undefined, undefined, true);
         }
         if (!userDB) {
             logger.info("User not found", { userId });
-            return NextResponse.json({ message: "User not found" }, { status: 404 });
+            return failResponse({ message: "User not found" }, 404, undefined, undefined, true);
         }
         if (!courseDB) {
             logger.info("Course not found", { courseId });
-            return NextResponse.json({ message: "Course not found" }, { status: 404 });
+            return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         }
         // await progressDB!.save();
 
@@ -88,7 +89,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         if (!isNewCompletion) {
             // already completed earlier — no-op, don't double count
             const progressDB = await Progress.findOne({ userId, courseId }).lean();
-            return NextResponse.json({ message: "Lesson already marked as completed", progress: progressDB, lessonProgress: lessonProgressDoc, completedLessonIds }, { status: 200 });
+            return successResponse({ message: "Lesson already marked as completed", progress: progressDB, lessonProgress: lessonProgressDoc, completedLessonIds }, 200, undefined, undefined, true);
         }
 
         // only increments on a genuinely new completion
@@ -140,11 +141,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             lessonProgress: lessonProgressDoc, //Updated Course
             completedLessonIds,
         };
-        return NextResponse.json({ message: "Lesson marked as completed", ...response });
+        return successResponse({ message: "Lesson marked as completed", ...response }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         console.error("Error marking lesson complete:", error); // Log the error for debugging in dev environment 
         const message: string = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error marking lesson complete:", { message });
-        return NextResponse.json({ message: `Failed to complete lesson :${message}` }, { status: 500 });
+        return failResponse({ message: `Failed to complete lesson :${message}` }, 500, undefined, undefined, true);
     }
 }

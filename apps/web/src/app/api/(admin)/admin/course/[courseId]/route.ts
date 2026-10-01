@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextResponse } from "next/server";
 import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory } from '@repo/shared/server';
@@ -7,25 +8,28 @@ import mongoose from "mongoose";
 import { diffDocuments } from "@/lib/helpers/genericDiff";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
 
+const updateCourseBodySchema = z.record(z.string(), z.any());
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
-        if (!user || user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
+        if (!user || user?.role !== "instructor") { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
         const { courseId } = context.params;
         logger.info("This is the courseId for the admin in the edit route", { courseId: courseId })
         if (!courseId || !validateMongooseId({ courseId })) {
-            return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         }
         await connectDB(process.env.MONGODB_URI!);
         const course: ICourse | null = await Course.findById(courseId).lean();
 
         if (!course) {
-            return NextResponse.json({ message: "Course not found" }, { status: 404 });
+            return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         }
 
         const completeCourse = await Course.aggregate([
@@ -109,13 +113,13 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
             },
         ]);
         logger.info("Course retrieved successfully");
-        return NextResponse.json({
+        return successResponse({
             course: completeCourse,
-        });
+        }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in getting course:", { message: message });
-        return NextResponse.json({ message: `Error in getting course` }, { status: 500 });
+        return failResponse({ message: `Error in getting course` }, 500, undefined, undefined, true);
     }
 }
 
@@ -126,24 +130,24 @@ export async function DELETE(request: CustomNextRequest, { params }: { params: {
     try {
         const { courseId } = params;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
-        if (user?.role !== "instructor") { return NextResponse.json({ message: "You are not authorized" }, { status: 401 }); }
+        if (user?.role !== "instructor") { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
         if (!courseId || !validateMongooseId({ courseId })) {
-            return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         }
         await connectDB(process.env.MONGODB_URI!);
         const course: ICourse | null = await Course.findByIdAndDelete(courseId);
 
         if (!course) {
-            return NextResponse.json({ message: "Course not found" }, { status: 404 });
+            return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         }
         logger.info("Course deleted successfully");
-        return NextResponse.json({ message: "Course deleted successfully" }, { status: 200 });
+        return successResponse({ message: "Course deleted successfully" }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Internal server error';
         logger.error(`Error in deleting course: ${message}`);
-        return NextResponse.json({ message: `Error in deleting course:${message}` }, { status: 500 });
+        return failResponse({ message: `Error in deleting course:${message}` }, 500, undefined, undefined, true);
     }
 }
 
@@ -155,7 +159,9 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
     const session = await mongoose.startSession()
     try {
         const { courseId } = context.params;
-        const body = await request.json();
+        const parsedBody = await parseBody(request, updateCourseBodySchema);
+        if (!parsedBody.ok) return parsedBody.response;
+        const body = parsedBody.data;
         const {
             lessons,
             sections,
@@ -166,21 +172,21 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             ...courseFields
         } = body;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const sessionUser: ISessionUser | null = authSession?.user;
 
         if (sessionUser?.role !== "instructor") {
             logger.warn("Unauthorized access attempt in admin course update route");
-            return NextResponse.json({ message: "You are not authorized" }, { status: 401 });
+            return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true);
         }
         if (!courseId || !validateMongooseId({ courseId: courseId })) {
             logger.warn("Course id is required in admin course update route");
-            return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         }
         const course: ICourse | null = await Course.findOne({ _id: courseId, instructorId: sessionUser.id });
         if (!course) {
             logger.warn("Course not found in admin course update route with this Id", { courseId: courseId });
-            return NextResponse.json({ message: "Course not found" }, { status: 404 });
+            return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         }
         // Ensure that the instructor can only update their own course and make this compatible with the new schema changes
 
@@ -250,12 +256,12 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
         })
 
         logger.info("Course updated successfully");
-        return NextResponse.json({ message: "Course updated successfully" });
+        return successResponse({ message: "Course updated successfully" }, 200, undefined, undefined, true);
     } catch (error: unknown) {
 
         const message = error instanceof Error ? error.message : 'Internal server error';
         logger.error(`Error in updating course: ${message}`);
-        return NextResponse.json({ message: `Error in updating course:${message}` }, { status: 500 });
+        return failResponse({ message: `Error in updating course:${message}` }, 500, undefined, undefined, true);
     } finally {
         session.endSession()
     }

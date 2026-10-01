@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { NextRequest, NextResponse } from 'next/server';
@@ -11,6 +12,15 @@ import Payment from "@/models/Payment/paymentModel"
 import { RazorpayCreateOrderRequest } from '@/types/server';
 import { IPaymentsByUser } from '@/types/model';
 import { logger } from "@/utils/logger/logger.node";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const initiateChatPaymentBodySchema = z.object({
+    amount: z.number().positive(),
+    chatId: z.string(),
+    messageLimit: z.any(),
+    userId: z.string(),
+});
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID!,
     key_secret: process.env.RAZORPAY_KEY_SECRET!,
@@ -21,10 +31,12 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     try {
         await connectDB();
 
-        const { amount, chatId, messageLimit, userId } = await request.json();
+        const body = await parseBody(request, initiateChatPaymentBodySchema);
+        if (!body.ok) return body.response;
+        const { amount, chatId, messageLimit, userId } = body.data;
 
         const user = await User.findOne({ _id: userId });
-        if (!user) return NextResponse.json({ message: "User not found, Payment failed" }, { status: 404 });
+        if (!user) return failResponse({ message: "User not found, Payment failed" }, 404, undefined, undefined, true);
         logger.info({ amount, chatId, userId }, "Payment initiation");
         logger.info({ messageLimit }, "Message limit value");
         // Verify Razorpay signature
@@ -38,10 +50,10 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         const chat = await Chat.findOne({ _id: chatId });
 
         if (!chat) {
-            return NextResponse.json({
+            return failResponse({
                 success: false,
                 message: 'Chat not found'
-            }, { status: 404 });
+            }, 404, undefined, undefined, true);
         }
 
 
@@ -61,22 +73,22 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         });
 
         await payment.save();
-        return NextResponse.json({
+        return successResponse({
             success: true,
             message: 'Payment verified successfully',
             razorpayChatId: razorpayChat.id,
             chat: chat._id,
             amount: amount
-        }, { status: 200 });
+        }, 200, undefined, undefined, true);
 
     } catch (error: any) {
         logger.error(error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error verifying payment:${message}`);
-        return NextResponse.json({
+        return failResponse({
             success: false,
             message: 'Payment verification failed',
             error: error.message
-        }, { status: 500 });
+        }, 500, undefined, undefined, true);
     }
 }

@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { CProgress } from "@/types/client";
@@ -24,19 +25,19 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         : params.lessonId;  //Store States
     if (!courseId || !lessonId) {
         logger.error("Invalid course or lesson ID in progress route");
-        return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
+        return failResponse({ message: "Invalid course or lesson ID" }, 400, undefined, undefined, true);
     };
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
 
     if (!user || !user.id) {
         logger.info("Unauthorized access", { ip: ip });
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
     }
     const userId: string = user.id;
     let cached = await getCached<CProgress>(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`)
-    if (cached) return NextResponse.json({ message: "This is the progress of the course", response: cached }, { status: 200 });
+    if (cached) return successResponse({ message: "This is the progress of the course", response: cached }, 200, undefined, undefined, true);
 
     await connectDB(process.env.MONGODB_URI!);
     try {
@@ -79,10 +80,10 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         const serializedProgress = await serializeDocument(response);
         await setCached(PROGRESS_BY_USER_COURSE.namespace,
             `${userId}:${courseId}`, serializedProgress, CACHE_TTL.MEDIUM)
-        return NextResponse.json({ message: "This is the progress of the lesson", response }, { status: 200 });
+        return successResponse({ message: "This is the progress of the lesson", response }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         logger.error("Error marking lesson complete:", { error });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ message: `Failed to fetch progress :${message}` }, { status: 500 });
+        return failResponse({ message: `Failed to fetch progress :${message}` }, 500, undefined, undefined, true);
     }
 }

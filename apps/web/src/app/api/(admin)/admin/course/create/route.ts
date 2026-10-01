@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { Topic, Section, Lesson, connectDB, Course, Category } from '@repo/shared/server';
@@ -8,6 +9,10 @@ import mongoose, { ObjectId, Types } from "mongoose";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const createCourseBodySchema = z.record(z.string(), z.any());
 
 interface CreateCourseBody {
     title: string;
@@ -41,20 +46,22 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const session = await mongoose.startSession();
     session.startTransaction()
     try {
-        const body = await request.json();
+        const parsedBody = await parseBody(request, createCourseBodySchema);
+        if (!parsedBody.ok) return parsedBody.response;
+        const body = parsedBody.data;
         const { title, description, price, category, subCategory, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, topics, previewVideo, dripType, sections,
 
         } = body;
         if (!title || !price || !sections?.length || description === "" || category === "" || subCategory === "" || faq === "" || requirements === "" || whatYouWillLearn === "" || video === "" || lessons === "" || coverImage === "" || status === "" || duration === 0 || language === "" || level === "" || tags === "" || discount === "") {
             logger.warn("Validation failed: Missing required fields", { title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory });
-            return NextResponse.json({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, { status: 400 });
+            return failResponse({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, 400, undefined, undefined, true);
         }
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const userInSession: ISessionUser | null = authSession?.user;
         if (!userInSession || !validateMongooseId({ userId: userInSession.id })) {
             logger.warn("Unauthorized access attempt to create course", { ip: ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);
         }
         logger.info("This is the user is attempting to create course ", { name: userInSession.name, id: userInSession.id });
         const sessionUserId: string = userInSession.id;
@@ -139,13 +146,13 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         session.endSession();
         logger.info("Course created successfully", { courseId: createdCourse._id, instructorId: sessionUserId });
 
-        return NextResponse.json({ message: "Course created successfully", course: createdCourse }, { status: 201 });
+        return successResponse({ message: "Course created successfully", course: createdCourse }, 201, undefined, undefined, true);
 
     } catch (error: unknown) {
         await session.abortTransaction()
         logger.error("Error in creating course", { error: error instanceof Error ? error.message : 'Unknown error' });
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ message: `Error in creating course: ${message}` }, { status: 500 });
+        return failResponse({ message: `Error in creating course: ${message}` }, 500, undefined, undefined, true);
     } finally {
         await session.endSession();
     }

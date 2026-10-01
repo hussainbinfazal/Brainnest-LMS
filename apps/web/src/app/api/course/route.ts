@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
 import { Course, connectDB, logger, ICourse } from '@repo/shared/server';
 import { CustomNextRequest } from "@/types/server";
@@ -15,11 +16,11 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     try {
         const cachedCourses = await getCoursesWithCache();
         logger.info("Courses fetched successfully", { courseCount: cachedCourses?.length || 0 });
-        return NextResponse.json({ message: "Courses fetched successfully", courses: cachedCourses }, { status: 200 });
+        return successResponse({ message: "Courses fetched successfully", courses: cachedCourses }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         console.log("This is the error on server side", error)
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error fetching courses:", { error: message });
-        return NextResponse.json({ message: `Error in Fetching Courses : ${message}` }, { status: 500 });
+        return failResponse({ message: `Error in Fetching Courses : ${message}` }, 500, undefined, undefined, true);
     }
 }

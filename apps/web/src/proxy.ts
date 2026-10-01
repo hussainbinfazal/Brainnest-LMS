@@ -5,6 +5,7 @@ import { getToken } from "next-auth/jwt"
 import type { JWT } from "next-auth/jwt"
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
 import { checkIp, GLOBAL_IP_KEY } from '@repo/shared/server';
+import { failResponse } from "@/lib/helpers/failResponseHelper";
 
 export async function proxy(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
@@ -15,9 +16,12 @@ export async function proxy(req: NextRequest) {
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
     try {
       if (!allowed) {
-        return NextResponse.json(
+        return failResponse(
           { message: 'Too many requests' },
-          { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+          429,
+          undefined,
+          { 'Retry-After': String(retryAfterSec) },
+          true,
         );
       }
     } catch (error: unknown) {

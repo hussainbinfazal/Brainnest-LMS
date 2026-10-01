@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument, } from '@repo/shared/server';
@@ -5,26 +6,38 @@ import { ICourse, IOrder, IPayments, IUser } from '@repo/shared/server';
 import mongoose from 'mongoose';
 import { markPaymentCompleted, PaymentService } from '@repo/payment';
 import axios from 'axios';
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
 const paymentService: PaymentService = new PaymentService();
+const verifyPaymentBodySchema = z.object({
+  orderId: z.string(),
+  paymentId: z.string(),
+  signature: z.string(),
+  userId: z.string(),
+  amount: z.number(),
+});
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   await connectDB(process.env.MONGODB_URI!);
   const session: mongoose.ClientSession = await mongoose.startSession();
   let razorpayPaymentID: string | undefined = "";
   try {
 
-    const { orderId, paymentId, signature, userId, amount } = await request.json();
+    const body = await parseBody(request, verifyPaymentBodySchema);
+    if (!body.ok) return body.response;
+    const { orderId, paymentId, signature, userId, amount } = body.data;
     if (!orderId || !paymentId || !signature || !userId || !amount) {
       logger.warn('Invalid data');
-      return NextResponse.json({ message: "Invalid data" }, { status: 400 })
+      return failResponse({ message: "Invalid data" }, 400, undefined, undefined, true)
     };
     if (!validateMongooseId({ orderId: orderId })) {
       logger.error("Invalid Order Id", { orderId });
-      return NextResponse.json({ message: "Invalid Data" }, { status: 400 })
+      return failResponse({ message: "Invalid Data" }, 400, undefined, undefined, true)
     };
 
     if (!validateMongooseId({ userId: userId })) {
       logger.error("Invalid User Id in payment", { userId });
-      return NextResponse.json({ message: "Invalid Data" }, { status: 400 })
+      return failResponse({ message: "Invalid Data" }, 400, undefined, undefined, true)
     };
     logger.info('Payment verification request data', { orderId, paymentId, userId, amount },)
     await session.startTransaction();;
@@ -37,15 +50,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!pendingPayment) {
       logger.error('Payment not found');
-      return NextResponse.json({
+      return failResponse({
         success: false,
         message: 'Payment not found'
-      }, { status: 404 });
+      }, 404, undefined, undefined, true);
     }
     if (!pendingOrder) {
       await session.abortTransaction();
       logger.error('Order not found', { orderId });
-      return NextResponse.json({ message: 'Order not found' }, { status: 404 });
+      return failResponse({ message: 'Order not found' }, 404, undefined, undefined, true);
     }
 
     const isAuthentic: boolean = paymentService.verifyPayment(pendingPayment.paymentId, paymentId, signature);
@@ -74,17 +87,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       ]);
       await session.commitTransaction();
       logger.error('Invalid payment signature', { orderId, paymentId });
-      return NextResponse.json({
+      return failResponse({
         success: false,
         message: 'Invalid payment signature'
-      }, { status: 400 });
+      }, 400, undefined, undefined, true);
 
 
     }
     if (!pendingPayment) {
       await session.abortTransaction();
       logger.error('Payment not found', { paymentId });
-      return NextResponse.json({ message: 'Payment not found' }, { status: 404 });
+      return failResponse({ message: 'Payment not found' }, 404, undefined, undefined, true);
     }
 
     const courseIds: mongoose.Types.ObjectId[] = pendingOrder.orderItems.map((item: { course: mongoose.Types.ObjectId }) => item.course);
@@ -92,7 +105,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!courseIds.length) {
       await session.abortTransaction();
       logger.error('Order has no courses', { orderId });
-      return NextResponse.json({ message: 'Invalid order' }, { status: 400 });
+      return failResponse({ message: 'Invalid order' }, 400, undefined, undefined, true);
     }
     const completedOrder: OrderDocument | null = await Order.findOneAndUpdate(
       { _id: orderId, status: 'Pending' },
@@ -170,10 +183,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       coursesEnrolled: courseIds.length
     });
 
-    return NextResponse.json({
+    return successResponse({
       success: true,
       message: 'Payment verified successfully, Order Generated Successfully',
-    }, { status: 200 });
+    }, 200, undefined, undefined, true);
 
   } catch (error: unknown) {
     if (session.inTransaction()) await session.abortTransaction();
@@ -185,10 +198,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Try to mark order as failed if possible
     const message: string = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Error verifying payment', { message });
-    return NextResponse.json({
+    return failResponse({
       success: false,
       message: `Payment verification failed`,
-    }, { status: 500 });
+    }, 500, undefined, undefined, true);
   } finally {
     await session.endSession();
   }

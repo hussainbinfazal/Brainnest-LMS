@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 // import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
 import { NextRequest, NextResponse } from "next/server";
@@ -19,7 +20,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         //For Cache Keys        
         const { searchParams } = new URL(request.url);
@@ -28,19 +29,19 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         const skip = Number((page - 1)) * limit;
         if (!user) {
             logger.info("Unauthorized access", { ip: ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
         }
         const { courseId } = await context.params;
         const userId: string = user.id;
 
         if (!userId || !validateMongooseId({ userId })) {
             logger.info("Invalid user id", { userId });
-            return NextResponse.json({ message: "Invalid user id" }, { status: 400 })
+            return failResponse({ message: "Invalid user id" }, 400, undefined, undefined, true)
         }
 
         if (!courseId || !validateMongooseId({ courseId })) {
             logger.info("Invalid course id", { courseId });
-            return NextResponse.json({ message: "Invalid course id" }, { status: 400 })
+            return failResponse({ message: "Invalid course id" }, 400, undefined, undefined, true)
         }
         // const cached = await getCached<CUserCourse>(`userCourse`, `${userId}:${courseId}`)
         // if (cached) {
@@ -54,18 +55,18 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         ])
         if (!userDB) {
             logger.info("User not found");
-            return NextResponse.json({ message: "User not found" }, { status: 403 });
+            return failResponse({ message: "User not found" }, 403, undefined, undefined, true);
         }
         if (!courseDB) {
             logger.info("Course not found");
-            return NextResponse.json({ message: "Course not found" }, { status: 404 });
+            return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         }
 
         // Check if already liked using UserCourse model
 
         if (userCourseDB && userCourseDB.isLiked) {
             logger.info("User already liked this course", { courseName: courseDB.title });
-            return NextResponse.json({ message: "User already liked this course", courseName: courseDB.title }, { status: 400 });
+            return failResponse({ message: "User already liked this course", courseName: courseDB.title }, 400, undefined, undefined, true);
         }
 
         logger.info("Course liked successfully", {
@@ -90,7 +91,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
         ).lean().exec();
         if (!updatedUserCourse) {
-            return NextResponse.json({ message: "Unable to like course" }, { status: 500 });
+            return failResponse({ message: "Unable to like course" }, 500, undefined, undefined, true);
         }
         await invalidateCached(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         await invalidateCached(USER_COURSE_LIST.namespace, `${userId}`);
@@ -101,12 +102,12 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         logger.info("2 AFTER serialize");
         await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
 
-        return NextResponse.json({ message: "Course liked successfully", courseName: courseDB.title, userCourse: serialized }, { status: 200 });
+        return successResponse({ message: "Course liked successfully", courseName: courseDB.title, userCourse: serialized }, 200, undefined, undefined, true);
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error liking course:", { error: message });
-        return NextResponse.json({ message: `Error liking course ${message}` }, { status: 500 });
+        return failResponse({ message: `Error liking course ${message}` }, 500, undefined, undefined, true);
     }
 }
 

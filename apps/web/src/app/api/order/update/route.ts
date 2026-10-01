@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 import { auth } from "@/auth";
@@ -7,15 +8,22 @@ import { Session } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const updateOrderBodySchema = z.object({ orderId: z.string(), status: z.string() });
+
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
 
-        const { orderId, status } = await request.json();
+        const body = await parseBody(request, updateOrderBodySchema);
+        if (!body.ok) return body.response;
+        const { orderId, status } = body.data;
 
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
 
         const userId: string | null = user?.id || '';
@@ -23,51 +31,51 @@ export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
         const order: IOrder | null = await Order.findById(orderId);
 
         if (!order) {
-            return NextResponse.json({
+            return failResponse({
                 success: false,
                 message: 'Order not found'
-            }, { status: 404 });
+            }, 404, undefined, undefined, true);
         }
 
         if (order.user.toString() !== userId) {
-            return NextResponse.json({
+            return failResponse({
                 success: false,
                 message: 'Unauthorized'
-            }, { status: 401 });
+            }, 401, undefined, undefined, true);
         }
         order.status = status;
         await order.save();
         if (order.status === 'completed') {
-            return NextResponse.json({
+            return successResponse({
                 success: true,
                 message: 'Order completed successfully',
                 orderId: order._id
-            });
+            }, 200, undefined, undefined, true);
         }
         if (order.status === 'failed') {
-            return NextResponse.json({
+            return successResponse({
                 success: true,
                 message: 'Order Failed',
                 orderId: order._id
-            });
+            }, 200, undefined, undefined, true);
         }
         if (order.status === 'pending') {
-            return NextResponse.json({
+            return successResponse({
                 success: true,
                 message: 'Order is still pending',
                 orderId: order._id
-            });
+            }, 200, undefined, undefined, true);
         }
 
-        return NextResponse.json({
+        return successResponse({
             success: true,
             message: 'Order updated successfully',
             orderId: order._id
-        });
+        }, 200, undefined, undefined, true);
 
     } catch (error: any) {
         console.error("Error in PUT requestuest:", error);
         const message = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ message: `Internal Server Error: ${message}` }, { status: 500 });
+        return failResponse({ message: `Internal Server Error: ${message}` }, 500, undefined, undefined, true);
     }
 }

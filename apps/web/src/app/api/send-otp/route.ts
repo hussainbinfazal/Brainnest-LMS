@@ -1,16 +1,23 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
-import otpStore from '@/lib/OtpValidators';
 import twilio from 'twilio';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import { CustomNextRequest } from '@/types/server';
 import { logger } from '@/utils/logger/logger.node';
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
 
+const sendSmsOtpBodySchema = z.object({
+    phoneNumber: z.union([z.string(), z.number()]).transform(String),
+});
 const client = twilio(process.env.TWILIO_ACCOUNT_SID!, process.env.TWILIO_AUTH_TOKEN!);
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        const { phoneNumber } = await request.json();
+        const body = await parseBody(request, sendSmsOtpBodySchema);
+        if (!body.ok) return body.response;
+        const { phoneNumber } = body.data;
 
         // Format phone number to E.164 format
         let formattedPhone: string = phoneNumber.toString().replace(/\D/g, ''); // Remove non-digits
@@ -22,7 +29,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         // Validate phone number format
         if (!/^\+[1-9]\d{1,14}$/.test(formattedPhone)) {
-            return NextResponse.json({ message: 'Invalid phone number format' }, { status: 400 });
+            return failResponse({ message: 'Invalid phone number format' }, 400, undefined, undefined, true);
         }
 
         logger.info('Formatted phone number:', { formattedPhone });
@@ -36,10 +43,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         });
 
         // Store OTP with expiry (5 minutes)
-        otpStore[phoneNumber] = {
-            otp,
-            expires: Date.now() + 5 * 60 * 1000
-        };
+        // otpStore[phoneNumber] = {
+        //     otp,
+        //     expires: Date.now() + 5 * 60 * 1000
+        // };
 
         // Send SMS via Twilio or fallback for development
         if (process.env.NODE_ENV! === 'production' && process.env.TWILIO_PHONE_NUMBER!?.startsWith('+1')) {
@@ -59,13 +66,13 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             logger.info(`[DEV] SMS to ${formattedPhone}: Your Brainnest verification code is: ${otp}`);
         }
 
-        return NextResponse.json({
+        return successResponse({
             message: 'OTP sent successfully',
             ...(process.env.NODE_ENV === 'development' && { otp })
-        });
+        }, 200, undefined, undefined, true);
     } catch (error: any) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error('Twilio error:', { message: message, error: error });
-        return NextResponse.json({ message: message }, { status: 500 });
+        return failResponse({ message: message }, 500, undefined, undefined, true);
     }
 }

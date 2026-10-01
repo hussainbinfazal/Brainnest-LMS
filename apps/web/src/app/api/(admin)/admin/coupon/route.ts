@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from '@repo/shared/server';
@@ -6,33 +7,56 @@ import { logger } from "@/utils/logger/logger.node";
 import { CustomNextRequest } from "../../../../../types/server";
 import { auth } from "@/auth";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
 
+const createCouponBodySchema = z.object({
+    code: z.string(),
+    discountValue: z.number(),
+    discountType: z.string(),
+    expiresAt: z.union([z.string(), z.date()]),
+    maxUses: z.number(),
+});
+const deleteCouponBodySchema = z.object({ couponId: z.string() });
+const updateCouponBodySchema = z.object({
+    couponId: z.string(),
+    data: z.object({
+        code: z.string(),
+        discountValue: z.number(),
+        discountType: z.string(),
+        expiresAt: z.union([z.string(), z.date()]),
+        isActive: z.boolean(),
+        maxUses: z.number(),
+    }),
+});
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     await connectDB(process.env.MONGODB_URI!);
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
-        if (!user) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!user) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
 
         const userId: string = user?.id;
-        const { code, discountValue, discountType, expiresAt, maxUses, } = await request.json();
+        const body = await parseBody(request, createCouponBodySchema);
+        if (!body.ok) return body.response;
+        const { code, discountValue, discountType, expiresAt, maxUses } = body.data;
         const existingCoupon = await Coupon.findOne({ code: code });
-        if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required" }, { status: 400 });
+        if (!userId || !validateMongooseId({ userId })) return failResponse({ message: "User id is required" }, 400, undefined, undefined, true);
         if (existingCoupon) {
-            return NextResponse.json({ message: "This Coupon is already exists" }, { status: 400 });
+            return failResponse({ message: "This Coupon is already exists" }, 400, undefined, undefined, true);
         }
         const newCoupon = new Coupon({ code, discountValue, discountType, expiresAt, maxUses, createdBy: userId }).exec();
         await newCoupon.save();
         logger.info("Coupon created successfully");
-        return NextResponse.json({ message: "Coupon created successfully", newCoupon }, { status: 201 });
+        return successResponse({ message: "Coupon created successfully", newCoupon }, 201, undefined, undefined, true);
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error in creating coupon: ${message}`);
-        return NextResponse.json({ message: `Error in creating coupon:${message}` }, { status: 500 });
+        return failResponse({ message: `Error in creating coupon:${message}` }, 500, undefined, undefined, true);
     }
 }
 
@@ -42,17 +66,17 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
-        if (!user) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!user) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         await connectDB(process.env.MONGODB_URI!);
         const coupons: ICoupon[] | null = await Coupon.find().populate("createdBy", "name email").exec();
         logger.info("Coupons retrieved successfully");
-        return NextResponse.json(coupons, { status: 200 });
+        return successResponse(coupons, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message: string = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in getting coupons: ", { message });
-        return NextResponse.json({ message }, { status: 500 });
+        return failResponse({ message }, 500, undefined, undefined, true);
     }
 }
 
@@ -62,26 +86,28 @@ export async function DELETE(request: CustomNextRequest): Promise<NextResponse> 
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
-        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!user || validateMongooseId({ userId: user.id })) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const userId: string = user?.id;
-        const { couponId, } = await request.json();
+        const body = await parseBody(request, deleteCouponBodySchema);
+        if (!body.ok) return body.response;
+        const { couponId } = body.data;
         await connectDB(process.env.MONGODB_URI!);
         const [isValidCouponId, isUserValid] = await Promise.all([
             validateMongooseId({ couponId: couponId }),
             validateMongooseId({ userId: userId })
         ]);
-        if (!couponId || !isValidCouponId) return NextResponse.json({ message: "Coupon id is required" }, { status: 400 });
-        if (!userId || !isUserValid) return NextResponse.json({ message: "User id is required" }, { status: 400 });
+        if (!couponId || !isValidCouponId) return failResponse({ message: "Coupon id is required" }, 400, undefined, undefined, true);
+        if (!userId || !isUserValid) return failResponse({ message: "User id is required" }, 400, undefined, undefined, true);
         const coupon: ICoupon | null = await Coupon.findByIdAndDelete(couponId);
         logger.info("Coupon deleted successfully");
-        return NextResponse.json({ message: "Coupon deleted successfully" }, { status: 200 });
+        return successResponse({ message: "Coupon deleted successfully" }, 200, undefined, undefined, true);
 
     } catch (error: unknown) {
         const message: string = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in deleting coupon:", { message });
-        return NextResponse.json({ message }, { status: 500 });
+        return failResponse({ message }, 500, undefined, undefined, true);
     }
 }
 
@@ -89,26 +115,28 @@ export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     try {
-        const { couponId, data } = await request.json();
+        const body = await parseBody(request, updateCouponBodySchema);
+        if (!body.ok) return body.response;
+        const { couponId, data } = body.data;
         const { code, discountValue, discountType, expiresAt, isActive, maxUses } = data;
         if (!code || !discountValue || !discountType || !expiresAt || !maxUses || !isActive) {
-            return NextResponse.json({ message: "All fields are required" }, { status: 400 });
+            return failResponse({ message: "All fields are required" }, 400, undefined, undefined, true);
         }
-        if (!couponId || !validateMongooseId({ couponId })) return NextResponse.json({ message: "Coupon id is required and should be valid" }, { status: 400 });
+        if (!couponId || !validateMongooseId({ couponId })) return failResponse({ message: "Coupon id is required and should be valid" }, 400, undefined, undefined, true);
         const session: Session | null = await auth()
-        if (!session) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
-        if (!user || validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!user || validateMongooseId({ userId: user.id })) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const userId: string = user?.id;
-        if (!userId || !validateMongooseId({ userId })) return NextResponse.json({ message: "User id is required and should be valid" }, { status: 400 });
+        if (!userId || !validateMongooseId({ userId })) return failResponse({ message: "User id is required and should be valid" }, 400, undefined, undefined, true);
         await connectDB(process.env.MONGODB_URI!);
         const updatedCoupon: ICoupon | null = await Coupon.findByIdAndUpdate(couponId, { code, discountValue, expiresAt, discountType, maxUses, isActive }, { new: true });
         logger.info("Coupon updated successfully");
-        return NextResponse.json({ message: "Coupon updated successfully", updatedCoupon }, { status: 200 });
+        return successResponse({ message: "Coupon updated successfully", updatedCoupon }, 200, undefined, undefined, true);
     } catch (error: unknown) {
 
         const message: string = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error in updating coupon: ${message}`);
-        return NextResponse.json({ message: `Error in updating coupon:${message}` }, { status: 500 });
+        return failResponse({ message: `Error in updating coupon:${message}` }, 500, undefined, undefined, true);
     }
 }

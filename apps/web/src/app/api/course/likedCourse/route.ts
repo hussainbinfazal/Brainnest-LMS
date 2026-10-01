@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from '@repo/shared/server';
@@ -15,20 +16,18 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: ip });
-            return NextResponse.json({ message: "unauthorized" }, { status: 401 });
+            return failResponse({ message: "unauthorized" }, 401, undefined, undefined, true);
         }
-        if (!validateMongooseId({ userId: user.id })) return NextResponse.json({ message: "Invalid user id" }, { status: 400 });
+        if (!validateMongooseId({ userId: user.id })) return failResponse({ message: "Invalid user id" }, 400, undefined, undefined, true);
         const userId: string | null = user?.id
         if (mongoose.Types.ObjectId.isValid(userId)) {
-            return NextResponse.json({
+            return failResponse({
                 message: "Invalid user id"
-            }, {
-                status: 400
-            })
+            }, 400, undefined, undefined, true)
         }
         const result = await userCourse.aggregate([
             {
@@ -107,14 +106,14 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
         ])
 
         if (result.length === 0) {
-            return NextResponse.json({ message: "No liked courses found" }, { status: 200 });
+            return successResponse({ message: "No liked courses found" }, 200, undefined, undefined, true);
         }
         logger.info("Liked courses fetched successfully", { userId, likedCourseCount: result.length });
-        return NextResponse.json({ message: "Liked courses fetched successfully", userLikedCourses: result }, { status: 200 });
+        return successResponse({ message: "Liked courses fetched successfully", userLikedCourses: result }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in getting liked courses", { error: message });
-        return NextResponse.json({ message: `Error Fetching courses :${message}` }, { status: 500 });
+        return failResponse({ message: `Error Fetching courses :${message}` }, 500, undefined, undefined, true);
 
     }
 };

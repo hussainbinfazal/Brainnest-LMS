@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { Course, User, connectDB, logger, Review, validateMongooseId } from '@repo/shared/server';
@@ -5,6 +6,18 @@ import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
+
+const createReviewBodySchema = z.object({
+    rating: z.number().int().min(1).max(5),
+    comment: z.string(),
+});
+const updateReviewBodySchema = z.object({
+    reviewId: z.string(),
+    rating: z.number().int().min(1).max(5),
+    comment: z.string(),
+});
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
@@ -15,18 +28,20 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     try {
         const { courseId } = context.params;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
         if (!user || !user.id) {
             logger.error("Unauthorized access", { ip: ip });
-            return NextResponse.json({ message: "You are not logged in" }, { status: 401 })
+            return failResponse({ message: "You are not logged in" }, 401, undefined, undefined, true)
         };
         const userId: string = user.id;
-        if (!validateMongooseId({ userId, courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
-        const { rating, comment } = await request.json();
+        if (!validateMongooseId({ userId, courseId })) return failResponse({ message: "Invalid course id" }, 400, undefined, undefined, true);
+        const body = await parseBody(request, createReviewBodySchema);
+        if (!body.ok) return body.response;
+        const { rating, comment } = body.data;
         if (!rating || !comment) {
             logger.warn("rating & comment are required", { rating, comment });
-            return NextResponse.json({ message: "rating & comment are required" }, { status: 400 })
+            return failResponse({ message: "rating & comment are required" }, 400, undefined, undefined, true)
         };
         const [courseDB, isReviewed] = await Promise.all([
             Course.findById(courseId).session(session),
@@ -34,11 +49,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         ]);
         if (!courseDB) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Course not found" }, { status: 404 });
+            return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         };
         if (isReviewed) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Already reviewed" }, { status: 400 });
+            return failResponse({ message: "Already reviewed" }, 400, undefined, undefined, true);
         };
 
         // if(user.reviewCountInLastHour > 5){ //// maintain this with the redis
@@ -47,11 +62,11 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         // } 
         if (comment.length < 10) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Comment must be at least 10 characters" }, { status: 400 });
+            return failResponse({ message: "Comment must be at least 10 characters" }, 400, undefined, undefined, true);
         }
         if (comment.length > 2000) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Comment must be less than 2000 characters" }, { status: 400 });
+            return failResponse({ message: "Comment must be less than 2000 characters" }, 400, undefined, undefined, true);
         }
         const [newReview, updatedCourse] = await Promise.all([
             Review.create(
@@ -80,7 +95,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
         if (!newReview || !updatedCourse) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Error in adding review" }, { status: 500 });
+            return failResponse({ message: "Error in adding review" }, 500, undefined, undefined, true);
         }
 
 
@@ -88,12 +103,12 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         session.endSession();
 
         logger.info("Review added successfully");
-        return NextResponse.json({ review: newReview, message: "Review added successfully" }, { status: 200 });
+        return successResponse({ review: newReview, message: "Review added successfully" }, 200, undefined, undefined, true);
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Error in adding review: ${message}`);
-        return NextResponse.json({ message: `Error in Adding Review : ${message}` }, { status: 500 });
+        return failResponse({ message: `Error in Adding Review : ${message}` }, 500, undefined, undefined, true);
     } finally {
         session.endSession();
     }
@@ -108,23 +123,25 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
     session.startTransaction();
     try {
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const authenticatedUser: ISessionUser | null = authSession?.user;
         if (!authenticatedUser || !authenticatedUser.id) {
             logger.info("Unauthorized access", { ip: ip });
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);
         }
         const userId: string = authenticatedUser.id;
         const { courseId } = context.params;
         if (!courseId) {
             logger.info("Course id is required");
-            return NextResponse.json({ message: "Course id is required" }, { status: 400 })
+            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true)
         };
         if (!validateMongooseId({ userId, courseId })) {
             logger.info("Invalid course & userId", { userId, courseId });
-            return NextResponse.json({ message: "Invalid course id" }, { status: 400 })
+            return failResponse({ message: "Invalid course id" }, 400, undefined, undefined, true)
         };
-        const { reviewId, rating, comment } = await request.json();
+        const body = await parseBody(request, updateReviewBodySchema);
+        if (!body.ok) return body.response;
+        const { reviewId, rating, comment } = body.data;
 
         if (
             !validateMongooseId({ reviewId }) ||
@@ -133,10 +150,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
             rating < 1 ||
             rating > 5
         ) {
-            return NextResponse.json(
-                { message: "Invalid review data" },
-                { status: 400 }
-            );
+            return failResponse({ message: "Invalid review data" }, 400, undefined, undefined, true);
         }
         const oldReview = await Review.findOne({
             _id: reviewId,
@@ -146,10 +160,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
 
         if (!oldReview) {
             await session.abortTransaction();
-            return NextResponse.json(
-                { message: "Review not found" },
-                { status: 404 }
-            );
+            return failResponse({ message: "Review not found" }, 404, undefined, undefined, true);
         }
 
         const ratingDiff = rating - oldReview.rating;
@@ -174,7 +185,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
 
         if (!updatedReview || !updatedCourse) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Error in updating review" }, { status: 500 });
+            return failResponse({ message: "Error in updating review" }, 500, undefined, undefined, true);
         }
 
         // update review
@@ -182,12 +193,12 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
         await session.commitTransaction();
         session.endSession();
         logger.info("Review updated successfully");
-        return NextResponse.json({ message: "Review updated successfully", review: updatedReview }, { status: 200 });
+        return successResponse({ message: "Review updated successfully", review: updatedReview }, 200, undefined, undefined, true);
     } catch (error: any) {
         await session.abortTransaction();
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.info("Error in updating review", { message });
-        return NextResponse.json({ message: `Error in Updating Review : ${message}` }, { status: 500 });
+        return failResponse({ message: `Error in Updating Review : ${message}` }, 500, undefined, undefined, true);
     } finally {
         session.endSession();
     }

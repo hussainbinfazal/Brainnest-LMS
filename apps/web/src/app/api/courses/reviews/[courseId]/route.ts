@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/utils/logger/logger.node";
@@ -18,11 +19,11 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
         const { searchParams } = new URL(request.url);
         if (!courseId) {
             logger.warn("Course Id is required");
-            return NextResponse.json({ message: "Course Id is required" }, { status: 400 });
+            return failResponse({ message: "Course Id is required" }, 400, undefined, undefined, true);
         }
         if (!validateMongooseId({ courseId })) {
             logger.error("Invalid course id");
-            return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+            return failResponse({ message: "Invalid course id" }, 400, undefined, undefined, true);
         }
 
         const sortOptions: Record<string, any> = {
@@ -77,18 +78,18 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
             Review.countDocuments({ course: new mongoose.Types.ObjectId(courseId) })
         ])
         logger.info("Reviews fetched successfully", { courseId, page, limit, totalCount, sortType });
-        return NextResponse.json({
+        return successResponse({
             message: "Reviews fetched successfully", reviews: reviews, pagination: { /////////////add pagination in the routes 
                 page,
                 limit,
                 totalCount,
                 totalPages: Math.ceil(totalCount / limit)
             }
-        }, { status: 200 });
+        }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error fetching reviews:", { error: message });
-        return NextResponse.json({ message: message }, { status: 500 });
+        return failResponse({ message: message }, 500, undefined, undefined, true);
     }
 }
 
@@ -104,33 +105,33 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         const { searchParams } = new URL(request.url);
         if (!courseId) {
             logger.warn("Course Id is required");
-            return NextResponse.json({ message: "Course Id is required" }, { status: 400 });
+            return failResponse({ message: "Course Id is required" }, 400, undefined, undefined, true);
         };
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
 
         if (!user || !user.id) {
             logger.error("Unauthorized access", { ip: ip });
             session.endSession();
-            return NextResponse.json({
+            return failResponse({
                 message: "Unauthorized",
-            }, { status: 401 });
+            }, 401, undefined, undefined, true);
         }
         const reviewId = searchParams.get('reviewId');
         if (!reviewId) {
             logger.warn("Review Id is required");
-            return NextResponse.json({ message: "Review Id is required" }, { status: 400 });
+            return failResponse({ message: "Review Id is required" }, 400, undefined, undefined, true);
         }
 
         const deletedReview = await Review.findByIdAndDelete(reviewId).select("rating").session(session);
         if (!deletedReview) {
             await session.abortTransaction();
-            return NextResponse.json({ message: "Review not found" }, { status: 404 });
+            return failResponse({ message: "Review not found" }, 404, undefined, undefined, true);
         }
         if (!validateMongooseId({ courseId, reviewId })) {
             logger.error("Invalid course id or review id", { courseId, reviewId });
-            return NextResponse.json({ message: "Invalid course id or review id" }, { status: 400 });
+            return failResponse({ message: "Invalid course id or review id" }, 400, undefined, undefined, true);
         }
         const rating = deletedReview.rating;
         await Course.updateOne(
@@ -146,11 +147,11 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         );
         await session.commitTransaction();
         logger.info("Review deleted successfully", { reviewId });
-        return NextResponse.json({ message: "Review deleted successfully" }, { status: 200 });
+        return successResponse({ message: "Review deleted successfully" }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error deleting review:", { error: message });
-        return NextResponse.json({ message: message }, { status: 500 });
+        return failResponse({ message: message }, 500, undefined, undefined, true);
     } finally {
         session.endSession();
 

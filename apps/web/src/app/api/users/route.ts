@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { NextRequest, NextResponse } from "next/server";
 import { ISessionUser, IUserToken, User, UserToken } from '@repo/shared/server';
@@ -10,8 +11,10 @@ import mongoose from "mongoose";
 import { sendEmail } from "@/lib/helpers/mailer";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { z } from "zod";
 
-
+const resetPasswordBodySchema = z.object({ email: z.string().email() });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const ip = getClientIp(request.headers);
@@ -20,15 +23,17 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession();
     try {
-        const { email } = await request.json();
+        const body = await parseBody(request, resetPasswordBodySchema);
+        if (!body.ok) return body.response;
+        const { email } = body.data;
         const authSession: Session | null = await auth()
-        if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const sessionUser: ISessionUser | null = authSession?.user;
         const existingUser = await User.findOne({ email }).select("_id email").exec();
         // const { userId } = await request.json();
         if (!existingUser) {
             logger.info("User not found");
-            return NextResponse.json({ message: "If an account exists, a reset link has been sent to your email" }, { status: 200 })
+            return successResponse({ message: "If an account exists, a reset link has been sent to your email" }, 200, undefined, undefined, true)
         };
         session.startTransaction();
         await UserToken.deleteMany({
@@ -59,12 +64,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             userId: existingUser._id,
         });
 
-        return NextResponse.json({ message: "If an account exists, a reset link has been sent to your email" }, { status: 200 });
+        return successResponse({ message: "If an account exists, a reset link has been sent to your email" }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         await session.abortTransaction();
         const message: string = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Something went wrong:", { message });
-        return NextResponse.json({ message }, { status: 500 });
+        return failResponse({ message }, 500, undefined, undefined, true);
     } finally {
         await session.endSession();
     }

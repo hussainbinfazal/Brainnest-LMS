@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 import { auth } from "@/auth";
 import { CUserCourse } from "@/types/client";
@@ -13,11 +14,11 @@ export async function GET(request:
     const ip = getClientIp(request.headers);
     if (ip === 'unknown') logger.warn('OTP route: could not resolve client IP');
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
     if (!user) {
         logger.info("Unauthorized access", { ip: ip });
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
+        return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
     }
 
     const userId: string = user.id;
@@ -34,13 +35,13 @@ export async function GET(request:
         const cached = await getCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
         if (cached) {
             logger.info("User Courses fetched from cache");
-            return NextResponse.json({ userCourse: cached });
+            return successResponse({ userCourse: cached }, 200, undefined, undefined, true);
         }
         await connectDB(process.env.MONGODB_URI!);
         const authUserCourse: IUserCourse | null = await userCourse.findOne({ userId: userId, courseId: courseId }).lean().exec();
         if (!authUserCourse) {
             logger.info("User Courses not found");
-            return NextResponse.json({ message: "User Course not found" }, { status: 404 });
+            return failResponse({ message: "User Course not found" }, 404, undefined, undefined, true);
         }
         const serialized = serializeUserCourse(authUserCourse);
         await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
@@ -52,11 +53,11 @@ export async function GET(request:
             isLiked: authUserCourse?.isLiked,
             likedAt: authUserCourse?.likedAt,
         });
-        return NextResponse.json({ message: "User Courses fetched successfully", userCourse: serialized }, { status: 200 });
+        return successResponse({ message: "User Courses fetched successfully", userCourse: serialized }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Something went wrong';
         logger.error("Error fetching User Courses", { message, error });
-        return NextResponse.json({ message: "Something went wrong" }, { status: 500 });
+        return failResponse({ message: "Something went wrong" }, 500, undefined, undefined, true);
     }
 
 }

@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextResponse } from "next/server";
 import { logger, UPLOAD_SESSION } from '@repo/shared/server';
 import { CustomNextRequest } from "@/types/server";
@@ -18,17 +19,17 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
         const { searchParams } = new URL(request.url);
         const uploadId: string | null = searchParams.get("uploadId");
         if (!uploadId) {
-            return NextResponse.json({ error: "Missing uploadId" }, { status: 400 });
+            return failResponse({ error: "Missing uploadId" }, 400, undefined, undefined, true);
         }
         const data = await getCached<ProgressData>(UPLOAD_SESSION.namespace, uploadId);
         if (!data) {
-            return NextResponse.json({ error: "Not found" }, { status: 404 });
+            return failResponse({ error: "Not found" }, 404, undefined, undefined, true);
         }
         logger.info(`Fetched upload progress for uploadId: ${uploadId}`, { data: JSON.parse(JSON.stringify(data)) });
-        return NextResponse.json((data));
+        return successResponse((data), 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "An unknown error occurred";
         logger.error("Error fetching upload progress:", { error: message });
-        return NextResponse.json({ error: message }, { status: 500 });
+        return failResponse({ error: message }, 500, undefined, undefined, true);
     }
 }

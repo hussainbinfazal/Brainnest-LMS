@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
 import { Course, connectDB, logger } from '@repo/shared/server';
 import mongoose from "mongoose";
@@ -12,10 +13,10 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
         const { courseId } = context.params;
         const page = parseInt(request.nextUrl.searchParams.get("page") || "0", 10);
         if (!courseId || !validateMongooseId({ courseId: courseId })) {
-            return NextResponse.json({ message: "Course id is required" }, { status: 400 });
+            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         }
         if (!validateMongooseId({ courseId })) {
-            return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+            return failResponse({ message: "Invalid course id" }, 400, undefined, undefined, true);
         }
         const result = await Course.aggregate<CourseAggregationResult>([
             { $match: { _id: new mongoose.Types.ObjectId(courseId) } },
@@ -110,10 +111,10 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
         const totalReviews: number = instructorStats?.totalReviews || 0
         const totalRatings: number = instructorStats?.totalRatings || 0
         logger.info("Course fetched successfully", { courseId });
-        return NextResponse.json({ course, reviews, totalEnrolled, totalReviews, totalRatings }, { status: 200 });
+        return successResponse({ course, reviews, totalEnrolled, totalReviews, totalRatings }, 200, undefined, undefined, true);
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error in Fetching Course", { error: message });
-        return NextResponse.json({ message: `Error in Fetching Course: ${message}` }, { status: 500 });
+        return failResponse({ message: `Error in Fetching Course: ${message}` }, 500, undefined, undefined, true);
     }
 }

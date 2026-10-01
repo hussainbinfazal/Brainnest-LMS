@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,15 +15,15 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
   try {
     await connectDB(process.env.MONGODB_URI!);
     const authSession: Session | null = await auth()
-    if (!authSession) return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 });
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
     const { courseId } = context.params;
     if (!user || !user.id) {
       logger.info("Unauthorized access", { ip: ip });
-      return NextResponse.json({ message: "Unauthorized", ip: ip }, { status: 401 })
+      return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true)
     }
     const userId: string = user.id;
-    if (!courseId || !validateMongooseId({ userId, courseId })) return NextResponse.json({ message: "Invalid course id" }, { status: 400 });
+    if (!courseId || !validateMongooseId({ userId, courseId })) return failResponse({ message: "Invalid course id" }, 400, undefined, undefined, true);
 
     const [courseDB, userDB,] = await Promise.all([
       Course.findById(courseId)
@@ -39,7 +40,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         user: userDB ? userDB : null,
         course: courseDB ? courseDB : null,
       });
-      return NextResponse.json({ message: "User or Course not found" }, { status: 404 });
+      return failResponse({ message: "User or Course not found" }, 404, undefined, undefined, true);
     }
 
     // Optional: check if user completed course
@@ -51,7 +52,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
       = userProgress?.percentageCompleted === 100 ? true : false;
 
     if (!isCompleted) {
-      return NextResponse.json({ message: "Course not completed, please complete your pending lessons first" }, { status: 403 });
+      return failResponse({ message: "Course not completed, please complete your pending lessons first" }, 403, undefined, undefined, true);
     }
 
     const existingCertificate: ICertificate | null = await Certificate.findOne({
@@ -60,12 +61,12 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
     })
 
     if (!existingCertificate) {
-      return NextResponse.json({ message: "No Certificate Found" }, { status: 400 });
+      return failResponse({ message: "No Certificate Found" }, 400, undefined, undefined, true);
     }
-    return NextResponse.json({ message: "This is the certificate", certificateUrl: existingCertificate.pdfUrl }, { status: 200 });
+    return successResponse({ message: "This is the certificate", certificateUrl: existingCertificate.pdfUrl }, 200, undefined, undefined, true);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     logger.error("Error in generating certificate", { error });
-    return NextResponse.json({ message: `Error in Generating Certificate: ${message}` }, { status: 500 });
+    return failResponse({ message: `Error in Generating Certificate: ${message}` }, 500, undefined, undefined, true);
   }
 }

@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getClientIp } from "@repo/shared/utils/getClientIp";
 // app/api/cron/reconcile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,7 +16,7 @@ export async function GET(request: CustomNextRequest) {
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
         logger.info('Unauthorized', { ip: ip });
-        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+        return failResponse({ message: 'Unauthorized' }, 401, undefined, undefined, true);
     }
 
     await connectDB(process.env.MONGODB_URI!);
@@ -54,5 +55,5 @@ export async function GET(request: CustomNextRequest) {
         }
     }
     logger.info(`Reconciled ${stuckOrders.length} stuck orders`);
-    return NextResponse.json({ reconciled: stuckOrders.length }, { status: 200 });
+    return successResponse({ reconciled: stuckOrders.length }, 200, undefined, undefined, true);
 }

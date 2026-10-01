@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { CustomNextRequest, IFacets } from "@/types/server";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { connectDB, Course, COURSES_FACETS, ICategory, logger } from '@repo/shared/server';
@@ -8,7 +9,7 @@ export async function GET(request: CustomNextRequest, response: NextResponse): P
         await connectDB(process.env.MONGODB_URI!);
         const cached = getCached(COURSES_FACETS.namespace, COURSES_FACETS.id);
         if (cached) {
-            return NextResponse.json({ message: "Facets data grouped successfully", data: cached }, { status: 200 });
+            return successResponse({ message: "Facets data grouped successfully", data: cached }, 200, undefined, undefined, true);
         }
         const facets: IFacets[] = await Course.aggregate([
             {
@@ -33,15 +34,15 @@ export async function GET(request: CustomNextRequest, response: NextResponse): P
             };
             const serializedFacets = serializeDocument(data);
             await setCached<IFacets>(COURSES_FACETS.namespace, COURSES_FACETS.id, serializedFacets, CACHE_TTL.VERY_LONG);
-            return NextResponse.json({ success: true, serializedFacets }, { status: 200 });
+            return successResponse({ success: true, serializedFacets }, 200, undefined, undefined, true);
         }
-        return NextResponse.json({ success: true, data: [] }, { status: 200 })
+        return successResponse({ success: true, data: [] }, 200, undefined, undefined, true)
     } catch (
     error: unknown
     ) {
         const message = error instanceof Error ? error.message : "An unknown error occurred";
         logger.error("Error in fetching facets", { message });
-        return NextResponse.json({ error: message }, { status: 500 });
+        return failResponse({ error: message }, 500, undefined, undefined, true);
     }
 }
 

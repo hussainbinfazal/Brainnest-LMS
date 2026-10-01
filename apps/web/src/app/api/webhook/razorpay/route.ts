@@ -1,3 +1,4 @@
+import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 // app/api/webhook/razorpay/route.ts
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,19 +20,19 @@ export async function POST(request: CustomNextRequest) {
 
   if (signature !== expectedSignature) {
     logger.error('Invalid webhook signature');
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    return failResponse({ message: 'Unauthorized' }, 401, undefined, undefined, true);
   }
 
   const event = JSON.parse(body);
 
   // ✅ Only handle successful payments
   if (event.event !== 'payment.captured') {
-    return NextResponse.json({ received: true }, { status: 200 });
+    return successResponse({ received: true }, 200, undefined, undefined, true);
   }
 
   const razorpayPaymentId = event.payload.payment.entity.id;
 
   await reconcilePayment(razorpayPaymentId); // 👇 shared logic below
 
-  return NextResponse.json({ received: true }, { status: 200 });
+  return successResponse({ received: true }, 200, undefined, undefined, true);
 }
