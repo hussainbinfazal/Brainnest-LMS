@@ -1,6 +1,7 @@
 export * from "./models/index.export";
 export * from "./types";
 export { logger } from "./logger/logger";
+export { nodeLogger } from "./logger/logger.node";
 export * from "./validators";
 export * from "./timeFormat"
 export * from "./date";
@@ -14,7 +15,7 @@ export * from './utils/getClientIp';
 export * from "./schemas/auth.schema"
 
 
-//Uplaod Config 
+//Uplaod Config
 // packages/shared: single source of truth for upload purposes
 
 
