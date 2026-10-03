@@ -535,6 +535,9 @@ importers:
       murmurhash3js:
         specifier: ^3.0.1
         version: 3.0.1
+      nanoid:
+        specifier: ^6.0.1
+        version: 6.0.1
       next-auth:
         specifier: ^5.0.0-beta.29
         version: 5.0.0-beta.32(next@16.2.9(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.61.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(nodemailer@7.0.13)(react@19.2.8)
@@ -6320,6 +6323,11 @@ packages:
   nanoid@3.3.16:
     resolution: {integrity: sha512-bzlKTyNJ7+LdGIIwy8ijFpIqEQIvafahV7eYykJ8Cvh42EdJeODoJ6gUJXpQJvej1BddH8OqTXZNE/KfbWAu8Q==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
+  nanoid@6.0.1:
+    resolution: {integrity: sha512-3wVS3i51pE2pi1k5FFL/95BGfVS0kSsvDVuGXHOtxox/TywUmtgq+3qiTOTbs9J7KfHaXPiN171k/A6dBnaXFw==}
+    engines: {node: ^22 || ^24 || >=26}
     hasBin: true
 
   napi-build-utils@2.0.0:
@@ -14241,6 +14249,8 @@ snapshots:
     optional: true
 
   nanoid@3.3.16: {}
+
+  nanoid@6.0.1: {}
 
   napi-build-utils@2.0.0: {}
 

@@ -77,6 +77,10 @@
   * {
     @apply border-border outline-ring/50;
   }
+  button,
+  [data-slot="button"] {
+    @apply cursor-pointer;
+  }
   body {
     @apply bg-background text-foreground;
   }
