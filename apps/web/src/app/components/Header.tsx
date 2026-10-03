@@ -238,11 +238,7 @@ export default function Header({ className }: { className?: string }): React.JSX
 
                   >
                     <AvatarImage
-                      src={
-                        sessionUser?.profileImage || ""
-                        // authUser?.profileImage ||
-                        // session?.user?.image
-                      }
+                      src={sessionUser.profileImage || "/assets/default-avatar.svg"}
                       alt="User Avatar"
                       className="cursor-pointer"
                     />
