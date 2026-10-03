@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { logger, User } from '@repo/shared/server';
-import { useUsernameAvailability } from '@/hooks/userUsernameAvailability';
+import { getErrorMessage } from '@repo/shared';
 
 /**
  * Generates a unique username for OAuth users with fallback strategies
@@ -22,26 +22,19 @@ export async function generateUniqueUsername(
             'user';
 
         let username = `${baseUsername}_${nanoid(6)}`;
-        const { status: usernameStatus, error: usernameError } = useUsernameAvailability(username);
+        const isUserNameExists = await User.exists({ username: username });
+        if (!isUserNameExists) return username = `${baseUsername}_${nanoid(11)}`
         // Check if username exists (unlikely with nanoid, but safety check)
-        if (error) error = usernameError
-        if (usernameStatus) {
-            return username;
-        }
 
         // Strategy 2: If somehow it exists, use longer nanoid
         username = `${baseUsername}_${nanoid(10)}`;
-
-        if (usernameStatus !== 'checking' || usernameStatus !== "taken") {
-            return username;
-        }
-
         // Strategy 3: Fallback to pure nanoid (guaranteed unique)
         return `user_${nanoid(12)}`;
 
     } catch (error: unknown) {
         // Ultimate fallback if everything fails
-        logger.error('Error generating username:', { error });
+        const message: string = getErrorMessage(error, "Error generating Username")
+        logger.error('Error generating username in auth file:', { message, error });
         return `user_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     }
 }
