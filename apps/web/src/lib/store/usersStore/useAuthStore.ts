@@ -20,7 +20,7 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
   setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
   updateUserToInstructor: async (userId: string): Promise<void> => {
     set({ isUpdatingRole: true })
-
+    if (!userId) return
     try {
       const response = await axios.put(`/api/users/updateToInstructor/${userId}`);
       if (response.status === 200) {

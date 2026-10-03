@@ -36,6 +36,7 @@ export default function Header({ className }: { className?: string }): React.JSX
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
   const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser)
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser)
+  const updateUserRoleToInstructor = useAuthStore((state) => state.updateUserToInstructor);
   console.log("This is the authUser in header", authUser)
   const sessionUser = session?.user
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
@@ -95,7 +96,7 @@ export default function Header({ className }: { className?: string }): React.JSX
     if (status === "unauthenticated") clearAuthUser();
   }, [status, fetchAuthUser, clearAuthUser])
   async function updateUserToInstructor(): Promise<void> {
-    
+
   }
   // useEffect(() => {
   //   if (authUser) {
@@ -203,7 +204,12 @@ export default function Header({ className }: { className?: string }): React.JSX
                   <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
               ) : (
-                <Button className="ml-6 rounded-sm cursor-pointer" onClick={updateUserToInstructor}>
+                <Button className="ml-6 rounded-sm cursor-pointer" onClick={() => {
+                  if (session?.user) updateUserRoleToInstructor(session?.user?.id)
+                  else {
+                    toast.error("You are not logged in")
+                  }
+                }}>
                   Teach on Brainnest
                 </Button>
 
@@ -309,6 +315,6 @@ export default function Header({ className }: { className?: string }): React.JSX
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 }
