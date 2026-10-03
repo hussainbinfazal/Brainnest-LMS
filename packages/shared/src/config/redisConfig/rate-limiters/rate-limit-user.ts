@@ -1,4 +1,4 @@
-import { logger } from "src/server";
+import { logger } from "../../../logger/logger";
 import { fromIoredis, getIORedisClient, RateLimit } from "../../index.export";
 import { buildKey } from "../cache-helper";
 

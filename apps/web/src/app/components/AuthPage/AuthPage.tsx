@@ -36,6 +36,7 @@ import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";
 import { getErrorMessage } from "@repo/shared";
+import { CUploadResult } from "@/types/client";
 
 
 export const AuthPageComp = ({ className }: { className?: string }): JSX.Element => {
@@ -61,7 +62,6 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             username: "",
             password: "",
             confirmPassword: "",
-            profileImage: "",
         },
     });
     const watchedUsername = signupForm.watch('username');
@@ -74,6 +74,8 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const isEmailVerified = verifiedEmail === normalized;
     const isEmailValid: boolean = validateEmail(watchedEmail.toString());
     const password: string = signupForm.watch("password");
+    const [fileUploadResult, setFileUploadResult] = useState<Partial<CUploadResult>>({});
+    const [fileUploadStatus, setFileUploadStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>('idle');
     const confirmPassword: string = signupForm.watch("confirmPassword");
     const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
         try {
@@ -117,8 +119,12 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         // if (!isOtpVerified) {
         //   return toast.error("Please verify your phone number");
         // }
+        let finalData = {
+            ...data,
+            finalUploadResult: fileUploadResult
+        };
         try {
-            const response = await axios.post("/api/users/register", data);
+            const response = await axios.post("/api/users/register", finalData);
         } catch (error: unknown) {
             let message: string = getErrorMessage(error, "Something went wrong");
             clientLogger.error("Something went wrong, while Sign up the user", { message });
@@ -480,10 +486,12 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                 name="profileImage"
                                 render={({ field }: { field: ControllerRenderProps<z.infer<typeof signUpSchema>, "profileImage"> }) => (
                                     <FormItem className='w-full min-w-0 relative'>
-                                        <FormLabel className=''>Upload Profile Picture</FormLabel>
+                                        {fileUploadStatus !== "uploaded" && <FormLabel className=''>Upload Profile Picture</FormLabel>}
                                         <FormControl >
-                                            <ProfileImageUpload
+                                            <ProfileImageUpload<z.infer<typeof signUpSchema>>
                                                 field={field}
+                                                fileUploadResult={setFileUploadResult}
+                                                uploadStatus={setFileUploadStatus}
                                                 className="w-full min-w-0"
                                             />
                                         </FormControl>
@@ -533,5 +541,4 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         </div>
     );
 };
-
 

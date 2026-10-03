@@ -3,6 +3,7 @@ import { ICourse, IUser } from "./model";
 import { LucideIcon } from "lucide-react";
 import mongoose from "mongoose";
 import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
+import { RESOURCE_TYPE } from "@repo/shared/server";
 
 export interface CCertificate {
   _id: string;
@@ -745,16 +746,20 @@ export interface COrder {
 export interface CFeatureSection {
   icon: LucideIcon, title: string, description: string, color: string
 }
-export interface CuploadResult {
+
+export type CuploadType = (typeof RESOURCE_TYPE)[UploadPurpose];
+export interface CUploadResult {
+  // HTTPS URL, use it for previews
   url: string;
-  public_id: string,
-  width?: number,
-  height?: number,
-  duration: number
-
+  // Cloudinary id, send this to the server on registration
+  public_id: string;
+  // Pixels, set for both images and videos
+  width: number;
+  // Pixels, set for both images and videos
+  height: number;
+  // Seconds, only present for videos, so optional
+  duration?: number;
 }
-export type CuploadType = "image" | "video";
-
 
 export type CFacets = {
   categories: {

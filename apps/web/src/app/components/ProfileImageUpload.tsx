@@ -2,10 +2,12 @@
 
 
 import { cn } from "@/lib/utils";
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, Dispatch, SetStateAction } from "react";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
 import { uploadFileClient } from "@/utils/upload/uploadFile";
+import { CUploadResult } from "@/types/client";
+import { toast } from "sonner";
 
 const CIRCLE_SIZE = 128;
 const OUTPUT_SIZE = 200;
@@ -21,11 +23,20 @@ type Transform = {
   flipX: boolean;   // NEW
   flipY: boolean;   // NEW
 }
-function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className }: { field: ControllerRenderProps<TFieldValues, Path<TFieldValues> & "profileImage">; className?: string }) {
+type UploadStatus = "error" | "uploading" | "uploaded" | "idle";
+
+type ProfileImageUploadProps<TFieldValues extends FieldValues> = {
+  field: ControllerRenderProps<TFieldValues, Path<TFieldValues> & "profileImage">;
+  fileUploadResult: (result: CUploadResult) => void;
+  uploadStatus: Dispatch<SetStateAction<UploadStatus>>;
+  className?: string;
+};
+function ProfileImageUpload<TFieldValues extends FieldValues>({ field, fileUploadResult, uploadStatus, className }: ProfileImageUploadProps<TFieldValues>) {
   const [image, setImage] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [fileUploadStats, setFileUploadStats] = useState<UploadStatus>('idle')
   const [scale, setScale] = useState(1);
   const [rotating, setRotating] = useState<boolean>(false);
   const [rotation, setRotation] = useState<number>(0);
@@ -148,17 +159,54 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className
     if (!croppedBlobRef.current) return
     setIsUploading(true);
     setError(null);
+    uploadStatus('uploading')
+
     try {
       const file = new File([croppedBlobRef.current], "profile.jpg", { type: "image/jpeg" }); ///Create file from the cropped blob
-      const url = await uploadFileClient(file, "image"); //Upload file to cloudinary
-      field.onChange(url);
+      const result = await uploadFileClient(file, 'avatar'); //Upload file to cloudinary
+      fileUploadResult(result);
+      field.onChange(result.url);
       field.onBlur()
+      uploadStatus("uploaded")
+      setFileUploadStats('uploaded')
+      toast.success("Avatar Updated")
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       setError(message);
+      uploadStatus("error")
+      setFileUploadStats('error')
     } finally {
       setIsUploading(false)
     }
+  }
+  const handleChooseAnotherImage = (): void => {
+    setImage(null);
+    setPreviewUrl(null);
+    setPosition({ x: 0, y: 0 });
+    setScale(1);
+    setRotation(0);
+    setFlipX(false);
+    setFlipY(false);
+    setError(null);
+    setIsUploading(false);
+    setFileUploadStats('idle')
+
+    // Clear refs
+    decodedImgRef.current = null;
+    croppedBlobRef.current = null;
+
+    // Clear the file input
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+
+    // Reset the form field
+    field.onChange("");
+    field.onBlur();
+
+    // Reset upload status
+    uploadStatus("idle");
+
   }
 
   const handleMouseUp = (): void => {  /// Handle the mouse up event
@@ -291,22 +339,22 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className
 
   return (
     <div className={cn(" flex flex-col  w-full min-w-0 max-w-full gap-4 items-center justify-start", className)}>
-      <input
+      {fileUploadStats !== 'uploaded' && <input
         type="file"
         accept="image/*"
         onChange={handleImageChange}
         ref={inputRef}
         className="hidden"
-      />
-      <button
+      />}
+      {fileUploadStats !== 'uploaded' && <button
         type="button"
         className="px-4 py-2 text-sm bg-blue-500 shadow-[0px_1px_4px_0px_rgba(255,255,255,0.1)_inset,0px_-1px_2px_0px_rgba(255,255,255,0.1)_inset] text-white rounded-md hover:bg-blue-600 transition-colors"
         onClick={() => inputRef.current?.click()}
       >
         Upload Profile Picture
-      </button>
+      </button>}
       {error && <p className="text-sm text-red-500">{error}</p>}
-      {image && (
+      {image && fileUploadStats !== 'uploaded' && (
         <div className="w-full mt-4">
           <h3 className="text-lg font-medium mb-2">Edit Your Image:</h3>
           <div className="flex flex-wrap gap-4 mb-4">
@@ -373,7 +421,7 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className
             </button>
           </div>
 
-          <div
+          {fileUploadStats !== 'uploaded' && (<div
             ref={containerRef}
             className="relative overflow-hidden w-full h-64 dark:bg-black bg-gray-100 rounded-md cursor-move border-2 border-gray-300 dark:border-neutral-700"
             onMouseDown={handleMouseDown}
@@ -403,13 +451,13 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-32 h-32 rounded-full border-2 border-white shadow-inner bg-transparent opacity-80"></div>
             </div>
-          </div>
+          </div>)}
         </div>
       )}
 
       {previewUrl && (
         <div className="mt-4 text-center">
-          <h3 className="text-lg font-medium mb-2">Preview:</h3>
+          {fileUploadStats !== 'uploaded' && <h3 className="text-lg font-medium mb-2">Preview:</h3>}
           <img
             src={previewUrl}
             alt="Cropped Preview"
@@ -417,12 +465,20 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, className
           />
           <button
             type="button"
+            onClick={handleChooseAnotherImage}
+            disabled={isUploading}
+            className="mt-3 px-4 mx-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Choose another image
+          </button>
+          {fileUploadStats !== 'uploaded' && <button
+            type="button"
             onClick={handleSaveCroppedImage}
             disabled={isUploading}
             className="mt-3 px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? "Uploading..." : "Save"}
-          </button>
+          </button>}
         </div>
       )}
     </div>

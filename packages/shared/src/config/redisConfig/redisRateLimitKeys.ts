@@ -61,6 +61,7 @@ export const UPLOAD_SIGN_IP_KEY = {
   usedIn: ['Upload Init Rate Limiting'],
 } as const;
 
+
 //Generate Signature route rate limit config
 export const UPLOAD_SIGN_USER_KEY = {
   namespace: 'limit-upload-sign:user',
@@ -97,7 +98,32 @@ export const UPLOAD_COMPLETE_USER_KEY = {
   description: 'Limits Cloudinary signature requests per authenticated user',
   usedIn: ['Upload Complete User Rate Limiting'],
 } as const;
-
+//Upload ip for avatar, video, thumbnails
+//This is anonymos upload, so chooose strict time 
+export const AVATAR_SIGN_IP_KEY = {
+  namespace: 'limit-upload-avatar:ip',
+  id: 'ip',
+  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of upload avatar from one IP',
+  usedIn: ['Upload avatar Rate Limiting'],
+} as const;
+export const THUMBNAILS_SIGN_IP_KEY = {
+  namespace: 'limit-upload-thumbnails:ip',
+  id: 'ip',
+  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of upload thumbnails from one IP',
+  usedIn: ['Upload thumbnail Rate Limiting'],
+} as const;
+export const VIDEO_SIGN_IP_KEY = {
+  namespace: 'limit-upload-video:ip',
+  id: 'ip',
+  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of upload video from one IP',
+  usedIn: ['Upload Video Rate Limiting'],
+} as const;
 
 ///Register route rate limit config
 export const REGISTER_IP_KEY = {

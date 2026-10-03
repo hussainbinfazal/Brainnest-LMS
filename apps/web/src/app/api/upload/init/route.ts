@@ -4,24 +4,30 @@ import { logger } from "@/utils/logger/logger.node";
 import { redisClient } from "@/config/redis/redis";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
-import { acquireSlot, buildKey, CACHE_TTL, checkIp, checkUser, invalidateCached, releaseSlot, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_INIT_USER_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId } from "@repo/shared/server";
+import { acquireSlot, buildKey, CACHE_TTL, checkIp, checkUser, invalidateCached, setCached, UPLOAD_INIT_IP_KEY, UPLOAD_INIT_USER_KEY, UPLOAD_SESSION, UPLOAD_SESSION_ACTIVE, validateMongooseId, releaseSlot, } from "@repo/shared/server";
+import { MAX_ACTIVE_SESSIONS, MAX_FILE_SIZE, MAX_FILENAME_LENGTH, RESOURCE_TYPE, SESSION_TTL_SEC, UPLOAD_PURPOSES, } from '@repo/shared'
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import z from "zod";
 
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // import from shared config, same value as the client
-const MAX_FILENAME_LENGTH = 255;
-const SESSION_TTL_SEC = 24 * 60 * 60;
-const MAX_ACTIVE_SESSIONS = 3;
-
+// import from shared config, same value as the client
 const uploadInitRequestBodySchema = z
     .object({
         fileName: z.string().trim().min(1).max(MAX_FILENAME_LENGTH),
-        fileSize: z.number().int().positive().max(MAX_FILE_SIZE),
-        type: z.enum(["image", "video"]),
+        fileSize: z.number().int().positive(),
+        purpose: z.enum(UPLOAD_PURPOSES),
     })
-    .strict();
+    .strict()
+    .superRefine(({ fileSize, purpose }, ctx) => {
+        if (fileSize > MAX_FILE_SIZE[purpose]) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["fileSize"],
+                message: `File exceeds the maximum size for ${purpose}.`,
+            });
+        }
+    });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     let ip = "unknown"
@@ -60,7 +66,8 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
         let body = await parseBody(request, uploadInitRequestBodySchema);
         if (!body.ok) return body.response
-        const { fileName, fileSize, type } = body.data; /// get file name, file size and type
+        const { fileName, fileSize, purpose } = body.data; /// get file name, file size and purpose
+        const type = RESOURCE_TYPE[purpose];
         const uploadId: string = crypto.randomUUID(); /// Generate a unique uploadId
         const now = Date.now() // Get the current timestamp
         sessionKey = buildKey(UPLOAD_SESSION.namespace, uploadId) ///Build session key

@@ -1,7 +1,18 @@
+import { UploadPurpose } from "@repo/shared";
 import axios from "axios";
 
-export type uploadType = "image" | "video";
-export const getSignatureFromBackend = async (type: uploadType) => {
-    const { data } = await axios.post("/api/upload/sign", { type });
-    return data; // data.signature
+
+export const getSignatureFromBackend = async (purpose: UploadPurpose) => {
+    const { data } = await axios.post<{ data: {
+        signature: string;
+        timestamp: number;
+        cloudName: string;
+        apiKey: string;
+        folder: string;
+        resourceType?: string;
+        allowedFormats: string;
+        tags?: string;
+        transformation?: string;
+    } }>("/api/upload/sign", { purpose });
+    return data.data;
 };
