@@ -1,7 +1,7 @@
 export * from "./models/index.export";
 export * from "./types";
 export { logger } from "./logger/logger";
-export { nodeLogger } from "./logger/logger.node";
+export { nodeLogger, loggerInstance as nodeLoggerInstance } from "./logger/logger.node";
 export * from "./validators";
 export * from "./timeFormat"
 export * from "./date";
