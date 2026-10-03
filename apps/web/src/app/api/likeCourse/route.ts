@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 
 
 
-export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKES_LIST_IP_KEY.namespace, COURSE_LIKES_LIST_IP_KEY.max, COURSE_LIKES_LIST_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 

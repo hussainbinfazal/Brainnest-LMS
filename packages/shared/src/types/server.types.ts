@@ -1,14 +1,14 @@
-import { ICourse } from "./model.types";
+import { ICourse, IUser } from "./model.types";
 
-export interface ISessionUser {
+export type ISessionUser = Partial<IUser> &  {
   id: string;
-  phoneNumber?: string;
+  phoneNumber?: string | undefined;
   role: 'instructor' | 'student' | 'admin';
   name: string;
   email: string;
   profileImage?: string;
 
-}
+};
 export interface RazorpayCreateOrderRequest {
   amount: number;        // amount in paisa
   currency: string;      // usually 'INR'

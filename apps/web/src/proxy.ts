@@ -12,6 +12,9 @@ export async function proxy(req: NextRequest) {
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
 
+  const log = (message: string, data?: any) => {
+    logger.info({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
+  }
   if (pathname.startsWith('/api')) {
     const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
     try {
@@ -37,9 +40,6 @@ export async function proxy(req: NextRequest) {
       ? '__Secure-authjs.session-token'
       : 'authjs.session-token'
   }) as JWT | null
-  const log = (message: string, data?: any) => {
-    logger.info({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
-  }
 
   // Define public routes that don't require authentication
   const publicRoutes: string[] = [
@@ -77,13 +77,17 @@ export async function proxy(req: NextRequest) {
     log('No token, redirecting to login')
     return NextResponse.redirect(new URL("/login", req.url))
   }
+  const instructorRoutes = pathname.startsWith('/instructor') && token.role !== 'instructor' && token.role !== 'admin'
+  if (instructorRoutes) {
+    log('Non-instructor trying to access instructor route')
+    return NextResponse.redirect(new URL("/", req.url))
 
+  }
   // Check admin access for admin routes
   if (pathname.startsWith("/admin") && token.role !== "instructor" && token.role !== "admin") {
     log('Non-admin trying to access admin route')
     return NextResponse.redirect(new URL("/", req.url))
   }
-
   log('Allowing access to protected route')
   const res: NextResponse = NextResponse.next()
   res.headers.set("X-Request-ID", requestId);

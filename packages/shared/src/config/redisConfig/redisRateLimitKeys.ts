@@ -40,6 +40,14 @@ export const GLOBAL_IP_KEY = {
   usedIn: ['Global Rate Limiting'],
 } as const;
 
+export const UPDATE_TO_INSTRUCTOR_IP_KEY = {
+  namespace: 'limit-update-to-instructor:ip',
+  id: 'ip',
+  max: 30,
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of update to instructor from one IP',
+  usedIn: ['Update to Instructor Rate Limiting'],
+}
 
 //Init Route rate limit config
 export const UPLOAD_INIT_IP_KEY = {

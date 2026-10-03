@@ -504,8 +504,9 @@ export interface CAuthStore {
   authUser: CAuthUser | null;
   isAuthLoading: boolean;
   userLocation: CUserLocation | null;
-
+  isUpdatingRole: boolean;
   setAuthUser: (authUser: CAuthUser) => void;
+  updateUserToInstructor: (userId: string) => Promise<void>;
   clearAuthUser: () => void;
   setAuthLoading: (loading: boolean) => void;
   setUserLocation: (location: CUserLocation) => void;

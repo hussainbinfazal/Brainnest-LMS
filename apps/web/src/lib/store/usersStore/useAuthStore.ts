@@ -5,6 +5,9 @@ import axios from "axios";
 import { CAuthStore, CAuthUser, CUserLocation } from "@/types/client";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { fetchUserLocation } from "../../helpers/getUserLocation";
+import { getErrorMessage } from "@repo/shared";
+import { signOut, useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 export const useAuthStore = create<CAuthStore>((set, get) => ({
   authUser: null,
@@ -12,8 +15,34 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
   clearAuthUser: () => set({ authUser: null }),
   setAuthLoading: (loading: boolean) => set({ isAuthLoading: loading }),
   isAuthLoading: true,
+  isUpdatingRole: false,
   userLocation: null,
   setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
+  updateUserToInstructor: async (uesrId: string): Promise<void> => {
+    set({ isUpdatingRole: true })
+
+    try {
+      const response = await axios.put(`/api/users/updateToInstructor/${userId}`);
+      if (response.status === 200) {
+        clientLogger.info("User's Role updated successfully", { userId });
+        get().fetchAuthUser(); //Fetch the updated user
+      }
+      // Sign out to force fresh session with new role
+
+      clientLogger.info("Response from updating user to instructor", response);
+      toast.success("Congratulations, You are now an Instructor");
+      setTimeout(() => toast.success("Thank for being a part of our community"), 500);
+      setTimeout(() => {
+        signOut({ callbackUrl: '/login' })
+      }, 1500)
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, "Something went wrong, while updating the role of the user to instructor");
+      clientLogger.error("Something went wrong, while updating the role of the user to instructor", { message });
+      toast.error(message);
+    } finally {
+      set({ isUpdatingRole: false })
+    }
+  },
   fetchAuthUser: async () => {
     const { setAuthLoading } = get();
     setAuthLoading(true);

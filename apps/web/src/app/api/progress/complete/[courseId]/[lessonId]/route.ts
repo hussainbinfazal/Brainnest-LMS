@@ -17,7 +17,8 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
-
+    const params = await context.params;
+    
     if (!user) {
         logger.info("Unauthorized access", { ip: ip });
         return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)

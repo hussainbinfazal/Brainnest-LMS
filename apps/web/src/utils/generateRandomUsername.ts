@@ -9,7 +9,6 @@ export async function generateUniqueUsername(
     baseName: string,
     email: string
 ): Promise<string> {
-    let error = null
     try {
         // Strategy 1: Clean name + nanoid
         const sanitized = baseName

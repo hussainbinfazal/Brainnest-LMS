@@ -2,7 +2,6 @@
 import axios from "axios";
 import Link from "next/link";
 import { useState, useRef, useMemo, useCallback } from "react";
-import { motion, useSpring, useScroll } from "motion/react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
@@ -95,9 +94,9 @@ export default function Header({ className }: { className?: string }): React.JSX
     };  //Explicit refresh of authUser
     if (status === "unauthenticated") clearAuthUser();
   }, [status, fetchAuthUser, clearAuthUser])
-
-
-
+  async function updateUserToInstructor(): Promise<void> {
+    
+  }
   // useEffect(() => {
   //   if (authUser) {
   //     const timer = setTimeout(() => {
@@ -186,7 +185,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                   Profile
                 </Link>
               )}
-              {authUser?.role === "instructor" && (
+              {sessionUser ? sessionUser?.role === "instructor" : authUser?.role === "instructor" && (
                 <Link
                   href={`/myprofile`}
                   className="px-4 hover:underline underline-offset-4"
@@ -199,23 +198,22 @@ export default function Header({ className }: { className?: string }): React.JSX
             <div className="flex items-center gap-4">
               <ModeToggle />
 
-              {authUser?.role === "instructor" ? (
+              {sessionUser?.role === "instructor" ? (
                 <Link href="/course/manage">
                   <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
               ) : (
-                <Link href={"/course/manage"}>
-                  <Button className="ml-6 rounded-sm cursor-pointer">
-                    Teach on Brainnest
-                  </Button>
-                </Link>
+                <Button className="ml-6 rounded-sm cursor-pointer" onClick={updateUserToInstructor}>
+                  Teach on Brainnest
+                </Button>
+
               )}
-              {!authUser && (
+              {!sessionUser && (
                 <Link href={"/login"}>
                   <Button className="ml-6 rounded-sm cursor-pointer">Login</Button>
                 </Link>
               )}
-              {authUser && (
+              {sessionUser && (
                 <Button className="ml-6 rounded-sm cursor-pointer" onClick={handleLogout}>
                   Logout
                 </Button>
@@ -224,7 +222,7 @@ export default function Header({ className }: { className?: string }): React.JSX
               <div className="relative ml-4"
                 ref={avatarRef}
               >
-                {authUser && (
+                {sessionUser && (
                   <Avatar
 
                     className="ml-4 relative cursor-pointer"
@@ -235,7 +233,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                   >
                     <AvatarImage
                       src={
-                        authUser?.profileImage || ""
+                        sessionUser?.profileImage || ""
                         // authUser?.profileImage ||
                         // session?.user?.image
                       }
@@ -243,7 +241,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                       className="cursor-pointer"
                     />
                     <AvatarFallback className="cursor-pointer dark:bg-neutral-400 dark:text-neutral-200">
-                      {authUser?.name?.charAt(0).toUpperCase()}
+                      {sessionUser?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 )}
@@ -252,7 +250,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                     <Card
                       className={`menu absolute top-2 right-5 ${chatAlreadyExists
                         ? "min-h-45"
-                        : authUser
+                        : sessionUser
                           ? "min-h-38"
                           : " min-h-10"
                         }  w-40 z-70`}
@@ -264,7 +262,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                             <p className="whitespace-pre">Manage Courses</p>
                           </Link>
                         )}
-                        {authUser?.role === "instructor" && (
+                        {sessionUser?.role === "instructor" && (
                           <Link
                             href={`/`}
                             className={`${badgeVariants({
@@ -275,22 +273,22 @@ export default function Header({ className }: { className?: string }): React.JSX
                           </Link>
                         )}
 
-                        {authUser && enrolledCourses.size > 0 ? (
+                        {sessionUser && enrolledCourses.size > 0 ? (
                           <Link href={`/mycourses`}>
                             <p>My courses</p>
                           </Link>
                         ) : null}
-                        {authUser && (
+                        {sessionUser && (
                           <Link href="/myprofile">
                             <p>Profile</p>
                           </Link>
                         )}
-                        {authUser && chatAlreadyExists && (
+                        {sessionUser && chatAlreadyExists && (
                           <Link href="/chat">
                             <p>Chat</p>
                           </Link>
                         )}
-                        {/* {authUser && authUser?.certificates?.length > 0 && (
+                        {/* {sessionUser && sessionUser?.certificates?.length > 0 && (
                           <Link href="/myprofile/mycertificates">
                             <p>My Certificates</p>
                           </Link>
