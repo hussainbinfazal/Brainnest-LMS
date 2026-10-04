@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getErrorMessage } from "@repo/shared";
-import { AUTH_USER, checkIp, connectDB, invalidateCached, ISessionUser, IUser, logger, UPDATE_TO_INSTRUCTOR_IP_KEY, User, validateMongooseId } from "@repo/shared/server";
+import { AUTH_USER, checkIp, checkUser, connectDB, invalidateCached, ISessionUser, IUser, logger, UPDATE_TO_INSTRUCTOR_IP_KEY, User, validateMongooseId } from "@repo/shared/server";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
 
@@ -23,6 +23,14 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
         const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, UPDATE_TO_INSTRUCTOR_IP_KEY.namespace, UPDATE_TO_INSTRUCTOR_IP_KEY.max, UPDATE_TO_INSTRUCTOR_IP_KEY.windowSec); //Rate Limiting
 
         if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec), "Remaining-Attempts": String(remaining) }, true);
+
+
+        const { allowed: isUserAllowed, remaining: remainingAttempts, retryAfterSec: retryAfter, ip: userIp } = await checkUser(authUserId, UPDATE_TO_INSTRUCTOR_USER_KEY.namespace, UPDATE_TO_INSTRUCTOR_USER_KEY.max, UPDATE_TO_INSTRUCTOR_USER_KEY.windowSec); //Rate Limiting
+
+        if (!isUserAllowed) {
+            logger.error('QUOTA EXCEEDED', { userIp })
+            return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfter), "Remaining-Attempts": String(remainingAttempts) }, true);
+        }
         if (authUserId !== paramsUserId) return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);
         await connectDB(process.env.MONGODB_URI);
         const updatedUser: | null = await User.findByIdAndUpdate(paramsUserId, { role: "instructor" }, { new: true });

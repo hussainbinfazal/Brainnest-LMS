@@ -48,6 +48,14 @@ export const UPDATE_TO_INSTRUCTOR_IP_KEY = {
   description: 'Backstop against anonymous spam of update to instructor from one IP',
   usedIn: ['Update to Instructor Rate Limiting'],
 }
+export const UPDATE_TO_INSTRUCTOR_USER_KEY = {
+  namespace: 'limit-update-to-instructor:user',
+  id: 'userId',
+  max: 30,
+  windowSec: 60,
+  description: 'Backstop against anonymous spam of update to instructor from one IP',
+  usedIn: ['Update to Instructor Rate Limiting'],
+}
 
 //Init Route rate limit config
 export const UPLOAD_INIT_IP_KEY = {
