@@ -55,6 +55,7 @@ export interface IEnrollment {
   status: string;
   enrolledAt: Date;
 }
+///Add previewDurationInSeconds field in the lesson controllers
 export interface ILesson {
   _id: Types.ObjectId;
   courseId: Types.ObjectId;
@@ -64,7 +65,8 @@ export interface ILesson {
   description: string;
   durationInSeconds: number;
   isPreview: boolean;
-  isPreviewVideo?: string;
+  previewUrl?: string;
+  previewDurationInSeconds?: number;
   order: number;
 }
 export interface IReview {

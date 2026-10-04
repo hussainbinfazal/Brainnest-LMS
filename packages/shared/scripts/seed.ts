@@ -171,13 +171,13 @@ async function seed() {
         slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 
     // Create all top-level (parent) categories first.
-    const categoryDocs: Record<string, InstanceType<typeof Category>> = { };
+    const categoryDocs: Record<string, InstanceType<typeof Category>> = {};
     for (const slug of categoryList) {
         categoryDocs[slug] = await Category.create({ name: toName(slug), slug, parent: null });
     }
 
     // Then create all subcategories, referencing their parent's real _id.
-    const subCategoryDocs: Record<string,  InstanceType<typeof Category>> = {};
+    const subCategoryDocs: Record<string, InstanceType<typeof Category>> = {};
     for (const [parentSlug, subSlugs] of Object.entries(categoryToSubcategories)) {
         const parent = categoryDocs[parentSlug];
         for (const subSlug of subSlugs) {
@@ -293,7 +293,7 @@ async function seed() {
             description: "let, const, and primitive types",
             durationInSeconds: 600,
             isPreview: true,
-            isPreviewVideo: "true",
+            previewUrl: "true",
             order: 1,
         },
         {
@@ -304,7 +304,7 @@ async function seed() {
             description: "Function declarations, expressions, and closures",
             durationInSeconds: 900,
             isPreview: false,
-            isPreviewVideo: "false",
+            previewUrl: "true",
             order: 2,
         },
         {
@@ -315,7 +315,7 @@ async function seed() {
             description: "Understanding the Promise lifecycle",
             durationInSeconds: 1200,
             isPreview: false,
-            isPreviewVideo: "false",
+            previewUrl: "true",
             order: 3,
         },
         {
@@ -326,7 +326,7 @@ async function seed() {
             description: "Writing clean async code",
             durationInSeconds: 1500,
             isPreview: false,
-            isPreviewVideo: "false",
+            previewUrl: "true",
             order: 4,
         },
         {
@@ -337,7 +337,7 @@ async function seed() {
             description: "Panels, toolbars, and shortcuts",
             durationInSeconds: 480,
             isPreview: true,
-            isPreviewVideo: "true",
+            previewUrl: "true",
             order: 6,
         },
         {
@@ -348,7 +348,7 @@ async function seed() {
             description: "Creating and organizing frames",
             durationInSeconds: 720,
             isPreview: false,
-            isPreviewVideo: "false",
+            previewUrl: "true",
             order: 7,
         },
     ]);
@@ -359,7 +359,7 @@ async function seed() {
     console.log("Seeding payments...");
     const [payment1, payment2] = await Payment.create([
         {
-            amount: course1.price,
+            amount: course1.totalPrice,
             paymentId: "pay_sample_0001",
             paymentAt: new Date(),
             paymentBy: student1._id,

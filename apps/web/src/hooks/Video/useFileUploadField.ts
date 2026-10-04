@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 
 
-export async function useFileUploadField() { //Hook to upload file
+export function useFileUploadField() { //Hook to upload file
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [fileName, setFileName] = useState<string>(''); ///Browser file name
     const [uploadError, setUploadError] = useState<any>(null) ///Upload Error Message for UI
@@ -33,6 +33,7 @@ export async function useFileUploadField() { //Hook to upload file
     };
 
 
+    //Send the url of the video to get the duration and store vectors of this in ai service
     const getVideoDuration = (file: File): Promise<number> => {
         return new Promise((resolve, reject) => {
             setIsVideoParsing(true);
@@ -50,8 +51,10 @@ export async function useFileUploadField() { //Hook to upload file
                 URL.revokeObjectURL(url);
                 setIsVideoParsing(false);
                 reject(new Error('Failed to read video metadata'));
+               
             };
         })
+        
     }
     return { upload, isUploading, fileName, uploadError, }
 }

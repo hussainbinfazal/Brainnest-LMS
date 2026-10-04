@@ -625,7 +625,8 @@ export interface CLesson {
   description: string;
   durationInSeconds: number;
   isPreview: boolean;
-  isPreviewVideo?: string;
+  previewUrl?: string;
+  previewDurationInSeconds?: number;
   order: number;
   createdAt?: string;
   updatedAt?: string;

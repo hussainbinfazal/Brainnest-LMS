@@ -23,7 +23,8 @@ export const zodCourseSchema = z.object({
         description: z.string().min(3, "Lesson description must be at least 3 characters"),
         durationInSeconds: z.number().min(1, "Lesson duration must be at least 1"),
         isPreview: z.boolean(),
-        isPreviewVideo: z.boolean(),
+        previewUrl: z.string().optional(),
+        previewDurationInSeconds: z.number().optional(),
         order: z.number().min(1, "Lesson order must be at least 1"),
     })),
     sections: z.array(z.object({

@@ -10,7 +10,7 @@ const lessonSchema = new mongoose.Schema<ILesson>({
   description: { type: String },
   durationInSeconds: { type: Number, required: true },
   isPreview: { type: Boolean, default: false },
-  isPreviewVideo: { type: String },
+  previewUrl: { type: String },
   order: { type: Number, required: true }
 }, { timestamps: true });
 

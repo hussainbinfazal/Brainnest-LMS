@@ -1,8 +1,7 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextResponse } from "next/server";
-import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory } from '@repo/shared/server';
+import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory, logger } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
 import mongoose from "mongoose";
 import { diffDocuments } from "@/lib/helpers/genericDiff";
 import { Session } from "next-auth";
@@ -193,7 +192,7 @@ export async function PUT(request: CustomNextRequest, context: { params: { cours
 
         await session.withTransaction(async () => {
             const existingLessons: ILesson[] = await Lesson.find({ course: course._id }).lean()
-            const lessonDiff = diffDocuments(existingLessons, body.lessons, ["name", "videoUrl", "durationInSeconds", "description", "isPreview", "isPreviewVideo", "order"]);
+            const lessonDiff = diffDocuments(existingLessons, body.lessons, ["name", "videoUrl", "durationInSeconds", "description", "isPreview", "previewUrl", "order"]);
             const categoryToBeUpdate: ICategory = body.category;
             const subCategoryToBeUpdate = body.subCategory;
             if (lessonDiff.toInsert.length) {

@@ -33,7 +33,7 @@ export const buildCoursePayload = (form: CCreateCourseForm) => {
         isPreview: false,
         lessons: form.lessons.map((lesson) => ({
             _id: lesson._id ?? undefined,
-            isPreviewVideo: lesson.isPreviewVideo,
+            previewUrl: lesson.previewUrl,
             isPreview: lesson.isPreview,
             durationInSeconds: Number(lesson.durationInSeconds),
             description: lesson.description.trim(),
