@@ -26,7 +26,7 @@ import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { clientLogger } from "@/utils/logger/clientLogger";
 import { useClickOutSide } from "@/hooks/useClickOutside";
-
+///Add Skeletons while loading
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
@@ -37,6 +37,7 @@ export default function Header({ className }: { className?: string }): React.JSX
   const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser)
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser)
   const updateUserRoleToInstructor = useAuthStore((state) => state.updateUserToInstructor);
+  const isUpdating = useAuthStore((state) => state.isUpdatingRole)
   console.log("This is the authUser in header", authUser)
   const sessionUser = session?.user
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
@@ -48,12 +49,13 @@ export default function Header({ className }: { className?: string }): React.JSX
   const avatarRef = useRef<HTMLDivElement>(null);
   const [chatAlreadyExists, setChatAlreadyExists] = useState<boolean>(false);
   const [cartItemsCount, setCartItemsCount] = useState<number>(0);
+  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
+    setIsLoggingOut(true)
     await signOut();
     setIsMenuOpen(false);
     toast.success("Logout successful");
-
   };
 
   const handleCloseMenu = useCallback(() => {
@@ -95,9 +97,7 @@ export default function Header({ className }: { className?: string }): React.JSX
     };  //Explicit refresh of authUser
     if (status === "unauthenticated") clearAuthUser();
   }, [status, fetchAuthUser, clearAuthUser])
-  async function updateUserToInstructor(): Promise<void> {
 
-  }
   // useEffect(() => {
   //   if (authUser) {
   //     const timer = setTimeout(() => {
@@ -200,7 +200,7 @@ export default function Header({ className }: { className?: string }): React.JSX
               <ModeToggle />
 
               {sessionUser?.role === "instructor" ? (
-                <Link href="/course/manage">
+                <Link href="instructor/course/manage">
                   <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
               ) : (
@@ -210,7 +210,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                     toast.error("You are not logged in")
                   }
                 }}>
-                  Teach on Brainnest
+                  {isUpdating ? "Updating" : "Teach on Brainnest"}
                 </Button>
 
               )}
@@ -219,11 +219,11 @@ export default function Header({ className }: { className?: string }): React.JSX
                   <Button className="ml-6 rounded-sm cursor-pointer">Login</Button>
                 </Link>
               )}
-              {sessionUser && (
+              {/* {sessionUser && (
                 <Button className="ml-6 rounded-sm cursor-pointer" onClick={handleLogout}>
-                  Logout
+                  {isLoggingOut ? 'Logging Out' : 'Logout'}
                 </Button>
-              )}
+              )} */}
 
               <div className="relative ml-4"
                 ref={avatarRef}
@@ -300,7 +300,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                           className="cursor-pointer"
                           onClick={() => handleLogout()}
                         >
-                          Logout
+                          {isLoggingOut ? 'Logging Out' : 'Logout'}
                         </p>
                       </CardContent>
                     </Card>

@@ -3,15 +3,15 @@ import { AUTH_USER, checkIp, connectDB, IUser, IUserCourse, logger, User, USER_P
 import { NextResponse } from "next/server";
 
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CAuthUser } from "@/types/client";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 //Look into this 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_PROFILE_IP_KEY.namespace, USER_PROFILE_IP_KEY.max, USER_PROFILE_IP_KEY.windowSec);
-    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
+  const { allowed, retryAfterSec, ip } = await checkIp(request, USER_PROFILE_IP_KEY.namespace, USER_PROFILE_IP_KEY.max, USER_PROFILE_IP_KEY.windowSec);
+  if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
   try {
     const authSession: Session | null = await auth()
@@ -21,7 +21,6 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
       logger.warn("Unauthorized access attempt", { ip: ip });
       return failResponse({ message: "Missing User Details" }, 401, undefined, undefined, true);
     }
-
     const cached = await getCached<CAuthUser[]>(AUTH_USER.namespace, authUser.id);
 
     if (cached) {

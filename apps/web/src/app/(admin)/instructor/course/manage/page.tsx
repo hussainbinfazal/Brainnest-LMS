@@ -29,7 +29,7 @@ async function ManageInstructorsCoursesPage({ searchParams }: ManageCoursesPageP
     const instructorId: string = user.id
     if (!validateMongooseId({ userId: instructorId })) {
       logger.warn("Invalid user id", { userId: instructorId });
-      return notFound()
+      return redirect('/')
     }
     const cachedInstructorCourses = await getInstructorCoursesWithCache(instructorId, page, limit, skip);
     logger.info("Instructor Courses fetched from cache", { courseCount: cachedInstructorCourses.paginatedInstructorCourses.length });

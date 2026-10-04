@@ -1,4 +1,4 @@
-export function uploadFolder(sub: string): string {
+export function uploadFolder(sub: string): string { //For client
     // Read the root folder from the environment
     const root = process.env.CLOUDINARY_UPLOAD_FOLDER;
     // Fail loudly instead of producing "undefined/..."

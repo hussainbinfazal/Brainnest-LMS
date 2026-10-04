@@ -25,6 +25,8 @@ import { convertToTotalHours } from "@/utils/timeFormat";
 import { formatRatingNumber } from "@/utils/timeFormat";
 import PaginationSection from "../../sections/PaginationSection";
 import { usePageState } from "@/hooks/usePageState";
+import { useSession } from "next-auth/react";
+import { Session } from "next-auth";
 const MotionButton = motion.create(Button);
 
 interface ManageCoursePageProps {
@@ -39,6 +41,8 @@ const ManageCoursePageComponent = ({
         paginatedInstructorCourses || []
     );
     ///Store states
+    const { data: session, status } = useSession();
+    const sessionUser = session?.user;
     const authUser = useAuthStore((state) => state.authUser);
     const setAuthUser = useAuthStore((state) => state.setAuthUser);
     const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
@@ -71,14 +75,13 @@ const ManageCoursePageComponent = ({
 
     // Get paginated instructor courses from the store
     const getPaginatedInstructorCourses = useCallback(async () => {
-        let instructorId = authUser?._id?.toString();
+        let instructorId = sessionUser?.id;
         if (
-            !authUser ||
-            authUser === null ||
-            authUser.role !== "instructor" ||
+            !sessionUser ||
+            sessionUser.role !== "instructor" ||
             !instructorId
         ) {
-            toast.error("You are not an unauthorized");
+            // toast.error("Unauthorized");
             return;
         }
         setIsLoading(true);
@@ -116,28 +119,6 @@ const ManageCoursePageComponent = ({
         }
     }, [currentPage, itemsPerPage]);
 
-    const updateUserToInstructor = useCallback(async (): Promise<void> => {
-        try {
-            const userId: string = authUser?._id ? authUser._id : "";
-
-            const responseFromUpdateUser = await axios.put(
-                `/api/users/update/updateToInstructor/${userId}`
-            );
-
-            const response = await axios.get("/api/users/me");
-            // Update store with fresh user
-            const { user } = response.data;
-            setAuthUser(user);
-            toast.success("Welcome to the teaching team at Brainnest.");
-        } catch (error: unknown) {
-            let message = "Something went wrong";
-            if (axios.isAxiosError(error)) {
-                message = error.response?.data?.message || error.message || message;
-            } else if (error instanceof Error) {
-                message = error.message;
-            }
-        }
-    }, [authUser]);
     const handleDeleteCourse = async (courseId: string) => {
         let instructorId = authUser?._id?.toString();
         if (
@@ -146,7 +127,6 @@ const ManageCoursePageComponent = ({
             authUser.role !== "instructor" ||
             !instructorId
         ) {
-            toast.error("You are not an unauthorized");
             return;
         }
         try {
@@ -162,12 +142,6 @@ const ManageCoursePageComponent = ({
         }
     };
 
-    useEffect(() => {
-        const timer: ReturnType<typeof setTimeout> = setTimeout((): void => {
-            updateUserToInstructor();
-        }, 300); // Small delay to prevent immediate load
-        return (): void => clearTimeout(timer);
-    }, [updateUserToInstructor]);
     const filteredCourses =
         searchTerm?.trim() === ""
             ? courses

@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -77,7 +77,15 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
     const [fileUploadResult, setFileUploadResult] = useState<Partial<CUploadResult>>({});
     const [fileUploadStatus, setFileUploadStatus] = useState<'idle' | 'uploading' | 'uploaded' | 'error'>('idle');
     const confirmPassword: string = signupForm.watch("confirmPassword");
+    const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+    const [isLoggingWithGoogle, setIsLoggingWithGoogle] = useState<boolean>(false);
+    const [isLoggingWithGithub, setIsLoggingWithGithub] = useState<boolean>(false);
+    const [isSigningUp, setIsSigningUp] = useState<boolean>(false);
+    // const loginTimerRef = useRef<NodeJS.Timeout | null>(null);
+    // const signupTimerRef = useRef<NodeJS.Timeout | null>(null);
+
     const handleLoginSubmit = async (data: z.infer<typeof loginSchema>) => {
+        setIsLoggingIn(true)
         try {
             const res = await signIn("credentials", {
                 email: data.email,
@@ -88,18 +96,31 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             if (res?.error) {
                 clientLogger.error("Something went wrong while login", { message: res.error });
                 toast.error("Invalid credentials");
+                setIsLoggingIn(false)
                 return;
             };
             toast.success("Log in successfull");
             router.replace("/");
+            // if (loginTimerRef.current) {
+            //     clearTimeout(loginTimerRef.current);
+            // }
+
+            // // Store timer reference for cleanup
+            // loginTimerRef.current = setTimeout(() => {
+            //     setIsLoggingIn(false);
+            //     loginTimerRef.current = null;
+            // }, 200);
         } catch (error: unknown) {
             let message: string = getErrorMessage(error, "Something went wrong");
             clientLogger.error("Something went wrong, while Login the user", { message });
             // toast.error();
+            setIsLoggingIn(false)
         }
     };
 
     const handleSignupSubmit = async (data: z.infer<typeof signUpSchema>) => {
+
+        setIsSigningUp(true)
         if (!isEmailVerified) return toast.error("Please verify your email address");
         if (usernameStatus === 'checking') {
             toast.error("Checking username availability")
@@ -115,6 +136,8 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             toast.error("Passwords do not match");
             return;
         }
+        if (fileUploadStatus === "uploading") return toast.error("Please wait for the image upload to finish");
+
         // Phone verification is disabled for now
         // if (!isOtpVerified) {
         //   return toast.error("Please verify your phone number");
@@ -129,6 +152,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
             let message: string = getErrorMessage(error, "Something went wrong");
             clientLogger.error("Something went wrong, while Sign up the user", { message });
             toast.error(message)
+            setIsSigningUp(false)
         }
         const res = await signIn("credentials", {
             email: data.email,
@@ -142,6 +166,15 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
         }
         toast.success("Signup successful");
         router.replace("/");
+        // if (signupTimerRef.current) {
+        //     clearTimeout(signupTimerRef.current);
+        // }
+
+        // // Store timer reference for cleanup
+        // signupTimerRef.current = setTimeout(() => {
+        //     setIsSigningUp(false);
+        //     signupTimerRef.current = null;
+        // }, 200);
     };
 
     const onOtpSent = () => {
@@ -277,7 +310,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                 )}
                             />
 
-                            <Button className='w-full' variant='default' size='default' type="submit">Log In</Button>
+                            <Button className='w-full' variant='default' size='default' type="submit">{isLoggingIn ? "Logging In" : "Log In"}</Button>
                             <Separator className="my-4" />
                             <div className="flex justify-center items-center gap-4 flex-col">
                                 <h2>Other Sign In options</h2>
@@ -292,7 +325,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                     className="w-full p-2 bg-red-500 text-white rounded"
                                 >
                                     <FcGoogle className="w-6 h-6" />
-                                    Log in With Google
+                                    {isLoggingWithGoogle ? "Logging In With Google" : 'Log in With Google'}
                                 </Button>
                                 <Button
                                     variant='default' size='default'
@@ -304,7 +337,7 @@ export const AuthPageComp = ({ className }: { className?: string }): JSX.Element
                                     className="w-full p-2 bg-black text-white rounded"
                                 >
                                     <FaGithub className="w-6 h-6" />
-                                    Log In With GitHub
+                                    {isLoggingWithGithub ? 'Logging In With Github' : 'Log In With GitHub'}
                                 </Button>
                             </div>
                         </form>

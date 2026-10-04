@@ -22,7 +22,7 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
     set({ isUpdatingRole: true })
     if (!userId) return
     try {
-      const response = await axios.put(`/api/users/updateToInstructor/${userId}`);
+      const response = await axios.put(`/api/users/update/updateToInstructor/${userId}`);
       if (response.status === 200) {
         clientLogger.info("User's Role updated successfully", { userId });
         get().fetchAuthUser(); //Fetch the updated user

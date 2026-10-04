@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getErrorMessage } from "@repo/shared";
-import { checkIp, connectDB, ISessionUser, IUser, logger, UPDATE_TO_INSTRUCTOR_IP_KEY, User, validateMongooseId } from "@repo/shared/server";
+import { AUTH_USER, checkIp, connectDB, invalidateCached, ISessionUser, IUser, logger, UPDATE_TO_INSTRUCTOR_IP_KEY, User, validateMongooseId } from "@repo/shared/server";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
 
@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
     try {
         const authSession: Session | null = await auth(); //Validate User Session 
         if (!authSession?.user.id) return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);
-        if (validateMongooseId({ userId: paramsUserId })) return failResponse({ message: "Invalid User" }, 400, undefined, undefined, true);
+        if (!validateMongooseId({ userId: paramsUserId })) return failResponse({ message: "Invalid User" }, 400, undefined, undefined, true);
         const authUser: ISessionUser = authSession.user;
         const authUserId = authUser.id;
 
@@ -31,8 +31,10 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
         let data: Record<any, any> = {
             updatedUser
         };
+        await invalidateCached(AUTH_USER.namespace, authUser.id)
         return successResponse(data, 200, "User updated successfully", undefined, true);
     } catch (error: unknown) {
+        console.log('This is the error in update to instructor route', error);
         const message = getErrorMessage(error, "Error in updating user role on server");
         logger.error(`Error in updating user :`, { message, error });
         return failResponse({ message }, 500, undefined, undefined, true);
