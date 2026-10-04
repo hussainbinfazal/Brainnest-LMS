@@ -14,7 +14,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { JSX } from "react/jsx-runtime";
 import { CCourse, CCart } from "@/types/client";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import LikeCoursesPageSkeleton from "./LikedCoursesPage-skeleton";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";

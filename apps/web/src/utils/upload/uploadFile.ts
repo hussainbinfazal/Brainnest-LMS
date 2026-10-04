@@ -1,5 +1,5 @@
 import { getUploadStrategy } from "@/config/uploadConfig/upload";
-import { clientLogger } from "../logger/clientLogger";
+import { clientLogger } from "../clientLogger/clientLogger";
 import { uploadChunkedToCloudinary } from "./uploadStrategyHybrid/uploadChunkedToCloudinary";
 import { uploadDirectToCloudinary } from "./uploadStrategyHybrid/uploadDirectToCloudinary";
 import { getErrorMessage } from "@repo/shared";
@@ -46,7 +46,7 @@ export async function uploadFileClient(file: File, purpose: UploadPurpose): Prom
         ctx.strategy = strategy;
         const startedAt = performance.now();
         clientLogger.info("Upload started", ctx);
-        let result;
+        let result : CUploadResult;
         switch (strategy) {
             case "direct": {
                 result = await uploadDirectToCloudinary(file, purpose);

@@ -11,7 +11,7 @@ import { signIn } from "next-auth/react";
 // The mocked toast, so we can assert which messages the component tried to show
 import { toast } from "sonner";
 // The mocked logger, so we can assert that errors were logged
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 // The mocked hook, so each test can decide what username status (idle/checking/available/taken) it returns
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 // The component under test (adjust this path/name to your real file)

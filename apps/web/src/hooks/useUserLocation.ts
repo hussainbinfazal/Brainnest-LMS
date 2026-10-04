@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fetchUserLocation } from "@/lib/helpers/getUserLocation";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 interface UserLocation {
     country_name: string;

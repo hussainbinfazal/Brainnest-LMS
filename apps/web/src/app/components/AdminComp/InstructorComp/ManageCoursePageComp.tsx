@@ -13,12 +13,11 @@ import { IoSearch } from "react-icons/io5";
 import { PiChatCircleDotsLight } from "react-icons/pi";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import LoadingBarLoader from "@/app/components/shared/LoadingBarLoader";
 import { CCourse } from "@/types/client";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 import ManageCoursePageSkeleton from "./ManageCoursePage-Skeleton";
 import { convertToTotalHours } from "@/utils/timeFormat";
@@ -179,7 +178,7 @@ const ManageCoursePageComponent = ({
                         Manage your courses here
                     </span>
                     <span className="flex gap-4 items-start sm:items-center justify-start lg:justify-end w-full lg:w-inline sm:flex-row flex-col">
-                        <Link href={"/course/manage/chats"}>
+                        <Link href={"/instructor/course/manage/chats"}>
                             <motion.span>
                                 <MotionButton
                                     size="default"
@@ -195,7 +194,7 @@ const ManageCoursePageComponent = ({
                                 </MotionButton>
                             </motion.span>
                         </Link>
-                        <Link href={"/course/manage/courseStats"}>
+                        <Link href={"/instructor/course/manage/courseStats"}>
                             <motion.span>
                                 <MotionButton
                                     size="default"
@@ -211,7 +210,7 @@ const ManageCoursePageComponent = ({
                                 </MotionButton>
                             </motion.span>
                         </Link>
-                        <Link href={"/course/create"}>
+                        <Link href="/instructor/course/create">
                             <motion.span>
                                 <MotionButton
                                     size="default"
@@ -227,7 +226,7 @@ const ManageCoursePageComponent = ({
                                 </MotionButton>
                             </motion.span>
                         </Link>
-                        <Link href={"/course/coupon"}>
+                        <Link href={"/instructor/course/coupon"}>
                             <motion.span>
                                 <MotionButton
                                     size="default"
@@ -349,7 +348,7 @@ const ManageCoursePageComponent = ({
                                                                     size="default"
                                                                     variant="default"
                                                                     onClick={() =>
-                                                                        router.push(`/course/edit/${course._id}`)
+                                                                        router.push(`instructor/course/edit/${course._id}`)
                                                                     }
                                                                     className="p-6 px-10 mr-2 rounded-sm cursor-pointer"
                                                                 >

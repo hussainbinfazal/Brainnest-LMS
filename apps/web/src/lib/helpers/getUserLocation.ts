@@ -1,4 +1,4 @@
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import axios from "axios";
 interface data {
     country_name: string;

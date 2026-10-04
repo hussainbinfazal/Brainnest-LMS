@@ -1,7 +1,7 @@
 import { CUploadResult, CuploadType } from "@/types/client";
 import { getSignatureFromBackend } from "../getSignatureFromBackend/getSignatureFromBackend";
 import axios from "axios";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { uploadWithRetry } from "@/lib/helpers/retryHelper";
 import { getErrorMessage } from "@repo/shared";
 import { RESOURCE_TYPE, UploadPurpose } from "@repo/shared";

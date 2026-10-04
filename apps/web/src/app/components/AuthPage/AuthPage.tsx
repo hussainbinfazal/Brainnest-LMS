@@ -31,7 +31,7 @@ import { loginSchema, signUpSchema } from "@/utils/fieldsValidation/Auth/ZodAuth
 import ProfileImageUpload from "../ProfileImageUpload";
 import { EmailOtpSender, EmailOtpVerifier } from "../UserVerificationForm";
 import { cn } from "@/lib/utils";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { useUsernameAvailability } from "@/hooks/userUsernameAvailability";
 import { validatePhoneNumber } from "@/utils/phoneValidators";
 import { validateEmail } from "@/utils/phoneValidators";

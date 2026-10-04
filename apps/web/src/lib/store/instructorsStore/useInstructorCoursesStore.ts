@@ -4,7 +4,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { CCourse, CAuthUser } from "@/types/client";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 export interface CInstructorCourseStore {
     cachedPaginatedInstructorCourses: CCourse[];
     cachedCurrentPageNumber: number;

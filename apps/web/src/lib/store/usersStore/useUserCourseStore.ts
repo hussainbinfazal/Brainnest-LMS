@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { CCourse, CUserCourse } from "@/types/client";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 type CUserCourseStore = {
     cachedLikedCurrentPageNumber: number;

@@ -28,12 +28,13 @@ import Tiptap from "@/components/Tiptap";
 import { CCategory, CFaq, CLesson, CTopic } from "@/types/client";
 import { CCreateCourseForm } from "@/types/forms/formValidators";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
-import { useVideoParsing } from "@/utils/hooks/Video/useVideoParsing";
+import { useVideoParsing } from "@/hooks/Video/useVideoParsing";
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { CCreateCourse, zodCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
+import { categoryToSubcategories, uiCategories, uiLanguages } from "@/locales/locales";
 
 
 
@@ -96,148 +97,16 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }
   const { fields: lessonsFields, append: appendLessons, remove: removeLessons } = useFieldArray({ control, name: "lessons" });
   const { fields: sectionsFields, append: appendSections, remove: removeSections } = useFieldArray({ control, name: "sections" });
   const { fields: faqFields, append: appendFaq, remove: removeFaq } = useFieldArray({ control, name: "faq" });
-  const categories: string[] = [
-    "academics",
-    "business",
-    "design",
-    "development",
-    "finance",
-    "fitness",
-    "lifestyle",
-    "marketing",
-    "music",
-    "personal-development",
-    "photography",
-    "productivity",
-    "technology",
-  ];
-
-  const categoryToSubcategories: Record<string, string[]> = {
-    academics: ["math", "science", "history"],
-    business: ["entrepreneurship", "management", "sales"],
-    design: ["ui", "ux", "graphic-design"],
-    development: ["web", "mobile", "game"],
-    finance: ["investing", "accounting", "crypto"],
-    fitness: ["yoga", "cardio", "strength"],
-    lifestyle: ["travel", "food", "productivity"],
-    marketing: ["seo", "content", "ads"],
-    music: ["production", "instrument", "theory"],
-    "personal-development": ["mindfulness", "habits", "communication"],
-    photography: ["editing", "gear", "composition"],
-    productivity: ["time-management", "tools", "automation"],
-    technology: ["ai", "cloud", "iot"],
-  };
-  const languages: string[] = [
-    "English", "Spanish", "French", "German", "Hindi", "Chinese", "Japanese",
-    "Korean", "Portuguese", "Arabic", "Russian", "Bengali", "Urdu", "Tamil",
-    "Telugu", "Gujarati", "Marathi", "Punjabi", "Malayalam", "Dutch", "Italian",
-    "Swedish", "Turkish", "Vietnamese", "Thai", "Hebrew", "Polish", "Ukrainian",
-    "Czech", "Romanian", "Greek", "Hungarian", "Finnish", "Slovak", "Norwegian",
-    "Danish", "Croatian", "Serbian", "Bulgarian", "Estonian", "Latvian", "Lithuanian",
-  ];
-  const mockCategories: CCategory[] = [
-    // --- Parent categories ---
-    { _id: "cat-academics", name: "Academics", slug: "academics", parent: null },
-    { _id: "cat-business", name: "Business", slug: "business", parent: null },
-    { _id: "cat-design", name: "Design", slug: "design", parent: null },
-    { _id: "cat-development", name: "Development", slug: "development", parent: null },
-    { _id: "cat-finance", name: "Finance", slug: "finance", parent: null },
-    { _id: "cat-fitness", name: "Fitness", slug: "fitness", parent: null },
-    { _id: "cat-lifestyle", name: "Lifestyle", slug: "lifestyle", parent: null },
-    { _id: "cat-marketing", name: "Marketing", slug: "marketing", parent: null },
-    { _id: "cat-music", name: "Music", slug: "music", parent: null },
-    { _id: "cat-personal-development", name: "Personal Development", slug: "personal-development", parent: null },
-    { _id: "cat-photography", name: "Photography", slug: "photography", parent: null },
-    { _id: "cat-productivity", name: "Productivity", slug: "productivity", parent: null },
-    { _id: "cat-technology", name: "Technology", slug: "technology", parent: null },
-
-    // --- Academics ---
-    { _id: "sub-math", name: "Math", slug: "math", parent: "cat-academics" },
-    { _id: "sub-science", name: "Science", slug: "science", parent: "cat-academics" },
-    { _id: "sub-history", name: "History", slug: "history", parent: "cat-academics" },
-
-    // --- Business ---
-    { _id: "sub-entrepreneurship", name: "Entrepreneurship", slug: "entrepreneurship", parent: "cat-business" },
-    { _id: "sub-management", name: "Management", slug: "management", parent: "cat-business" },
-    { _id: "sub-sales", name: "Sales", slug: "sales", parent: "cat-business" },
-
-    // --- Design ---
-    { _id: "sub-ui", name: "UI", slug: "ui", parent: "cat-design" },
-    { _id: "sub-ux", name: "UX", slug: "ux", parent: "cat-design" },
-    { _id: "sub-graphic-design", name: "Graphic Design", slug: "graphic-design", parent: "cat-design" },
-
-    // --- Development ---
-    { _id: "sub-web", name: "Web", slug: "web", parent: "cat-development" },
-    { _id: "sub-mobile", name: "Mobile", slug: "mobile", parent: "cat-development" },
-    { _id: "sub-game", name: "Game", slug: "game", parent: "cat-development" },
-
-    // --- Finance ---
-    { _id: "sub-investing", name: "Investing", slug: "investing", parent: "cat-finance" },
-    { _id: "sub-accounting", name: "Accounting", slug: "accounting", parent: "cat-finance" },
-    { _id: "sub-crypto", name: "Crypto", slug: "crypto", parent: "cat-finance" },
-
-    // --- Fitness ---
-    { _id: "sub-yoga", name: "Yoga", slug: "yoga", parent: "cat-fitness" },
-    { _id: "sub-cardio", name: "Cardio", slug: "cardio", parent: "cat-fitness" },
-    { _id: "sub-strength", name: "Strength", slug: "strength", parent: "cat-fitness" },
-
-    // --- Lifestyle ---
-    { _id: "sub-travel", name: "Travel", slug: "travel", parent: "cat-lifestyle" },
-    { _id: "sub-food", name: "Food", slug: "food", parent: "cat-lifestyle" },
-    { _id: "sub-productivity-lifestyle", name: "Productivity", slug: "productivity-lifestyle", parent: "cat-lifestyle" },
-
-    // --- Marketing ---
-    { _id: "sub-seo", name: "SEO", slug: "seo", parent: "cat-marketing" },
-    { _id: "sub-content", name: "Content", slug: "content", parent: "cat-marketing" },
-    { _id: "sub-ads", name: "Ads", slug: "ads", parent: "cat-marketing" },
-
-    // --- Music ---
-    { _id: "sub-production", name: "Production", slug: "production", parent: "cat-music" },
-    { _id: "sub-instrument", name: "Instrument", slug: "instrument", parent: "cat-music" },
-    { _id: "sub-theory", name: "Theory", slug: "theory", parent: "cat-music" },
-
-    // --- Personal Development ---
-    { _id: "sub-mindfulness", name: "Mindfulness", slug: "mindfulness", parent: "cat-personal-development" },
-    { _id: "sub-habits", name: "Habits", slug: "habits", parent: "cat-personal-development" },
-    { _id: "sub-communication", name: "Communication", slug: "communication", parent: "cat-personal-development" },
-
-    // --- Photography ---
-    { _id: "sub-editing", name: "Editing", slug: "editing", parent: "cat-photography" },
-    { _id: "sub-gear", name: "Gear", slug: "gear", parent: "cat-photography" },
-    { _id: "sub-composition", name: "Composition", slug: "composition", parent: "cat-photography" },
-
-    // --- Productivity ---
-    { _id: "sub-time-management", name: "Time Management", slug: "time-management", parent: "cat-productivity" },
-    { _id: "sub-tools", name: "Tools", slug: "tools", parent: "cat-productivity" },
-    { _id: "sub-automation", name: "Automation", slug: "automation", parent: "cat-productivity" },
-
-    // --- Technology ---
-    { _id: "sub-ai", name: "AI", slug: "ai", parent: "cat-technology" },
-    { _id: "sub-cloud", name: "Cloud", slug: "cloud", parent: "cat-technology" },
-    { _id: "sub-iot", name: "IoT", slug: "iot", parent: "cat-technology" },
-  ];
-  const parentCategories = mockCategories
-    .filter((c: CCategory) => c.parent === null)
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  const subCategoryOptions = selectedParentId
-    ? mockCategories
-      .filter((c) => c.parent === selectedParentId)
-      .sort((a, b) => a.name.localeCompare(b.name))
-    : [];
-
-  type CategoryOption = { _id: string; name: string; slug: string; parent: string | null };
-
   const handleCategoryChange = (value: string): void => {
     setSelectedParentId(value);
     updateField("category", "");
   };
-  const updateField = <K extends keyof CCreateCourseForm>(key: K, value: CCreateCourseForm[K]) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value
-    }))
-  }
+  // const updateField = <K extends keyof CCreateCourseForm>(key: K, value: CCreateCourseForm[K]) => {
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     [key]: value
+  //   }))
+  // }
   const router = useRouter();
   const handleTopicChange = (index: number, field: keyof CTopic, value: CTopic[typeof field]): void => {
     const newTopics: CTopic[] = [...form.topics];
@@ -522,9 +391,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="">
-                  {parentCategories.map((cat: CCategory) => (
-                    <SelectItem className="" key={cat._id} value={cat._id}>
-                      {cat.name
+                  {Object.entries(categoryToSubcategories).map(([cat, sub]) => (
+                    <SelectItem className="" key={cat} value={cat}>
+                      {cat
                       }
                     </SelectItem>
                   ))}
@@ -546,10 +415,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }
                       <SelectValue placeholder="Select a SubCategory" />
                     </SelectTrigger>
                     <SelectContent className="">
-                      {subCategoryOptions.map((sub: CCategory) => (
-                        <SelectItem className="" key={sub._id} value={sub._id}>
-                          {sub.name}
-                        </SelectItem>
+                      {Object.entries(categoryToSubcategories).map(([cat, sub]) => (
+                        cat === selectedParentId && sub.map((sub) => (
+                          <SelectItem className="" key={sub} value={sub}>
+                            {sub}
+                          </SelectItem>
+                        ))
                       ))}
                     </SelectContent>
                   </Select>
@@ -589,7 +460,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }
               <Input
                 className=""
                 type="text"
-                value={form.durationInSeconds}
+                value={form.totaldurationInSeconds}
                 placeholder="e.g. 3600 for 1 hour"
               />
             </div>
@@ -664,7 +535,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }
                       <SelectValue placeholder="Select a language" />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px] overflow-y-auto">
-                      {languages.map((lang: string) => (
+                      {uiLanguages.map((lang: string) => (
                         <SelectItem className="" key={lang} value={lang.toLowerCase()}>
                           {lang}
                         </SelectItem>
@@ -892,12 +763,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({ className }
               </div>
             ))}
 
-            <Button size="default" className="" type="button" onClick={appendLesson} variant="outline">
+            <Button size="default" className="" type="button" onClick={appendLessons} variant="outline">
               + Add Lessons
             </Button>
             <Label className={"my-4"}>Faqs</Label>
 
-            {form.faq.map((item, index) => (
+            {form.faq.map((item: CFaq, index: number) => (
               <div key={index} className="mb-4 space-y-2 relative ">
                 {form.faq.length > 1 && index !== 0 && (
                   <div

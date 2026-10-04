@@ -62,7 +62,7 @@ import { IInstructorStats } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { CCreateReview, zodReviewSchema } from "@/utils/fieldsValidation/Client/reviewSchemaValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 import { useProgressStore } from "@/lib/store/usersStore/useProgressStore";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";

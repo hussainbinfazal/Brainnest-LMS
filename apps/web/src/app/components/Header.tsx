@@ -24,7 +24,7 @@ import { CAuthUser, CChatMessage } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { useClickOutSide } from "@/hooks/useClickOutside";
 ///Add Skeletons while loading
 export default function Header({ className }: { className?: string }): React.JSX.Element {
@@ -89,11 +89,15 @@ export default function Header({ className }: { className?: string }): React.JSX
     }
   }, []);
 
+  ///This is the function to fetch the authUser 
+  const fetchAuthUserCallback = useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    fetchAuthUser().finally(() => setIsLoading(false));
+  }, [fetchAuthUser])
+
   useEffect(() => {
     if (status === "authenticated") {
-      setIsLoading(true);
-      fetchAuthUser();
-      setIsLoading(false);
+      fetchAuthUserCallback();
     };  //Explicit refresh of authUser
     if (status === "unauthenticated") clearAuthUser();
   }, [status, fetchAuthUser, clearAuthUser])

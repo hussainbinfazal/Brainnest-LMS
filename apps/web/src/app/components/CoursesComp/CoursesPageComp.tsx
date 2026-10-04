@@ -29,7 +29,7 @@ import LoadingBarLoader from "../shared/LoadingBarLoader";
 import { cn } from "@/lib/utils";
 import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";

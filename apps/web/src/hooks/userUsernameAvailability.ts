@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import axios, { AxiosError } from "axios";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { getErrorMessage } from "@repo/shared";
 
 

@@ -1,4 +1,4 @@
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { getSignatureFromBackend } from "../getSignatureFromBackend/getSignatureFromBackend";
 import { CUploadResult, CuploadType } from "@/types/client";
 import axios from "axios";

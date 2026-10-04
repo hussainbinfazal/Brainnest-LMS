@@ -5,7 +5,7 @@ import axios, { AxiosError } from "axios";
 import { toast } from "sonner"
 import { CCourse, CCourseStore, CReview } from "@/types/client";
 import { CCategoryWithChildren } from "../../non-Admin-Cached/getCachedCategory";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 
 export const useCourseStore = create<CCourseStore>((set, get) => ({

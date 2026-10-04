@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { CAuthStore, CAuthUser, CUserLocation } from "@/types/client";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { fetchUserLocation } from "../../helpers/getUserLocation";
 import { getErrorMessage } from "@repo/shared";
 import { signOut } from "next-auth/react";

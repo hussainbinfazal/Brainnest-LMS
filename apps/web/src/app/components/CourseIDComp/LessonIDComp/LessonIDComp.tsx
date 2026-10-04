@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CCourse, CLesson } from "@/types/client";
 import { logger } from "@/utils/logger/logger.node";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { cn } from "@/lib/utils";
 
 // Render a YouTube video player

@@ -10,7 +10,7 @@ import {
   CSendOtpResponse,
   CVerifyOtpResponse,
 } from "@/types/client";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { cn } from "@/lib/utils";
 import { validateEmail } from "@/utils/phoneValidators";
 import { useSendEmailOtp, useVerifyEmailOtp } from "@/hooks/useEmailOtp";

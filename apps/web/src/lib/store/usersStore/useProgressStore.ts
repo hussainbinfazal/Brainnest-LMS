@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { CProgressStore, CProgress, CLessonProgress} from "@/types/client";
 import axios from "axios";
-import { clientLogger } from "@/utils/logger/clientLogger";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 
 export interface CSectionProgress {
