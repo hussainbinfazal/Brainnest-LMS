@@ -53,7 +53,7 @@ export const UPDATE_TO_INSTRUCTOR_USER_KEY = {
   id: 'userId',
   max: 30,
   windowSec: 60,
-  description: 'Backstop against anonymous spam of update to instructor from one IP',
+  description: 'Backstop against anonymous spam of update to instructor from same user',
   usedIn: ['Update to Instructor Rate Limiting'],
 }
 

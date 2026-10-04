@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getErrorMessage } from "@repo/shared";
-import { AUTH_USER, checkIp, checkUser, connectDB, invalidateCached, ISessionUser, IUser, logger, UPDATE_TO_INSTRUCTOR_IP_KEY, User, validateMongooseId } from "@repo/shared/server";
+import { AUTH_USER, checkIp, checkUser, connectDB, invalidateCached, ISessionUser, IUser, logger, UPDATE_TO_INSTRUCTOR_IP_KEY, UPDATE_TO_INSTRUCTOR_USER_KEY, User, validateMongooseId } from "@repo/shared/server";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
 
