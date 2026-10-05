@@ -27,7 +27,7 @@ import { useParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import Image from "next/image";
 import { RxCrossCircled } from "react-icons/rx";
-import Tiptap from "@/components/Tiptap";
+import Tiptap from "@/components/Tiptap/Tiptap";
 import { CCourse, CLesson, } from "@/types/client";
 import { CUpdateCourseForm } from "@/types/forms/formValidators";
 import { useUpload } from "@/utils/hooks/Video/useUpload";

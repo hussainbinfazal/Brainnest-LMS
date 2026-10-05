@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import Tiptap from "@/components/Tiptap";
+import Tiptap from "@/components/Tiptap/Tiptap";
 import { CCategory, CFaq, CLesson, CSection, CTopic } from "@/types/client";
 import { CCreateCourseForm } from "@/types/forms/formValidators";
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
