@@ -15,6 +15,7 @@ const Tiptap = ({ description, onChange }) => {
   const editor = useEditor({
     extensions: [StarterKit, Underline],
     content: description || "",
+    immediatelyRender:false,//// // Wait for the browser before creating the editor, this removes the SSR mismatch
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       onChange(html);
@@ -94,7 +95,7 @@ const Tiptap = ({ description, onChange }) => {
       {/* Editor */}
       <EditorContent
         editor={editor}
-        className="min-h-[150px] border rounded-md p-3"
+        className="min-h-37.5 border rounded-md p-3"
       />
     </div>
   );

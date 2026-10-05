@@ -79,7 +79,6 @@ const EMPTY_SECTION: CSection = {
   lessons: [EMPTY_LESSON],
   createdAt: "",
   updatedAt: "",
-
 };
 
 export const CreateCourseComp: React.FC<{ className?: string }> = ({
@@ -114,17 +113,20 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   // total duration is derived, never typed by hand
   const totalSeconds = (watch("sections") ?? []).reduce(
     (sum: number, section: CSection) =>
-      sum + section.lessons.reduce(
+      sum +
+      section.lessons.reduce(
         (acc: number, lesson: CLesson) => acc + lesson.durationInSeconds,
         0
       ),
     0
   );
 
-
   const onSubmit = async (data: CCreateCourse) => {
     try {
-      const totalLessons = data.sections.reduce((acc, section) => acc + section.lessons.length, 0);
+      const totalLessons = data.sections.reduce(
+        (acc, section) => acc + section.lessons.length,
+        0
+      );
       //attach derived totals
       const payload = buildCoursePayload({
         ...data,
@@ -140,7 +142,6 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
       toast.error(message);
     }
   };
-
 
   return (
     <div
@@ -437,6 +438,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     <CommaListField
                       value={field.value}
                       onChange={field.onChange}
+                      onBlur={field.onBlur}
                       placeholder="e.g. React, Next.js"
                     />
                   )}
@@ -527,6 +529,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     <CommaListField
                       value={field.value}
                       onChange={field.onChange}
+                      onBlur={field.onBlur}
+
                       placeholder="e.g. Variables, loops"
                     />
                   )}
@@ -559,6 +563,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     <CommaListField
                       value={field.value}
                       onChange={field.onChange}
+                      onBlur={field.onBlur}
+
                       placeholder="e.g. HTML, CSS"
                     />
                   )}
@@ -740,7 +746,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 // Get the nested lessons field array for this specific section
                 const sectionLessons = useFieldArray({
                   control,
-                  name: `sections.${sectionIndex}.lessons`
+                  name: `sections.${sectionIndex}.lessons`,
                 });
 
                 return (
@@ -770,9 +776,13 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     {/* section description */}
                     <Field
                       label="Description"
-                      error={errors.sections?.[sectionIndex]?.description?.message}
+                      error={
+                        errors.sections?.[sectionIndex]?.description?.message
+                      }
                     >
-                      <Input {...register(`sections.${sectionIndex}.description`)} />
+                      <Input
+                        {...register(`sections.${sectionIndex}.description`)}
+                      />
                     </Field>
 
                     <h3 className="mt-6 text-sm font-medium">Lessons</h3>
@@ -803,10 +813,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => sections.append({
-                  ...EMPTY_SECTION,
-                  lessons: [EMPTY_LESSON]  // Start with one empty lesson
-                })}
+                onClick={() =>
+                  sections.append({
+                    ...EMPTY_SECTION,
+                    lessons: [EMPTY_LESSON], // Start with one empty lesson
+                  })
+                }
               >
                 + Add Section
               </Button>

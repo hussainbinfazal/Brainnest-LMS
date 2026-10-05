@@ -1,6 +1,6 @@
 // small reusable pieces that kill the repeated JSX
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -82,29 +82,46 @@ export function FileField(props: {
     </Field>
   );
 }
+// Stable empty array, so the default does not change identity on every render
+const EMPTY: string[] = [];
+// Turn "a, b,, c" into ["a", "b", "c"]
+const parse = (raw: string): string[] => raw.split(',').map((s) => s.trim()).filter(Boolean)
+
 export function CommaListField(props: {
   value: string[];
   onChange: (v: string[]) => void;
+  onBlur?: () => void
   placeholder?: string;
 }) {
+  // Fall back to the stable empty array
+  const value: string[] = props.value ?? EMPTY
   //raw text lives here, not in the form
-  const [text, setText] = useState(props.value.join(", "));
+  const [text, setText] = useState(value.join(", "));
+  /// Resync only when the form value really differs from what the user sees
+  useEffect(() => {
+    // Parse the text as currently typed
+    const current = parse(text);
+    // A reset or async load changes the value; normal typing does not, so commas survive
+    //does what's in the input already mean the same thing as the form's array
+    //user>raw>parsed>form
+    if (JSON.stringify(current) !== JSON.stringify(value)) setText(value.join(", "));
+    // text is intentionally omitted, this must run when the form value changes, not on each keystroke
+  }, [props.value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Input
       value={text}
       placeholder={props.placeholder}
       onChange={(e) => {
         setText(e.target.value);
+        // Push the parsed array into the form immediately
+        props.onChange(parse(e.target.value));
       }}
       // parse and commit when the user leaves the field
-      onBlur={(e) => {
-        const items = text
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean);
-        props.onChange(items);
+      onBlur={() => {
+        // props.onChange(parse(text).join(', '));
         // normalise what the user sees
-        setText(items.join(", "));
+        setText(parse(text).join(", "));
+        props.onBlur?.();
       }}
     />
   );
