@@ -37,6 +37,7 @@ export const buildCoursePayload = (form: CCreateCourseForm) => {
                     : undefined,
                 order: lessonIndex + 1
             }))
+
         })),
 
         topics: form.topics.map((topic) => ({

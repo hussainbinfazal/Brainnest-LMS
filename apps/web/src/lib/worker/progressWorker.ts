@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 import { generateProgress, updateProgress } from "@/services/progressService";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 
 export const progressWorker = new Worker("progressQueue", async (job) => {
     try {

@@ -2,7 +2,7 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from '@repo/shared/server';
 import { Coupon, ICoupon, ISessionUser, validateMongooseId } from '@repo/shared/server';
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { CustomNextRequest } from "../../../../../types/server";
 import { auth } from "@/auth";
 import { Session } from "next-auth";

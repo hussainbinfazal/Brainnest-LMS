@@ -1,6 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import mongoose from "mongoose";
 import { checkIp, COURSE_REVIEW_LIST_IP_KEY, COURSE_REVIEW_MUTATION_IP_KEY, Review, Course, connectDB } from '@repo/shared/server';
 import { validateMongooseId } from '@repo/shared/server';

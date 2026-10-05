@@ -1,6 +1,6 @@
 
 import type { Session } from "next-auth";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { auth } from "@/auth";
 
 

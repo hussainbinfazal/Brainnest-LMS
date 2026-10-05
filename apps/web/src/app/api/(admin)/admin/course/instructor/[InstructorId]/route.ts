@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { connectDB, INSTRUCTOR_COURSES_ALL, InstructorCoursesResponse } from '@repo/shared/server';
 import { Course, ICourse, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { getCached, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
 import { Session } from "next-auth";

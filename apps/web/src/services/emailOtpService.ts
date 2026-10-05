@@ -1,5 +1,5 @@
 import {UserToken} from '@repo/shared/server';
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { validateEmail } from "@/utils/phoneValidators";

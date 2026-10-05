@@ -3,7 +3,7 @@ import { checkIp, PROGRESS_LESSON_IP_KEY } from '@repo/shared/server';
 import { connectDB, ILessonProgress, IProgress, Progress } from '@repo/shared/server';
 import { generateProgress, updateProgress } from "@/services/progressService";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 
 import { Session } from "next-auth";

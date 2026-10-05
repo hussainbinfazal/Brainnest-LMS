@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";

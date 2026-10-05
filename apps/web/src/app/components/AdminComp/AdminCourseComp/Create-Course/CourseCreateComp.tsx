@@ -54,6 +54,7 @@ import {
   FileField,
   LessonItem,
 } from "./courseFields";
+import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
 
 const LEVELS: string[] = ["Beginner", "Intermediate", "Expert"];
 
@@ -70,10 +71,12 @@ const EMPTY_LESSON: CLesson = {
   isPreview: false,
 };
 const EMPTY_SECTION: CSection = {
+  _id: "",
   courseId: "",
   title: "",
   description: "",
   order: 0,
+  lessons: [EMPTY_LESSON],
   createdAt: "",
   updatedAt: "",
 
@@ -82,18 +85,9 @@ const EMPTY_SECTION: CSection = {
 export const CreateCourseComp: React.FC<{ className?: string }> = ({
   className,
 }) => {
-  const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState<
-    string[]
-  >([]);
-  const [isLessonVideoUploading, setIsLessonVideoUploading] = useState<
-    Record<string, boolean>
-  >({});
-  const [isVideoUploading, setIsVideoUploading] = useState<boolean>(false);
-  const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
-  const [selectedVideoName, setSelectedVideoName] = useState<string>("");
-  const [selectedImageName, setSelectedImageName] = useState<string>("");
   const [selectedParentId, setSelectedParentId] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const isLoading = useInstructorCourse((state) => state.isLoading);
+  const createCourse = useInstructorCourse((state) => state.createCourse);
   const form = useForm<CCreateCourseForm>({
     resolver: zodResolver(zodCourseSchema),
   });
@@ -106,7 +100,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
     formState: { errors, isSubmitting },
   } = form;
 
-  const lessons = useFieldArray({ control, name: "lessons" });
+  // const lessons = useFieldArray({ control, name: "lessons" });
+  const router = useRouter();
   const faq = useFieldArray({ control, name: "faq" });
   const sections = useFieldArray({ control, name: "sections" });
   const topics = useFieldArray({ control, name: "topics" });
@@ -117,20 +112,26 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   // derive subcategories instead of nested map + &&
   const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
   // total duration is derived, never typed by hand
-  const totalSeconds = (watch("lessons") ?? []).reduce(
-    (sum: number, l: CLesson) => sum + (l.durationInSeconds || 0),
+  const totalSeconds = (watch("sections") ?? []).reduce(
+    (sum: number, section: CSection) =>
+      sum + section.lessons.reduce(
+        (acc: number, lesson: CLesson) => acc + lesson.durationInSeconds,
+        0
+      ),
     0
   );
 
+
   const onSubmit = async (data: CCreateCourse) => {
     try {
+      const totalLessons = data.sections.reduce((acc, section) => acc + section.lessons.length, 0);
       //attach derived totals
       const payload = buildCoursePayload({
         ...data,
-        totalLessons: data.lessons.length,
+        totalLessons: totalLessons,
         totalDurationInSeconds: totalSeconds,
       });
-      await axios.post("/api/admin/course/create", payload);
+      await createCourse(payload);
       // feedback and redirect
       toast.success("Course created successfully");
       router.push("/course/manage");
@@ -140,222 +141,6 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
     }
   };
 
-  // const handleCategoryChange = (value: string): void => {
-  //   setSelectedParentId(value);
-  //   updateField("category", "");
-  // };
-  // // const updateField = <K extends keyof CCreateCourseForm>(key: K, value: CCreateCourseForm[K]) => {
-  // //   setForm((prev) => ({
-  // //     ...prev,
-  // //     [key]: value
-  // //   }))
-  // // }
-  const router = useRouter();
-  // const handleTopicChange = (
-  //   index: number,
-  //   field: keyof CTopic,
-  //   value: CTopic[typeof field]
-  // ): void => {
-  //   const newTopics: CTopic[] = [...form.topics];
-  //   newTopics[index] = { ...newTopics[index], [field]: value ?? "" };
-  //   setForm((prev: CCreateCourseForm) => ({
-  //     ...prev,
-  //     topics: newTopics, //// [ CTopic]
-  //   }));
-  // };
-
-  // const handleFaqChange = (
-  //   index: number,
-  //   field: keyof CFaq,
-  //   value: CFaq[typeof field]
-  // ): void => {
-  //   const newFaq = [...form.faq];
-  //   newFaq[index][field] = value;
-  //   setForm((prev: CCreateCourseForm) => ({
-  //     ...prev,
-  //     faq: newFaq,
-  //   }));
-  // };
-
-  // const handleLessonChange = <K extends keyof CLesson>(
-  //   index: number,
-  //   field: K,
-  //   value: CLesson[K]
-  // ): void => {
-  //   const newLessons = [...form.lessons];
-  //   newLessons[index][field] = value;
-  //   updateField("lessons", newLessons);
-  // };
-  // const addTopic = (): void => {
-  //   setForm((prev: CCreateCourseForm) => ({
-  //     ...prev,
-  //     topics: [
-  //       ...prev.topics,
-  //       { name: "", description: "", slug: "", isActive: true },
-  //     ],
-  //   }));
-  // };
-  // const removeTopic = (index: number): void => {
-  //   const newTopics = [...form.topics];
-  //   newTopics.splice(index, 1);
-  //   setForm((prev: CCreateCourseForm) => ({
-  //     ...prev,
-  //     topics: newTopics,
-  //   }));
-  // };
-
-  // const addLesson = (): void => {
-  //   setForm((prev: CCreateCourseForm) => ({
-  //     ...prev,
-  //     lessons: [
-  //       ...prev.lessons,
-  //       {
-  //         isPreviewVideo: "",
-  //         isPreview: false,
-  //         durationInSeconds: 0,
-  //         description: "",
-  //         videoUrl: "",
-  //         name: "",
-  //         order: 0,
-  //       },
-  //     ],
-  //   }));
-
-  //   setIsLessonVideoUploading((prev) => ({
-  //     ...prev,
-  //     [form.lessons.length]: false, // New lesson at the last index
-  //   }));
-  // };
-
-  // const removeLesson = (index: number): void => {
-  //   const newLessons = [...form.lessons];
-  //   newLessons.splice(index, 1);
-  //   setForm((prev: CCreateCourseForm) => ({
-  //     ...prev,
-  //     lessons: newLessons,
-  //   }));
-  // };
-  // const addFaq = (): void => {
-  //   updateField("faq", [...form.faq, { question: "", answer: "" }]);
-
-  //   // const removeFaq = (index: number): void => {
-  //   const newFaq = [...form.faq];
-  //   newFaq.splice(index, 1);
-  //   updateField("faq", newFaq);
-  // };
-
-  // const handleVideoUpload = async (
-  //   e: React.ChangeEvent<HTMLInputElement>
-  // ): Promise<void> => {
-  //   try {
-  //     setIsVideoUploading(true);
-  //     const target = e.target as HTMLInputElement;
-  //     if (!target.files) throw new Error("No file selected");
-  //     const file = target.files[0];
-  //     setSelectedVideoName(file.name);
-
-  //     const url = await uploadFile(file);
-  //     const seconds: number = await getVideoDuration(file);
-  //     updateField("durationInSeconds", Number(seconds));
-  //   } catch (error: unknown) {
-  //     toast.error(error.message);
-  //     return;
-  //   } finally {
-  //     setIsVideoUploading(false);
-  //   }
-  // };
-
-  // const handleImageUpload = async (
-  //   e: React.ChangeEvent<HTMLInputElement>
-  // ): Promise<void> => {
-  //   try {
-  //     setIsImageUploading(true);
-  //     const target = e.target as HTMLInputElement;
-  //     if (!target.files) throw new Error("No file selected");
-  //     const file = target.files[0];
-  //     setSelectedImageName(file.name);
-  //     const url = await uploadFile(file);
-  //     updateField("coverImage", url);
-  //   } catch (error: any) {
-  //     return alert(error.message);
-  //   } finally {
-  //     setIsImageUploading(false);
-  //   }
-  // };
-
-  // const handleCreateCourse: React.FormEventHandler = async (
-  //   data: CCreateCourse
-  // ): Promise<void | string | number> => {
-  //   setLoading(true);
-  //   try {
-  //     const payload = buildCoursePayload(data);
-  //     const validation = zodCourseSchema.safeParse(payload);
-  //     if (!validation.success) {
-  //       const errorMessage = validation.error.errors
-  //         .map((error) => error.message)
-  //         .join("\n");
-  //       toast.error(errorMessage);
-  //       setLoading(false);
-  //       return;
-  //     }
-  //     const response = await axios.post("/api/admin/course/create", payload);
-  //     toast.success("Course created successfully");
-  //     router.push("/course/manage");
-  //     setLoading(false);
-  //   } catch (error: any) {
-  //     setLoading(false);
-  //     return toast.error(error?.response?.data?.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-  // const handleLessonVideoUpload = async (
-  //   index: number,
-  //   file: File
-  // ): Promise<void> => {
-  //   setIsLessonVideoUploading((prev) => {
-  //     const newState = { ...prev }; // Create a shallow copy
-  //     newState[index] = true; // Set the specific index to true
-  //     return newState;
-  //   });
-
-  //   try {
-  //     setSelectedLessonVideoNames((prev) => {
-  //       const updated = [...prev];
-  //       updated[index] = file.name;
-  //       return updated;
-  //     });
-  //     const url = await uploadFile(file);
-  //     const duration = await getVideoDuration(file);
-  //     const updatedLessons = [...form.lessons];
-  //     updatedLessons[index].videoUrl = url;
-  //     updatedLessons[index].durationInSeconds = duration;
-  //     setForm((prev: CCreateCourseForm) => ({
-  //       ...prev,
-  //       lessons: updatedLessons,
-  //     }));
-  //   } catch (error: any) {
-  //     toast.error(error.message);
-  //   } finally {
-  //     setIsLessonVideoUploading((prev) => {
-  //       const newState = { ...prev }; // Create a shallow copy
-  //       newState[index] = false; // Set the specific index to false
-  //       return newState;
-  //     });
-  //   }
-  // };
-
-  useEffect(() => {
-    // Initialize states for each lesson
-    const initialUploadingState: Record<number, boolean> = {};
-    const initialVideoNames = form.lessons.map(() => "");
-
-    form.lessons.forEach((_, index: number) => {
-      initialUploadingState[index] = false;
-    });
-    setIsLessonVideoUploading(initialUploadingState);
-    setSelectedLessonVideoNames(initialVideoNames);
-  }, []);
 
   return (
     <div
@@ -376,7 +161,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
             <form
               id="create-course-form"
               className="space-y-4"
-              onSubmit={handleSubmit(handleCreateCourse)}
+              onSubmit={handleSubmit(onSubmit)}
             >
               {/* <div className="space-y-2">
               <Label className="">Title</Label>
@@ -811,7 +596,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a language" />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px] overflow-y-auto">
+                      <SelectContent className="max-h-75 overflow-y-auto">
                         {uiLanguages.map((l: string) => (
                           <SelectItem key={l} value={l.toLowerCase()}>
                             {l}

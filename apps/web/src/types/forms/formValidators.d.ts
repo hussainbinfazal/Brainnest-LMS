@@ -1,4 +1,8 @@
-import { CFaq, CLesson, CTopic } from "../client";
+import { CFaq, CLesson, CTopic, CSection } from "../client";
+
+type CCreateCourseSectionForm = Omit<CSection, "lessons"> & {
+    lessons: Omit<CLesson, "sectionId">[];
+};
 
 export interface CCreateCourseForm {
     title: string;
@@ -17,8 +21,8 @@ export interface CCreateCourseForm {
     status: string;
     level: string;
     totalEnrolledCount: number;
-    lessons: CLesson[];
-    sections: CSection[];
+    // lessons: CLesson[];
+    sections: CCreateCourseSectionForm[];
     topics: CTopic[];
     category: string;
     subCategory: string;
@@ -28,6 +32,7 @@ export interface CCreateCourseForm {
     dripType: string;
     previewVideo: string;
 }
+
 export interface CUpdateCourseForm {
     title: string;
     description: string;

@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
 import { generateCertificate } from "@/services/certficateService";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 
 new Worker("certificateQueue", async (job) => {
     const { userId, courseId, instructorName, courseTitle, userName } = job.data;

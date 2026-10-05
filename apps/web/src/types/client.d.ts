@@ -621,7 +621,7 @@ export interface CLesson {
   courseId?: string;
   name: string;
   videoUrl: string;
-  sectionId: string;
+  sectionId?: string;
   description: string;
   durationInSeconds: number;
   isPreview: boolean;
@@ -647,14 +647,14 @@ export interface CLessonProgress {
   updatedAt?: Date;
 }
 export interface CSection {
-  _id: string,
-  courseId: string;
+  _id?: string,
+  courseId?: string;
   title: string;
   description: string;
   order: number;
   lessons: CLesson[];
-  createdAt: string;
-  updatedAt: string
+  createdAt?: string;
+  updatedAt?: string
 }
 
 export interface PaymentsResponse {

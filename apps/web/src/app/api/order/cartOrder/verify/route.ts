@@ -3,7 +3,7 @@
 // import { connectDB, User, userCourse, Order, Course, Payment, Cart } from '@repo/shared/server';
 // import { ICourse, IOrder, IUser } from '@/types/model';
 // import mongoose from 'mongoose';
-// import { logger } from "@/utils/logger/logger.node";
+// import { logger } from "@repo/shared/server";
 // export async function POST(request: NextRequest): Promise<NextResponse> {
 //     try {
 //         await connectDB(process.env.MONGODB_URI!);

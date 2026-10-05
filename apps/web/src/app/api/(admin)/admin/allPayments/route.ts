@@ -2,7 +2,7 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 import { NextResponse } from 'next/server';
 import { connectDB } from '@repo/shared/server';
 import {Payment, IPayments} from '@repo/shared/server';
-import { logger } from '@/utils/logger/logger.node';
+import { logger } from '@repo/shared';
 
 export async function GET(): Promise<NextResponse> {
     try {

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Topic, Section, Lesson, connectDB, Course, Category } from '@repo/shared/server';
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import mongoose, { ObjectId, Types } from "mongoose";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 import { Session } from "next-auth";

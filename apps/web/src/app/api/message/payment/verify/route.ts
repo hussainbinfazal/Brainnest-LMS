@@ -7,7 +7,7 @@
 // import Message from '@/models/Chat/messageModel';
 // import Chat from '@/models/Chat/chatModel';
 // import { IChat } from '@/types/model';
-// import { logger } from "@/utils/logger/logger.node";
+// import { logger } from "@repo/shared/server";
 // export async function PUT(request: NextRequest): Promise<NextResponse> {
 //   try {
 //     await connectDB();
@@ -85,7 +85,7 @@
 // import Message from '@/models/Chat/messageModel';
 // import Chat from '@/models/Chat/chatModel';
 // import { IChat } from '@/types/model';
-// import { logger } from "@/utils/logger/logger.node";
+// import { logger } from "@repo/shared/server";
 // export async function PUT(request: NextRequest): Promise<NextResponse> {
 //   try {
 //     await connectDB();

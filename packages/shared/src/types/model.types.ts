@@ -68,6 +68,9 @@ export interface ILesson {
   previewUrl?: string;
   previewDurationInSeconds?: number;
   order: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+  status?: "completed" | "incomplete";
 }
 export interface IReview {
   _id: Types.ObjectId;
@@ -298,8 +301,11 @@ export interface ISection {
   _id: mongoose.Types.ObjectId;
   courseId: mongoose.Types.ObjectId;
   title: string;
-  description?: string;
+  description: string;
   order: number;
+  lessons: ILesson[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 

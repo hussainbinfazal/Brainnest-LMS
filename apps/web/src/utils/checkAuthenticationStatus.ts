@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { AuthenticatedUser, Credentials } from "@/types/auth";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { connectDB, IUser, User } from '@repo/shared/server';
 
 

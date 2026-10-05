@@ -2,7 +2,7 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 
 import { NextRequest, NextResponse } from 'next/server';
 import otpGenerator from 'otp-generator';
-import { logger } from '@/utils/logger/logger.node';
+import { logger } from '@repo/shared';
 import { ATTEMPT_EMAIL_VERIFICATION, checkIp, COOLDOWN_VERIFICATION_EMAIL, OTP_VERIFICATION_EMAIL } from '@repo/shared/server';
 import { getErrorMessage } from "@repo/shared"
 import { sendEmailBodySchema } from '@repo/shared/client';

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CCourse, CLesson } from "@/types/client";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { cn } from "@/lib/utils";
 

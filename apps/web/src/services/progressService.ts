@@ -1,7 +1,7 @@
 import {Progress, ProgressDocument} from '@repo/shared/server';
 import {userCourse} from '@repo/shared/server';
 import { IProgress } from "@/types/model";
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { validateMongooseId } from '@repo/shared/server';
 import mongoose from "mongoose";
 

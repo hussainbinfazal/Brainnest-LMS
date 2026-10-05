@@ -66,5 +66,5 @@ export async function generateCertificate(userName: string, courseId: string, us
 
     }
 }
-import { logger } from "@/utils/logger/logger.node";import { uploadDirectToCloudinary } from "@/utils/upload/uploadStrategyHybrid/uploadDirectToCloudinary";
+import { logger } from "@repo/shared/server";import { uploadDirectToCloudinary } from "@/utils/upload/uploadStrategyHybrid/uploadDirectToCloudinary";
 

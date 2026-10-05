@@ -4,7 +4,7 @@ import otpGenerator from 'otp-generator';
 import twilio from 'twilio';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import { CustomNextRequest } from '@/types/server';
-import { logger } from '@/utils/logger/logger.node';
+import { logger } from '@repo/shared';
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
 

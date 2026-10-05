@@ -11,7 +11,7 @@ import Message from '@/models/Chat/messageModel';
 import Payment from "@/models/Payment/paymentModel"
 import { RazorpayCreateOrderRequest } from '@/types/server';
 import { IPaymentsByUser } from '@/types/model';
-import { logger } from "@/utils/logger/logger.node";
+import { logger } from "@repo/shared/server";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
 
