@@ -135,11 +135,13 @@ export function BooleanSelect(props: {
 }
 
 export function LessonItem({
-  index,
+  sectionIndex,
+  lessonIndex,
   canRemove,
   onRemove,
 }: {
-  index: number;
+  sectionIndex: number;
+  lessonIndex: number;
   canRemove: boolean;
   onRemove: () => void;
 }) {
@@ -155,15 +157,15 @@ export function LessonItem({
   // separate upload state for the preview video
   const preview = useFileUploadField();
   // shortcut to this lesson's errors
-  const err = errors.lessons?.[index];
+  const err = errors.sections?.[sectionIndex]?.lessons?.[lessonIndex];
   ///main video: upload, the store the url and duration
   const handleVideo = async (file: File) => {
     //uplaod and get url
     const result = await video.upload(file, "lecture-video");
     const { url, duration } = result!;
     if (!url || !duration) return;
-    setValue(`lessons.${index}.videoUrl`, url, { shouldValidate: true });
-    setValue(`lessons.${index}.durationInSeconds`, Number(duration));
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`, url, { shouldValidate: true });
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, Number(duration));
   };
   ///preview video: upload, the store the url and duration
   const handlePreview = async (file: File) => {
@@ -172,8 +174,8 @@ export function LessonItem({
     const { url, duration } = result!;
     if (!url || !duration) return;
     ///Field in schema, value and validation
-    setValue(`lessons.${index}.previewUrl`, url, { shouldValidate: true });
-    setValue(`lessons.${index}.previewDurationInSeconds`, Number(duration));
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`, url, { shouldValidate: true });
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`, Number(duration));
   };
   return (
     <div className="relative mb-4 space-y-2">
@@ -190,14 +192,14 @@ export function LessonItem({
       {/* lesson name */}
       <Field label="Name" error={err?.name?.message}>
         <Input
-          {...register(`lessons.${index}.name`)}
+          {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.name`)}
           placeholder="e.g. JavaScript Basics"
         />
       </Field>
       {/* lesson description */}
       <Field label="Description" error={err?.description?.message}>
         <Input
-          {...register(`lessons.${index}.description`)}
+          {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.description`)}
           placeholder="e.g. Variables, loops, functions"
         />
       </Field>
@@ -214,7 +216,7 @@ export function LessonItem({
         <Input
           type="number"
           readOnly
-          {...register(`lessons.${index}.durationInSeconds`, {
+          {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, {
             valueAsNumber: true,
           })}
         />
@@ -223,14 +225,14 @@ export function LessonItem({
       <Field label="Order">
         <Input
           type="number"
-          {...register(`lessons.${index}.order`, { valueAsNumber: true })}
+          {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.order`, { valueAsNumber: true })}
         />
       </Field>
       {/* is this lesson a free preview */}
       <Field label="IsPreview">
         <Controller
           control={control}
-          name={`lessons.${index}.isPreview`}
+          name={`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`}
           render={({ field }) => (
             <BooleanSelect value={field.value} onChange={field.onChange} />
           )}

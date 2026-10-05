@@ -2,32 +2,37 @@ import { CFaq, CLesson, CTopic } from "../client";
 
 export interface CCreateCourseForm {
     title: string;
+    topic: string;
     description: string;
     instructorId: string;
-    durationInSeconds:number;
     price: number;
-    discount: number;
+    averageRating: number;
+    totalReviews?: string;
+    totalLessons: number;
     coverImage: string;
+    tags: string[];
+    discount: number;
+    totalDurationInSeconds: number;
+    language: string;
+    status: string;
+    level: string;
+    totalEnrolledCount: number;
+    lessons: CLesson[];
+    sections: CSection[];
+    topics: CTopic[];
     category: string;
     subCategory: string;
-    level: string;
-    language: string;
-    tags: string[]
-    whatYouWillLearn: string[]
     requirements: string[];
+    whatYouWillLearn: string[];
+    faq: CFaq[];
+    dripType: string;
     previewVideo: string;
-    sections: CSection[]
-    lessons: CLesson[]
-    topics:CTopic[]
-    faq: CFaq[]
-    dripType: string
-    status: string
 }
 export interface CUpdateCourseForm {
     title: string;
     description: string;
     instructorId: string;
-    durationInSeconds:number;
+    durationInSeconds: number;
     price: number;
     discount: number;
     coverImage: string;
@@ -41,7 +46,7 @@ export interface CUpdateCourseForm {
     previewVideo: string;
     sections: CSection[]
     lessons: CLesson[]
-    topics:CTopic[]
+    topics: CTopic[]
     faq: CFaq[]
     dripType: string
     status: string
