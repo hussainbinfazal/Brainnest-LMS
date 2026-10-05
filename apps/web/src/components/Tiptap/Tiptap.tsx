@@ -17,6 +17,8 @@ import { TOOLBAR_ITEMS, ToolbarItem } from "./TipTap.Tools";
 const EDITOR_CLASSES = [
   // Make the whole box clickable and give it a minimum height
   "min-h-[150px] p-3",
+  // Use the Inter font, a readable size, and comfortable line spacing
+  "font-sans text-base leading-relaxed",
   // Remove the browser's default focus outline (the wrapper shows focus instead)
   "focus:outline-none",
   // Restore bullet styles that Tailwind preflight removes
