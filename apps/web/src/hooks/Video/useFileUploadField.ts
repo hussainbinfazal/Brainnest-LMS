@@ -1,3 +1,4 @@
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { uploadFileClient } from "@/utils/upload/uploadFile";
 import { getErrorMessage, UploadPurpose } from "@repo/shared";
 import { useState } from "react";
@@ -26,6 +27,7 @@ export function useFileUploadField() { //Hook to upload file
             toast.error(error instanceof Error ? error.message : "Upload Failed")
             const message = getErrorMessage(error, "Upload Failed");
             setUploadError(message);
+            clientLogger.error(isVideoParsing ? "Video Parsing Failed" : "Upload Failed", message);
             return null
         } finally {
             setIsUploading(false);
@@ -51,10 +53,10 @@ export function useFileUploadField() { //Hook to upload file
                 URL.revokeObjectURL(url);
                 setIsVideoParsing(false);
                 reject(new Error('Failed to read video metadata'));
-               
+
             };
         })
-        
+
     }
     return { upload, isUploading, fileName, uploadError, }
 }
