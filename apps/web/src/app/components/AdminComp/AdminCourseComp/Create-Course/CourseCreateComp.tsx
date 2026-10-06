@@ -241,6 +241,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   const result = await previewVideo.upload(f, "preview-video");
                   if (result) setValue("previewVideo", result.url);
                 }}
+                url={watch("previewVideo") ?? ""}
+                fileKind={"video"}
               />
               {/* cover image */}
               {/* <div className="space-y-2">
@@ -275,6 +277,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                       shouldValidate: true,
                     });
                 }}
+                url={watch("coverImage") ?? ""}
+                fileKind="image"
               />
 
               {/* <div className="space-y-2">
@@ -291,8 +295,10 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 <Input
                   type="number"
                   step="0.01"
-                  {...register("price", { valueAsNumber: true })}
-                  placeholder="e.g. 69.99"
+                  min={0}
+                  max={100000}
+                {...register("price", { valueAsNumber: true })}
+                placeholder="e.g. 69.99"
                 />
               </Field>
               {/* <div className="space-y-2">

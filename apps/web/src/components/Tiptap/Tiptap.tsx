@@ -5,11 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { ReactNode, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { BiBold } from "react-icons/bi";
-import { FaItalic } from "react-icons/fa";
-import { MdFormatUnderlined } from "react-icons/md";
-import { FaListUl } from "react-icons/fa";
-import { CgUndo } from "react-icons/cg";
+
 import { FaRedoAlt } from "react-icons/fa";
 import { TOOLBAR_ITEMS, ToolbarItem } from "./TipTap.Tools";
 

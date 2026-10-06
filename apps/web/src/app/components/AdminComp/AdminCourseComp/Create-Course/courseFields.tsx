@@ -45,13 +45,22 @@ export function Field({
     </div>
   );
 }
-
+const getFileKind = (file: File): "image" | "video" | "other" => {
+  // Any MIME type starting with "video/" is a video
+  if (file.type.startsWith("video/")) return "video";
+  // Any MIME type starting with "image/" is an image
+  if (file.type.startsWith("image/")) return "image";
+  // Anything else (pdf, zip, etc.)
+  return "other";
+};
 ///File input with skeleton while uploading
 export function FileField(props: {
   label: string;
   accept: string;
   isUploading: boolean;
   fileName: string;
+  fileKind: "image" | "video" | "other";
+  url: string;
   onFile: (file: File) => void;
   error?: string;
 }) {
@@ -77,6 +86,44 @@ export function FileField(props: {
           {props.fileName && (
             <p className="mt-1 text-sm text-gray-500">{props.fileName}</p>
           )}
+          {/* Show a preview only when a URL exists */}
+          {props.url &&
+            // Video gets a player, image gets an <img>, anything else gets a plain link
+            (props.fileKind === "video" ? (
+              <video
+                // Where the video file lives
+                src={props.url}
+                // Show play, pause, and seek controls
+                controls
+                // Load only metadata (duration, first frame), not the whole file
+                preload="metadata"
+                // Responsive width, limited height, black bars around odd aspect ratios
+                className="mt-2 max-h-64 w-full rounded-md bg-black"
+              />
+            ) : props.fileKind === "image" ? (
+              <img
+                // Where the image file lives
+                src={props.url}
+                // Describe the image for screen readers
+                alt={props.fileName ?? "Uploaded file"}
+                // Responsive width, limited height, keep the full image visible
+                className="mt-2 max-h-64 w-full rounded-md object-contain"
+              />
+            ) : (
+              <a
+                // Where the file lives
+                href={props.url}
+                // Open in a new tab
+                target="_blank"
+                // Security: stop the new tab from accessing this page
+                rel="noopener noreferrer"
+                // Link styling
+                className="mt-2 inline-block text-sm text-blue-600 underline"
+              >
+                {/* Link text */}
+                Open file
+              </a>
+            ))}
         </>
       )}
     </Field>
@@ -167,6 +214,7 @@ export function LessonItem({
     register,
     control,
     setValue,
+    watch,
     formState: { errors },
   } = useFormContext<CCreateCourse>();
   // separate upload state for the main video
@@ -226,6 +274,8 @@ export function LessonItem({
         accept="video/*"
         {...video}
         onFile={handleVideo}
+        url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`) ?? ""}
+        fileKind={"video"}
         error={err?.videoUrl?.message}
       />
       {/* readOnly, NOT disabled: disabled inputs submit undefined in RHF */}
@@ -261,6 +311,8 @@ export function LessonItem({
         accept="video/*"
         {...preview}
         onFile={handlePreview}
+        url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`) ?? ""}
+        fileKind="video"
         error={err?.previewUrl?.message}
       />
     </div>
