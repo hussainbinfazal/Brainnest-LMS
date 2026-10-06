@@ -1,6 +1,6 @@
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { getSignatureFromBackend } from "../getSignatureFromBackend/getSignatureFromBackend";
-import { CUploadResult, CuploadType } from "@/types/client";
+import { CUploadResult, CuploadType, UploadOptions } from "@/types/client";
 import axios from "axios";
 import { getErrorMessage } from "@repo/shared";
 import { UploadPurpose } from "@repo/shared";
@@ -52,7 +52,7 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
             onUploadProgress: (e) => {
                 //e.total can be undefined, so fallback to the file size
                 const total = e.total ?? file.size;
-                opts.onProgress?.(Math.min(99, Math.round(e.loaded / total) * 100))
+                opts?.onProgress?.(Math.min(99, Math.round(e.loaded / total) * 100))
             }
         });
 
@@ -62,7 +62,7 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
             throw new Error(data.error.message || "Cloudinary upload failed");
         }
         clientLogger.info("File uploaded successfully to Cloudinary", { url: data.secure_url, public_id: data.public_id });
-        opts.onProgress?.(100) //Progress Completes here 
+        opts?.onProgress?.(100) //Progress Completes here 
         return {
             url: data.secure_url,
             public_id: data.public_id,

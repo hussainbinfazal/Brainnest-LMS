@@ -26,6 +26,7 @@ function saveState(key: string, state: SavedUpload) {
 export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpose, opts?: { onProgress?: (percent: number) => void; signal?: AbortSignal }): Promise<CUploadResult> {
     const key: string = `upload:${file.name}:${file.size}:${file.lastModified}`;
     try {
+        
         const saved = loadSaved(key); /// Load the saved state from local storage with the key
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE); /// Calculate the total number of chunks
         let uploadedBytes = saved?.uploadedBytes || 0; /// Initialize the uploaded bytes, this is used to track the progress of how many bytes have been uploaded
@@ -33,6 +34,18 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
         let startIndex = saved?.nextIndex || 0; /// Initialize the startIndex
         let finalResponse: any = saved?.result ?? null; /// Initialize the finalResponse
         let type = RESOURCE_TYPE[purpose]
+        let lastPercent = 0;
+        // Report a percent only if it is higher than the last one
+        const report = (p: number) => {
+            // Skip duplicates and backwards moves (retries restart a chunk from 0)
+            if (p <= lastPercent) return;
+            // Save the new highest value
+            lastPercent = p;
+            // Tell the UI
+            opts?.onProgress?.(p);
+        };
+        // When resuming, show the saved progress immediately instead of 0%
+        report(Math.round(((startIndex * CHUNK_SIZE) / file.size) * 100));
         if (!uploadId) {
             const res = await axios.post("/api/upload/init", {   //// Initialize the upload session
                 fileName: file.name,
@@ -76,10 +89,19 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
                 "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
                 "X-Unique-Upload-Id": uploadId
             }; /// Set the headers
+
             const response = await uploadWithRetry(() => axios.post(`https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`, formData, {
 
                 headers,
-                signal: opts?.signal
+                signal: opts?.signal,
+                onUploadProgress: (e) => {
+                    // loaded includes multipart overhead, so clamp it to the chunk size
+                    const sentInChunk = Math.min(e.loaded, chunk.size);
+                    // Overall bytes = all finished chunks (start) + part of this chunk
+                    const overall = start + sentInChunk;
+                    // Cap at 99 until /api/upload/complete succeeds
+                    report(Math.min(99, Math.round((overall / file.size) * 100)));
+                },
             }), 3); //// Upload the chunk with retry upto 3 times
             const res = response.data;
             if (res.error) { /// if there is an error 
@@ -101,7 +123,6 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
 
             });
             ///Clean up backend progress route also 
-            opts?.onProgress?.(Math.round((end / file.size) * 100));
             clientLogger.info(`Chunk ${i + 1} uploaded successfully`, { uploadedBytes, totalBytes: file.size });
 
         }
@@ -116,6 +137,8 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
             url: finalResponse.secure_url,
 
         });
+        // After axios.post("/api/upload/complete", ...) succeeds
+        report(100);
 
         localStorage.removeItem(key); ///Remove the saved state
         return {
@@ -132,6 +155,7 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
             if (![401, 403, 429].includes(Number(s))) localStorage.removeItem(key);
         }
         const message = getErrorMessage(error, 'Chunked Cloudinary upload error');
+        clientLogger.error("This is the error in chunked Upload function, client side ",{error, message})
         // clientLogger.error('Chunked Cloudinary upload error:', { error: message });
         throw error ///Throw the error
     }
