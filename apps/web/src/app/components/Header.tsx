@@ -10,7 +10,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { useChatStore } from "@/lib/store/usersStore/useChatStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Scroller from "./Scroller";
+import { Scroller } from "./Scroller";
 import { LiaShoppingCartSolid } from "react-icons/lia";
 import { CiHeart } from "react-icons/ci";
 import { FaGraduationCap } from "react-icons/fa6";

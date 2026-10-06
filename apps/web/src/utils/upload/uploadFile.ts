@@ -4,7 +4,8 @@ import { uploadChunkedToCloudinary } from "./uploadStrategyHybrid/uploadChunkedT
 import { uploadDirectToCloudinary } from "./uploadStrategyHybrid/uploadDirectToCloudinary";
 import { getErrorMessage } from "@repo/shared";
 import { MAX_FILE_SIZE, RESOURCE_TYPE, type UploadPurpose } from "@repo/shared";
-import { CUploadResult } from "@/types/client";
+import { CUploadResult, UploadOptions } from "@/types/client";
+import axios from "axios";
 
 
 
@@ -30,7 +31,7 @@ export class UploadError extends Error {
 }
 
 
-export async function uploadFileClient(file: File, purpose: UploadPurpose): Promise<CUploadResult> {
+export async function uploadFileClient(file: File, purpose: UploadPurpose, opts?: UploadOptions): Promise<CUploadResult> {
     const maxSize = MAX_FILE_SIZE[purpose]
     const type = RESOURCE_TYPE[purpose]
     const ctx: Record<string, unknown> = {
@@ -47,15 +48,15 @@ export async function uploadFileClient(file: File, purpose: UploadPurpose): Prom
         ctx.strategy = strategy;
         const startedAt = performance.now();
         clientLogger.info("Upload started", ctx);
-        let result : CUploadResult;
+        let result: CUploadResult;
         switch (strategy) {
             case "direct": {
-                result = await uploadDirectToCloudinary(file, purpose);
+                result = await uploadDirectToCloudinary(file, purpose, opts);
                 break;
             }
             case "chunked": {
                 clientLogger.warn("Large file, upload may take time", ctx);
-                result = await uploadChunkedToCloudinary(file, purpose);
+                result = await uploadChunkedToCloudinary(file, purpose, opts);
                 break;
             }
             default:
@@ -67,6 +68,7 @@ export async function uploadFileClient(file: File, purpose: UploadPurpose): Prom
         });
         return result
     } catch (error: unknown) {
+        if (axios.isCancel(error)) throw error;
         console.log('This is the error in upload file upload function client side', error)
         const message = getErrorMessage(error, "Failed to upload file."); //getErrorMessage(error, "Failed to upload file.");
         const uploadError =

@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ import { RxCross2 } from "react-icons/rx";
 // import hooks and types
 import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
 import { CCreateCourse } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { ProgressScroller } from "@/app/components/Scroller";
 
 ////Course --------------------------------------------
 ///Label + input slot + error.message used by every field
@@ -63,13 +65,23 @@ export function FileField(props: {
   url: string;
   onFile: (file: File) => void;
   error?: string;
+  onCancel?: () => void;
+  onClear?: () => void;
+  progress: number;
 }) {
   return (
     //reuse field for label + error
     <Field label={props.label} error={props.error}>
-      {props.isUploading ? (
+      {props.isUploading ? (<>
         <Skeleton className="h-10 w-full skeleton-shimmer" />
-      ) : (
+        <ProgressScroller progress={props.progress} className="mt-2" />
+        {props.onCancel && (
+          <Button type="button" variant="outline" onClick={props.onCancel}>
+            <RxCross2 />
+            Cancel upload
+          </Button>
+        )}
+      </>) : (
         <>
           {/* file picker, hand the first file to the parent */}
           <Input
@@ -274,6 +286,7 @@ export function LessonItem({
         accept="video/*"
         {...video}
         onFile={handleVideo}
+        onCancel={video.cancel}
         url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`) ?? ""}
         fileKind={"video"}
         error={err?.videoUrl?.message}
@@ -311,6 +324,7 @@ export function LessonItem({
         accept="video/*"
         {...preview}
         onFile={handlePreview}
+        onCancel={preview.cancel}
         url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`) ?? ""}
         fileKind="video"
         error={err?.previewUrl?.message}

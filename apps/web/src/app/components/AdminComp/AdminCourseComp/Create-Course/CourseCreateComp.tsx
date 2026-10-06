@@ -106,6 +106,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   const topics = useFieldArray({ control, name: "topics" });
   const cover = useFileUploadField();
   const previewVideo = useFileUploadField();
+
   // parent category is UI-only state, not part of the payload
   const [parentCategory, setParentCategory] = useState<string>("");
   // derive subcategories instead of nested map + &&
@@ -241,6 +242,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   const result = await previewVideo.upload(f, "preview-video");
                   if (result) setValue("previewVideo", result.url);
                 }}
+                onCancel={previewVideo.cancel}
+                isUploading={previewVideo.isUploading}
+                progress={previewVideo.progress}
                 url={watch("previewVideo") ?? ""}
                 fileKind={"video"}
               />
@@ -277,6 +281,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                       shouldValidate: true,
                     });
                 }}
+                onCancel={cover.cancel}
+                isUploading={cover.isUploading}
+                progress={cover.progress}
                 url={watch("coverImage") ?? ""}
                 fileKind="image"
               />
@@ -297,8 +304,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   step="0.01"
                   min={0}
                   max={100000}
-                {...register("price", { valueAsNumber: true })}
-                placeholder="e.g. 69.99"
+                  {...register("price", { valueAsNumber: true })}
+                  placeholder="e.g. 69.99"
                 />
               </Field>
               {/* <div className="space-y-2">

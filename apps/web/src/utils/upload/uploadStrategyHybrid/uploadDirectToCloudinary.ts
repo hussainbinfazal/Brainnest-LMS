@@ -74,6 +74,7 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
 
 
     } catch (error: unknown) {
+        if (axios.isCancel(error)) throw error;
         if (axios.isAxiosError<CloudinaryUploadResponse>(error) && error.response?.data?.error?.message) {
             clientLogger.error("Direct Cloudinary upload error:", {
                 status: error.response.status,

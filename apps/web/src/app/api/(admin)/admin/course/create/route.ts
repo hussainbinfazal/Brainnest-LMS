@@ -137,7 +137,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             description: lesson.description,
             durationInSeconds: Number(lesson.durationInSeconds) || 0,
             isPreview: lesson.isPreview,
-            isPreviewVideo: lesson.isPreviewUrl,
+            isPreviewVideo: lesson.previewUrl,
             order: lesson.order
         }));
         await Lesson.insertMany(lessonDocs, { session });
