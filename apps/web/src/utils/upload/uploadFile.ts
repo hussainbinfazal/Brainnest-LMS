@@ -29,6 +29,7 @@ export class UploadError extends Error {
     }
 }
 
+
 export async function uploadFileClient(file: File, purpose: UploadPurpose): Promise<CUploadResult> {
     const maxSize = MAX_FILE_SIZE[purpose]
     const type = RESOURCE_TYPE[purpose]

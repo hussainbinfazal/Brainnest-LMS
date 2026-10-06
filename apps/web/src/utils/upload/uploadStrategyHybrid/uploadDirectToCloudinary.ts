@@ -14,7 +14,7 @@ type CloudinaryUploadResponse = {
     error?: { message?: string };
 };
 
-export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpose): Promise<CUploadResult> {
+export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpose, opts?: UploadOptions): Promise<CUploadResult> {
     try {
         if (!file) {
             throw new Error("No file provided for upload.");
@@ -47,13 +47,22 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
         if (transformation) formData.append("transformation", transformation);
 
         const endPoint = `https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`;
-        const response = await axios.post<CloudinaryUploadResponse>(endPoint, formData);
+        const response = await axios.post<CloudinaryUploadResponse>(endPoint, formData, {
+            signal: opts?.signal,
+            onUploadProgress: (e) => {
+                //e.total can be undefined, so fallback to the file size
+                const total = e.total ?? file.size;
+                opts.onProgress?.(Math.min(99, Math.round(e.loaded / total) * 100))
+            }
+        });
+
         const data = response.data;
         if (data.error) {
             clientLogger.error("Cloudinary upload failed", { status: response.status, response: data });
             throw new Error(data.error.message || "Cloudinary upload failed");
         }
         clientLogger.info("File uploaded successfully to Cloudinary", { url: data.secure_url, public_id: data.public_id });
+        opts.onProgress?.(100) //Progress Completes here 
         return {
             url: data.secure_url,
             public_id: data.public_id,

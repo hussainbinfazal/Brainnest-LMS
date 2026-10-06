@@ -3,11 +3,10 @@
 
 import { cn } from "@/lib/utils";
 import React, { useState, useRef, useEffect, useCallback, Dispatch, SetStateAction } from "react";
-import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { ControllerRenderProps, FieldValues, Path } from "react-hook-form";
-import { uploadFileClient } from "@/utils/upload/uploadFile";
 import { CUploadResult } from "@/types/client";
 import { toast } from "sonner";
+import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
 
 const CIRCLE_SIZE = 128;
 const OUTPUT_SIZE = 200;
@@ -16,16 +15,16 @@ const MIN_SCALE = 0.1;
 const MAX_SCALE = 3;
 const MAX_FILE_SIZE_MB = 5;
 
-type Transform = {
+export type Transform = {
   position: { x: number, y: number };
   scale: number;
   rotation: number,
   flipX: boolean;   // NEW
   flipY: boolean;   // NEW
 }
-type UploadStatus = "error" | "uploading" | "uploaded" | "idle";
+export type UploadStatus = "error" | "uploading" | "uploaded" | "idle";
 
-type ProfileImageUploadProps<TFieldValues extends FieldValues> = {
+export type ProfileImageUploadProps<TFieldValues extends FieldValues> = {
   field: ControllerRenderProps<TFieldValues, Path<TFieldValues> & "profileImage">;
   fileUploadResult: (result: CUploadResult) => void;
   uploadStatus: Dispatch<SetStateAction<UploadStatus>>;
@@ -45,7 +44,6 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, fileUploa
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const startPosRef = useRef<{ x: number; y: number }>(null);
-  const { uploadFile } = useUpload() ///TO manage the upload of Image
   const [flipX, setFlipX] = useState(false);
   const [flipY, setFlipY] = useState(false);
   //Decoded image is cached here once per upload instead of being re-created with new Image() on every wheel tick/drag end.
@@ -162,8 +160,13 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, fileUploa
     uploadStatus('uploading')
 
     try {
+
       const file = new File([croppedBlobRef.current], "profile.jpg", { type: "image/jpeg" }); ///Create file from the cropped blob
-      const result = await uploadFileClient(file, 'avatar'); //Upload file to cloudinary
+      const { upload } = useFileUploadField()
+      const result = await upload(file, 'avatar'); //Upload file to cloudinary
+      if (!result) {
+        throw new Error("Upload failed. Please try again.");
+      }
       fileUploadResult(result);
       field.onChange(result.url);
       field.onBlur()
@@ -421,7 +424,7 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({ field, fileUploa
             </button>
           </div>
 
-          {fileUploadStats !== 'uploaded' && (<div
+          {fileUploadStats !== "uploaded" && (<div
             ref={containerRef}
             className="relative overflow-hidden w-full h-64 dark:bg-black bg-gray-100 rounded-md cursor-move border-2 border-gray-300 dark:border-neutral-700"
             onMouseDown={handleMouseDown}

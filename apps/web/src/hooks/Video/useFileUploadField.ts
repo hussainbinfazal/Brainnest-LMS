@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 export function useFileUploadField() { //Hook to upload file
     const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [progress, setProgress] = useState<number>(0)
     const [fileName, setFileName] = useState<string>(''); ///Browser file name
     const [uploadError, setUploadError] = useState<any>(null) ///Upload Error Message for UI
     const [isVideoParsing, setIsVideoParsing] = useState<boolean>(false);
@@ -21,6 +22,8 @@ export function useFileUploadField() { //Hook to upload file
             if (isVideo) {
                 duration = await getVideoDuration(file);
             };
+            //TODO implement progress logic here in this 
+            
             const result = await uploadFileClient(file, purpose);
             return isVideo && duration != undefined ? { ...result, duration } : result
         } catch (error: unknown) {

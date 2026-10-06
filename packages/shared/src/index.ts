@@ -12,7 +12,9 @@ export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
     "preview-video": 100 * 1024 * 1024,
 };
 export const PENDING_AVATAR_SUBFOLDER = "pending-avatars";
-
+export const PENDING_PREVIEW_VIDEO_SUBFOLDER = "pending-preview-video";
+export const PENDING_THUMBNAIL_SUBFOLDER = "pending-thumbnai"
+export const PENDING_LECTURES_SUBFOLDER = "pending-"
 export const MAX_FILENAME_LENGTH = 255;
 export const SESSION_TTL_SEC = 24 * 60 * 60;
 export const MAX_ACTIVE_SESSIONS = 3;
@@ -36,15 +38,15 @@ export const UPLOAD_POLICIES: Record<UploadPurpose, UploadPolicy> = {
     thumbnail: {
         requiresAuth: true, allowedRoles: ['instructor', 'admin'
         ],
-        resourceType: "image", folder: "thumbnails", allowedFormats: "jpg,jpeg,png,webp"
+        resourceType: "image", folder: PENDING_THUMBNAIL_SUBFOLDER, allowedFormats: "jpg,jpeg,png,webp"
     },
     //Lecture video or lessons
     "preview-video": {
-        requiresAuth: true, allowedRoles: ['instructor', 'admin'], resourceType: 'video', folder: 'previewVideo', allowedFormats: 'mp4,mov,webm'
+        requiresAuth: true, allowedRoles: ['instructor', 'admin'], resourceType: 'video', folder: PENDING_PREVIEW_VIDEO_SUBFOLDER, allowedFormats: 'mp4,mov,webm'
     },
     'lecture-video': {
         requiresAuth: true, allowedRoles: ['instructor', 'admin'], resourceType: 'video',
-        folder: 'lectures', allowedFormats: 'mp4,mov,webm'
+        folder: PENDING_LECTURES_SUBFOLDER, allowedFormats: 'mp4,mov,webm'
     }
 
 };

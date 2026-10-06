@@ -764,6 +764,12 @@ export interface CUploadResult {
   // Seconds, only present for videos, so optional
   duration?: number;
 }
+export type UploadOptions = {
+  // Called with a whole number from 0 to 100
+  onProgress?: (percent: number) => void;
+  // Lets the caller cancel the upload
+  signal?: AbortSignal;
+};
 
 export type CFacets = {
   categories: {

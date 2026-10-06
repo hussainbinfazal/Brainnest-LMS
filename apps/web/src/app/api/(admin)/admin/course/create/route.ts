@@ -38,6 +38,9 @@ interface CreateCourseBody {
     faq: string[]
 
 }
+///TODO 
+//1) Implement pending video, lesson and coverImage functionality;
+//2) 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_CREATE_IP_KEY.namespace, ADMIN_COURSE_CREATE_IP_KEY.max, ADMIN_COURSE_CREATE_IP_KEY.windowSec);
@@ -134,7 +137,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             description: lesson.description,
             durationInSeconds: Number(lesson.durationInSeconds) || 0,
             isPreview: lesson.isPreview,
-            isPreviewVideo: lesson.isPreviewVideo,
+            isPreviewVideo: lesson.isPreviewUrl,
             order: lesson.order
         }));
         await Lesson.insertMany(lessonDocs, { session });
