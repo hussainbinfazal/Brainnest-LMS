@@ -1,4 +1,4 @@
-import { CLesson } from "@/types/client"
+import { CCreateLesson, CLesson } from "@/types/client"
 import { CCreateCourseForm } from "@/types/forms/formValidators"
 
 export const buildCoursePayload = (form: CCreateCourseForm) => {
@@ -12,6 +12,7 @@ export const buildCoursePayload = (form: CCreateCourseForm) => {
         totalReviews: form.totalReviews,
         totalLessons: Number(form.totalLessons),
         coverImage: form.coverImage,
+        coverPublicId: form.coverPublicId,
         tags: form.tags.map((tag: string) => tag.trim()),
         discount: Number(form.discount) || 0,
         totalDurationInSeconds: Number(form.totalDurationInSeconds),
@@ -24,14 +25,16 @@ export const buildCoursePayload = (form: CCreateCourseForm) => {
             title: section.title.trim(),
             description: section.description.trim(),
             order: sectionIndex + 1,
-            lessons: section.lessons.map((lesson: CLesson, lessonIndex: number) => ({
+            lessons: section.lessons.map((lesson: CCreateLesson, lessonIndex: number) => ({
                 _id: lesson._id ?? undefined,
                 name: lesson.name.trim(),
                 videoUrl: lesson.videoUrl.trim(),
+                videoPublicId: lesson.videoPublicId.trim(),
                 description: lesson.description.trim(),
                 durationInSeconds: Number(lesson.durationInSeconds),
                 isPreview: lesson.isPreview,
                 previewUrl: lesson.previewUrl,
+                previewPublicId: lesson.previewPublicId,
                 previewDurationInSeconds: lesson.previewDurationInSeconds
                     ? Number(lesson.previewDurationInSeconds)
                     : undefined,
@@ -56,7 +59,8 @@ export const buildCoursePayload = (form: CCreateCourseForm) => {
             answer: item.answer.trim()
         })),
         dripType: form.dripType,
-        previewVideo: form.previewVideo
+        previewVideo: form.previewVideo,
+        previewVideoPublicId: form.previewVideoPublicId
     }
 }
 

@@ -10,6 +10,9 @@ export const zodCourseSchema = z.object({
     totalReviews: z.string().min(0, "Total Reviews must be at least 3 characters").optional(),
     totalLessons: z.number().min(0, "Total Lessons must be at least 1"),
     coverImage: z.string().min(3, "Cover Image must be at least 3 characters"),
+    coverPublicId: z.string().min(3, "Cover Public Id must be at least 3 characters"),
+    previewVideo: z.string().min(3, "Preview Video must be at least 3 characters"),
+    previewVideoPublicId: z.string().min(3, "Preview Video must be at least 3 characters"),
     tags: z.array(z.string().min(3, "Tag must be at least 3 characters")),
     discount: z.number().min(0, "Discount must be at least 0"),
     totalDurationInSeconds: z.number().min(0, "Total Duration must be at least 0"),
@@ -24,10 +27,12 @@ export const zodCourseSchema = z.object({
         lessons: z.array(z.object({
             name: z.string().min(3, "Lesson name must be at least 3 characters"),
             videoUrl: z.string().min(20, "Please provide a valid video URL"),
+            videoPublicId: z.string().min(20, "Please provide a valid Upload Id"),
             description: z.string().min(3, "Lesson description must be at least 3 characters"),
             durationInSeconds: z.number().min(1, "Lesson duration must be at least 1"),
             isPreview: z.boolean(),
             previewUrl: z.string().optional(),
+            previewPublicId: z.string().optional(),
             previewDurationInSeconds: z.number().optional(),
             order: z.number().min(1, "Lesson order must be at least 1"),
         }))
@@ -48,11 +53,7 @@ export const zodCourseSchema = z.object({
             answer: z.string().min(3, "Answer must be at least 3 characters"),
         })
     ),
-    dripType: z.string().min(3, "Drip Type must be at least 3 characters"),
-    previewVideo: z.string().min(3, "Preview Video must be at least 3 characters"),
-
-
-
+    dripType: z.string().min(3, "Drip Type must be at least 3 characters")
 });
 
 export type CCreateCourse = z.infer<typeof zodCourseSchema>;

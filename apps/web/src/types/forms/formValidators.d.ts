@@ -1,7 +1,12 @@
 import { CFaq, CLesson, CTopic, CSection } from "../client";
 
 type CCreateCourseSectionForm = Omit<CSection, "lessons"> & {
-    lessons: Omit<CLesson, "sectionId">[];
+    lessons: (Omit<CLesson, "sectionId"> & {
+        // These fields are now added to every lesson
+        previewPublicId?: string;
+        videoPublicId: string;
+    })[];
+
 };
 
 export interface CCreateCourseForm {
@@ -14,6 +19,9 @@ export interface CCreateCourseForm {
     totalReviews?: string;
     totalLessons: number;
     coverImage: string;
+    coverPublicId: string;
+    previewVideo: string;
+    previewVideoPublicId: string;
     tags: string[];
     discount: number;
     totalDurationInSeconds: number;

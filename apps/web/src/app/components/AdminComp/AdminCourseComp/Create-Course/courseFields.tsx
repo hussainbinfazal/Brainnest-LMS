@@ -1,11 +1,10 @@
 // small reusable pieces that kill the repeated JSX
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -23,6 +22,7 @@ import { RxCross2 } from "react-icons/rx";
 import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
 import { CCreateCourse } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { ProgressScroller } from "@/app/components/Scroller";
+import { Button } from "@/components/ui/button";
 
 ////Course --------------------------------------------
 ///Label + input slot + error.message used by every field
@@ -69,31 +69,44 @@ export function FileField(props: {
   onClear?: () => void;
   progress: number;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     //reuse field for label + error
     <Field label={props.label} error={props.error}>
       {props.isUploading ? (<>
         <Skeleton className="h-10 w-full skeleton-shimmer" />
-        <ProgressScroller progress={props.progress} className="mt-2" />
-        {props.onCancel && (
-          <Button type="button" variant="outline" onClick={props.onCancel}>
-            <RxCross2 />
-            Cancel upload
-          </Button>
-        )}
+        <ProgressScroller progress={props.progress} className={"mt-2"} />
+        <Button
+          type="button"
+          className="absolute right-2 top-0 text-lg"
+          onClick={props.onCancel}
+        >
+          <RxCross2 />
+        </Button>
       </>) : (
         <>
-          {/* file picker, hand the first file to the parent */}
+          {/* Keep the native picker hidden; the button below opens it. */}
           <Input
+            ref={fileInputRef}
             type="file"
             accept={props.accept}
+            className="hidden"
             onChange={(e) => {
-              // optional chaining avoids crash when selection is cancelled
               const file: File | undefined = e.target.files?.[0];
-              // only call parent when a file exists
+              e.currentTarget.value = "";
               if (file) props.onFile(file);
             }}
           />
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => fileInputRef.current?.click()}
+
+          >
+            {props.fileName || props.url ? "Choose another file" : "Choose file"}
+          </Button>
           {/* show chosen file name */}
           {props.fileName && (
             <p className="mt-1 text-sm text-gray-500">{props.fileName}</p>
@@ -286,7 +299,6 @@ export function LessonItem({
         accept="video/*"
         {...video}
         onFile={handleVideo}
-        onCancel={video.cancel}
         url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`) ?? ""}
         fileKind={"video"}
         error={err?.videoUrl?.message}
@@ -324,7 +336,6 @@ export function LessonItem({
         accept="video/*"
         {...preview}
         onFile={handlePreview}
-        onCancel={preview.cancel}
         url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`) ?? ""}
         fileKind="video"
         error={err?.previewUrl?.message}

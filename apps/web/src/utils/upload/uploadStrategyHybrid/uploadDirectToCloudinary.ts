@@ -52,7 +52,7 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
             onUploadProgress: (e) => {
                 //e.total can be undefined, so fallback to the file size
                 const total = e.total ?? file.size;
-                opts?.onProgress?.(Math.min(99, Math.round(e.loaded / total) * 100))
+                opts?.onProgress?.(Math.min(99, Math.round((e.loaded / total) * 100)))
             }
         });
 

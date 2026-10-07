@@ -633,6 +633,10 @@ export interface CLesson {
   order: number;
   status?: 'completed' | 'incomplete';
 };
+export type CCreateLesson = CLesson & {
+  previewPublicId?: string;
+  videoPublicId: string;
+};
 export interface CLessonProgress {
   _id?: string;
   userId: string;

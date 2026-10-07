@@ -55,6 +55,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const { title, description, price, category, subCategory, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, topics, previewVideo, dripType, sections,
 
         } = body;
+        
         if (!title || !price || !sections?.length || description === "" || category === "" || subCategory === "" || faq === "" || requirements === "" || whatYouWillLearn === "" || video === "" || lessons === "" || coverImage === "" || status === "" || duration === 0 || language === "" || level === "" || tags === "" || discount === "") {
             logger.warn("Validation failed: Missing required fields", { title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory });
             return failResponse({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, 400, undefined, undefined, true);
