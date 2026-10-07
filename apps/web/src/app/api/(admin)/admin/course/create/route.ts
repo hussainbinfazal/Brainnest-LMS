@@ -1,6 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
-import { Topic, Section, Lesson, connectDB, Course, Category } from '@repo/shared/server';
+import { Topic, Section, Lesson, connectDB, Course, Category, IFaq } from '@repo/shared/server';
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@repo/shared/server";
@@ -13,31 +13,45 @@ import { z } from "zod";
 import { ADMIN_COURSE_CREATE_IP_KEY, checkIp } from "@repo/shared/server";
 
 const createCourseBodySchema = z.record(z.string(), z.any());
+type CCreateCourseSectionBody = Omit<ISection, "lessons"> & {
+    lessons: (Omit<ILesson, "sectionId"> & {
+        // These fields are now added to every lesson
+        previewPublicId?: string;
+        videoPublicId: string;
+    })[];
 
-interface CreateCourseBody {
+};
+export interface CCreateCourseForm {
     title: string;
-    price: number;
+    topic: string;
     description: string;
+    instructorId: string;
+    price: number;
+    averageRating: number;
+    totalReviews?: string;
+    totalLessons: number;
     coverImage: string;
-    subCategory: string
-    category: ICategory;
+    coverPublicId: string;
+    previewVideoPublicId: string;
+    tags: string[];
     discount: number;
-    duration: number;
-    whatYouWillLearn: string[];
-    dripType: string
-    requirements: string[];
-    level: string;
+    totalDurationInSeconds: number;
     language: string;
     status: string;
-    tags: string[]
-    isPreview: boolean;
-    previewVideo: string
-    lessons: ILesson[];
-    topics: string[]
-    sections: ISection[];
-    faq: string[]
-
+    level: string;
+    totalEnrolledCount: number;
+    // lessons: CLesson[];
+    sections: CCreateCourseSectionBody[];
+    topics: ITopic[];
+    category: string;
+    subCategory: string;
+    requirements: string[];
+    whatYouWillLearn: string[];
+    faq: IFaq[];
+    dripType: string;
+    previewVideo: string;
 }
+
 ///TODO 
 //1) Implement pending video, lesson and coverImage functionality;
 //2) 
@@ -55,7 +69,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const { title, description, price, category, subCategory, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, topics, previewVideo, dripType, sections,
 
         } = body;
-        
+
         if (!title || !price || !sections?.length || description === "" || category === "" || subCategory === "" || faq === "" || requirements === "" || whatYouWillLearn === "" || video === "" || lessons === "" || coverImage === "" || status === "" || duration === 0 || language === "" || level === "" || tags === "" || discount === "") {
             logger.warn("Validation failed: Missing required fields", { title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory });
             return failResponse({ message: "All fields are required", title, description, price, category, faq, requirements, whatYouWillLearn, video, lessons, coverImage, status, duration, language, level, certificate, tags, discount, subCategory }, 400, undefined, undefined, true);

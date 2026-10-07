@@ -38,6 +38,11 @@ export interface ICourse {
   createdAt: Date;
   updatedAt: Date;
 }
+export interface IFaq {
+  question: string;
+  answer: string;
+}
+
 
 export interface ICategory {
   _id: Types.ObjectId;

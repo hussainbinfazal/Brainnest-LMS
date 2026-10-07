@@ -637,6 +637,7 @@ export type CCreateLesson = CLesson & {
   previewPublicId?: string;
   videoPublicId: string;
 };
+export type CCreateSection = CSection
 export interface CLessonProgress {
   _id?: string;
   userId: string;
