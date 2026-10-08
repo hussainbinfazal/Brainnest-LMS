@@ -109,10 +109,6 @@ const courseSchema = new mongoose.Schema<ICourse>({
       type: String
     }
   ],
-  video: {
-    type: String,
-
-  },
   previewVideo: {
     type: String,
 

@@ -20,7 +20,6 @@ export interface CCreateCourseForm {
     totalLessons: number;
     coverImage: string;
     coverPublicId: string;
-    previewVideo: string;
     previewVideoPublicId: string;
     tags: string[];
     discount: number;
