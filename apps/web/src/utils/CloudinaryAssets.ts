@@ -56,7 +56,8 @@ function isUnderPrefix(publicId: string, prefix: string): boolean {
 
 //Validates every asset; prefix first (tree), then existence (network, in parallel)
 
-export async function verfyAssets(assets: PendingAsset[]) {
+
+export async function verifyAssets(assets: PendingAsset[]) {
     ///The same file referenced twice would make the seconds rename fail
 
     const ids = assets.map((a) => a.publicId)

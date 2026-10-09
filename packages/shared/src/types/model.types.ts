@@ -308,9 +308,12 @@ export interface ISection {
   title: string;
   description: string;
   order: number;
-  lessons: ILesson[];
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export type CreateSectionType = ISection & {
+  lessons: ILesson[]
 }
 
 
