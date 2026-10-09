@@ -45,7 +45,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
         // Verify and move Cloudinary upload if provided
         const avatarPublicId = finalUploadResult?.public_id;
-
+        const finalUploadFolder = uploadFolder(`courses/${.toString()}`)
         const AVATAR_PENDING_PREFIX = `${uploadFolder(PENDING_AVATAR_SUBFOLDER)}/`; // ✅ No cloud name in public_id
         if (avatarPublicId) {
 
