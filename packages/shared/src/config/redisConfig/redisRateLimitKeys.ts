@@ -307,12 +307,20 @@ export const CART_COURSE_IP_KEY = {
 export const ADMIN_COUPON_IP_KEY = {
   namespace: 'limit-admin-coupon:ip',
   id: 'ip',
-  max: 30,
+  max: 5,
   windowSec: 60,
   description: 'Rate limits administrative coupon reads and mutations by client IP',
   usedIn: ['Admin Coupon API'],
 } as const;
 
+export const ADMIN_COURSE_CREATE_USER_KEY = {
+  namespace: 'limit-admin-course-create:ip',
+  id: 'ip',
+  max: 10,
+  windowSec: 60,
+  description: 'Rate limits instructor course creation by client IP',
+  usedIn: ['Admin Course Create API'],
+} as const;
 export const ADMIN_COURSE_CREATE_IP_KEY = {
   namespace: 'limit-admin-course-create:ip',
   id: 'ip',

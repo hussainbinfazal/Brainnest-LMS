@@ -1,6 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextRequest, NextResponse } from "next/server";
-import { Topic, Section, Lesson, connectDB, Course, Category, IFaq, CreateSectionType } from '@repo/shared/server';
+import { Topic, Section, Lesson, connectDB, Course, Category, IFaq, CreateSectionType, checkUser, ADMIN_COURSE_CREATE_USER_KEY } from '@repo/shared/server';
 import { CourseDocument, ICategory, ICourse, ILesson, ISection, ITopic } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@repo/shared/server";
@@ -57,6 +57,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     }
     logger.info("This is the user is attempting to create course ", { name: userInSession.name, id: userInSession.id });
     const sessionUserId: string = userInSession.id;
+
+    const { allowed: isUserAllowed, remaining: remainingAttempts, retryAfterSec: retryAfter } = await checkUser(userInSession.id, ADMIN_COURSE_CREATE_USER_KEY.namespace, ADMIN_COURSE_CREATE_USER_KEY.max, ADMIN_COURSE_CREATE_USER_KEY.windowSec);
+
+    if (!isUserAllowed) {
+        return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfter) }, true);
+    }
     const pendingAssets: PendingAsset[] = [
         ///Course cover is an image ( the old code treated it as a video)
         {
