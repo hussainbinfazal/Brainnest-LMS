@@ -11,7 +11,7 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 import { z } from "zod";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 import { uploadFolder } from "@/utils/upload/uploadSubFolderCreation";
-import { AssetError, AssetErrorCode, AVATAR_ERRORS, MovedAsset, PendingAsset, verifyAssets } from "@/utils/CloudinaryAssets";
+import { AssetError, AssetErrorCode, AVATAR_ERRORS, moveAssets, MovedAsset, PendingAsset, rollbackMoves, verifyAssets } from "@/utils/CloudinaryAssets";
 
 
 
@@ -63,9 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // Verify and move Cloudinary upload if provided
         // // Public id of the pending upload, if any
         const avatarPublicId = finalUploadResult?.public_id;
-
-        const finalUploadFolder = uploadFolder(`courses/${.toString()}`)
-        const AVATAR_PENDING_PREFIX = `${uploadFolder(PENDING_AVATAR_SUBFOLDER)}/`; // ✅ No cloud name in public_id
+        let profileImage = DEFAULT_AVATAR_URL;
 
 
         ///Verify and move the avatar (only reached  by users  who passed every cheap check)
@@ -79,7 +77,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 ///The only folder an avatar may come from
                 pendingPrefix: uploadFolder(PENDING_AVATAR_SUBFOLDER),
                 ///Final home: one folder per user, NOT the pending folder;
-                targetPublicId: uploadFolder(`$avatars/${userId.toString()}`),
+                targetPublicId: uploadFolder(`avatars/${userId.toString()}`),
                 maxBytes: MAX_FILE_SIZE.avatar,
 
             }
@@ -96,10 +94,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
                 ///Translate the helper code to match your existing client contract
                 const mapped = AVATAR_ERRORS[verifyError.code]
-                if (!mapped) {
-                    throw verifyError
+                if (mapped) {
                     return failResponse(mapped.message, verifyError?.status, mapped.code, undefined, true);
                 }
+            }
+            ////Move it, a failure here must not block registration
+            try {
+                ///The helper renames, removes the pending tag, and rollsback itself
+                const moved = await moveAssets([avatarAsset]);
+
+                movedAvatar = moved.get(avatarPublicId);
+
+
+                //Cloudinary answer's 
+                profileImage = movedAvatar!.url
+
+            } catch (moveError: unknown) {
+                logger.error("Failed to claim Avatar", { error: moveError instanceof Error ? moveError.message : "Unknown error", email })
             }
         }
 
@@ -113,25 +124,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             profileImage: DEFAULT_AVATAR_URL,
         });
         await newUser.save();
-        if (avatarPublicId) {
-            try {
-                // Move out of the pending folder, the new user id makes the target unique
-                const moved = await cloudinary.uploader.rename(avatarPublicId, `${AVATAR_PENDING_PREFIX} / ${newUser._id}`);
-                // Remove the tag so the 24h cleanup job keeps this file
-                await cloudinary.uploader.remove_tag(AVATAR_PENDING_PREFIX, [moved.public_id]);
-                // Use Cloudinary's answer, never client data
-                newUser.profileImage = moved.secure_url;
-                // Persist the permanent URL
-                await newUser.save();
-            } catch (moveError: unknown) {
-                // Registration still succeeds, the user keeps the default avatar
-                logger.error("Failed to claim avatar", { error: moveError instanceof Error ? moveError.message : "Unknown error", userId: newUser._id.toString() });
-            }
-        }
+        movedAvatar = undefined;
+
         try {
             await invalidateCached(USER_VERIFIED_FLAG.namespace, email);
 
         } catch (cacheError: unknown) {
+
+
             logger.error("Failed to clear verified flag", { error: cacheError instanceof Error ? cacheError.message : String('Unknown error') });
         }
         let data = {
@@ -147,6 +147,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         logger.info("User created successfully");
         return successResponse(data, 201, "User created successfully");
     } catch (error: unknown) {
+        ///////Rollback if some thing failed
+        if (movedAvatar) await rollbackMoves([movedAvatar])
         if (isDuplicateKeyError(error)) return failResponse("Email or username already taken ", 400, "USER_ALREADY_EXISTS"); ///To prevent combination of email and username to be unique
         const message = error instanceof Error ? error.message : 'Unknown error';
         logger.error("Error creating user:", { error: message });
