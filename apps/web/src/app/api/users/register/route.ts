@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkIp, connectDB, getCached, invalidateCached, IUser, logger, REGISTER_IP_KEY, User, USER_VERIFIED_FLAG } from '@repo/shared/server';
-import { PENDING_AVATAR_SUBFOLDER } from "@repo/shared"
+import { MAX_FILE_SIZE, PENDING_AVATAR_SUBFOLDER } from "@repo/shared"
 
 import bcrypt from "bcryptjs";
 
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Types } from "mongoose";
 import { signUpBase } from "@/utils/fieldsValidation/Auth/ZodAuthSchema";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { z } from "zod";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 import { uploadFolder } from "@/utils/upload/uploadSubFolderCreation";
+import { AssetError, AssetErrorCode, AVATAR_ERRORS, MovedAsset, PendingAsset, verifyAssets } from "@/utils/CloudinaryAssets";
 
 
 
@@ -19,12 +20,15 @@ const registerBodySchema = signUpBase.omit({ profileImage: true }).extend({
 
 });
 const DEFAULT_AVATAR_URL = "/assets/default-avatar.svg";
-// Detect Mongo duplicate-key errors (E11000) raised by the unique indexes
+
+
 function isDuplicateKeyError(error: unknown): boolean {
     return typeof error === 'object' && error !== null && 'code' in error && error.code === 11000;
 }
 export async function POST(request: NextRequest): Promise<NextResponse> {
     let ip = "unknown";
+    let movedAvatar: MovedAsset | undefined;
+
     try {
         const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, REGISTER_IP_KEY.namespace, REGISTER_IP_KEY.max, REGISTER_IP_KEY.windowSec); /// rate limit
         ip = requestIp
@@ -43,36 +47,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         };
         const { name, email, username, password, finalUploadResult } = body.data;
 
-        // Verify and move Cloudinary upload if provided
-        const avatarPublicId = finalUploadResult?.public_id;
-        const finalUploadFolder = uploadFolder(`courses/${.toString()}`)
-        const AVATAR_PENDING_PREFIX = `${uploadFolder(PENDING_AVATAR_SUBFOLDER)}/`; // ✅ No cloud name in public_id
-        if (avatarPublicId) {
-
-            try {
-                // Verify the asset exists and check size
-                const asset = await cloudinary.api.resource(avatarPublicId);
-
-                if (asset.bytes > 2 * 1024 * 1024) {
-                    return failResponse("Avatar too large (max 2MB)", 400, "AVATAR_TOO_LARGE");
-                }
-
-                // Verify it's in the pending folder
-                if (!avatarPublicId.startsWith(AVATAR_PENDING_PREFIX)) {
-                    logger.warn("Invalid public_id prefix", { avatarPublicId, email });
-                    return failResponse("Invalid upload location", 400, "INVALID_UPLOAD_LOCATION");
-                }
-            } catch (cloudinaryError: unknown) {
-                logger.error("Cloudinary verification failed", {
-                    error: cloudinaryError instanceof Error ? cloudinaryError.message : 'Unknown error',
-                    avatarPublicId
-                });
-                return failResponse("Invalid avatar upload", 400, "INVALID_AVATAR");
-            }
-        }
         await connectDB(process.env.MONGODB_URI!);
-
-        //Check the verified flag First : cheap redis read
         const isEmailVerified = await getCached(USER_VERIFIED_FLAG.namespace, email);
         if (!isEmailVerified) {
             logger.info("Email is not verified");
@@ -84,6 +59,51 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             logger.info(`Register conflict: ${emailTaken ? 'email' : 'username'} already taken`);
             return failResponse(`${emailTaken ? 'User already exists' : 'Username is already taken'}`, 400, `${emailTaken ? 'USER_ALREADY_EXISTS' : 'USERNAME_ALREADY_TAKEN'}`);
         };
+        const userId = new Types.ObjectId();
+        // Verify and move Cloudinary upload if provided
+        // // Public id of the pending upload, if any
+        const avatarPublicId = finalUploadResult?.public_id;
+
+        const finalUploadFolder = uploadFolder(`courses/${.toString()}`)
+        const AVATAR_PENDING_PREFIX = `${uploadFolder(PENDING_AVATAR_SUBFOLDER)}/`; // ✅ No cloud name in public_id
+
+
+        ///Verify and move the avatar (only reached  by users  who passed every cheap check)
+        if (avatarPublicId) {
+            //Describe the file for the explorer
+            const avatarAsset: PendingAsset = {
+                ///Where the client say the file is
+                publicId: avatarPublicId,
+                ///Avatars are image
+                kind: 'image',
+                ///The only folder an avatar may come from
+                pendingPrefix: uploadFolder(PENDING_AVATAR_SUBFOLDER),
+                ///Final home: one folder per user, NOT the pending folder;
+                targetPublicId: uploadFolder(`$avatars/${userId.toString()}`),
+                maxBytes: MAX_FILE_SIZE.avatar,
+
+            }
+
+            ///Verify the Asset
+            try {
+                await verifyAssets([avatarAsset])
+            } catch (verifyError: unknown) {
+                if (!(verifyError instanceof AssetError))
+                    throw verifyError
+
+                logger.warn('Avatar verification failed', { code: verifyError.code, avatarPublicId, email })
+
+
+                ///Translate the helper code to match your existing client contract
+                const mapped = AVATAR_ERRORS[verifyError.code]
+                if (!mapped) {
+                    throw verifyError
+                    return failResponse(mapped.message, verifyError?.status, mapped.code, undefined, true);
+                }
+            }
+        }
+
+        //Check the verified flag First : cheap redis read
         const hashedPassword: string = await bcrypt.hash(password, 10);
         const newUser: HydratedDocument<IUser> = new User({
             name,
@@ -96,7 +116,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         if (avatarPublicId) {
             try {
                 // Move out of the pending folder, the new user id makes the target unique
-                const moved = await cloudinary.uploader.rename(avatarPublicId, `${AVATAR_PENDING_PREFIX}/${newUser._id}`);
+                const moved = await cloudinary.uploader.rename(avatarPublicId, `${AVATAR_PENDING_PREFIX} / ${newUser._id}`);
                 // Remove the tag so the 24h cleanup job keeps this file
                 await cloudinary.uploader.remove_tag(AVATAR_PENDING_PREFIX, [moved.public_id]);
                 // Use Cloudinary's answer, never client data

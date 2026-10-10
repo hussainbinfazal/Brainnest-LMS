@@ -174,3 +174,12 @@ export async function moveAssets(assets: PendingAsset[]): Promise<Map<string, Mo
     ///Everything moved Successfully
     return moved
 }
+
+export const AVATAR_ERRORS: Record<AssetErrorCode, { message: string, status: number, code: AssetErrorCode }> = {
+    DUPLICATE: { message: "Invalid avatar upload", status: 400, code: "DUPLICATE" },
+    INVALID_LOCATION: { message: "Invalid upload location", status: 400, code: "INVALID_LOCATION" },
+    NOT_FOUND: { message: "Avatar not found", status: 400, code: "NOT_FOUND" },
+    TOO_LARGE: { message: "Avatar too large (max 2MB)", status: 400, code: "TOO_LARGE" },
+    MOVE_FAILED: { message: "Failed to claim avatar", status: 500, code: "MOVE_FAILED" },
+    // Detect Mongo duplicate-key errors (E11000) raised by the unique indexes
+}

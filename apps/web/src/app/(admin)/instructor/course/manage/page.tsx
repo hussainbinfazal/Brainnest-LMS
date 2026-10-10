@@ -23,7 +23,7 @@ async function ManageInstructorsCoursesPage({ searchParams }: ManageCoursesPageP
     const user = session?.user;
     if (!user) return redirect('/login')
     if (user?.role !== "instructor") {
-      logger.warn("Unauthorized", { userId: user?.id, role: user?.role });
+      logger.warn("nauthorized", { userId: user?.id, role: user?.role });
       return redirect('/')
     }
     const instructorId: string = user.id
