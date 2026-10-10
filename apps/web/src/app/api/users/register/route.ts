@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkIp, connectDB, getCached, invalidateCached, IUser, logger, REGISTER_IP_KEY, User, USER_VERIFIED_FLAG } from '@repo/shared/server';
-import { MAX_FILE_SIZE, PENDING_AVATAR_SUBFOLDER, uploadFolder } from "@repo/shared"
+import { MAX_FILE_SIZE, PENDING_AVATAR_SUBFOLDER, TOPIC_FOLDER, uploadFolder } from "@repo/shared"
 
 import bcrypt from "bcryptjs";
 
@@ -75,9 +75,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 ///Avatars are image
                 kind: 'image',
                 ///The only folder an avatar may come from
-                pendingPrefix: uploadFolder('avatar', PENDING_AVATAR_SUBFOLDER),
+                pendingPrefix: uploadFolder(TOPIC_FOLDER['avatar'], PENDING_AVATAR_SUBFOLDER),
                 ///Final home: one folder per user, NOT the pending folder;
-                targetPublicId: uploadFolder('avatar,', userId.toString()),
+                targetPublicId: uploadFolder(TOPIC_FOLDER['avatar'], userId.toString()),
                 maxBytes: MAX_FILE_SIZE.avatar,
 
             }

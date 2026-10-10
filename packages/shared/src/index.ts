@@ -3,13 +3,13 @@
 
 export * from "./helper/getErrorMessage"
 // Union type derived from the array, so a new purpose is added in one place only
-// export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
-//     avatar: 2 * 1024 * 1024,
-//     thumbnail: 5 * 1024 * 1024,
-//     "lecture-video": 100 * 1024 * 1024,
-//     "preview-video": 100 * 1024 * 1024,
-//     "lecture_preview-video": 100 * 1024 * 1024,
-// };
+export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
+    avatar: 2 * 1024 * 1024,
+    thumbnail: 5 * 1024 * 1024,
+    "lecture-video": 100 * 1024 * 1024,
+    "preview-video": 100 * 1024 * 1024,
+    "lecture_preview-video": 100 * 1024 * 1024,
+};
 export const PENDING_AVATAR_SUBFOLDER = "pending-avatars";
 export const PENDING_PREVIEW_VIDEO_SUBFOLDER = "pending-preview-video";
 export const PENDING_THUMBNAIL_SUBFOLDER = "pending-thumbnai"

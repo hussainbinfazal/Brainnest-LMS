@@ -43,7 +43,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
                 return failResponse("Authentication required", 401, 'UNAUTHORIZED');
             }
             //Role gate (adjust to however your session stores the role )
-            if (policy.allowedRoles && !policy.allowedRoles.includes(session.user.role)) return failResponse("Forbideen", 403, 'FORBIDDEN')
+            if (policy.allowedRoles && !policy.allowedRoles.some((role) => role === session.user.role)) return failResponse("Forbidden", 403, 'FORBIDDEN')
             //Safe to read the id now
             userId = session.user.id;
 
@@ -58,7 +58,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             //Required for signature
             timestamp,
             folder: uploadFolder(policy.folder, policy.subFolder),
-            allowed_formats: policy.allowedFormats,
+            allowed_formats: policy.allowedFormats.join(','),
             ...(policy.transformation && { transformation: policy.transformation }),
             ...(policy.tags && { tags: policy.tags })
         }
