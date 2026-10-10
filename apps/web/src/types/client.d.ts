@@ -255,7 +255,6 @@ export interface CCourse {
   totalEnrolledCount: number,
   language: string;
   status: "draft" | "published" | "archived" | "deleted";
-  topic: CTopic[];
   totalReviews: number;
   ratingDistribution: number[];
   totalLessons: number;
@@ -264,6 +263,7 @@ export interface CCourse {
   requirements?: string[];
   whatYouWillLearn?: string[];
   video?: string;
+  isPreview: boolean;
   previewVideo?: string;
   tags?: string[];
   dripType: string,
@@ -632,6 +632,14 @@ export interface CLesson {
   updatedAt?: string;
   order: number;
   status?: 'completed' | 'incomplete';
+};
+export type CCreateCourseSectionForm = Omit<CSection, "lessons"> & {
+  lessons: (Omit<CLesson, "sectionId"> & {
+    // These fields are now added to every lesson
+    previewPublicId?: string;
+    videoPublicId: string;
+  })[];
+
 };
 export type CCreateLesson = CLesson & {
   previewPublicId?: string;

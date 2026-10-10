@@ -41,7 +41,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
     const courseId = new Types.ObjectId();
 
-    const finalFolder = uploadFolder(`courses/${courseId.toString()}`);
+    const finalFolder = uploadFolder(courses, courseId.toString());
 
     ///Every asset that must move out of the pending folders
 

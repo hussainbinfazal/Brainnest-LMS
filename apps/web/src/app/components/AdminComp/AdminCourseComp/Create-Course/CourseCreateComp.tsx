@@ -26,11 +26,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap/Tiptap";
 import { CCategory, CFaq, CLesson, CSection, CTopic } from "@/types/client";
-import { CCreateCourseForm } from "@/types/forms/formValidators";
-import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
+// import { CCreateCourseForm } from "@/types/forms/formValidators";
+// import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import {
-  CCreateCourse,
-  zodCourseSchema,
+  CreateCourseBody,
+  createCourseSchema,
 } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import {
   Controller,
@@ -55,16 +55,19 @@ import {
   LessonItem,
 } from "./courseFields";
 import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
+import z from "zod";
 
 const LEVELS: string[] = ["Beginner", "Intermediate", "Expert"];
 
 // default lesson shape in one place (match your schema's field names!)
-const EMPTY_LESSON: CLesson = {
+const EMPTY_LESSON = {
   name: "",
   description: "",
   videoUrl: "",
   previewUrl: "",
+  previewPublicId: "",
   durationInSeconds: 0,
+  videoPublicId: "",
   sectionId: "",
   previewDurationInSeconds: 0,
   order: 0,
@@ -87,8 +90,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   const [selectedParentId, setSelectedParentId] = useState<string>("");
   const isLoading = useInstructorCourse((state) => state.isLoading);
   const createCourse = useInstructorCourse((state) => state.createCourse);
-  const form = useForm<CCreateCourseForm>({
-    resolver: zodResolver(zodCourseSchema),
+  const form = useForm<
+    z.input<typeof createCourseSchema>,
+    undefined,
+    CreateCourseBody
+  >({
+    resolver: zodResolver(createCourseSchema),
   });
   const {
     register,
@@ -113,28 +120,23 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
   // total duration is derived, never typed by hand
   const totalSeconds = (watch("sections") ?? []).reduce(
-    (sum: number, section: CSection) =>
+    (sum, section) =>
       sum +
-      section.lessons.reduce(
-        (acc: number, lesson: CLesson) => acc + lesson.durationInSeconds,
+      section.lessons.reduce<number>(
+        (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
         0
       ),
     0
   );
 
-  const onSubmit = async (data: CCreateCourse) => {
+  const onSubmit = async (data: CreateCourseBody) => {
     try {
       const totalLessons = data.sections.reduce(
         (acc, section) => acc + section.lessons.length,
         0
       );
       //attach derived totals
-      const payload = buildCoursePayload({
-        ...data,
-        totalLessons: totalLessons,
-        totalDurationInSeconds: totalSeconds,
-      });
-      await createCourse(payload);
+      await createCourse({ ...data, totalLessons, totalSeconds });
       // feedback and redirect
       toast.success("Course created successfully");
       router.push("/course/manage");
@@ -379,7 +381,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   value={parentCategory}
                   onValueChange={(v) => {
                     setParentCategory(v);
-                    setValue("category", "");
+                    setValue("category.name", "");
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -395,9 +397,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 </Select>
               </Field>
               {/* subcategory: the value actually stored in the form */}
-              <Field label="SubCategory" error={errors.category?.message}>
+              <Field label="SubCategory" error={errors.subCategory?.message}>
                 <Controller
-                  name="category"
+                  name="subCategory"
                   control={control}
                   render={({ field }) => (
                     <Select
@@ -449,7 +451,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   control={control}
                   render={({ field }) => (
                     <CommaListField
-                      value={field.value}
+                      value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                       placeholder="e.g. React, Next.js"
@@ -540,7 +542,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   control={control}
                   render={({ field }) => (
                     <CommaListField
-                      value={field.value}
+                      value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
 
@@ -574,7 +576,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   control={control}
                   render={({ field }) => (
                     <CommaListField
-                      value={field.value}
+                      value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
 
@@ -718,9 +720,6 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   >
                     <Input {...register(`topics.${i}.description`)} />
                   </Field>
-                  <Field label="Slug" error={errors.topics?.[i]?.slug?.message}>
-                    <Input {...register(`topics.${i}.slug`)} />
-                  </Field>
                   {/* active flag */}
                   <Field label="IsActive">
                     <Controller
@@ -728,7 +727,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                       name={`topics.${i}.isActive`}
                       render={({ field }) => (
                         <BooleanSelect
-                          value={field.value}
+                          value={field.value ?? false}
                           onChange={field.onChange}
                         />
                       )}
@@ -745,7 +744,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     name: "",
                     description: "",
                     isActive: true,
-                    slug: "",
+
                   })
                 }
               >

@@ -1,43 +1,46 @@
 import { z } from "zod";
- 
+
 // One lesson inside a section; the *PublicId fields point to files already uploaded to the pending folder
 const lessonSchema = z.object({
     // Lesson title shown in the player sidebar
     name: z.string().trim().min(1).max(200),
+    videoUrl: z.string().trim().min(1),
     // Optional lesson description
-    description: z.string().trim().max(2000).optional().default(""),
+    description: z.string().trim().min(3).max(2000),
     // Cloudinary public_id of the main lecture video (required for every lesson)
     videoPublicId: z.string().min(1),
     // Cloudinary public_id of an optional preview clip
     previewPublicId: z.string().min(1).optional(),
     // Duration is coerced because forms often send numbers as strings
-    durationInSeconds: z.coerce.number().int().min(0).default(0),
+    durationInSeconds: z.number().int().min(0).default(0),
     // Whether non-enrolled users can watch this lesson
     isPreview: z.boolean().default(false),
+    previewUrl: z.string().trim(),
     // Position of the lesson inside its section
     order: z.number().int().min(0),
 });
- 
+
 // One section (chapter) of the course
 const sectionSchema = z.object({
     // Section title
-    title: z.string().trim().min(1).max(200),
+    title: z.string().trim().min(3).max(200),
     // Optional section description
-    description: z.string().trim().max(2000).optional().default(""),
+    description: z.string().trim().min(1).max(2000),
     // Position of the section inside the course
     order: z.number().int().min(0),
     // A section without lessons makes no sense, so require at least one
     lessons: z.array(lessonSchema).min(1),
 });
- 
+
 // The full request body for POST /courses
 export const createCourseSchema = z.object({
     // Course title
     title: z.string().trim().min(3).max(200),
     // Course description
-    description: z.string().trim().min(1),
+    description: z.string().trim().min(3).max(2000),
     // Price must never be negative
     price: z.coerce.number().min(0),
+    instructorId: z.string().trim().min(1),
     // Discount is a percentage
     discount: z.coerce.number().min(0).max(100).default(0),
     // Parent category, only the name is needed (it is upserted)
@@ -61,17 +64,24 @@ export const createCourseSchema = z.object({
     // Free-form tags
     tags: z.array(z.string().trim().min(1)).default([]),
     // Topics are upserted by name
-    topics: z.array(z.object({ name: z.string().trim().min(1), description: z.string().optional().default("") })).default([]),
+    topics: z.array(z.object({ name: z.string().trim().min(1), description: z.string().optional().default(""), isActive: z.boolean().default(false) })).default([]),
     // Drip type (tighten to an enum if you have fixed values)
     dripType: z.string().trim().min(1),
+    coverImage: z.string().min(1),
     // Cloudinary public_id of the course cover image
     coverPublicId: z.string().min(1),
     // Cloudinary public_id of the course preview video
     previewVideoPublicId: z.string().min(1),
     // At least one section is required
     sections: z.array(sectionSchema).min(1),
+    averageRating: z.number().min(0, "Average Rating must be at least 0").max(5, "Average Rating must be at most 5"),
+    totalReviews: z.string().min(0, "Total Reviews must be at least 3 characters").optional(),
+    totalLessons: z.number().min(0, "Total Lessons must be at least 1"),
+    previewVideo: z.string().min(3, "Preview Video must be at least 3 characters"),
+    totalEnrolledCount: z.string().min(0, "Total Enrolled Count must be at least 0"),
+    totalDurationInSeconds: z.number().min(0, "Total Duration must be at least 0"),
 });
- 
+
 // Inferred type, so the route never needs a hand-written interface
 export type CreateCourseBody = z.infer<typeof createCourseSchema>;
 
@@ -131,4 +141,4 @@ export type CreateCourseBody = z.infer<typeof createCourseSchema>;
 //     dripType: z.string().min(3, "Drip Type must be at least 3 characters")
 // });
 
-export type CCreateCourse = z.infer<typeof createCourseSchema>; 
+// export type CCreateCourse = z.infer<typeof createCourseSchema>; 

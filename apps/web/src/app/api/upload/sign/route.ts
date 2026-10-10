@@ -6,10 +6,9 @@ import { auth } from "@/auth";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { AVATAR_SIGN_IP_KEY, checkIp, checkUser, UPLOAD_SIGN_IP_KEY, UPLOAD_SIGN_USER_KEY } from "@repo/shared/server";
-import { UPLOAD_POLICIES, UPLOAD_PURPOSES } from '@repo/shared';
+import { UPLOAD_POLICIES, UPLOAD_PURPOSES, uploadFolder } from '@repo/shared';
 import z from "zod";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
-import { uploadFolder } from "@/utils/upload/uploadSubFolderCreation";
 export const uploadSignRequestBodySchema = z.object({
     purpose: z.enum(UPLOAD_PURPOSES),
 }).strict();

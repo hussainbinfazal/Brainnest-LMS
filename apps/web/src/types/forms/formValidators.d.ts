@@ -1,44 +1,36 @@
 import { CFaq, CLesson, CTopic, CSection } from "../client";
 
-type CCreateCourseSectionForm = Omit<CSection, "lessons"> & {
-    lessons: (Omit<CLesson, "sectionId"> & {
-        // These fields are now added to every lesson
-        previewPublicId?: string;
-        videoPublicId: string;
-    })[];
 
-};
-
-export interface CCreateCourseForm {
-    title: string;
-    topic: string;
-    description: string;
-    instructorId: string;
-    price: number;
-    averageRating: number;
-    totalReviews?: string;
-    totalLessons: number;
-    coverImage: string;
-    coverPublicId: string;
-    previewVideoPublicId: string;
-    tags: string[];
-    discount: number;
-    totalDurationInSeconds: number;
-    language: string;
-    status: string;
-    level: string;
-    totalEnrolledCount: number;
-    // lessons: CLesson[];
-    sections: CCreateCourseSectionForm[];
-    topics: CTopic[];
-    category: string;
-    subCategory: string;
-    requirements: string[];
-    whatYouWillLearn: string[];
-    faq: CFaq[];
-    dripType: string;
-    previewVideo: string;
-}
+type createTopicForm = Omit<CTopic, 'slug'>
+// export interface CCreateCourseForm {
+//     title: string;
+//     description: string;
+//     instructorId: string;
+//     price: number;
+//     averageRating: number;
+//     totalReviews?: string;
+//     totalLessons: number;
+//     coverImage: string;
+//     coverPublicId: string;
+//     previewVideoPublicId: string;
+//     tags: string[];
+//     discount: number;
+//     totalDurationInSeconds: number;
+//     language: string;
+//     status: string;
+//     level: string;
+//     totalEnrolledCount: number;
+//     // lessons: CLesson[];
+//     sections: CCreateCourseSectionForm[];
+//     topics: createTopicForm[];
+//     category: { name: string };
+//     subCategory: string;
+//     requirements: string[];
+//     whatYouWillLearn: string[];
+//     faq: CFaq[];
+//     dripType: string;
+//     previewVideo: string;
+// }
 
 export interface CUpdateCourseForm {
     title: string;
