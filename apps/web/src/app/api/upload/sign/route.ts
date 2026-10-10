@@ -40,7 +40,8 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             //No session is a clean 401, not a crash
             if (!session?.user?.id) {
                 logger.warn("Anynonimus Upload in sign route")
-                return failResponse("Authentication required", 401, 'UNAUTHORIZED');}
+                return failResponse("Authentication required", 401, 'UNAUTHORIZED');
+            }
             //Role gate (adjust to however your session stores the role )
             if (policy.allowedRoles && !policy.allowedRoles.includes(session.user.role)) return failResponse("Forbideen", 403, 'FORBIDDEN')
             //Safe to read the id now
@@ -56,7 +57,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         let paramsToSign: Record<string, string | number> = {
             //Required for signature
             timestamp,
-            folder: uploadFolder(policy.folder),
+            folder: uploadFolder(policy.folder, policy.subFolder),
             allowed_formats: policy.allowedFormats,
             ...(policy.transformation && { transformation: policy.transformation }),
             ...(policy.tags && { tags: policy.tags })
