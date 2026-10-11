@@ -13,33 +13,56 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 // import RHF context hook and controller
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 // import ui pieces
 import { RxCross2 } from "react-icons/rx";
 // import shared field pieces
 
 // import hooks and types
 import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
-import { CCreateCourse } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { CreateCourseBody as CCreateCourse } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { ProgressScroller } from "@/app/components/Scroller";
 import { Button } from "@/components/ui/button";
-
+const EMPTY_LESSON = {
+  name: "",
+  description: "",
+  videoUrl: "",
+  previewUrl: "",
+  previewPublicId: "",
+  durationInSeconds: 0,
+  videoPublicId: "",
+  sectionId: "",
+  previewDurationInSeconds: 0,
+  order: 0,
+  isPreview: false,
+};
 ////Course --------------------------------------------
 ///Label + input slot + error.message used by every field
 export function Field({
   label,
   error,
+  required,
   children,
 }: {
   label: string;
   error?: string;
+  required?: boolean;
   children: ReactNode;
 }) {
   return (
     // vertical spacing wrapper
     <div className="space-y-2">
-      {/* field label */}
-      <Label>{label}</Label>
+      {/* Field label with the optional star */}
+      <Label>
+        {/* The label text */}
+        {label}
+        {/* Star only when required; aria-hidden stops screen readers saying "star" */}
+        {required && (
+          <span aria-hidden="true" className="text-destructive">
+            *
+          </span>
+        )}
+      </Label>
       {/* the actual input */}
       {children}
       {/* error text only when present */}
@@ -68,23 +91,27 @@ export function FileField(props: {
   onCancel?: () => void;
   onClear?: () => void;
   progress: number;
+  disabled?: boolean;
+  required?: boolean;
+  children?: ReactNode;
+
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     //reuse field for label + error
-    <Field label={props.label} error={props.error}>
-      {props.isUploading ? (<>
-        <Skeleton className="h-10 w-full skeleton-shimmer" />
-        <ProgressScroller progress={props.progress} className={"mt-2"} />
+    <Field label={props.label} error={props.error} required={props.required}>
+      {props.isUploading ? (<div className="relative">
         <Button
           type="button"
-          className="absolute right-2 top-0 text-lg"
+          className="absolute right-0 bottom-6 text-lg z-10 py-5 bg-red-700"
           onClick={props.onCancel}
         >
           <RxCross2 />
         </Button>
-      </>) : (
+        <Skeleton className="h-10 w-full skeleton-shimmer z-0" />
+        <ProgressScroller progress={props.progress} className={"mt-2"} />
+      </div>) : (
         <>
           {/* Keep the native picker hidden; the button below opens it. */}
           <Input
@@ -97,11 +124,13 @@ export function FileField(props: {
               e.currentTarget.value = "";
               if (file) props.onFile(file);
             }}
+            disabled={props.disabled}
           />
           <Button
             type="button"
             variant="outline"
             className="w-full"
+            disabled={props.disabled}
             onClick={() => fileInputRef.current?.click()}
 
           >
@@ -164,6 +193,7 @@ export function CommaListField(props: {
   onChange: (v: string[]) => void;
   onBlur?: () => void
   placeholder?: string;
+  required?: boolean
 }) {
   // Fall back to the stable empty array
   const value: string[] = props.value ?? EMPTY
@@ -203,6 +233,7 @@ export function CommaListField(props: {
 export function BooleanSelect(props: {
   value: boolean;
   onChange: (v: boolean) => void;
+
 }) {
   return (
     //convert between string and boolean at the boundary
@@ -228,11 +259,13 @@ export function LessonItem({
   lessonIndex,
   canRemove,
   onRemove,
+  required
 }: {
   sectionIndex: number;
   lessonIndex: number;
   canRemove: boolean;
   onRemove: () => void;
+  required?: boolean
 }) {
   // read form helpers from the provider, no prop drilling
   const {
@@ -252,20 +285,20 @@ export function LessonItem({
   const handleVideo = async (file: File) => {
     //uplaod and get url
     const result = await video.upload(file, "lecture-video");
-    const { url, duration } = result!;
-    if (!url || !duration) return;
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`, url, { shouldValidate: true });
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, Number(duration));
+    if (!result) return;
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`, result.url, { shouldValidate: true });
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoPublicId`, result.public_id, { shouldValidate: true });
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
   };
   ///preview video: upload, the store the url and duration
   const handlePreview = async (file: File) => {
     //uplaod and get url
     const result = await preview.upload(file, "preview-video");
-    const { url, duration } = result!;
-    if (!url || !duration) return;
+    if (!result) return;
     ///Field in schema, value and validation
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`, url, { shouldValidate: true });
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`, Number(duration));
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`, result.url, { shouldValidate: true });
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewPublicId`, result.public_id, { shouldValidate: true });
+    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
   };
   return (
     <div className="relative mb-4 space-y-2">
@@ -273,21 +306,21 @@ export function LessonItem({
       {canRemove && (
         <button
           type="button"
-          className="absolute right-2 top-0 text-lg"
+          className="absolute right-2 top-0 text-lg rounded-full bg-red"
           onClick={onRemove}
         >
           <RxCross2 />
         </button>
       )}
       {/* lesson name */}
-      <Field label="Name" error={err?.name?.message}>
+      <Field label="Lesson Name" error={err?.name?.message} required={true}>
         <Input
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.name`)}
           placeholder="e.g. JavaScript Basics"
         />
       </Field>
       {/* lesson description */}
-      <Field label="Description" error={err?.description?.message}>
+      <Field label="Description" error={err?.description?.message} required={true}>
         <Input
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.description`)}
           placeholder="e.g. Variables, loops, functions"
@@ -301,12 +334,17 @@ export function LessonItem({
         onFile={handleVideo}
         url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`) ?? ""}
         fileKind={"video"}
-        error={err?.videoUrl?.message}
+        error={err?.videoUrl?.message ?? err?.videoPublicId?.message}
+        onCancel={video.cancel}
+        progress={video.progress}
+        isUploading={video.isUploading}
+        required={true}
       />
       {/* readOnly, NOT disabled: disabled inputs submit undefined in RHF */}
-      <Field label="Duration (seconds)" error={err?.durationInSeconds?.message}>
+      <Field label="Duration (seconds)" error={err?.durationInSeconds?.message} required={true}>
         <Input
           type="number"
+          min={0}
           readOnly
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, {
             valueAsNumber: true,
@@ -314,19 +352,20 @@ export function LessonItem({
         />
       </Field>
       {/* lesson order */}
-      <Field label="Order">
+      <Field label="Order" error={err?.order?.message} required={true}>
         <Input
+          min={0}
           type="number"
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.order`, { valueAsNumber: true })}
         />
       </Field>
       {/* is this lesson a free preview */}
-      <Field label="IsPreview">
+      <Field label="IsPreview" error={err?.isPreview?.message} required={true}>
         <Controller
           control={control}
           name={`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`}
           render={({ field }) => (
-            <BooleanSelect value={field.value} onChange={field.onChange} />
+            <BooleanSelect value={field.value ?? false} onChange={field.onChange} />
           )}
         />
       </Field>
@@ -338,8 +377,80 @@ export function LessonItem({
         onFile={handlePreview}
         url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`) ?? ""}
         fileKind="video"
-        error={err?.previewUrl?.message}
+        error={err?.previewUrl?.message ?? err?.previewPublicId?.message}
+        onCancel={preview.cancel}
+        progress={preview.progress}
+        isUploading={preview.isUploading}
+        disabled={!watch(`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`)}
       />
     </div>
   );
 }
+
+
+
+
+// Props for one section row
+export const SectionItem: React.FC<{
+  // Position of this section in the sections array
+  sectionIndex: number;
+  // Whether the remove button is shown
+  canRemove: boolean;
+  // Parent owns the sections array, so it handles removal
+  onRemove: () => void;
+  onCancel?: () => void;
+}> = ({ sectionIndex, canRemove, onRemove, onCancel }) => {
+  // Get form helpers from the nearest <FormProvider>
+  const { register,
+    control,
+    setValue,
+    watch,
+    formState: { errors }, } = useFormContext<CCreateCourse>();
+  // Safe here: top level of a component, called once per render
+  const lessons = useFieldArray({
+    control,
+    name: `sections.${sectionIndex}.lessons`,
+  });
+
+  // Render this one section
+  return (
+    // Wrapper for the section
+    <div className="relative mb-4 space-y-2">
+      {/* Remove button, only for sections after the first */}
+      {canRemove && (
+        <button type="button" className="absolute right-2 top-0 text-lg rounded-full bg-red" onClick={onRemove}>
+          <RxCross2 />
+        </button>
+      )}
+      {/* Section title */}
+      <Field label="Title" error={errors.sections?.[sectionIndex]?.title?.message} required={true}>
+        <Input {...register(`sections.${sectionIndex}.title`)} />
+      </Field>
+      {/* Section description */}
+      <Field label="Description" error={errors.sections?.[sectionIndex]?.description?.message} required={true}>
+        <Input {...register(`sections.${sectionIndex}.description`)} />
+      </Field>
+      <Field label="Order" error={errors.sections?.[sectionIndex]?.order?.message} required={true}>
+        <Input
+          min={0}
+          type="number"
+          {...register(`sections.${sectionIndex}.order`, { valueAsNumber: true })}
+        />
+      </Field>
+      {/* One LessonItem per lesson, lesson.id is the stable key */}
+      {lessons.fields.map((lesson, lessonIndex) => (
+        <LessonItem
+          key={lesson.id}
+          sectionIndex={sectionIndex}
+          lessonIndex={lessonIndex}
+          canRemove={lessonIndex > 0}
+          onRemove={() => lessons.remove(lessonIndex)}
+        />
+      ))}
+      {/* Add a lesson, spread so each lesson is a fresh object */}
+      <Button type="button" variant="outline" onClick={() => lessons.append({ ...EMPTY_LESSON })}>
+        + Add Lesson
+      </Button>
+    </div>
+  );
+};

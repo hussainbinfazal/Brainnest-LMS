@@ -96,7 +96,22 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
+  matcher: [{
+
+    // Run on everything EXCEPT: Next internals, root files, folders (with trailing slash), and image files
+    source:
+      "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|\\.well-known/|reviews/|assets/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    missing: [
+
+      //// Header Next.js sets on router prefetches
+      {
+        type: 'header', key: 'next-router-prefetch'
+      }, {
+        ///Header browsers set on prefetches
+        type: 'header', key: "purpose", value: 'prefetch'
+      }]
+
+  }
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
@@ -105,6 +120,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - reviews (static JSON files)
      */
-    '/((?!_next/static|_next/image|favicon.ico|reviews|assets).*)',
+    // '/((?!_next/static|_next/image|favicon.ico|\\.well-known|reviews|assets).*)',
   ],
 }

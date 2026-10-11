@@ -68,9 +68,25 @@ export async function verifyAssets(assets: PendingAsset[]) {
 
     const ids = assets.map((a) => a.publicId)
 
+    const seen = new Map<string, number>();
+    // Walk every id once
+    for (const id of ids) {
+        // Increment the counter for this id
+        seen.set(id, (seen.get(id) ?? 0) + 1);
+    }
+    // Keep only the ids that appear more than once
+    const dupes = [...seen.entries()].filter(([, count]) => count > 1).map(([id]) => id);
+    // Throw only if at least one duplicate exists
+    if (dupes.length > 0) {
+        // Log the actual offending ids, not the class
+        logger.error("Duplicate publicId in asset batch", { dupes });
+        // Send the same error shape as before
+        throw new AssetError("Duplicate publicId", 400, "DUPLICATE");
+    }
     //Compare unique count against total count
 
     if (new Set(ids).size !== ids.length) {
+        logger.error("This is the error cloudinary Asset File,", { error: AssetError })
         throw new AssetError("Duplicate publicId", 400, "DUPLICATE");
     }
 
@@ -78,6 +94,7 @@ export async function verifyAssets(assets: PendingAsset[]) {
     for (const asset of assets) {
         //Fail fast on the first bad prefix
         if (!isUnderPrefix(asset.publicId, asset.pendingPrefix)) {
+            logger.error("This is the error cloudinary Asset File,", { error: AssetError })
             throw new AssetError(`Invalid public_id prefix`, 400, "INVALID_LOCATION");
         }
     };
@@ -134,7 +151,11 @@ export async function moveAssets(assets: PendingAsset[]): Promise<Map<string, Mo
                 await cloudinary.uploader.remove_tag(tag, [result.public_id], { resource_type: a.kind });
             } catch (tagError) {
                 // A moved but still tagged file is a time bomb, so undo this rename before failing
-                await cloudinary.uploader.rename(result.public_id, a.publicId, { resource_type: a.kind });
+                await cloudinary.uploader.rename(result.public_id, a.publicId, { resource_type: a.kind }).catch((renameError: unknown) => {
+                    logger.error("Asset move failed", { asset: a.publicId, error: renameError });
+                    throw renameError
+                });
+                logger.error("This is the error in cloudinary File, Tag removal,", { error: tagError })
                 // Report this asset as failed
                 throw tagError;
             }
@@ -169,6 +190,7 @@ export async function moveAssets(assets: PendingAsset[]): Promise<Map<string, Mo
 
     if (failed) {
         await rollbackMoves(Array.from(moved.values()));
+        logger.error("Asset move failed", { assets: assets.map((a) => a.publicId) })
         throw new AssetError("Asset move failed", 500, "MOVE_FAILED");
     }
     ///Everything moved Successfully

@@ -53,6 +53,7 @@ import {
   Field,
   FileField,
   LessonItem,
+  SectionItem,
 } from "./courseFields";
 import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
 import z from "zod";
@@ -136,7 +137,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
         0
       );
       //attach derived totals
-      await createCourse({ ...data, totalLessons, totalSeconds });
+      await createCourse({ ...data, totalLessons });
       // feedback and redirect
       toast.success("Course created successfully");
       router.push("/course/manage");
@@ -146,10 +147,14 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
     }
   };
 
+  const onInvalidSubmit = () => {
+    toast.error("Please complete the required fields highlighted in the form.");
+  };
+
   return (
     <div
       className={cn(
-        "flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8",
+        "flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8 relative",
         className
       )}
     >
@@ -164,8 +169,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
           <CardContent className="">
             <form
               id="create-course-form"
-              className="space-y-4"
-              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4 relative"
+              onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
             >
               {/* <div className="space-y-2">
               <Label className="">Title</Label>
@@ -178,7 +183,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
             </div> */}
               {/* {Title} */}
-              <Field label="Title" error={errors.title?.message}>
+              <Field label="Title" error={errors.title?.message} required={true}>
                 <Input
                   {...register("title")}
                   placeholder="e.g. JavaScript Course"
@@ -242,13 +247,22 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 {...previewVideo}
                 onFile={async (f: File) => {
                   const result = await previewVideo.upload(f, "preview-video");
-                  if (result) setValue("previewVideo", result.url);
+                  if (result) {
+                    setValue("previewVideo", result.url, { shouldValidate: true });
+                    setValue("previewVideoPublicId", result.public_id, {
+                      shouldValidate: true,
+                    });
+                  }
                 }}
                 onCancel={previewVideo.cancel}
                 isUploading={previewVideo.isUploading}
                 progress={previewVideo.progress}
                 url={watch("previewVideo") ?? ""}
                 fileKind={"video"}
+                error={
+                  errors.previewVideo?.message ??
+                  errors.previewVideoPublicId?.message
+                }
               />
               {/* cover image */}
               {/* <div className="space-y-2">
@@ -278,16 +292,24 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 {...cover}
                 onFile={async (f) => {
                   const result = await cover.upload(f, "thumbnail");
-                  if (result)
+                  if (result) {
                     setValue("coverImage", result.url, {
                       shouldValidate: true,
                     });
+                    setValue("coverPublicId", result.public_id, {
+                      shouldValidate: true,
+                    });
+                  }
                 }}
+                required={true}
                 onCancel={cover.cancel}
                 isUploading={cover.isUploading}
                 progress={cover.progress}
                 url={watch("coverImage") ?? ""}
                 fileKind="image"
+                error={
+                  errors.coverImage?.message ?? errors.coverPublicId?.message
+                }
               />
 
               {/* <div className="space-y-2">
@@ -302,8 +324,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               </div> */}
               <Field label="Price" error={errors.price?.message}>
                 <Input
+                  required={true}
                   type="number"
-                  step="0.01"
+                  step="1"
                   min={0}
                   max={100000}
                   {...register("price", { valueAsNumber: true })}
@@ -322,7 +345,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {/* discount percent */}
               <Field label="Discount (%)" error={errors.discount?.message}>
                 <Input
+
                   type="number"
+                  min={0}
                   {...register("discount", { valueAsNumber: true })}
                   placeholder="e.g. 10"
                 />
@@ -350,7 +375,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   name="category"
                   render={({ field }) => (
                     <Select
-                      value={field.value}
+                      value={field.value ?? ""}
                       onValueChange={field.onChange}
                       disabled={!selectedParentId}
                     >
@@ -376,12 +401,16 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 )}
               </div> */}
               {/* parent category: resets the subcategory on change */}
-              <Field label="Category">
+              <Field
+                required={true}
+                label="Category"
+                error={errors.category?.name?.message ?? errors.category?.message}
+              >
                 <Select
                   value={parentCategory}
                   onValueChange={(v) => {
                     setParentCategory(v);
-                    setValue("category.name", "");
+                    setValue("category.name", v, { shouldValidate: true });
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -397,13 +426,13 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 </Select>
               </Field>
               {/* subcategory: the value actually stored in the form */}
-              <Field label="SubCategory" error={errors.subCategory?.message}>
+              <Field label="SubCategory" error={errors.subCategory?.message} required={true}>
                 <Controller
                   name="subCategory"
                   control={control}
                   render={({ field }) => (
                     <Select
-                      value={field.value}
+                      value={field.value ?? ""}
                       onValueChange={field.onChange}
                       disabled={!parentCategory}
                     >
@@ -445,7 +474,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* tags */}
-              <Field label="Tags">
+              <Field label="Tags" error={errors.tags?.message} required={true}>
                 <Controller
                   name="tags"
                   control={control}
@@ -469,16 +498,18 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 />
               </div> */}
               {/* derived total duration, read-only */}
-              <Field label="Total duration (seconds)">
-                <Input readOnly value={totalSeconds} />
-              </Field>
+              {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
+                errors.totalDurationInSeconds?.message
+              } required={true}>
+                <Input readOnly value={totalSeconds} disabled />
+              </Field>}
               {/* <div className="space-y-2">
                 <Label className="">Level</Label>
                 <Controller
                   name="level"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a level" />
                       </SelectTrigger>
@@ -496,12 +527,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* level */}
-              <Field label="Level" error={errors.level?.message}>
+              <Field label="Level" error={errors.level?.message} required={true}>
                 <Controller
                   name="level"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a level" />
                       </SelectTrigger>
@@ -536,7 +567,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* what you will learn */}
-              <Field label="What you will learn">
+              <Field label="What you will learn" error={errors.whatYouWillLearn?.message} required={true}>
                 <Controller
                   name="whatYouWillLearn"
                   control={control}
@@ -570,7 +601,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* requirements */}
-              <Field label="Requirements">
+              <Field label="Requirements" error={errors.requirements?.message} required={true}>
                 <Controller
                   name="requirements"
                   control={control}
@@ -608,12 +639,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* language */}
-              <Field label="Language" error={errors.language?.message}>
+              <Field label="Language" error={errors.language?.message} required={true}>
                 <Controller
                   name="language"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a language" />
                       </SelectTrigger>
@@ -623,6 +654,27 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                             {l}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Field>
+              <Field label="Lesson release schedule" error={errors.dripType?.message} required={true}>
+                <Controller
+                  name="dripType"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a release schedule" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="sequential">Sequential</SelectItem>
+                        <SelectItem value="drip-by-date">Drip by date</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -695,17 +747,18 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 <div key={item.id} className="relative mb-4 space-y-2">
                   {/* remove button, hidden for the first topic */}
                   {i > 0 && (
-                    <button
+                    <Button
                       type="button"
                       className="absolute right-2 top-0 text-lg"
                       onClick={() => topics.remove(i)}
                     >
                       <RxCross2 />
-                    </button>
+                    </Button>
                   )}
                   {/* topic name */}
                   <Field
                     label="Topic"
+                    required={true}
                     error={errors.topics?.[i]?.name?.message}
                   >
                     <Input
@@ -716,12 +769,13 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   {/* topic description */}
                   <Field
                     label="Description"
+                    required={true}
                     error={errors.topics?.[i]?.description?.message}
                   >
                     <Input {...register(`topics.${i}.description`)} />
                   </Field>
                   {/* active flag */}
-                  <Field label="IsActive">
+                  <Field label="IsActive" error={errors.topics?.[i]?.isActive?.message} required={true}>
                     <Controller
                       control={control}
                       name={`topics.${i}.isActive`}
@@ -752,72 +806,30 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               </Button>
               {/* sections block, same pattern as topics */}
               <h3 className="mt-6 text-sm font-medium">Sections</h3>
+              {errors.sections?.message && (
+                <p className="text-sm text-destructive">
+                  {errors.sections.message}
+                </p>
+              )}
               {/* lessons section */}
               {/* item.id is the stable key */}
               {sections.fields.map((section, sectionIndex) => {
                 // Get the nested lessons field array for this specific section
-                const sectionLessons = useFieldArray({
-                  control,
-                  name: `sections.${sectionIndex}.lessons`,
-                });
+                // const sectionLessons = useFieldArray({
+                //   control,
+                //   name: `sections.${sectionIndex}.lessons`,
+                // });
 
                 return (
-                  <div key={section.id} className="relative mb-4 space-y-2">
-                    {/* remove button, hidden for the first section */}
-                    {sectionIndex > 0 && (
-                      <button
-                        type="button"
-                        className="absolute right-2 top-0 text-lg"
-                        onClick={() => sections.remove(sectionIndex)}
-                      >
-                        <RxCross2 />
-                      </button>
-                    )}
-
-                    {/* section title */}
-                    <Field
-                      label="Title"
-                      error={errors.sections?.[sectionIndex]?.title?.message}
-                    >
-                      <Input
-                        {...register(`sections.${sectionIndex}.title`)}
-                        placeholder="e.g. Getting started"
-                      />
-                    </Field>
-
-                    {/* section description */}
-                    <Field
-                      label="Description"
-                      error={
-                        errors.sections?.[sectionIndex]?.description?.message
-                      }
-                    >
-                      <Input
-                        {...register(`sections.${sectionIndex}.description`)}
-                      />
-                    </Field>
-
-                    <h3 className="mt-6 text-sm font-medium">Lessons</h3>
-
-                    {/* Lessons for THIS section */}
-                    {sectionLessons.fields.map((lesson, lessonIndex) => (
-                      <LessonItem
-                        key={lesson.id}
-                        sectionIndex={sectionIndex}
-                        lessonIndex={lessonIndex}
-                        canRemove={lessonIndex > 0}
-                        onRemove={() => sectionLessons.remove(lessonIndex)}
-                      />
-                    ))}
-
-                    {/* add lesson to THIS section */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => sectionLessons.append(EMPTY_LESSON)}
-                    >
-                      + Add Lesson
-                    </Button>
+                  <div key={section.id} className="relative">
+                    <SectionItem
+                      // Position of this section
+                      sectionIndex={sectionIndex}
+                      // First section cannot be removed
+                      canRemove={sectionIndex > 0}
+                      // Remove this section from the parent array
+                      onRemove={() => sections.remove(sectionIndex)}
+                    />
                   </div>
                 );
               })}
@@ -991,7 +1003,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {/* <Button size="default" className="" type="button" onClick={appendLessons} variant="outline">
               + Add Lessons
             </Button> */}
-              <Label className={"my-4"}>Faqs</Label>
+
 
               {/* {form.faq.map((item: CFaq, index: number) => (
               <div key={index} className="mb-4 space-y-2 relative ">
@@ -1039,18 +1051,19 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 <div key={item.id} className="relative mb-4 space-y-2">
                   {/* remove button */}
                   {i > 0 && (
-                    <button
+                    <Button
                       type="button"
                       className="absolute right-2 top-0 text-lg"
                       onClick={() => faq.remove(i)}
                     >
                       <RxCross2 />
-                    </button>
+                    </Button>
                   )}
                   {/* question: registered, so no manual onChange handler needed */}
                   <Field
                     label="Question"
                     error={errors.faq?.[i]?.question?.message}
+                    required={true}
                   >
                     <Input
                       {...register(`faq.${i}.question`)}
@@ -1061,6 +1074,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   <Field
                     label="Answer"
                     error={errors.faq?.[i]?.answer?.message}
+                    required={true}
                   >
                     <Input {...register(`faq.${i}.answer`)} />
                   </Field>
@@ -1097,6 +1111,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               type="submit"
               form="create-course-form"
               disabled={isSubmitting}
+              className="active:scale-90 hover:scale-120 ease-in-out duration-600"
             >
               {isSubmitting ? "Creating..." : "Create Course"}
             </Button>

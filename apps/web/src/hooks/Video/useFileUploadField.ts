@@ -21,7 +21,7 @@ export function useFileUploadField() { //Hook to upload file
         setIsUploading(true);
         setFileName(file.name);
         try {
-            const isVideo = file.type.startsWith('/video');
+            const isVideo = file.type.startsWith('video/');
             let duration: number | undefined;
             if (isVideo) {
                 duration = await getVideoDuration(file);
@@ -49,7 +49,14 @@ export function useFileUploadField() { //Hook to upload file
         }
     };
     // Cancel button handler
-  const cancel = useCallback(() => abortRef.current?.abort(), []);
+    const cancel = useCallback(() => {
+        abortRef.current?.abort();
+        setIsUploading(false);
+        setProgress(0);
+        setFileName('');
+        setUploadError(null);
+
+    }, []);
 
     //Send the url of the video to get the duration and store vectors of this in ai service
     const getVideoDuration = (file: File): Promise<number> => {
@@ -63,7 +70,7 @@ export function useFileUploadField() { //Hook to upload file
                 const duration = Math.floor(video.duration);
                 URL.revokeObjectURL(video.src);
                 setIsVideoParsing(false);
-                resolve(Math.floor(duration));
+                resolve(duration);
             };
             video.onerror = () => {
                 URL.revokeObjectURL(url);
@@ -74,5 +81,5 @@ export function useFileUploadField() { //Hook to upload file
         })
 
     }
-    return { upload,cancel, progress, isUploading, fileName, uploadError, }
+    return { upload, cancel, progress, isUploading, fileName, uploadError, }
 }

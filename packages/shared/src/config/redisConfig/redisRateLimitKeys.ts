@@ -383,3 +383,63 @@ export const CRON_RECONCILE_IP_KEY = {
   description: 'Rate limits payment reconciliation cron requests by client IP',
   usedIn: ['Payment Reconciliation Cron API'],
 } as const;
+
+// Generated key format: namespace:{ip} for IP limits and namespace:{userId} for user limits.
+export const RATE_LIMIT_KEYS_QUICK_REFERENCE = `
+REDIS RATE LIMIT KEYS - QUICK REFERENCE
+=======================================
+Key builder: buildKey(namespace, identifier) -> namespace:{identifier}
+Limits are maximum requests per window. Windows are fixed-window durations.
+
+IP-BASED LIMITS (key pattern | max requests | window | purpose)
+limit-otp-send:ip:{ip}                         | 5   | 15m | Send email OTP
+limit-otp-verify-email:ip:{ip}                 | 30  | 15m | Verify email OTP
+limit-internal-auth:ip:{ip}                    | 300 | 60s | Internal/worker route authentication
+limit-global:ip:{ip}                           | 100 | 60s | Global API protection
+limit-update-to-instructor:ip:{ip}             | 30  | 60s | Update-to-instructor endpoint
+limit-upload-init:ip:{ip}                      | 30  | 60s | Initialize upload
+limit-upload-sign:ip:{ip}                      | 30  | 60s | Generate upload signature
+limit-upload-complete:ip:{ip}                  | 30  | 60s | Complete upload
+limit-upload-avatar:ip:{ip}                    | 30  | 60s | Avatar upload signature
+limit-upload-thumbnails:ip:{ip}                | 30  | 60s | Thumbnail upload signature
+limit-upload-video:ip:{ip}                     | 30  | 60s | Video upload signature
+limit-register:ip:{ip}                         | 30  | 60s | Register
+limit-user-profile:ip:{ip}                     | 120 | 60s | User profile reads
+limit-user-password-reset:ip:{ip}              | 10  | 15m | Password reset email requests
+limit-user-course-detail:ip:{ip}               | 120 | 60s | User course detail reads
+limit-user-course-list:ip:{ip}                 | 120 | 60s | User course list reads
+limit-user-course-batch:ip:{ip}                | 60  | 60s | Batched user course lookups
+limit-progress-lesson:ip:{ip}                  | 30  | 60s | Lesson progress generation/updates
+limit-progress-course:ip:{ip}                  | 60  | 60s | Course progress reads
+limit-progress-complete:ip:{ip}                | 20  | 60s | Lesson completion/certificate requests
+limit-course-liked:ip:{ip}                      | 60  | 60s | Liked course list reads
+limit-course-like:ip:{ip}                       | 30  | 60s | Like/unlike operations
+limit-course-likes-list:ip:{ip}                 | 60  | 60s | Liked course search/list reads
+limit-cart:ip:{ip}                              | 60  | 60s | Cart reads and course mutations
+limit-order-create-cart:ip:{ip}                 | 10  | 60s | Create cart order
+limit-order-create-course:ip:{ip}               | 10  | 60s | Create course checkout order
+limit-order-update:ip:{ip}                      | 20  | 60s | Update order status
+limit-certificate:ip:{ip}                       | 20  | 60s | Certificate lookups
+limit-cart-course:ip:{ip}                       | 30  | 60s | Add/remove cart courses
+limit-admin-coupon:ip:{ip}                      | 5   | 60s | Admin coupon reads/mutations
+limit-admin-course-create:ip:{ip}               | 10  | 60s | Admin course creation
+limit-admin-course-detail:ip:{ip}               | 20  | 60s | Admin course detail reads/mutations
+limit-admin-instructor-courses:ip:{ip}           | 60  | 60s | Admin instructor course list/delete
+limit-course-review-list:ip:{ip}                 | 60  | 60s | Course review listing
+limit-course-review-mutation:ip:{ip}             | 15  | 60s | Course review deletion
+limit-course-rating:ip:{ip}                      | 15  | 60s | Course review creation/updates
+limit-cron-reconcile:ip:{ip}                     | 5   | 60s | Payment reconciliation cron
+
+USER-BASED LIMITS (key pattern | max requests | window | purpose)
+limit-update-to-instructor:user:{userId}         | 30  | 60s | Update-to-instructor endpoint
+limit-upload-sign:user:{userId}                  | 15  | 60s | Generate upload signature
+limit-upload-init:user:{userId}                  | 15  | 60s | Initialize upload
+limit-upload-complete:user:{userId}              | 15  | 60s | Complete upload
+
+NOTES
+* The identifier inside {braces} is the actual client IP or authenticated user id;
+  the literal strings "ip" and "userId" in each constant's id field are labels.
+* ADMIN_COURSE_CREATE_USER_KEY currently has the same namespace and IP identifier
+  as ADMIN_COURSE_CREATE_IP_KEY. It is therefore an IP limit, not a user limit,
+  and both constants use the same Redis counter.
+`;
