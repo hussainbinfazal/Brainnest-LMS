@@ -1,6 +1,6 @@
 
 import { logger } from "@repo/shared/server";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
 
 
 

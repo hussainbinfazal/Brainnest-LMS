@@ -104,10 +104,10 @@ export function FileField(props: {
       {props.isUploading ? (<div className="relative">
         <Button
           type="button"
-          className="absolute right-0 bottom-6 text-lg z-10 py-5 bg-red-700"
+          className="absolute right-0 bottom-6 text-sm z-10 py-5 "
           onClick={props.onCancel}
         >
-          <RxCross2 />
+          Cancel Upload <RxCross2 />
         </Button>
         <Skeleton className="h-10 w-full skeleton-shimmer z-0" />
         <ProgressScroller progress={props.progress} className={"mt-2"} />
@@ -189,6 +189,7 @@ const EMPTY: string[] = [];
 const parse = (raw: string): string[] => raw.split(',').map((s) => s.trim()).filter(Boolean)
 
 export function CommaListField(props: {
+  inputType: string;
   value: string[];
   onChange: (v: string[]) => void;
   onBlur?: () => void
@@ -211,6 +212,7 @@ export function CommaListField(props: {
   }, [props.value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Input
+      type={props.inputType}
       value={text}
       placeholder={props.placeholder}
       onChange={(e) => {

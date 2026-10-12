@@ -114,6 +114,10 @@ export const createCourseSchema = z.object({
     tags: z.array(z.string({ error: "Tag cannot be empty" })
         .trim()
         .min(1, "Tag cannot be empty"))
+        .refine(
+            (tags) => tags.every((tag) => !Number.isFinite(Number(tag))),
+            "Tags cannot contain values made only of numbers"
+        )
         .default([]),
     // Topics are upserted by name
     topics: z.array(z.object({

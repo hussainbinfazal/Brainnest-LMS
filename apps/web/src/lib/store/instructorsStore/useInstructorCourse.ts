@@ -23,6 +23,7 @@ export const useInstructorCourse = create<CInstructorCourseStore>((set, get) => 
             toast.success('Course created successfully');
             set({ isLoading: false });
         } catch (error: unknown) {
+            console.log("This is the error in create course function ", error, error instanceof Error && error.message)
             const message = getErrorMessage(error, "Something went wrong, while creating course");
             toast.error("Something went wrong")
             clientLogger.error("Something went wrong, while creating course", { message, error });

@@ -480,6 +480,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   control={control}
                   render={({ field }) => (
                     <CommaListField
+                      inputType="text"
                       value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
@@ -573,6 +574,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   control={control}
                   render={({ field }) => (
                     <CommaListField
+                      inputType="text"
                       value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
@@ -607,6 +609,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   control={control}
                   render={({ field }) => (
                     <CommaListField
+                      inputType="text"
                       value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
