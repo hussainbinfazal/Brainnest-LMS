@@ -60,6 +60,7 @@ export const connectDB = async (mongoDbUrl?: string) => {
         bufferCommands: false,
         maxPoolSize: Number(process.env.DB_MAX_POOL_SIZE) || 10,
         autoIndex: process.env.NODE_ENV !== "production",
+        retryWrites: false,
 
       });
     }

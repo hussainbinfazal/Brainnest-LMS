@@ -77,7 +77,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 ///The only folder an avatar may come from
                 pendingPrefix: uploadFolder(TOPIC_FOLDER['avatar'], PENDING_AVATAR_SUBFOLDER),
                 ///Final home: one folder per user, NOT the pending folder;
-                targetPublicId: uploadFolder(TOPIC_FOLDER['avatar'], userId.toString()),
+                targetPublicId: uploadFolder(TOPIC_FOLDER['avatar'], userId.toString()).replace(/\/$/, ""),
                 maxBytes: MAX_FILE_SIZE.avatar,
 
             }

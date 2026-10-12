@@ -11,14 +11,12 @@ let redisDownUntil = 0;
 export async function checkIp(request: { headers: RequestHeaders }, namespace: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, ip: string }> {
 
     const ip = getClientIp(request.headers);
+    if (process.env.NODE_ENV !== "production") {
+        return { allowed: true, remaining: max, retryAfterSec: 0, ip };
+    }
     // if (ip === 'unknown') logger.warn('OTP Helper: could not resolve client IP');
     // console.log("This is the IP of the User", ip)
     const isKey = ip //? `ip:${ip}` : 'ip';
-    // Local development: skip the limiter so dev traffic never uses Redis quota
-    // if (process.env.NODE_ENV !== "production") {
-    //     // Allow the request with no wait time
-    //     return { allowed: true, remaining: max, retryAfterSec: 0, ip };
-    // }
     // Circuit breaker: Redis failed recently, so go straight to memory
     if (Date.now() < redisDownUntil) {
         // Use the per-instance counter
@@ -26,9 +24,6 @@ export async function checkIp(request: { headers: RequestHeaders }, namespace: s
     }
     try {
         const fullKey: string = buildKey(namespace, isKey); // Full key for rate limiter
-        if (process.env.NODE_ENV !== "production") {
-            // Pretend the request is allowed with no wait time
-        }
         const limit = await RateLimit(fromIoredis(getIORedisClient(process.env.REDIS_URL)), { key: fullKey, max, windowSec },); // time this too 
         const t0 = Date.now();
         // const result = await getRedisClient().get(fullKey);         // time this

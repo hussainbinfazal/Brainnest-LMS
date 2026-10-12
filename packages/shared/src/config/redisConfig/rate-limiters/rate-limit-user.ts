@@ -6,11 +6,9 @@ import { memoryUserRateLimiter } from "./memory-rate-limiter";
 let redisDownUntil = 0;
 export async function checkUser(userId: string, namespace: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, userId: string, ip?: string }> {
     try {
-
-        // if (process.env.NODE_ENV !== "production") {
-        //     // Pretend the request is allowed with no wait time
-        //     return { allowed: true, remaining: 0, retryAfterSec: 0, userId };
-        // }
+        if (process.env.NODE_ENV !== "production") {
+            return { allowed: true, remaining: max, retryAfterSec: 0, userId };
+        }
 
         if (Date.now() < redisDownUntil) {
             // Use the per-instance counter

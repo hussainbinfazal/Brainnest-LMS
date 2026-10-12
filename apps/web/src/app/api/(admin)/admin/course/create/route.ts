@@ -62,6 +62,10 @@ function toSlug(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, "-"); ////turns web development to web-development
 }
 
+function uploadTargetPublicId(folder: string, id: string): string {
+  return uploadFolder(folder, id).replace(/\/$/, "");
+}
+
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   const { allowed, retryAfterSec, ip } = await checkIp(
     request,
@@ -142,7 +146,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         TOPIC_FOLDER["thumbnail"],
         PENDING_THUMBNAIL_SUBFOLDER
       ),
-      targetPublicId: uploadFolder(
+      targetPublicId: uploadTargetPublicId(
         TOPIC_FOLDER["thumbnail"],
         courseId.toString()
       ),
@@ -155,7 +159,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         TOPIC_FOLDER["preview-video"],
         PENDING_PREVIEW_VIDEO_SUBFOLDER
       ),
-      targetPublicId: uploadFolder(
+      targetPublicId: uploadTargetPublicId(
         TOPIC_FOLDER["preview-video"],
         courseId.toString()
       ),
@@ -165,11 +169,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   body.sections.forEach((section, sIdx) => {
     section.lessons.forEach((lesson, lIdx) => {
       // Unique folder per lesson so names never collide
-      const lessonFinal = uploadFolder(
+      const lessonFinal = uploadTargetPublicId(
         TOPIC_FOLDER["lecture-video"],
         `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
       );
-      const previewLessonFinal = uploadFolder(
+      const previewLessonFinal = uploadTargetPublicId(
         TOPIC_FOLDER["lecture_preview-video"],
         `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
       );
@@ -261,7 +265,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
           $setOnInsert: { name: parentName, slug: toSlug(parentName) },
           parent: null,
         },
-        { upsert: true, new: true, session }
+        { upsert: true, returnDocument: "after", session }
       );
       ////Upsert the subcategory under the same parent
       const subCategory: ICategory = await Category.findOneAndUpdate(
@@ -273,7 +277,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             parent: parentCategory._id,
           },
         },
-        { upsert: true, new: true, session }
+        { upsert: true, returnDocument: "after", session }
       );
 
       ///Duplicate Topics under normalized name
