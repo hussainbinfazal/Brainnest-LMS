@@ -206,6 +206,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   try {
     await verifyAssets(pendingAssets);
   } catch (err: unknown) {
+    console.error("This is the error in verifyAsset function ", err, err instanceof Error ? err.message : "Unknown error");
     const status = err instanceof AssetError ? err.status : 500;
     // Safe to show: AssetError messages never contain Cloudinary internals
     console.log("This is the error in asset verification ", err)
@@ -227,6 +228,8 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   try {
     moved = await moveAssets(pendingAssets); ///Move all the pending assets
   } catch (err: unknown) {
+    console.error("This is the error in moveAssets", err, err instanceof Error ? err.message : "Unknown error");
+
     // Same mapping as above
     const status = err instanceof AssetError ? err.status : 500;
     logger.error("This is the error in move Asset process in the course create route,", { error: err })
@@ -254,31 +257,60 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
+      console.log("📦 Received payload:", JSON.stringify(body, null, 2));
       ///Normailze names once
       const parentName: string = body.category.name.trim().toLowerCase();
       const subName: string = body.subCategory.trim().toLowerCase();
+      console.log("🏷️ Parent category name:", parentName);
+      console.log("🔗 Parent category slug:", toSlug(parentName));
 
       //Upsert Parent cateogry
-      const parentCategory: ICategory = await Category.findOneAndUpdate(
-        { name: parentName, parent: null },
-        {
-          $setOnInsert: { name: parentName, slug: toSlug(parentName) },
+      // const parentCategory: ICategory = await Category.findOneAndUpdate(
+      //   { name: parentName, parent: null },
+      //   {
+      //     $setOnInsert: { name: parentName, slug: toSlug(parentName) },
+      //     parent: null,
+      //   },
+      //   { upsert: true, returnDocument: "after", session }
+      // );
+
+      let parentCategory = await Category.findOne({
+        slug: toSlug(parentName),
+        parent: null
+      });
+
+      if (!parentCategory) {
+        parentCategory = await Category.create({  // ❌ Crashes if slug exists
+          // name: parentName,
+          slug: toSlug(parentName),
           parent: null,
-        },
-        { upsert: true, returnDocument: "after", session }
-      );
+        });
+      }
       ////Upsert the subcategory under the same parent
-      const subCategory: ICategory = await Category.findOneAndUpdate(
-        { name: subName, parent: parentCategory._id },
-        {
-          $setOnInsert: {
-            name: subName,
-            slug: toSlug(subName),
-            parent: parentCategory._id,
-          },
-        },
-        { upsert: true, returnDocument: "after", session }
-      );
+      // const subCategory: ICategory = await Category.findOneAndUpdate(
+      //   { name: subName, parent: parentCategory._id },
+      //   {
+      //     $setOnInsert: {
+      //       name: subName,
+      //       slug: toSlug(subName),
+      //       parent: parentCategory._id,
+      //     },
+      //   },
+      //   { upsert: true, returnDocument: "after", session }
+      // );
+
+      let subCategory = await Category.findOne({
+        slug: toSlug(subName),
+        parent: parentCategory._id
+      });
+
+      if (!subCategory) {
+        subCategory = await Category.create({  // ❌ Crashes if slug exists
+          // name: subName,
+          slug: toSlug(subName),
+          parent: parentCategory._id,
+        });
+      }
 
       ///Duplicate Topics under normalized name
       const topicMap: Map<string, { name: string; description: string }> =
@@ -293,24 +325,35 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       );
 
       //Upsert  in one round trip instead of find + insertmany ( which  races under concurrent requests)
+      // if (topicMap.size > 0) {
+      //   await Topic.bulkWrite(
+      //     [...topicMap.values()].map((t) => ({
+      //       updateOne: {
+      //         filter: { name: t.name },
+      //         update: {
+      //           $setOnInsert: {
+      //             name: t.name,
+      //             description: t.description,
+      //             slug: toSlug(t.name),
+      //             isActive: true,
+      //           },
+      //         },
+      //         upsert: true,
+      //       },
+      //     })),
+      //     { session }
+      //   );
+      // }
       if (topicMap.size > 0) {
-        await Topic.bulkWrite(
-          [...topicMap.values()].map((t) => ({
-            updateOne: {
-              filter: { name: t.name },
-              update: {
-                $setOnInsert: {
-                  name: t.name,
-                  description: t.description,
-                  slug: toSlug(t.name),
-                  isActive: true,
-                },
-              },
-              upsert: true,
-            },
-          })),
-          { session }
-        );
+        for (const topic of topicMap.values()) {
+          // Check if exists
+          let existingTopic = await Topic.findOne({ name: topic.name });
+
+          if (!existingTopic) {
+            // Create if not exists
+            await Topic.create(topic);
+          }
+        }
       }
       // Read back the ids of all topics for this course
 
@@ -391,6 +434,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       createdCourse = course;
     });
   } catch (error: unknown) {
+    console.error("This is the error in admin course route", error, error instanceof Error ? error.message : "Unknown error");
     await rollbackMoves([...moved.values()]);
     logger.error("Error in creating course", {
       error: error instanceof Error ? error.message : "Unknown error",

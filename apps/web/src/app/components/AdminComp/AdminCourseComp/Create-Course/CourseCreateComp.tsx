@@ -97,6 +97,45 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
     CreateCourseBody
   >({
     resolver: zodResolver(createCourseSchema),
+    defaultValues: {
+      title: "Test JavaScript Course",
+      description: "<p>This is a test course description</p>",
+      price: 999,
+      discount: 10,
+      tags: ["javascript", "react", "nextjs"],
+      level: "Beginner",
+      whatYouWillLearn: ["Variables", "Functions", "Loops"],
+      requirements: ["HTML", "CSS"],
+      language: "english",
+      dripType: "free",
+      topics: [
+        {
+          name: "JavaScript Basics",
+          description: "Introduction to JS fundamentals",
+          isActive: true,
+        },
+      ],
+      sections: [
+        {
+          ...EMPTY_SECTION,
+          title: "Introduction Section",
+          description: "Getting started",
+          lessons: [
+            {
+              ...EMPTY_LESSON,
+              name: "Welcome Lesson",
+              description: "Course intro",
+            },
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "What is async/await?",
+          answer: "It's for handling promises",
+        },
+      ],
+    },
   });
   const {
     register,
@@ -120,7 +159,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   // derive subcategories instead of nested map + &&
   const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
   // total duration is derived, never typed by hand
-  const totalSeconds = (watch("sections") ?? []).reduce(
+  const totalDurationInSeconds = (watch("sections") ?? []).reduce(
     (sum, section) =>
       sum +
       section.lessons.reduce<number>(
@@ -137,7 +176,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
         0
       );
       //attach derived totals
-      await createCourse({ ...data, totalLessons });
+      await createCourse({ ...data, totalLessons, totalDurationInSeconds });
       // feedback and redirect
       toast.success("Course created successfully");
       router.push("/course/manage");
@@ -502,7 +541,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
                 errors.totalDurationInSeconds?.message
               } required={true}>
-                <Input readOnly value={totalSeconds} disabled />
+                <Input readOnly value={totalDurationInSeconds} type="number" disabled />
               </Field>}
               {/* <div className="space-y-2">
                 <Label className="">Level</Label>

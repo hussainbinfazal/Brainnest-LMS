@@ -146,7 +146,7 @@ export const createCourseSchema = z.object({
     totalLessons: z.number().min(0, "Total Lessons must be at least 1").default(0),
     previewVideo: z.string().min(3, "Preview Video must be at least 3 characters"),
     totalEnrolledCount: z.string().min(0, "Total Enrolled Count must be at least 0").default("0"),
-    totalDurationInSeconds: z.number().min(0, "Total Duration must be at least 0").default(0),
+    totalDurationInSeconds: z.number().min(0).optional(),
 });
 
 // Inferred type, so the route never needs a hand-written interface
