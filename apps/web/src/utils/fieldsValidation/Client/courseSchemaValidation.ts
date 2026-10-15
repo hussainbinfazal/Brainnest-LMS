@@ -107,7 +107,11 @@ export const createCourseSchema = z.object({
     // Difficulty level (tighten to an enum if you have fixed values)
     level: z.string({ error: "Select a course level" })
         .trim()
-        .min(1, "Select a course level"),
+        .min(1, "Select a course level")
+        .toLowerCase()
+        .default("beginner")
+        .pipe(z.enum(["beginner", "intermediate", "advanced"])),
+
     // Whether a certificate is issued
     certificate: z.boolean().default(false),
     // Free-form tags

@@ -265,52 +265,52 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       console.log("🔗 Parent category slug:", toSlug(parentName));
 
       //Upsert Parent cateogry
-      // const parentCategory: ICategory = await Category.findOneAndUpdate(
-      //   { name: parentName, parent: null },
-      //   {
-      //     $setOnInsert: { name: parentName, slug: toSlug(parentName) },
-      //     parent: null,
-      //   },
-      //   { upsert: true, returnDocument: "after", session }
-      // );
-
-      let parentCategory = await Category.findOne({
-        slug: toSlug(parentName),
-        parent: null
-      });
-
-      if (!parentCategory) {
-        parentCategory = await Category.create({  // ❌ Crashes if slug exists
-          // name: parentName,
-          slug: toSlug(parentName),
+      const parentCategory: ICategory = await Category.findOneAndUpdate(
+        { name: parentName, parent: null },
+        {
+          $setOnInsert: { name: parentName, slug: toSlug(parentName) },
           parent: null,
-        });
-      }
+        },
+        { upsert: true, returnDocument: "after", session }
+      );
+
+      // let parentCategory = await Category.findOne({
+      //   slug: toSlug(parentName),
+      //   parent: null
+      // });
+
+      // if (!parentCategory) {
+      //   parentCategory = await Category.create({  // ❌ Crashes if slug exists
+      //     // name: parentName,
+      //     slug: toSlug(parentName),
+      //     parent: null,
+      //   });
+      // }
       ////Upsert the subcategory under the same parent
-      // const subCategory: ICategory = await Category.findOneAndUpdate(
-      //   { name: subName, parent: parentCategory._id },
-      //   {
-      //     $setOnInsert: {
-      //       name: subName,
-      //       slug: toSlug(subName),
-      //       parent: parentCategory._id,
-      //     },
-      //   },
-      //   { upsert: true, returnDocument: "after", session }
-      // );
+      const subCategory: ICategory = await Category.findOneAndUpdate(
+        { name: subName, parent: parentCategory._id },
+        {
+          $setOnInsert: {
+            name: subName,
+            slug: toSlug(subName),
+            parent: parentCategory._id,
+          },
+        },
+        { upsert: true, returnDocument: "after", session }
+      );
 
-      let subCategory = await Category.findOne({
-        slug: toSlug(subName),
-        parent: parentCategory._id
-      });
+      // let subCategory = await Category.findOne({
+      //   slug: toSlug(subName),
+      //   parent: parentCategory._id
+      // });
 
-      if (!subCategory) {
-        subCategory = await Category.create({  // ❌ Crashes if slug exists
-          // name: subName,
-          slug: toSlug(subName),
-          parent: parentCategory._id,
-        });
-      }
+      // if (!subCategory) {
+      //   subCategory = await Category.create({  // ❌ Crashes if slug exists
+      //     // name: subName,
+      //     slug: toSlug(subName),
+      //     parent: parentCategory._id,
+      //   });
+      // }
 
       ///Duplicate Topics under normalized name
       const topicMap: Map<string, { name: string; description: string }> =
@@ -325,36 +325,40 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       );
 
       //Upsert  in one round trip instead of find + insertmany ( which  races under concurrent requests)
-      // if (topicMap.size > 0) {
-      //   await Topic.bulkWrite(
-      //     [...topicMap.values()].map((t) => ({
-      //       updateOne: {
-      //         filter: { name: t.name },
-      //         update: {
-      //           $setOnInsert: {
-      //             name: t.name,
-      //             description: t.description,
-      //             slug: toSlug(t.name),
-      //             isActive: true,
-      //           },
-      //         },
-      //         upsert: true,
-      //       },
-      //     })),
-      //     { session }
-      //   );
-      // }
       if (topicMap.size > 0) {
-        for (const topic of topicMap.values()) {
-          // Check if exists
-          let existingTopic = await Topic.findOne({ name: topic.name });
-
-          if (!existingTopic) {
-            // Create if not exists
-            await Topic.create(topic);
-          }
-        }
+        await Topic.bulkWrite(
+          [...topicMap.values()].map((t) => ({
+            updateOne: {
+              filter: { name: t.name },
+              update: {
+                $setOnInsert: {
+                  name: t.name,
+                  description: t.description,
+                  slug: toSlug(t.name),
+                  isActive: true,
+                },
+              },
+              upsert: true,
+            },
+          })),
+          { session }
+        );
       }
+      // if (topicMap.size > 0) {
+      //   for (const topic of topicMap.values()) {
+      //     // Check if exists
+      //     let existingTopic = await Topic.findOne({ name: topic.name });
+
+      //     if (!existingTopic) {
+      //       const name: string = topic.name;
+      //       const description: string = topic.description;
+      //       const slug: toSlug(topic.name);
+
+      //       // Create if not exists
+      //       await Topic.create(topic);
+      //     }
+      //   }
+      // }
       // Read back the ids of all topics for this course
 
       const topicDocs: ITopic[] = await Topic.find({

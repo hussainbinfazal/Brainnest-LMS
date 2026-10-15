@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,11 +20,9 @@ import {
 } from "@/components/ui/select";
 import { RxCross2 } from "react-icons/rx";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap/Tiptap";
-import { CCategory, CFaq, CLesson, CSection, CTopic } from "@/types/client";
+import { CSection} from "@/types/client";
 // import { CCreateCourseForm } from "@/types/forms/formValidators";
 // import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import {
@@ -52,7 +49,6 @@ import {
   CommaListField,
   Field,
   FileField,
-  LessonItem,
   SectionItem,
 } from "./courseFields";
 import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
