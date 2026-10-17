@@ -1,6 +1,9 @@
+import { USE_MEMORY } from "../cache-helper";
 import { getIORedisClient } from "../queue";
+import { memAcquireSlot, memReleaseSlot } from "./inMemoryConcurrentSessionCounter";
 
 export async function acquireSlot(key: string, id: string, max: number, ttlSec: number): Promise<boolean> {
+    if (USE_MEMORY) return memAcquireSlot(key, id, max, ttlSec);
     const redisClient = getIORedisClient(process.env.REDIS_URL);
     const now: number = Date.now();
     const results = await redisClient
@@ -29,6 +32,7 @@ export async function acquireSlot(key: string, id: string, max: number, ttlSec: 
 }
 
 export const releaseSlot = async (key: string, id: string): Promise<number> => {
+    if (USE_MEMORY) return memReleaseSlot(key, id)
     const redisClient = getIORedisClient(process.env.REDIS_URL);
     return redisClient.zrem(key, id);
 }

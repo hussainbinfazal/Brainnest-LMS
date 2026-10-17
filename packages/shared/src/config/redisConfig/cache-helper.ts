@@ -14,7 +14,7 @@ export function buildKey(namespace: string, id: string | number): string {
   return `${namespace}:{${id}}` //Redis Cluster hashes only what's inside the first {}. Same content inside braces → same slot → same node → safe to use together in MULTI/EXEC or Lua. (Hash tags in Redis Cluster: force related keys onto the same node.)
 };
 
-const USE_MEMORY = process.env.NODE_ENV !== "production";
+export const USE_MEMORY = process.env.NODE_ENV !== "production";
 
 
 export async function getCached<T>(
