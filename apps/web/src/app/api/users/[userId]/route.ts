@@ -16,25 +16,28 @@ import { CustomNextRequest } from "@/types/server";
  
 
 // GET handler to fetch a user by ID from URL params
-export async function GET(request: CustomNextRequest, context: { params: { id: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: Promise<{ userId: string | string[] }> }): Promise<NextResponse> {
   try {
     await connectDB(process.env.MONGODB_URI!);
 
-    const { id } = context.params;
-    if (!id) {
-      logger.info("User Id is required", { id });
+    const params = await context.params;
+    const userId = Array.isArray(params.userId)
+      ? params.userId[0]
+      : params.userId;
+    if (!userId) {
+      logger.info("User Id is required", { userId });
       return failResponse({ error: "User ID is required" }, 400, undefined, undefined, true);
     }
-    if (!validateMongooseId({ userId: id })) {
-      logger.info("Invalid User ID", { id });
+    if (!validateMongooseId({ userId })) {
+      logger.info("Invalid User ID", { userId });
       return failResponse({ error: "Invalid User ID" }, 400, undefined, undefined, true);
     }
-    const user: IUser | null = await User.findById(id).lean();
+    const user: IUser | null = await User.findById(userId).lean();
     if (!user) {
       logger.info("User not found");
       return failResponse({ error: "User not found" }, 404, undefined, undefined, true);
     }
-    logger.info("User fetched successfully", { userId: id });
+    logger.info("User fetched successfully", { userId });
     return successResponse({ user }, 200, undefined, undefined, true);
   } catch (error: any) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -44,11 +47,14 @@ export async function GET(request: CustomNextRequest, context: { params: { id: s
 }
 
 
-export async function PUT(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
+export async function PUT(request: NextRequest, context: { params: Promise<{ userId: string | string[] }> }): Promise<NextResponse> {
   try {
     // console.log("Put controller called")
     await connectDB(process.env.MONGODB_URI!);
-    const { userId } = await context.params;
+    const params = await context.params;
+    const userId = Array.isArray(params.userId)
+      ? params.userId[0]
+      : params.userId;
     const user: UserDocument | null = await User.findById(userId);
     if (!user) return failResponse({ message: "User not found" }, 404, undefined, undefined, true);
     if (!userId) return failResponse({ message: "User id is required" }, 400, undefined, undefined, true);
@@ -75,10 +81,13 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
 }
 
 
-export async function DELETE(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ userId: string | string[] }> }): Promise<NextResponse> {
   try {
     await connectDB(process.env.MONGODB_URI!);
-    const { userId } = await context.params;
+    const params = await context.params;
+    const userId = Array.isArray(params.userId)
+      ? params.userId[0]
+      : params.userId;
     if (!userId) return failResponse({ message: "User id is required" }, 400, undefined, undefined, true);
     const user: IUser | null = await User.findByIdAndDelete(userId);
     return successResponse({ message: "User deleted successfully", user }, 200, undefined, undefined, true);

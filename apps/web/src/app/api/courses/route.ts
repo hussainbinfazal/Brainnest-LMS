@@ -9,7 +9,7 @@ import { serializeCourses } from "@/utils/serializer/course.Serializer";
 
 
 
-export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams?.get('page') || '1') || 1;
     const limit = parseInt(searchParams?.get('limit') || '5') || 5;

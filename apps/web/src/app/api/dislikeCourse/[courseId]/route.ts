@@ -9,14 +9,17 @@ import { CUserCourse } from "@/types/client";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 
-export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKE_IP_KEY.namespace, COURSE_LIKE_IP_KEY.max, COURSE_LIKE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
-        const { courseId } = await context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         if (!user || !user.id) {
             logger.info("Unauthorized access", { ip: ip });
             return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);

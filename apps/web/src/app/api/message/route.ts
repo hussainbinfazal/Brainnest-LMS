@@ -25,7 +25,7 @@ const updateMessageBodySchema = z.object({
     isDeletedBySender: z.boolean().optional(),
 });
 
-export async function POST(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         await connectDB(process);
         const body = await parseBody(request, createMessageBodySchema);
@@ -68,11 +68,12 @@ export async function POST(request: NextRequest, context: { params: { userId: st
 }
 
 
-export async function GET(request: NextRequest, context: { params: { skip: string, limit: string } }): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
         await connectDB();
-        const skip: number = parseInt(context.params.skip) || 0;
-        const limit: number = parseInt(context.params.limit) || 10;
+        const { searchParams } = new URL(request.url);
+        const skip: number = parseInt(searchParams.get("skip") || "0") || 0;
+        const limit: number = parseInt(searchParams.get("limit") || "10") || 10;
         const messages: IMessage[] = await Message.find().skip(skip).limit(limit);
         return successResponse({ messages }, 200, undefined, undefined, true);
 
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest, context: { params: { skip: strin
     }
 }
 
-export async function DELETE(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
     try {
         await connectDB();
         const body = await parseBody(request, deleteMessageBodySchema);
@@ -105,7 +106,7 @@ export async function DELETE(request: NextRequest, context: { params: { userId: 
     }
 }
 
-export async function PUT(request: NextRequest, context: { params: { userId: string } }): Promise<NextResponse> {
+export async function PUT(request: NextRequest): Promise<NextResponse> {
     try {
         await connectDB();
         const body = await parseBody(request, updateMessageBodySchema);

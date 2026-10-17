@@ -13,7 +13,7 @@ import { Session } from "next-auth";
 
 
 
-export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_LIKE_IP_KEY.namespace, COURSE_LIKE_IP_KEY.max, COURSE_LIKE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
@@ -31,7 +31,10 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
             logger.info("Unauthorized access", { ip: ip });
             return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
         }
-        const { courseId } = await context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         const userId: string = user.id;
 
         if (!userId || !validateMongooseId({ userId })) {

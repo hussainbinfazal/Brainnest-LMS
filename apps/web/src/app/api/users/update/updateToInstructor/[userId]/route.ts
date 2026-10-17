@@ -6,7 +6,7 @@ import { Session } from "next-auth";
 import { NextRequest } from "next/server";
 
 
-export async function PUT(request: NextRequest, context: { params: { userId: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ userId: string | string[] }> }) {
     const params = await context.params;
     const paramsUserId = Array.isArray(params.userId)
         ? params.userId[0]

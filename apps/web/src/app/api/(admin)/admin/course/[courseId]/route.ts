@@ -11,7 +11,7 @@ import { z } from "zod";
 import { ADMIN_COURSE_DETAIL_IP_KEY, checkIp } from "@repo/shared/server";
 
 const updateCourseBodySchema = z.record(z.string(), z.any());
-export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
@@ -19,7 +19,10 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
         if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
         if (!user || user?.role !== "instructor") { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
-        const { courseId } = context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         logger.info("This is the courseId for the admin in the edit route", { courseId: courseId })
         if (!courseId || !validateMongooseId({ courseId })) {
             return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
@@ -123,11 +126,14 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 }
 
 
-export async function DELETE(request: CustomNextRequest, { params }: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
-        const { courseId } = params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
@@ -151,13 +157,16 @@ export async function DELETE(request: CustomNextRequest, { params }: { params: {
 }
 
 
-export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function PUT(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession()
     try {
-        const { courseId } = context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         const parsedBody = await parseBody(request, updateCourseBodySchema);
         if (!parsedBody.ok) return parsedBody.response;
         const body = parsedBody.data;

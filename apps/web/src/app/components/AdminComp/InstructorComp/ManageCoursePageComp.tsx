@@ -338,7 +338,9 @@ const ManageCoursePageComponent = ({
                                                                     type="button"
                                                                     size="default"
                                                                     variant="destructive"
-                                                                    className=" p-6 px-10 rounded-sm cursor-pointer"
+                                                                    className=" p-6 px-10 rounded-sm cursor-pointer hover:bg-red-100 hover:text-gray-900
+               transition-colors duration-150 ease-in-out
+               transform hover:scale-105"
                                                                     onClick={() => handleDeleteCourse(course._id)}
                                                                 >
                                                                     Delete

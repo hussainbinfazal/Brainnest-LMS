@@ -6,7 +6,7 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { CustomNextRequest } from "@/types/server";
 
-export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
@@ -15,7 +15,10 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         const sessionUser: ISessionUser | null = authSession?.user;
 
         if (!sessionUser) return failResponse({ message: "User not found" }, 403, undefined, undefined, true);
-        const { courseId } = await context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         if (validateMongooseId({ courseId: courseId }) ||
             validateMongooseId({ userId: sessionUser.id })) return failResponse({ message: "Course id and user id should be valid" }, 400, undefined, undefined, true);
 
@@ -84,7 +87,7 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 
 };
 
-export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function DELETE(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB();
@@ -96,7 +99,10 @@ export async function DELETE(request: CustomNextRequest, context: { params: { co
         if (!user) return failResponse({ message: "User not found" }, 403, undefined, undefined, true);
         const isUserIdValid = validateMongooseId({ userId });
         if (!isUserIdValid) return failResponse({ message: "User id should be valid" }, 400, undefined, undefined, true);
-        const { courseId } = await context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
 
         if (!courseId || !validateMongooseId({ courseId })) return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         const course: ICourse | null = await Course.findById(courseId);

@@ -13,19 +13,16 @@ import { checkIp, PROGRESS_COURSE_IP_KEY } from '@repo/shared/server';
 
 
 
-export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COURSE_IP_KEY.namespace, PROGRESS_COURSE_IP_KEY.max, PROGRESS_COURSE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const params = await context.params;
     const courseId = Array.isArray(params.courseId)
         ? params.courseId[0]
         : params.courseId;  //Store States
-    const lessonId = Array.isArray(params.lessonId)
-        ? params.lessonId[0]
-        : params.lessonId;  //Store States
-    if (!courseId || !lessonId) {
-        logger.error("Invalid course or lesson ID in progress route");
-        return failResponse({ message: "Invalid course or lesson ID" }, 400, undefined, undefined, true);
+    if (!courseId) {
+        logger.error("Invalid course ID in progress route");
+        return failResponse({ message: "Invalid course ID" }, 400, undefined, undefined, true);
     };
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
@@ -76,7 +73,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
             lessonsProgress: allLessonsProgress,
             completedLessonIds,
         };
-        logger.info("This is the progress of the Lesson", { progress, lessonId });
+        logger.info("This is the progress of the course", { progress, courseId });
         const serializedProgress = await serializeDocument(response);
         await setCached(PROGRESS_BY_USER_COURSE.namespace,
             `${userId}:${courseId}`, serializedProgress, CACHE_TTL.MEDIUM)

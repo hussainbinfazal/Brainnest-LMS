@@ -86,12 +86,15 @@ const updateProgressBodySchema = z.object({
 //         return NextResponse.json({ message: `Failed to fetch progress :${message}` }, { status: 500 });
 //     }
 // }
-export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function POST(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     // await connectDB(process.env.MONGODB_URI!);
     try {
-        const { courseId } = context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
 
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
@@ -115,13 +118,19 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
         return failResponse({ message: `Failed to complete lesson :${message}` }, 500, undefined, undefined, true);
     }
 }
-export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
+export async function PUT(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[]; lessonId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     // await connectDB(process.env.MONGODB_URI!);
 
     try {
-        const { courseId, lessonId } = context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
+        const lessonId = Array.isArray(params.lessonId)
+            ? params.lessonId[0]
+            : params.lessonId;
         const body = await parseBody(request, updateProgressBodySchema);
         if (!body.ok) return body.response;
         const { progressValue } = body.data;

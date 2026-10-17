@@ -7,10 +7,13 @@ import { CourseAggregationResult } from "@/types/aggregation/aggregation";
 import { validateMongooseId } from '@repo/shared/server';
 
 
-export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+export async function GET(request: NextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const { courseId } = context.params;
+        const params = await context.params;
+        const courseId = Array.isArray(params.courseId)
+            ? params.courseId[0]
+            : params.courseId;
         const page = parseInt(request.nextUrl.searchParams.get("page") || "0", 10);
         if (!courseId || !validateMongooseId({ courseId: courseId })) {
             return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);

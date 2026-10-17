@@ -15,7 +15,7 @@ import { ADMIN_INSTRUCTOR_COURSES_IP_KEY, checkIp } from "@repo/shared/server";
 
 
 
-export async function GET(request: CustomNextRequest, context: { params: { InstructorId: string } }): Promise<NextResponse> {
+export async function GET(request: CustomNextRequest, context: { params: Promise<{ InstructorId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const { searchParams } = new URL(request.url);
@@ -40,9 +40,11 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
                 }
             }, 401, undefined, undefined, true)
         };
-        const { InstructorId } = await context.params;
+        const params = await context.params;
         const userId: string = user.id;
-
+        const InstructorId = Array.isArray(params.InstructorId)
+            ? params.InstructorId[0]
+            : params.InstructorId;
         if (!userId || !validateMongooseId({ userId })) {
             logger.info("Invalid user id", { userId });
             return failResponse({
@@ -108,7 +110,7 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
 
 
 
-export async function DELETE(request: CustomNextRequest, context: { params: { InstructorId: string } }) {
+export async function DELETE(request: CustomNextRequest, context: { params: Promise<{ InstructorId: string | string[] }> }) {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const { searchParams } = new URL(request.url);
@@ -128,7 +130,10 @@ export async function DELETE(request: CustomNextRequest, context: { params: { In
 
 
         await connectDB(process.env.MONGODB_URI!);
-        const { InstructorId } = await context.params;
+        const params = await context.params;
+        const InstructorId = Array.isArray(params.InstructorId)
+            ? params.InstructorId[0]
+            : params.InstructorId;
         if (!validateMongooseId({ userId: InstructorId })) {
             logger.error("Invalid instructor id", { InstructorId });
             return failResponse({ message: "Invalid instructor id" }, 400, undefined, undefined, true)

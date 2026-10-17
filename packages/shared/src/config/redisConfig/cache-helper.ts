@@ -61,7 +61,7 @@ export async function invalidateCached(
   namespace: string,
   id?: string | number
 ): Promise<void> {
-  if (USE_MEMORY) memDeleteByPrefix(namespace)
+  if (USE_MEMORY) return memDeleteByPrefix(namespace)
   const redisClient = getRedisClient()
   try {
     if (id !== undefined) {

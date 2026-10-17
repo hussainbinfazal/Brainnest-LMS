@@ -10,15 +10,13 @@ import { serializeDocument } from "@/utils/serializer/serializeDocument";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { checkIp, PROGRESS_COMPLETE_IP_KEY } from '@repo/shared/server';
-export async function POST(request: CustomNextRequest, context: { params: { courseId: string, sectionId: string, lessonId: string } }) {
+export async function POST(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[]; lessonId: string | string[] }> }) {
     const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COMPLETE_IP_KEY.namespace, PROGRESS_COMPLETE_IP_KEY.max, PROGRESS_COMPLETE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
     const user: ISessionUser | null = authSession?.user;
-    const params = await context.params;
-    
     if (!user) {
         logger.info("Unauthorized access", { ip: ip });
         return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)

@@ -9,7 +9,7 @@ import { Session } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET(request:
-    CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
+    CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, USER_COURSE_DETAIL_IP_KEY.namespace, USER_COURSE_DETAIL_IP_KEY.max, USER_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const authSession: Session | null = await auth()
@@ -21,7 +21,10 @@ export async function GET(request:
     }
 
     const userId: string = user.id;
-    const { courseId } = await context.params;
+    const params = await context.params;
+    const courseId = Array.isArray(params.courseId)
+        ? params.courseId[0]
+        : params.courseId;
     try {
         if (!validateMongooseId({ courseId: courseId })) {
             logger.warn("Invalid course id", { courseId });
