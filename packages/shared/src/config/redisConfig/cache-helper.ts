@@ -1,5 +1,6 @@
 import { getRedisClient } from "./cache";
 import { logger } from "../../logger/logger";
+import { memDecrIfExists, memDeleteByPrefix, memGet, memIncr, memSet, memSetNX } from "./inmemory-cache-helper";
 
 export const CACHE_TTL = {
   SHORT: 60, //1 min - volatile data (session type data)
@@ -11,7 +12,10 @@ export const CACHE_TTL = {
 
 export function buildKey(namespace: string, id: string | number): string {
   return `${namespace}:{${id}}` //Redis Cluster hashes only what's inside the first {}. Same content inside braces → same slot → same node → safe to use together in MULTI/EXEC or Lua. (Hash tags in Redis Cluster: force related keys onto the same node.)
-}
+};
+
+const USE_MEMORY = process.env.NODE_ENV !== "production";
+
 
 export async function getCached<T>(
   namespace: string,
@@ -20,6 +24,7 @@ export async function getCached<T>(
   const redisClient = getRedisClient()
   const key: string = buildKey(namespace, id)
   try {
+    if (USE_MEMORY) return memGet<T>(key);
     // const response = await redisClient.ping();
     const value = await redisClient.get<T>(key)
 
@@ -40,6 +45,7 @@ export async function setCached<T>(
 ): Promise<void> {
   const key = buildKey(namespace, id)
   try {
+    if (USE_MEMORY) return memSet(key, value, ttlSeconds);
     const redisClient = getRedisClient()
     const response = await redisClient.ping();
     logger.info("Redis ping successful", { response });
@@ -55,6 +61,7 @@ export async function invalidateCached(
   namespace: string,
   id?: string | number
 ): Promise<void> {
+  if (USE_MEMORY) memDeleteByPrefix(namespace)
   const redisClient = getRedisClient()
   try {
     if (id !== undefined) {
@@ -86,6 +93,7 @@ export async function invalidateCached(
 //
 export async function setOnlyIfNotExist(namespace: string, id: string | number, value: string, ttlSeconds: number = CACHE_TTL.SHORT): Promise<boolean> {
   const key = buildKey(namespace, id)
+  if (USE_MEMORY) return memSetNX(key, value, ttlSeconds);
   const result = await getRedisClient().set(key, value, { ex: ttlSeconds, nx: true }) //nx means only set if key doesn't exist
   return result === "OK" //null when key already exists
 }
@@ -97,6 +105,7 @@ export async function incrementWithTtl(
   by = 1,
 ): Promise<number> {
   const key = buildKey(namespace, id);
+  if (USE_MEMORY) return memIncr(key, by, ttlSeconds);
   const tx = getRedisClient().multi();
   tx.incrby(key, by);
   tx.expire(key, ttlSeconds, 'NX'); // TTL only if the key has none
@@ -119,6 +128,7 @@ export async function decrementIfExists(
   by = 1,
 ): Promise<number | null> {
   const key = buildKey(namespace, id);
+  if (USE_MEMORY) return memDecrIfExists(key, by);
   return (await getRedisClient().eval(DECR_IF_EXISTS, [key], [String(by)])) as number | null;
 }
 
@@ -129,6 +139,7 @@ export async function getCachedMany<T>(entries: { namespace: string, id: string 
   if (ids.length === 0) return out;
 
   const keys = entries.map(({ namespace, id }) => buildKey(namespace, id));
+  if (USE_MEMORY) { entries.forEach((e, i) => out.set(ids[i], memGet<T>(buildKey(e.namespace, e.id)))); return out; }
   const results = await runPipeline<T | null>(
     (p) => keys.forEach((key) => p.get(key)),
     { count: entries.length, namespaces: [...new Set(entries.map((e) => e.namespace))] }
@@ -158,6 +169,7 @@ export async function setCachedMany<T>(
   entries: { namespace: string, id: string | number; value: T; ttlSeconds?: number }[]
 ): Promise<void> {
   if (entries.length === 0) return;
+  if (USE_MEMORY) { entries.forEach((e) => memSet(buildKey(e.namespace, e.id), e.value, e.ttlSeconds ?? CACHE_TTL.MEDIUM)); return; }
   await runPipeline(
     //Build pipeline of set commands
     (p) => entries.forEach(({ namespace, id, value, ttlSeconds = CACHE_TTL.MEDIUM }) => p.set(buildKey(namespace, id), value, { ex: ttlSeconds })),
