@@ -28,7 +28,7 @@ import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import Image from "next/image";
 import { RxCrossCircled } from "react-icons/rx";
 import Tiptap from "@/components/Tiptap/Tiptap";
-import { CCourse, CLesson, } from "@/types/client";
+import { CCourse, CLesson, CSection, } from "@/types/client";
 import { CUpdateCourseForm } from "@/types/forms/formValidators";
 import { useUpload } from "@/utils/hooks/Video/useUpload";
 import { useVideoParsing } from "@/hooks/Video/useVideoParsing";
@@ -37,8 +37,14 @@ import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchema
 import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
 import { cn } from "@/lib/utils";
-
-const EditCourseComp = ({className}: { className?: string }): JSX.Element => {
+type EditorCourseCompParams = {
+  renderedCourse: CCourse,
+  renderedCourseSections: CSection,
+  renderedCourseLessons: CLesson,
+  requestCourseId: string,
+  className?: string,
+}
+const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourseLessons, requestCourseId, className }: EditorCourseCompParams): JSX.Element => {
   const [form, setForm] = useState<CUpdateCourseForm>({
     title: "",
     description: "",
@@ -321,7 +327,7 @@ const EditCourseComp = ({className}: { className?: string }): JSX.Element => {
     } catch (error: any) {
       clientLogger.error("Video upload failed", error?.response?.data?.message)
       toast.error(error?.response?.data?.message)
-      return 
+      return
     } finally {
       setIsLessonVideoUploading((prev: { [key: number]: boolean }) => {
         const newState = { ...prev }; // Create a shallow copy
@@ -329,7 +335,7 @@ const EditCourseComp = ({className}: { className?: string }): JSX.Element => {
         return newState;
       });
     };
-    
+
   }
   useEffect(() => {
     // Initialize states for each lesson
@@ -657,7 +663,7 @@ const EditCourseComp = ({className}: { className?: string }): JSX.Element => {
               {isLoadingCourse ? (
                 <Skeleton className="w-full h-[30px] rounded-md" />
               ) : (
-                <Select value={form.language} onValueChange={(value: string)=>{
+                <Select value={form.language} onValueChange={(value: string) => {
                   setForm((prev) => ({ ...prev, language: value }))
                 }}>
                   <SelectTrigger className="w-full">
