@@ -3,7 +3,7 @@
 
 import { create } from "zustand";
 import axios from "axios";
-import { CCourse, CAuthUser } from "@/types/client";
+import { CCourse} from "@/types/client";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 export interface CInstructorCourseStore {
     cachedPaginatedInstructorCourses: CCourse[];
@@ -97,7 +97,7 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
                 limit: itemsPerPage.toString(),
                 courseId: courseId.toString()
             })
-            const response = await axios.delete(`/api/admin/course/${instructorId}?${params.toString()}`);
+            const response = await axios.delete(`/api/admin/course/instructor/${instructorId}?${params.toString()}`);
             clientLogger.info("Instructor course deleted successfully", { courseId, message: response.data.message });
             return await get().fetchPaginatedInstructorCourses({ page, itemsPerPage, instructorId });
         }
