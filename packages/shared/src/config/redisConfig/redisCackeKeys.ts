@@ -36,10 +36,17 @@ export const COURSES_ALL = {
 
 export const INSTRUCTOR_COURSES_ALL = {
   namespace: "instructor-courses",
-  id: "instructorId",
+  id: "page:limit:skip:instructorId",
   ttl: "MEDIUM",
   description: "All Available courses by an instructor",
   usedIn: ["Instructor Dashboard"],
+}
+export const INSTRUCTOR_COURSE_WITH_ID = {
+  namespace: "instructor-course",
+  id: "courseId:instructorId",
+  ttl: "MEDIUM",
+  description: "Single course by an instructor",
+  usedIn: ["Course Management API"],
 }
 
 
