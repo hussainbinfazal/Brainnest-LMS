@@ -39,8 +39,8 @@ import { JSX } from "react/jsx-runtime";
 import { cn } from "@/lib/utils";
 type EditorCourseCompParams = {
   renderedCourse: CCourse,
-  renderedCourseSections: CSection,
-  renderedCourseLessons: CLesson,
+  renderedCourseSections: CSection[],
+  renderedCourseLessons: CLesson[],
   requestCourseId: string,
   className?: string,
 }

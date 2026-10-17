@@ -1,16 +1,15 @@
 import EditCourseComp from "@/app/components/AdminComp/AdminCourseComp/EditCourse/EditCourseComp";
 import { auth } from "@/auth";
-import { Course, getCached, Lesson, logger, Section, validateMongooseId } from "@repo/shared/server";
+import { getInstructorCourseWithCache } from "@/lib/adminCached/getAdminCachedCourse";
+import { logger, validateMongooseId } from "@repo/shared/server";
 import { Session } from "next-auth";
 import { redirect } from "next/navigation";
 import { JSX } from "react";
-import { SessionContextImpl } from "twilio/lib/rest/proxy/v1/service/session";
 
 type EditCoursePageProps = {
-  context: { params: Promise<{ courseId: string | string[] }> };
-
+  params: Promise<{ courseId: string }>;
 }
-export async function EditCoursePage({ context }: EditCoursePageProps): Promise<JSX.Element> {
+export default async function EditCoursePage({ params }: EditCoursePageProps): Promise<JSX.Element> {
   const session: Session | null = await auth()
   if (!session) {
 
@@ -23,31 +22,20 @@ export async function EditCoursePage({ context }: EditCoursePageProps): Promise<
     logger.error("You are not authroized to access this", { userId: instructorId });
     return redirect('/login')
   }
-  const params = await context.params
-  const courseId = Array.isArray(params.courseId) ? params.courseId[0] : params.courseId
+  const { courseId } = await params;
   if (!courseId) {
     logger.error("Course id is required", { courseId })
     throw new Error()
   };
-  const cachedCourseInfo = await getCached()
-  ///Find the course, instructor or admin want to update/Edit
-  const [courseFromDb, sectionsFromDb, LessonsFromDb] = await Promise.all([Course.findById(courseId).lean().exec(), Section.find({ courseId: courseId }).lean().exec(), Lesson.find({ courseId }).lean().exec()])
+  const response = await getInstructorCourseWithCache(instructorId, courseId);
 
-  if (!courseFromDb) {
-    logger.error("Course not found this course", { courseId })
-    throw new Error()
-  };
-  if (!sectionsFromDb) {
-    logger.error("Sections not found this course", { courseId })
-    throw new Error()
-  };
-  if (!LessonsFromDb) {
-    logger.error("Lessons not found for this course", { courseId })
-    throw new Error()
-  };
-
-  return <EditCourseComp renderedCourse={courseFromDb} renderedCourseSections={sectionsFromDb} renderedCourseLessons={LessonsFromDb} requestCourseId={courseId} />;
-
+  if (!response.course) return redirect('/instructor/course/manage')
+  return (
+    <EditCourseComp
+      renderedCourse={response.course}
+      renderedCourseSections={response.sections}
+      renderedCourseLessons={response.lessons}
+      requestCourseId={courseId}
+    />
+  );
 };
-
-export default EditCoursePage;

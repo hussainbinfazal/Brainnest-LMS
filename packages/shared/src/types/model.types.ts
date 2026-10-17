@@ -303,10 +303,11 @@ export interface ICategory {
 }
 
 export interface ISection {
-  _id: mongoose.Types.ObjectId;
-  courseId: mongoose.Types.ObjectId;
+  _id?: Types.ObjectId;
+  courseId: Types.ObjectId;
   title: string;
   description: string;
+  lessons?: mongoose.Types.ObjectId[];
   order: number;
   createdAt?: Date;
   updatedAt?: Date;

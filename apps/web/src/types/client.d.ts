@@ -661,7 +661,7 @@ export interface CLessonProgress {
 }
 export interface CSection {
   _id?: string,
-  courseId?: string;
+  courseId: string;
   title: string;
   description: string;
   order: number;

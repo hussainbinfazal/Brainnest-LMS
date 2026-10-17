@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { CCourse } from "@/types/client";
+import { CCourse, CLesson, CSection } from "@/types/client";
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
 import { connectDB, Course, COURSES_ALL, ICourse, ILesson, INSTRUCTOR_COURSE_WITH_ID, INSTRUCTOR_COURSES_ALL, ISection, ISessionUser, Lesson, logger, Section, validateMongooseId } from '@repo/shared/server';
 import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
@@ -16,8 +16,8 @@ export type InstructorCoursesResponse = {
 }
 export type InstructorCourseResponse = {
     course: CCourse | null;
-    sections: ISection[];
-    lessons: ILesson[]
+    sections: CSection[];
+    lessons: CLesson[];
 }
 ///All Instructor Courses
 export async function getInstructorCoursesWithCache(instructorId: string, page: number, limit: number, skip: number): Promise<{
@@ -143,13 +143,13 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
     }
 };
 
-///Single course by instructor
-export async function getInstructorCourseWithCache(instructorId: string, courseId: string) {
+///Single course by instructor with particular courseId
+export async function getInstructorCourseWithCache(instructorId: string, courseId: string): Promise<InstructorCourseResponse> {
     const session: Session | null = await auth()
     if (!session?.user) {
         logger.warn("Unauthorized", { user: session?.user })
         return {
-            course: {},
+            course: null,
             sections: [],
             lessons: []
         }
@@ -159,7 +159,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
     if (user?.role !== "instructor") {
         logger.error("Unauthorized", { user })
         return {
-            course: {},
+            course: null,
             sections: [],
             lessons: []
         }
@@ -167,7 +167,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
     if (!validateMongooseId({ userId: instructorId })) {
         logger.error("Invalid User", { userId: instructorId });
         return {
-            course: {},
+            course: null,
             sections: [],
             lessons: []
         };
@@ -175,7 +175,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
     if (!validateMongooseId({ courseId: courseId })) {
         logger.error("Invalid Course Details in Instructor Cached Course", { courseId });
         return {
-            course: {},
+            course: null,
             sections: [],
             lessons: []
         };
@@ -217,7 +217,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
         if (!instructorCourseFromDB) {
             logger.error("Instructor Course not found", { courseId, instructorId });
             return {
-                course: {},
+                course: null,
                 sections: [],
                 lessons: []
             };
@@ -225,7 +225,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
         if (!courseSectionsFromDB || !Array.isArray(courseSectionsFromDB) || courseSectionsFromDB.length === 0 || !Array.isArray(courseLesonsFromDB) || courseLesonsFromDB.length === 0) {
             logger.error("Something went wrong while fetching instructor's course, sections and lessons", { courseId: courseId, instructorId: instructorId, sectionsLength: courseSectionsFromDB.length, lessonsLength: courseLesonsFromDB.length });
             return {
-                course: {},
+                course: null,
                 sections: [],
                 lessons: []
             };
@@ -245,7 +245,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
         const message = error instanceof Error ? error.message : 'Something went wrong while fetching instructor courses';
         logger.error("Error fetching courses", { message, error });
         return {
-            course: {},
+            course: null,
             sections: [],
             lessons: []
         };
