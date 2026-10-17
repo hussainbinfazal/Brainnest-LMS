@@ -37,10 +37,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             logger.error(`Missing required fields for uploadId:`, { uploadId, url });
             return failResponse("Missing required fields", 400, "MISSING_FIELDS");
         }
-        const existing = await getCached<UploadSession>(UPLOAD_SESSION.namespace, uploadId);
+       if(process.env.NODE_ENV === 'production'){ const existing = await getCached<UploadSession>(UPLOAD_SESSION.namespace, uploadId);
         if (!existing) {
             return failResponse({ error: "Upload session not found" }, 404, undefined, undefined, true);
-        }
+        }}
 
         const updated: UploadSession & { url: string } = {
             ...existing,

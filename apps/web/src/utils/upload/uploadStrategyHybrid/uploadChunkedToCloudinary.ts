@@ -45,7 +45,7 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
         // When resuming, show the saved progress immediately instead of 0%
         report(Math.round(((startIndex * CHUNK_SIZE) / file.size) * 100));
         if (!uploadId) {
-            const res = await axios.post("/api/upload/init", {   //// Initialize the upload session
+            const initRes = await axios.post("/api/upload/init", {   //// Initialize the upload session
                 fileName: file.name,
                 fileSize: file.size,
                 purpose
@@ -54,10 +54,10 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
                 signal: opts?.signal, //Pass the signal;
 
             });
-            console.log("This is the uploadId in after init call", res.data.data.uploadId)
-            const data = res.data.data.uploadId /// Extract the uploadId from the response
+            console.log("This is the uploadId in after init call", initRes.data.data.uploadId)
+            const data = initRes.data.data /// Extract the uploadId from the response
             uploadId = data.uploadId as string; //// Set the uploadId
-            
+            console.log("This is upload after populating")
             if (!uploadId) throw new Error("Init route did not return an uploadId");
         }
         const generatedSignature = await getSignatureFromBackend(purpose);  /// Get the signature from backend
