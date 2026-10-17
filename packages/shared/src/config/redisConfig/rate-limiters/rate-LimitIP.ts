@@ -4,7 +4,7 @@ import { buildKey } from "../cache-helper";
 import { fromIoredis, RateLimit } from "./rate-limit";
 import { getIORedisClient } from "../queue";
 import type { RequestHeaders } from "../../../utils/getClientIp";
-import { memoryIpRateLimiter } from "./memory-rate-limiter";
+import { memoryIpRateLimiter } from "./In-memory-rate-limiters/memory-rate-limiter";
 
 // Timestamp (ms) until which we skip Redis and use memory only
 let redisDownUntil = 0;

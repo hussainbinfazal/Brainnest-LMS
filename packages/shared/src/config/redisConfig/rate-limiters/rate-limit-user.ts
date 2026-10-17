@@ -1,7 +1,7 @@
 import { logger } from "../../../logger/logger";
 import { fromIoredis, getIORedisClient, RateLimit } from "../../index.export";
 import { buildKey } from "../cache-helper";
-import { memoryUserRateLimiter } from "./memory-rate-limiter";
+import { memoryUserRateLimiter } from "./In-memory-rate-limiters/memory-rate-limiter";
 
 let redisDownUntil = 0;
 export async function checkUser(userId: string, namespace: string, max: number = 10, windowSec: number = 60): Promise<{ allowed: boolean, remaining: number, retryAfterSec: number, userId: string, ip?: string }> {

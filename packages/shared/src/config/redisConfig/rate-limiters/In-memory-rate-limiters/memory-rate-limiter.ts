@@ -1,9 +1,9 @@
 
 //One counter per key: how many hits, and when the window ends
 
-import { logger } from "../../../logger/logger";
-import { getClientIp, type RequestHeaders } from "../../../utils/getClientIp";
-import { buildKey } from "../cache-helper";
+import { logger } from "../../../../logger/logger";
+import { getClientIp, type RequestHeaders } from "../../../../utils/getClientIp";
+import { buildKey } from "../../cache-helper";
 
 type Entry = {
     //Requests seen in the current window
