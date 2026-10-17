@@ -12,7 +12,9 @@ import { z } from "zod";
 const updateOrderBodySchema = z.object({ orderId: z.string(), status: z.string() });
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, ORDER_UPDATE_IP_KEY.namespace, ORDER_UPDATE_IP_KEY.max, ORDER_UPDATE_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, ORDER_UPDATE_IP_KEY.namespace, ORDER_UPDATE_IP_KEY.max, ORDER_UPDATE_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
 

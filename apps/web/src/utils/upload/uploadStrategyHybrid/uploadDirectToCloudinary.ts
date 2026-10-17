@@ -44,7 +44,7 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
         formData.append("signature", signature);
         formData.append("allowed_formats", allowedFormats);
         if (tags) formData.append("tags", tags);
-        if (transformation) formData.append("transformation", transformation);
+        if (file.type.startsWith('image/') && transformation) formData.append("transformation", transformation);
 
         const endPoint = `https://api.cloudinary.com/v1_1/${cloudName}/${type}/upload`;
         const response = await axios.post<CloudinaryUploadResponse>(endPoint, formData, {

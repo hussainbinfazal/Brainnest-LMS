@@ -16,7 +16,9 @@ import { z } from "zod";
 const resetPasswordBodySchema = z.object({ email: z.string().email() });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_PASSWORD_RESET_IP_KEY.namespace, USER_PASSWORD_RESET_IP_KEY.max, USER_PASSWORD_RESET_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, USER_PASSWORD_RESET_IP_KEY.namespace, USER_PASSWORD_RESET_IP_KEY.max, USER_PASSWORD_RESET_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     await connectDB(process.env.MONGODB_URI!);

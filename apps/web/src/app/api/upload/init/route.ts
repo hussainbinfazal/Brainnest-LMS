@@ -35,15 +35,19 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     let sessionKey = ""
     let userId: string | null = null
     try {
-        const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOAD_INIT_IP_KEY.namespace, UPLOAD_INIT_IP_KEY.max, UPLOAD_INIT_IP_KEY.windowSec); /// rate limit
-        ip = requestIp
-        if (!allowed) {
-            logger.info(`Rate limit exceeded for IP: ${ip}`);
-            return failResponse(
-                `Too many requests. Try again in ${retryAfterSec} seconds.`,
-                429, "RATE_LIMITED", { "Retry-After": String(retryAfterSec) },
-            );
-        };
+        ///Rate limit but in the production 
+        if (process.env.NODE_ENV === 'production') {
+
+            const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOAD_INIT_IP_KEY.namespace, UPLOAD_INIT_IP_KEY.max, UPLOAD_INIT_IP_KEY.windowSec); /// rate limit
+            ip = requestIp
+            if (!allowed) {
+                logger.info(`Rate limit exceeded for IP: ${ip}`);
+                return failResponse(
+                    `Too many requests. Try again in ${retryAfterSec} seconds.`,
+                    429, "RATE_LIMITED", { "Retry-After": String(retryAfterSec) },
+                );
+            };
+        }
 
 
         //Auth
@@ -54,15 +58,16 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             return failResponse("Unauthorized", 401, "UNAUTHORIZED");
         }
         const authUser: ISessionUser | null = authSession?.user; /// check if user is authenticated
-        const userLimit = await checkUser(authUser.id, UPLOAD_INIT_USER_KEY.namespace, UPLOAD_INIT_USER_KEY.max, UPLOAD_INIT_USER_KEY.windowSec);
-        if (!userLimit.allowed) {
-            logger.info(`Rate limit exceeded for user`, { user: authUser.id, ip });
-            return failResponse(
-                `Too many requests. Try again in ${userLimit.retryAfterSec} seconds.`,
-                429, "RATE_LIMITED", { "Retry-After": String(userLimit.retryAfterSec) },
-            );
-        };
-
+        if (process.env.NODE_ENV === 'production') {
+            const userLimit = await checkUser(authUser.id, UPLOAD_INIT_USER_KEY.namespace, UPLOAD_INIT_USER_KEY.max, UPLOAD_INIT_USER_KEY.windowSec);
+            if (!userLimit.allowed) {
+                logger.info(`Rate limit exceeded for user`, { user: authUser.id, ip });
+                return failResponse(
+                    `Too many requests. Try again in ${userLimit.retryAfterSec} seconds.`,
+                    429, "RATE_LIMITED", { "Retry-After": String(userLimit.retryAfterSec) },
+                );
+            };
+        }
 
         let body = await parseBody(request, uploadInitRequestBodySchema);
         if (!body.ok) return body.response
@@ -83,28 +88,36 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             status: "uploading",
             createdAt: Date.now()
         };
-        await setCached(UPLOAD_SESSION.namespace, uploadId, JSON.stringify(data) as string, SESSION_TTL_SEC) // 1 hour expiration
+        if (process.env.NODE_ENV === 'production') {
+            // await setCached(UPLOAD_SESSION.namespace, uploadId, JSON.stringify(data) as string, SESSION_TTL_SEC) // 1 hour expiration
+        }
 
 
         /// Check active session limit
-        const ok = await acquireSlot(activeKey, userId, MAX_ACTIVE_SESSIONS, SESSION_TTL_SEC);
-        if (!ok) return failResponse("Finish your current request first.", 429, "QUOTA_EXCEEDED", { "Retry-After": String(SESSION_TTL_SEC) });
+        if (process.env.NODE_ENV === 'production') {
+            const ok = await acquireSlot(activeKey, userId, MAX_ACTIVE_SESSIONS, SESSION_TTL_SEC);
+            if (!ok) return failResponse("Finish your current request first.", 429, "QUOTA_EXCEEDED", { "Retry-After": String(SESSION_TTL_SEC) });
+        }
 
         logger.info(` Upload session created`, { userId, uploadId, type, fileSize, ip }); // Log
         return successResponse(
-            uploadId //data
+            {uploadId:uploadId} //data
             , 200,
             "Upload session created")
 
     } catch (error: unknown) {
-        logger.error("Upload init fail Responseed", {
+        console.log("Error in init route,", error, error instanceof Error ? error.message : "unknown error in init route")
+        logger.error("Upload init fail Responsed", {
             ip,
             error: error instanceof Error ? error.message : "unknown",
         });
         return failResponse("Could not start the upload. Please try again.", 500, "SERVER_ERROR"); // generic message to the client
     } finally {
-        if (userId) {
-            await releaseSlot(activeKey, userId); //Release slot if user was successfully resolved
+        //Only in production 
+        if (process.env.NODE_ENV === 'production') {
+            if (userId) {
+                await releaseSlot(activeKey, userId); //Release slot if user was successfully resolved
+            }
         }
 
     }

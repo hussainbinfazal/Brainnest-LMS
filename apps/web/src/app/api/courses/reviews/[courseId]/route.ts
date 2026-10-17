@@ -9,7 +9,9 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 
 export async function GET(request: NextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_REVIEW_LIST_IP_KEY.namespace, COURSE_REVIEW_LIST_IP_KEY.max, COURSE_REVIEW_LIST_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, COURSE_REVIEW_LIST_IP_KEY.namespace, COURSE_REVIEW_LIST_IP_KEY.max, COURSE_REVIEW_LIST_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGDB_URI!);
     try {
@@ -93,7 +95,9 @@ export async function GET(request: NextRequest, context: { params: { courseId: s
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, COURSE_REVIEW_MUTATION_IP_KEY.namespace, COURSE_REVIEW_MUTATION_IP_KEY.max, COURSE_REVIEW_MUTATION_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, COURSE_REVIEW_MUTATION_IP_KEY.namespace, COURSE_REVIEW_MUTATION_IP_KEY.max, COURSE_REVIEW_MUTATION_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI);
     const session = await mongoose.startSession();

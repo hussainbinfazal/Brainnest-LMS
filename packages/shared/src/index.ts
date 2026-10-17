@@ -6,9 +6,9 @@ export * from "./helper/getErrorMessage"
 export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
     avatar: 2 * 1024 * 1024,
     thumbnail: 5 * 1024 * 1024,
-    "lecture-video": 100 * 1024 * 1024,
-    "preview-video": 100 * 1024 * 1024,
-    "lecture_preview-video": 100 * 1024 * 1024,
+    "lecture-video": 1000 * 1024 * 1024,
+    "preview-video": 1000 * 1024 * 1024,
+    "lecture_preview-video": 1000 * 1024 * 1024,
 };
 export const PENDING_AVATAR_SUBFOLDER = "pending-avatars";
 export const PENDING_PREVIEW_VIDEO_SUBFOLDER = "pending-preview-video";
@@ -39,8 +39,7 @@ export const SESSION_TTL_SEC = 24 * 60 * 60;
 export const MAX_ACTIVE_SESSIONS = 3;
 
 
-export const RESOURCE_TYPE: Record<UploadPurpose, "image" | "video"> = { avatar: "image", thumbnail: "image", "lecture-video": "video", 'preview-video': 'video', 'lecture_preview-video': 'video' };
-
+export const RESOURCE_TYPE: Record<UploadPurpose, "image" | "video" | 'auto'> = { avatar: "image", thumbnail: "image", "lecture-video": "video", 'preview-video': 'video', 'lecture_preview-video': 'video' };
 
 export function uploadFolder(folder: string, subFolder: string): string { //For client
     // Read the root folder from the environment

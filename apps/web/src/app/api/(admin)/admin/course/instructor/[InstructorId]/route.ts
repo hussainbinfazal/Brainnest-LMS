@@ -16,7 +16,9 @@ import { ADMIN_INSTRUCTOR_COURSES_IP_KEY, checkIp } from "@repo/shared/server";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { InstructorId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams?.get('page') || '1') || 1;
@@ -109,7 +111,9 @@ export async function GET(request: CustomNextRequest, context: { params: { Instr
 
 
 export async function DELETE(request: CustomNextRequest, context: { params: { InstructorId: string } }) {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, ADMIN_INSTRUCTOR_COURSES_IP_KEY.namespace, ADMIN_INSTRUCTOR_COURSES_IP_KEY.max, ADMIN_INSTRUCTOR_COURSES_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const { searchParams } = new URL(request.url);
     const page: number = parseInt(searchParams?.get('page') || '1') || 1;

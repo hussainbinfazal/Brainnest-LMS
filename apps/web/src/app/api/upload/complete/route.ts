@@ -22,7 +22,9 @@ const completeRequestBodySchema: z.ZodType<{ uploadId: string; url: string }> = 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, UPLOAD_COMPLETE_IP_KEY.namespace, UPLOAD_COMPLETE_IP_KEY.max, UPLOAD_COMPLETE_IP_KEY.windowSec); /// rate limit
+        const { allowed, remaining, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+            ? await checkIp(request, UPLOAD_COMPLETE_IP_KEY.namespace, UPLOAD_COMPLETE_IP_KEY.max, UPLOAD_COMPLETE_IP_KEY.windowSec)
+            : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" }; /// rate limit
 
         if (!allowed) {
             return failResponse(`Too many requests. Try again in ${retryAfterSec} seconds.`, 429, "RATE_LIMITED", { "Retry-After": String(retryAfterSec) });

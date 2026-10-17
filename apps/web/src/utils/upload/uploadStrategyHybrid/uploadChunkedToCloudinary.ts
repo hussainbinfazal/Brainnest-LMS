@@ -18,15 +18,13 @@ function loadSaved(key: string): SavedUpload | null {
     }
 };
 function saveState(key: string, state: SavedUpload) {
-    ;
-
     try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* quota / private mode */ }
 }
 
 export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpose, opts?: { onProgress?: (percent: number) => void; signal?: AbortSignal }): Promise<CUploadResult> {
     const key: string = `upload:${file.name}:${file.size}:${file.lastModified}`;
     try {
-        
+
         const saved = loadSaved(key); /// Load the saved state from local storage with the key
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE); /// Calculate the total number of chunks
         let uploadedBytes = saved?.uploadedBytes || 0; /// Initialize the uploaded bytes, this is used to track the progress of how many bytes have been uploaded
@@ -56,9 +54,11 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
                 signal: opts?.signal, //Pass the signal;
 
             });
-
-            const data = res.data; /// Extract the uploadId from the response
+            console.log("This is the uploadId in after init call", res.data.data.uploadId)
+            const data = res.data.data.uploadId /// Extract the uploadId from the response
             uploadId = data.uploadId as string; //// Set the uploadId
+            
+            if (!uploadId) throw new Error("Init route did not return an uploadId");
         }
         const generatedSignature = await getSignatureFromBackend(purpose);  /// Get the signature from backend
         if (!generatedSignature) throw new Error("Failed to get signature from backend.");
@@ -83,8 +83,8 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
             formData.append("signature", signature); /// Append the signature to the FormData;
             formData.append("allowed_formats", allowedFormats);
             if (tags) formData.append("tags", tags);
-            formData.append("resource_type", type);
-
+            // formData.append("resource_type", type);
+            formData.append("resource_type", type)
             const headers: any = {
                 "Content-Range": `bytes ${start}-${end - 1}/${file.size}`,
                 "X-Unique-Upload-Id": uploadId
@@ -152,10 +152,11 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             const s = error.response?.status;
-            if (![401, 403, 429].includes(Number(s))) localStorage.removeItem(key);
+            console.log("CLOUDINARY SAYS:", error.response?.data, error.config?.headers?.["Content-Range"]);
+            if (![401, 403, 429, 400].includes(Number(s))) localStorage.removeItem(key);
         }
         const message = getErrorMessage(error, 'Chunked Cloudinary upload error');
-        clientLogger.error("This is the error in chunked Upload function, client side ",{error, message})
+        clientLogger.error("This is the error in chunked Upload function, client side ", { error, message })
         // clientLogger.error('Chunked Cloudinary upload error:', { error: message });
         throw error ///Throw the error
     }

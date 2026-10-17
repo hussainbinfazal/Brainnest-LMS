@@ -7,7 +7,9 @@ import { auth } from "@/auth";
 import { CustomNextRequest } from "@/types/server";
 
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const authSession: Session | null = await auth()
@@ -85,7 +87,9 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
 };
 
 export async function DELETE(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, CART_COURSE_IP_KEY.namespace, CART_COURSE_IP_KEY.max, CART_COURSE_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB();
     try {

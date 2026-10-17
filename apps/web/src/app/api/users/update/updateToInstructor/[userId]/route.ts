@@ -20,12 +20,16 @@ export async function PUT(request: NextRequest, context: { params: { userId: str
 
 
 
-        const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, UPDATE_TO_INSTRUCTOR_IP_KEY.namespace, UPDATE_TO_INSTRUCTOR_IP_KEY.max, UPDATE_TO_INSTRUCTOR_IP_KEY.windowSec); //Rate Limiting
+        const { allowed, remaining, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+            ? await checkIp(request, UPDATE_TO_INSTRUCTOR_IP_KEY.namespace, UPDATE_TO_INSTRUCTOR_IP_KEY.max, UPDATE_TO_INSTRUCTOR_IP_KEY.windowSec)
+            : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" }; //Rate Limiting
 
         if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec), "Remaining-Attempts": String(remaining) }, true);
 
 
-        const { allowed: isUserAllowed, remaining: remainingAttempts, retryAfterSec: retryAfter, ip: userIp } = await checkUser(authUserId, UPDATE_TO_INSTRUCTOR_USER_KEY.namespace, UPDATE_TO_INSTRUCTOR_USER_KEY.max, UPDATE_TO_INSTRUCTOR_USER_KEY.windowSec); //Rate Limiting
+        const { allowed: isUserAllowed, remaining: remainingAttempts, retryAfterSec: retryAfter, ip: userIp } = process.env.NODE_ENV === 'production'
+            ? await checkUser(authUserId, UPDATE_TO_INSTRUCTOR_USER_KEY.namespace, UPDATE_TO_INSTRUCTOR_USER_KEY.max, UPDATE_TO_INSTRUCTOR_USER_KEY.windowSec)
+            : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" }; //Rate Limiting
 
         if (!isUserAllowed) {
             logger.error('QUOTA EXCEEDED', { userIp })

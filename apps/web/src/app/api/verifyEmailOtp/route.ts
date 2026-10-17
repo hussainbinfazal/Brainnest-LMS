@@ -17,7 +17,9 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 
 ///on first registration, there will be no email and user id 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec);
+    const { allowed, remaining, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, OTP_VERIFY_EMAIL_IP_KEY.namespace, OTP_VERIFY_EMAIL_IP_KEY.max, OTP_VERIFY_EMAIL_IP_KEY.windowSec)
+        : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) {
         return failResponse({ message: `Too many requests, please try again later after ${retryAfterSec}` }, 429, undefined, { 'Retry-After': String(retryAfterSec) }, true);
     }

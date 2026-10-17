@@ -30,7 +30,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let movedAvatar: MovedAsset | undefined;
 
     try {
-        const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, REGISTER_IP_KEY.namespace, REGISTER_IP_KEY.max, REGISTER_IP_KEY.windowSec); /// rate limit
+        const { allowed, remaining, retryAfterSec, ip: requestIp } = process.env.NODE_ENV === 'production'
+            ? await checkIp(request, REGISTER_IP_KEY.namespace, REGISTER_IP_KEY.max, REGISTER_IP_KEY.windowSec)
+            : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" }; /// rate limit
         ip = requestIp
         if (!allowed) {
             logger.info(`Rate limit exceeded for IP: ${ip}`);

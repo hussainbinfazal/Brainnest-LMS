@@ -16,20 +16,22 @@ export async function proxy(req: NextRequest) {
     logger.info({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
   }
   if (pathname.startsWith('/api')) {
-    const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
-    try {
-      if (!allowed) {
-        return failResponse(
-          { message: 'Too many requests' },
-          429,
-          undefined,
-          { 'Retry-After': String(retryAfterSec) },
-          true,
-        );
+    if (process.env.NODE_ENV === 'production') {
+      const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
+      try {
+        if (!allowed) {
+          return failResponse(
+            { message: 'Too many requests' },
+            429,
+            undefined,
+            { 'Retry-After': String(retryAfterSec) },
+            true,
+          );
+        }
+      } catch (error: unknown) {
+        logger.error('Global limiter unavailable', { error, ip: ip });
+        // fail open
       }
-    } catch (error: unknown) {
-      logger.error('Global limiter unavailable', { error, ip: ip });
-      // fail open
     }
     return NextResponse.next();
   }

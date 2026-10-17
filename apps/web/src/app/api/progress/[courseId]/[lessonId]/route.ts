@@ -87,7 +87,9 @@ const updateProgressBodySchema = z.object({
 //     }
 // }
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     // await connectDB(process.env.MONGODB_URI!);
     try {
@@ -116,7 +118,9 @@ export async function POST(request: CustomNextRequest, context: { params: { cour
     }
 }
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
+        ? await checkIp(request, PROGRESS_LESSON_IP_KEY.namespace, PROGRESS_LESSON_IP_KEY.max, PROGRESS_LESSON_IP_KEY.windowSec)
+        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     // await connectDB(process.env.MONGODB_URI!);
 

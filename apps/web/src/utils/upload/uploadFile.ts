@@ -6,6 +6,7 @@ import { getErrorMessage } from "@repo/shared";
 import { MAX_FILE_SIZE, RESOURCE_TYPE, type UploadPurpose } from "@repo/shared";
 import { CUploadResult, UploadOptions } from "@/types/client";
 import axios from "axios";
+import { toast } from "sonner";
 
 
 
@@ -41,9 +42,9 @@ export async function uploadFileClient(file: File, purpose: UploadPurpose, opts?
         if (!file.type.startsWith(`${type}/`)) {
             throw new UploadError("INVALID_TYPE", `Please select a valid ${type} file.`, ctx);
         }
-        if (file.size > maxSize) {
-            throw new UploadError("FILE_TOO_LARGE", `File is too large. Maximum size is ${maxSize / (1024 * 1024)} MB.`, ctx);
-        };
+        // if (file.size > maxSize) {
+        //     throw new UploadError("FILE_TOO_LARGE", `File is too large. Maximum size is ${maxSize / (1024 * 1024)} MB.`, ctx);
+        // };
         const strategy = getUploadStrategy(file.size);
         ctx.strategy = strategy;
         const startedAt = performance.now();
@@ -51,10 +52,13 @@ export async function uploadFileClient(file: File, purpose: UploadPurpose, opts?
         let result: CUploadResult;
         switch (strategy) {
             case "direct": {
+                toast.info("Uploading Started")
                 result = await uploadDirectToCloudinary(file, purpose, opts);
                 break;
             }
             case "chunked": {
+                toast.info("Uploading Started")
+                toast.info("Large file, upload may take time")
                 clientLogger.warn("Large file, upload may take time", ctx);
                 result = await uploadChunkedToCloudinary(file, purpose, opts);
                 break;
