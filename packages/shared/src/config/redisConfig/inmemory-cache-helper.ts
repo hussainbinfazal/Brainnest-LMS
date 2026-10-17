@@ -3,7 +3,7 @@ type Entry = {
 };
 
 // Upper limit so a long dev session cannot grow memory forever
-const MAX_ENTRIES = 5000;
+export const MAX_ENTRIES = 5000;
 
 
 ///Keep the Map on globalThis, because nextjs  dev revaluates modules on hot reload

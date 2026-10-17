@@ -37,7 +37,7 @@ export type UserRateLimit = RateLimitResult & {
 
 
 
-const MAX_KEYS = 10_000
+export const MAX_KEYS = 10_000
 
 
 ///Typed handle  to globalThis so we can park the Map there
