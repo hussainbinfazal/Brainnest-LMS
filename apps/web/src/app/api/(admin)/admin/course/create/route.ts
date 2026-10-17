@@ -67,14 +67,12 @@ function uploadTargetPublicId(folder: string, id: string): string {
 }
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-  const { allowed, remaining, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-    ? await checkIp(
+  const { allowed, remaining, retryAfterSec, ip } = await checkIp(
       request,
       ADMIN_COURSE_CREATE_IP_KEY.namespace,
       ADMIN_COURSE_CREATE_IP_KEY.max,
       ADMIN_COURSE_CREATE_IP_KEY.windowSec
-    )
-    : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    );
   if (!allowed)
     return failResponse(
       { message: "Too many requests" },
@@ -123,14 +121,12 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     allowed: isUserAllowed,
     remaining: remainingAttempts,
     retryAfterSec: retryAfter,
-  } = process.env.NODE_ENV === 'production'
-      ? await checkUser(
+  } = await checkUser(
         userInSession.id,
         ADMIN_COURSE_CREATE_USER_KEY.namespace,
         ADMIN_COURSE_CREATE_USER_KEY.max,
         ADMIN_COURSE_CREATE_USER_KEY.windowSec
-      )
-      : { allowed: true, remaining: 0, retryAfterSec: 0 };
+      );
 
   if (!isUserAllowed) {
     return failResponse(

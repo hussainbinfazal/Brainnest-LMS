@@ -16,9 +16,7 @@ const createCartOrderBodySchema = z.object({
 }).passthrough();
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ORDER_CREATE_CART_IP_KEY.namespace, ORDER_CREATE_CART_IP_KEY.max, ORDER_CREATE_CART_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ORDER_CREATE_CART_IP_KEY.namespace, ORDER_CREATE_CART_IP_KEY.max, ORDER_CREATE_CART_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB();
 

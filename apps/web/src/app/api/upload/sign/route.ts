@@ -25,9 +25,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         const UPLOADIPKEY = policy.requiresAuth ? UPLOAD_SIGN_IP_KEY : AVATAR_SIGN_IP_KEY;
         //Rate limit by IP In every case
 
-        const { allowed, remaining, retryAfterSec, ip: requestIp } = process.env.NODE_ENV === 'production'
-            ? await checkIp(request, UPLOADIPKEY.namespace, UPLOADIPKEY.max, UPLOADIPKEY.windowSec)
-            : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" }; /// rate limit
+        const { allowed, remaining, retryAfterSec, ip: requestIp } = await checkIp(request, UPLOADIPKEY.namespace, UPLOADIPKEY.max, UPLOADIPKEY.windowSec); /// rate limit
         ip = requestIp
         if (!allowed) {
             return failResponse(
@@ -50,9 +48,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             userId = session.user.id;
 
             //Per user limit, only reachable when a user exists
-            const userLimit = process.env.NODE_ENV === 'production'
-                ? await checkUser(userId, UPLOAD_SIGN_USER_KEY.namespace, UPLOAD_SIGN_USER_KEY.max, UPLOAD_SIGN_USER_KEY.windowSec)
-                : { allowed: true, retryAfterSec: 0 };
+            const userLimit = await checkUser(userId, UPLOAD_SIGN_USER_KEY.namespace, UPLOAD_SIGN_USER_KEY.max, UPLOAD_SIGN_USER_KEY.windowSec);
             if (!userLimit.allowed) return failResponse(`Too many requests. Try again in ${userLimit.retryAfterSec} seconds.`, 429, "RATE_LIMITED", { "Retry-After": String(userLimit.retryAfterSec) });
 
 

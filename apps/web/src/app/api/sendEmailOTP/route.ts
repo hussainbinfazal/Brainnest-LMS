@@ -26,9 +26,7 @@ function generateOTP(): string {
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
 
-    const { allowed, remaining, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, OTP_SEND_EMAIL_IP_KEY.namespace, OTP_SEND_EMAIL_IP_KEY.max, OTP_SEND_EMAIL_IP_KEY.windowSec)
-        : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, OTP_SEND_EMAIL_IP_KEY.namespace, OTP_SEND_EMAIL_IP_KEY.max, OTP_SEND_EMAIL_IP_KEY.windowSec);
     if (!allowed) {
         return failResponse({ message: 'Too many requests, please try again later' }, 429, undefined, { 'Retry-After': String(retryAfterSec) }, true);
     }

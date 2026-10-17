@@ -22,9 +22,7 @@ const completeRequestBodySchema: z.ZodType<{ uploadId: string; url: string }> = 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     try {
-        const { allowed, remaining, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-            ? await checkIp(request, UPLOAD_COMPLETE_IP_KEY.namespace, UPLOAD_COMPLETE_IP_KEY.max, UPLOAD_COMPLETE_IP_KEY.windowSec)
-            : { allowed: true, remaining: 0, retryAfterSec: 0, ip: "unknown" }; /// rate limit
+        const { allowed, remaining, retryAfterSec, ip } = await checkIp(request, UPLOAD_COMPLETE_IP_KEY.namespace, UPLOAD_COMPLETE_IP_KEY.max, UPLOAD_COMPLETE_IP_KEY.windowSec); /// rate limit
 
         if (!allowed) {
             return failResponse(`Too many requests. Try again in ${retryAfterSec} seconds.`, 429, "RATE_LIMITED", { "Retry-After": String(retryAfterSec) });
@@ -37,10 +35,10 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             logger.error(`Missing required fields for uploadId:`, { uploadId, url });
             return failResponse("Missing required fields", 400, "MISSING_FIELDS");
         }
-       if(process.env.NODE_ENV === 'production'){ const existing = await getCached<UploadSession>(UPLOAD_SESSION.namespace, uploadId);
+        const existing = await getCached<UploadSession>(UPLOAD_SESSION.namespace, uploadId);
         if (!existing) {
             return failResponse({ error: "Upload session not found" }, 404, undefined, undefined, true);
-        }}
+        }
 
         const updated: UploadSession & { url: string } = {
             ...existing,

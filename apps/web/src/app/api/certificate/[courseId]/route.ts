@@ -9,9 +9,7 @@ import { Session } from "next-auth";
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse | Response> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, CERTIFICATE_IP_KEY.namespace, CERTIFICATE_IP_KEY.max, CERTIFICATE_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CERTIFICATE_IP_KEY.namespace, CERTIFICATE_IP_KEY.max, CERTIFICATE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
   try {
     await connectDB(process.env.MONGODB_URI!);

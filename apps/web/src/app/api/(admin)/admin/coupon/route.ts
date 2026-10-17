@@ -30,9 +30,7 @@ const updateCouponBodySchema = z.object({
     }),
 });
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     try {
@@ -64,9 +62,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const session: Session | null = await auth()
@@ -86,9 +82,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
 
 export async function DELETE(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const session: Session | null = await auth()
@@ -118,9 +112,7 @@ export async function DELETE(request: CustomNextRequest): Promise<NextResponse> 
 }
 
 export async function PUT(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COUPON_IP_KEY.namespace, ADMIN_COUPON_IP_KEY.max, ADMIN_COUPON_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const body = await parseBody(request, updateCouponBodySchema);

@@ -10,9 +10,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request:
     CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, USER_COURSE_DETAIL_IP_KEY.namespace, USER_COURSE_DETAIL_IP_KEY.max, USER_COURSE_DETAIL_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_COURSE_DETAIL_IP_KEY.namespace, USER_COURSE_DETAIL_IP_KEY.max, USER_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);

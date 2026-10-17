@@ -5,9 +5,6 @@ import axios from "axios";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 
-
-
-
 export function useFileUploadField() { //Hook to upload file
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [progress, setProgress] = useState<number>(0)
@@ -42,6 +39,8 @@ export function useFileUploadField() { //Hook to upload file
             toast.error(error instanceof Error ? error.message : "Upload Failed")
             const message = getErrorMessage(error, "Upload Failed");
             setUploadError(message);
+            setFileName("");
+            setProgress(0);
             clientLogger.error(isVideoParsing ? "Video Parsing Failed" : "Upload Failed", message);
             return null
         } finally {

@@ -7,9 +7,7 @@ import { Session } from "next-auth";
 ;
 
 export async function GET(request: CustomNextRequest): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, CART_IP_KEY.namespace, CART_IP_KEY.max, CART_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CART_IP_KEY.namespace, CART_IP_KEY.max, CART_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     // logger.debug('Fetch cart controller called');

@@ -12,9 +12,7 @@ import { ADMIN_COURSE_DETAIL_IP_KEY, checkIp } from "@repo/shared/server";
 
 const updateCourseBodySchema = z.record(z.string(), z.any());
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const session: Session | null = await auth()
@@ -126,9 +124,7 @@ export async function GET(request: CustomNextRequest, context: { params: { cours
 
 
 export async function DELETE(request: CustomNextRequest, { params }: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     try {
         const { courseId } = params;
@@ -156,9 +152,7 @@ export async function DELETE(request: CustomNextRequest, { params }: { params: {
 
 
 export async function PUT(request: CustomNextRequest, context: { params: { courseId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession()

@@ -14,9 +14,7 @@ import { checkIp, PROGRESS_COURSE_IP_KEY } from '@repo/shared/server';
 
 
 export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, PROGRESS_COURSE_IP_KEY.namespace, PROGRESS_COURSE_IP_KEY.max, PROGRESS_COURSE_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COURSE_IP_KEY.namespace, PROGRESS_COURSE_IP_KEY.max, PROGRESS_COURSE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const params = await context.params;
     const courseId = Array.isArray(params.courseId)

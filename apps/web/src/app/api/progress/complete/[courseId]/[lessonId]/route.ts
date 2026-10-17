@@ -11,9 +11,7 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { checkIp, PROGRESS_COMPLETE_IP_KEY } from '@repo/shared/server';
 export async function POST(request: CustomNextRequest, context: { params: { courseId: string, sectionId: string, lessonId: string } }) {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, PROGRESS_COMPLETE_IP_KEY.namespace, PROGRESS_COMPLETE_IP_KEY.max, PROGRESS_COMPLETE_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COMPLETE_IP_KEY.namespace, PROGRESS_COMPLETE_IP_KEY.max, PROGRESS_COMPLETE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     const authSession: Session | null = await auth()

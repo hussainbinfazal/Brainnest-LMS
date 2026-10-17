@@ -8,9 +8,7 @@ import { CustomNextRequest } from '@/types/server';
 const razorpayService = new RazorpayService();
 
 export async function GET(request: CustomNextRequest) {
-    const { allowed, retryAfterSec, ip } = process.env.NODE_ENV === 'production'
-        ? await checkIp(request, CRON_RECONCILE_IP_KEY.namespace, CRON_RECONCILE_IP_KEY.max, CRON_RECONCILE_IP_KEY.windowSec)
-        : { allowed: true, retryAfterSec: 0, ip: "unknown" };
+    const { allowed, retryAfterSec, ip } = await checkIp(request, CRON_RECONCILE_IP_KEY.namespace, CRON_RECONCILE_IP_KEY.max, CRON_RECONCILE_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     // ✅ Protect the cron endpoint
