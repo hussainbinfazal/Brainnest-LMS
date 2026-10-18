@@ -33,7 +33,6 @@ export function AppSidebar() {
   const { theme, setTheme } = useTheme();
   const authUser = useAuthStore((state) => state.authUser);
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
-  const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
   const menuRef = useRef(null); // <-- Add this
   const avatarRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,10 +42,7 @@ export function AppSidebar() {
 
     await axios.post("/api/users/logout");
     // setUser(null);
-
     clearAuthUser();
-    setHasInitialized(false);
-
     toast.success("Logout successful");
     router.push("/login");
   };
@@ -146,11 +142,11 @@ export function AppSidebar() {
                     <Avatar className="ml-4 relative">
                       <AvatarImage
                         className="my-class"
-                        src={authUser?.imageUrl || authUser?.profileImage}
+                        src={authUser?.profileImage}
                       />
                       <AvatarFallback className="my-class">
 
-                        {authUser?.firstName?.charAt(0).toUpperCase()}
+                        {authUser?.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   )}{" "}
@@ -173,17 +169,17 @@ export function AppSidebar() {
                 className="w-[--radix-popper-anchor-width]"
               >
                 <DropdownMenuItem className=""
-                  inset="" onClick={() => router.push("/myprofile")}>
+                  inset onClick={() => router.push("/myprofile")}>
                   <span onClick={() => router.push("/mycourses")}>Account</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className=""
-                  inset="">
+                  inset>
                   <span onClick={() => router.push("/course/manage")}>
                     Manage Courses
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className=""
-                  inset="">
+                  inset>
                   <span>
                     {authUser ? (
                       <p

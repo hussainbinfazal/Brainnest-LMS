@@ -12,6 +12,7 @@ import { getUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUser
 import { getCachedTopic } from "@/lib/non-Admin-Cached/getCachedTopic";
 import { getLessonsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedLessons";
 import { getSectionsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedSections";
+import { serializeCourse } from "@/utils/serializer/course.Serializer";
 
 async function CoursePage({ params }: { params: { courseId: string } }): Promise<JSX.Element> {
   await connectDB(process.env.MONGODB_URI!);
@@ -64,6 +65,7 @@ async function CoursePage({ params }: { params: { courseId: string } }): Promise
     logger.warn("Instructor stats is null", { courseId: course._id });
     return notFound();
   }
+
 
   return <CourseIdPage initialCourse={course} initialReviews={reviews} allCategories={categoriesWithChildren} courseCategory={courseCategoryWithChildren} relevantCategoryCourses={relevantCategoryCourses} instructorStats={instructorStats} userCourseStats={userCourse} otherCoursesByInstructor={instructorOtherCourses} initialTopic={topic} allLessons={lessons} allSections={sections} uProgress={progress} />;
 }

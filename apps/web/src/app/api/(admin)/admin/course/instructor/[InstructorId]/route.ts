@@ -165,6 +165,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
         logger.info("Course deleted successfully", { courseId });
         return successResponse({ message: "Course deleted successfully" }, 200, undefined, undefined, true)
     } catch (error: unknown) {
+        console.error("This is the error in delete instructor route",error)
         const message: string = error instanceof Error ? error.message : "Something went wrong";
         logger.error("Something went wrong while deleting course", { error, message });
         return failResponse({ message: "Error in deleting course" }, 500, undefined, undefined, true)

@@ -126,6 +126,7 @@ const ManageCoursePageComponent = ({
             authUser.role !== "instructor" ||
             !instructorId
         ) {
+            toast.error('Unauthorized')
             return;
         }
         try {

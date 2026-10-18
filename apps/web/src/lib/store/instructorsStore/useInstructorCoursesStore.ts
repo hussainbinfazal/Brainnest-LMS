@@ -34,8 +34,6 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
     cachedTotalCourses: 0,
     isLoading: false,
     hasFetched: false,
-
-
     fetchPaginatedInstructorCourses: async ({ page, itemsPerPage, instructorId }: { page: number, itemsPerPage: number, instructorId: string }) => {
         set({ isLoading: true })
         try {

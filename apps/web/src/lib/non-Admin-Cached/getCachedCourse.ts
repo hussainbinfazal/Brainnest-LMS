@@ -27,7 +27,7 @@ export async function getCoursesWithCache(): Promise<CCourse[]> {
     // console.log("This is the url of mongodb", process.env.MONGODB_URI)
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const courses: ICourse[] = await Course.find({}).sort({ createdAt: -1 })
+        const courses: ICourse[] = await Course.find({ isDeleted: false }).sort({ createdAt: -1 })
             .populate("instructorId", "_id name email")
             .populate({
                 path: "category",
@@ -69,7 +69,7 @@ export async function getCourseByIdWithCache(courseId: string): Promise<CCourse 
 
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const course: ICourse | null = await Course.findById(courseId)
+        const course: ICourse | null = await Course.findOne({ _id: courseId, isDeleted: false })
             .populate("instructorId", "_id name email")
             .populate({
                 path: "category",
@@ -116,7 +116,7 @@ export async function getReleatedCoursesWithCache(courseId: string): Promise<CCo
 
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const relatedCourses: ICourse[] = await Course.find({ category: courseId }).sort({ createdAt: -1 }).limit(5).lean().exec();
+        const relatedCourses: ICourse[] = await Course.find({ category: courseId, isDeleted: false }).sort({ createdAt: -1 }).limit(5).lean().exec();
         const serialized = serializeCourses(relatedCourses);
         await setCached(RELATED_COURSES.namespace, courseId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Related Courses fetched successfully", { courseCount: serialized.length });
@@ -142,7 +142,7 @@ export async function getCourseByParamsWithCache(page: number, limit: number, sk
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
             Course.countDocuments().lean().exec(),
-            Course.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec()
+            Course.find({ isDeleted: false }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec()
         ]);
         const totalCourses: number = totalCourseDoc;
         const courses: ICourse[] = coursesInDB;
@@ -197,7 +197,7 @@ export async function getInstructorStatsWithCache(instructorId: string): Promise
     await connectDB(process.env.MONGODB_URI!);
     try {
         const stats = await Course.aggregate<IInstructorStats>([
-            { $match: { instructorId: new mongoose.Types.ObjectId(instructorId) } },
+            { $match: { instructorId: new mongoose.Types.ObjectId(instructorId), isDeleted: false } },
             {
                 $group: {
                     _id: "$instructorId",
@@ -206,7 +206,7 @@ export async function getInstructorStatsWithCache(instructorId: string): Promise
                     totalReviews: { $sum: "$reviews" },
                     totalRatings: { $sum: "$ratingSum" }
                 }
-            }
+            },
         ]);
         const serialized = serializeDocument(stats[0]);
         await setCached(INSTRUCTOR_STATS.namespace, instructorId, serialized, CACHE_TTL.MEDIUM);
@@ -237,7 +237,7 @@ export async function getUserCourseWithCache(userId: string): Promise<CCourse[] 
     try {
         const userCourses = await UserCourse.find({ userId: new mongoose.Types.ObjectId(userId) }).lean().exec();
         const courseIds = userCourses.map((userCourse) => userCourse.courseId);
-        const courses = await Course.find({ _id: { $in: courseIds } }).lean().exec();
+        const courses = await Course.find({ _id: { $in: courseIds }, isDeleted: false }).lean().exec();
         const serialized = serializeCourses(courses);
         await setCached(USER_COURSE_LIST.namespace, userId, serialized, CACHE_TTL.MEDIUM);
         logger.info("User Courses fetched successfully", { courseCount: serialized.length });
@@ -261,7 +261,7 @@ export async function getInstructorOtherCoursesWithCache(instructorId: string, c
     }
     await connectDB(process.env.MONGODB_URI!);
     try {
-        const instructoreOtherCourses: ICourse[] = await Course.find({ _id: { $ne: courseId }, instructorId: instructorId, }).limit(5).lean().exec();
+        const instructoreOtherCourses: ICourse[] = await Course.find({ _id: { $ne: courseId }, instructorId: instructorId, isDeleted: false }).sort({ createdAt: -1 }).limit(5).lean().exec();
         const serialized = serializeCourses(instructoreOtherCourses);
         await setCached(INSTRUCTOR_OTHER_COURSES.namespace, instructorId, serialized, CACHE_TTL.MEDIUM);
         logger.info("Instructor Other Courses fetched successfully", { courseCount: serialized.length });
@@ -313,7 +313,8 @@ export async function getUserLikedCoursesWithCache(userId: string, page: number,
         };
         const courseIds = userCourses.map((uc) => uc.courseId);
         const courses: ICourse[] = await Course.find({
-            _id: { $in: courseIds }
+            _id: { $in: courseIds },
+            isDeleted: false
         })
             .populate("instructorId", "_id name email")
             .populate({
@@ -329,7 +330,7 @@ export async function getUserLikedCoursesWithCache(userId: string, page: number,
             .limit(limit)
             .lean({ virtuals: true })
             .exec();
-        const totalCourseCount = await Course.countDocuments({ _id: { $in: courseIds } }).lean().exec();
+        const totalCourseCount = await Course.countDocuments({ _id: { $in: courseIds }, isDeleted: false }).lean().exec();
         const totalPages = Math.ceil(totalCourseCount / limit);
         const hasNextPage: boolean = page < totalPages;
         const hasPrevPage: boolean = page > 1;

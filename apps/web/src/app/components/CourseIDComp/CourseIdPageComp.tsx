@@ -977,14 +977,18 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
                           }`}
                       >
                         <div className="flex gap-4 flex-1">{isEnrolled && <button className="flex justify-start items-center gap-4"
-                          aria-label={viewSectionId === section?._id ? "collapse-section" : "expand-section"}
+                          disabled={!section._id}
+                          aria-label={viewSectionId === section._id ? "collapse-section" : "expand-section"}
                           onClick={() => {
-                            if (viewSectionId === section?._id) {
+                            const sectionId = section._id;
+                            if (!sectionId) return;
+
+                            if (viewSectionId === sectionId) {
                               setViewSection(false);
                               setViewSectionId(null);
                             } else {
                               setViewSection(true);
-                              setViewSectionId(section?._id);
+                              setViewSectionId(sectionId);
                             }
                           }}>
                           {viewSectionId === section?._id ? (
@@ -1457,5 +1461,4 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     </div >
   );
 };
-
 
