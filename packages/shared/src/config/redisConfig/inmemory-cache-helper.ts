@@ -1,10 +1,13 @@
+import { redisIsDown } from "./cache";
+import { buildKey, CacheOp, runPipeline, USE_MEMORY } from "./cache-helper";
+
 type Entry = {
     json: string; expiresAt: number | null
 };
 
 // Upper limit so a long dev session cannot grow memory forever
 export const MAX_ENTRIES = 5000;
-
+export const FALLBACK_TTL_SEC = 10;
 
 ///Keep the Map on globalThis, because nextjs  dev revaluates modules on hot reload
 const g = globalThis as unknown as { __memCache?: Map<string, Entry> }
@@ -108,7 +111,7 @@ export function memDelete(key: string): void {
 }
 
 
-
+///Delete full namespace
 ////Delete every key that starts with a prefix, like redis SCAN + DEL namespace wipe
 export function memDeleteByPrefix(prefix: string): void {
     //Deleting from a Map 
@@ -116,5 +119,49 @@ export function memDeleteByPrefix(prefix: string): void {
         ///Remove matching keys only 
         if (key.startsWith(prefix)) store.delete(key)
     }
-}
+};
 
+// Development keeps the full TTL; an outage caps it so stale data stays short-lived
+const memTtl = (ttl: number): number => (USE_MEMORY) ? ttl : Math.min(ttl, FALLBACK_TTL_SEC);
+
+function memApplyOpsToMemory<T>(ops: CacheOp<T>[]): unknown[] {
+    ///Operations are applied in order
+    return ops.map((op) => {
+        const key = buildKey(op.namespace, op.id)
+        //Set
+        if (op.type === 'set') {
+            memSet(key, op.value, memTtl(op.ttlSeconds))
+            return "OK"
+        }
+        //Del
+        if (op.type === 'del') {
+            memDelete(key);
+            return 1;
+        }
+        // Get: return the stored value, or null on a miss
+        return memGet(key);
+    })
+};
+
+
+export async function execOps<T>(ops: CacheOp<T>[]): Promise<unknown[]> {
+    //Developer or breaker open never touch redis
+    if (USE_MEMORY || redisIsDown()) return memApplyOpsToMemory(ops);
+
+    ///Production
+    const results = await runPipeline<unknown>((p) => {
+        ///Translate each op into per op
+        for (const op of ops) {
+            const key = buildKey(op.namespace, op.id);
+            if (op.type === "set") {
+                p.set(key, op.value, { ex: memTtl(op.ttlSeconds) });
+            } else if (op.type === "get") {
+                p.get(key);
+            } else {
+                p.del(key);
+            }
+        }
+    }, { count: ops.length, sets: ops.filter((op) => op.type === "set").length, gets: ops.filter((op) => op.type === "get").length, deletes: ops.filter((op) => op.type === "del").length })
+    if (results === null) return memApplyOpsToMemory(ops);
+    return results;
+}

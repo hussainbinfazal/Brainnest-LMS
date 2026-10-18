@@ -41,3 +41,44 @@ export function getRedisClient() {
 // })
 
 // logger.info("Upstash Redis connected")
+
+
+export type RedisFailure = 'quota' | 'auth' | 'network' | 'unknown';
+
+
+///Simplify redis failure
+export function classifyRedisFailureError(err: unknown): RedisFailure {
+    const message = (err instanceof Error ? err.message : String(err)).toLowerCase();
+    //Network error code
+    const code = String((err as { code?: string })?.code ?? '').toUpperCase();
+
+    //Quota limit
+    if (/max (daily )?request|request limit|quota|max data size| max request size| oom command not allowed/.test(message)) return 'quota';
+    //Credentials Error
+    if (/wrongpass|noauth|unauthorized|invalid token/.test(message)) return 'auth'
+
+    ///No response, netwrok code
+    if (['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND'].includes(code) || /fetch failed|timeout|network|socket/.test(message))
+        return 'network'
+    return "unknown"
+}
+
+//Timestamp until which we skip redis
+let redisDownUntil = 0;
+
+export function markRedisDownFailure(err: unknown): void {
+    ///Decide what the kind of failure this is 
+    const kind = classifyRedisFailureError(err);
+    //Quota: back off for 10 minutes, since retrying cannot succeded and may burn commands
+    ///Network: 30 seconds, since outages are usually short
+    ///Auth/unknown: 60 seconds, and the log below tells you to go look
+    const backoffMs = kind === 'quota' ? 10 * 60 * 1000 : kind === 'network' ? 30 * 1000 : 60 * 1000;
+    ///Skip redis untill then
+    redisDownUntil = Date.now() + backoffMs;
+    //Log the kind AND the raw message
+    logger.error('Redis failed', { kind, message: err instanceof Error ? err.message : String(err), backoffMs });
+};
+
+
+export const redisIsDown = () => Date.now() < redisDownUntil;
+
