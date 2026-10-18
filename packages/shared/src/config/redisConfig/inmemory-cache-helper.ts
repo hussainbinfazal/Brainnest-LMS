@@ -121,47 +121,5 @@ export function memDeleteByPrefix(prefix: string): void {
     }
 };
 
-// Development keeps the full TTL; an outage caps it so stale data stays short-lived
-const memTtl = (ttl: number): number => (USE_MEMORY) ? ttl : Math.min(ttl, FALLBACK_TTL_SEC);
-
-function memApplyOpsToMemory<T>(ops: CacheOp<T>[]): unknown[] {
-    ///Operations are applied in order
-    return ops.map((op) => {
-        const key = buildKey(op.namespace, op.id)
-        //Set
-        if (op.type === 'set') {
-            memSet(key, op.value, memTtl(op.ttlSeconds))
-            return "OK"
-        }
-        //Del
-        if (op.type === 'del') {
-            memDelete(key);
-            return 1;
-        }
-        // Get: return the stored value, or null on a miss
-        return memGet(key);
-    })
-};
 
 
-export async function execOps<T>(ops: CacheOp<T>[]): Promise<unknown[]> {
-    //Developer or breaker open never touch redis
-    if (USE_MEMORY || redisIsDown()) return memApplyOpsToMemory(ops);
-
-    ///Production
-    const results = await runPipeline<unknown>((p) => {
-        ///Translate each op into per op
-        for (const op of ops) {
-            const key = buildKey(op.namespace, op.id);
-            if (op.type === "set") {
-                p.set(key, op.value, { ex: memTtl(op.ttlSeconds) });
-            } else if (op.type === "get") {
-                p.get(key);
-            } else {
-                p.del(key);
-            }
-        }
-    }, { count: ops.length, sets: ops.filter((op) => op.type === "set").length, gets: ops.filter((op) => op.type === "get").length, deletes: ops.filter((op) => op.type === "del").length })
-    if (results === null) return memApplyOpsToMemory(ops);
-    return results;
-}

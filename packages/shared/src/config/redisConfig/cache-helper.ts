@@ -1,6 +1,6 @@
 import { getRedisClient, markRedisDownFailure, redisIsDown } from "./cache";
 import { logger } from "../../logger/logger";
-import { execOps, memDecrIfExists, memDelete, memDeleteByPrefix, memGet, memIncr, memSet, memSetNX } from "./inmemory-cache-helper";
+import { FALLBACK_TTL_SEC, memDecrIfExists, memDelete, memDeleteByPrefix, memGet, memIncr, memSet, memSetNX } from "./inmemory-cache-helper";
 
 export const CACHE_TTL = {
   SHORT: 60, //1 min - volatile data (session type data)
@@ -22,11 +22,11 @@ export async function getCached<T>(
   namespace: string,
   id: string | number
 ): Promise<T | null> {
-  const redisClient = getRedisClient()
   const key: string = buildKey(namespace, id)
   if (USE_MEMORY || redisIsDown()) return memGet<T>(key);
   try {
 
+    const redisClient = getRedisClient()
     // const response = await redisClient.ping();
     const value = await redisClient.get<T>(key)
 
@@ -47,12 +47,12 @@ export async function setCached<T>(
   ttlSeconds: number = CACHE_TTL.MEDIUM
 ): Promise<void> {
   const key = buildKey(namespace, id)
-  if (USE_MEMORY || redisIsDown()) return memSet(key, value, ttlSeconds);
+  if (USE_MEMORY || redisIsDown()) return memSet(key, value, memTtl(ttlSeconds));
   try {
     const redisClient = getRedisClient()
     const response = await redisClient.ping();
     logger.info("Redis ping successful", { response });
-    await redisClient.set(key, value, { ex: ttlSeconds })
+    await redisClient.set(key, value, { ex: memTtl(ttlSeconds) })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err
     logger.error(`[cache] setCached failed for key :`, { key, err: message, namespace: namespace })
@@ -69,7 +69,7 @@ export async function invalidateCached(
   // No id: wipe every key that starts with "namespace:"
   else memDeleteByPrefix(`${namespace}:`);
   // Development or breaker open: nothing more to do (see the note below about lost deletes)
-  if (USE_MEMORY || redisIsDown()) return memDeleteByPrefix(namespace)
+  if (USE_MEMORY || redisIsDown()) return;
   try {
     const redisClient = getRedisClient()
     if (id !== undefined) {
@@ -94,7 +94,7 @@ export async function invalidateCached(
     const message = err instanceof Error ? err.message : err
     logger.error(`[cache] invalidateCached failed for namespace:`, { err: message, namespace: namespace })
     markRedisDownFailure(err)
-    return id !== undefined ? memDelete(buildKey(namespace, id)) : memDeleteByPrefix(namespace)
+
   }
 }
 
@@ -103,7 +103,7 @@ export async function invalidateCached(
 //
 export async function setOnlyIfNotExist(namespace: string, id: string | number, value: string, ttlSeconds: number = CACHE_TTL.SHORT): Promise<boolean> {
   const key = buildKey(namespace, id)
-  if (USE_MEMORY || redisIsDown()) return memSetNX(key, value, ttlSeconds);
+  if (USE_MEMORY || redisIsDown()) return memSetNX(key, value, memTtl(ttlSeconds));
   try {
     const result = await getRedisClient().set(key, value, { ex: ttlSeconds, nx: true }) //nx means only set if key doesn't exist
     return result === "OK" //null when key already exists
@@ -111,7 +111,7 @@ export async function setOnlyIfNotExist(namespace: string, id: string | number, 
     const message = err instanceof Error ? err.message : err
     logger.error(`[cache] setOnlyIfNotExist failed for key :`, { key, err: message, namespace: namespace })
     markRedisDownFailure(err)
-    return memSetNX(key, value, ttlSeconds);
+    return memSetNX(key, value, memTtl(ttlSeconds));
 
   }
 }
@@ -121,10 +121,10 @@ export async function incrementWithTtl(
   id: string | number,
   ttlSeconds: number,
   by = 1,
-): Promise<number | null> {
+): Promise<number> {
   const key = buildKey(namespace, id)
   try {
-    if (USE_MEMORY || redisIsDown()) return memIncr(key, by, ttlSeconds);
+    if (USE_MEMORY || redisIsDown()) return memIncr(key, by, memTtl(ttlSeconds));
     const tx = getRedisClient().multi();
     tx.incrby(key, by);
     tx.expire(key, ttlSeconds, 'NX'); // TTL only if the key has none
@@ -226,13 +226,66 @@ export async function runPipeline<T = unknown>(
   context: Record<string, unknown>
 ): Promise<T[] | null> {
   if (USE_MEMORY || redisIsDown()) return null;
+  try {
 
-  const redisClient: ReturnType<typeof getRedisClient> = getRedisClient();
-  const pipeLine: ReturnType<ReturnType<typeof getRedisClient>["pipeline"]> = redisClient.pipeline();
-  build(pipeLine);
-  const response = await pipeLine.exec();
-  return response as T[];
+    const redisClient: ReturnType<typeof getRedisClient> = getRedisClient();
+    const pipeLine: ReturnType<ReturnType<typeof getRedisClient>["pipeline"]> = redisClient.pipeline();
+    build(pipeLine);
+    const response = await pipeLine.exec();
+    return response as T[];
+  }
+  catch (error: unknown) {
+    const message = error instanceof Error ? error.message : error;
+    logger.error(`[cache] runPipeline failed for context :`, { context, err: message });
+    markRedisDownFailure(error);
+    return null
+  }
 }
+
+// Development keeps the full TTL; an outage caps it so stale data stays short-lived
+const memTtl = (ttl: number): number => (USE_MEMORY) ? ttl : Math.min(ttl, FALLBACK_TTL_SEC);
+
+function memApplyOpsToMemory<T>(ops: CacheOp<T>[]): unknown[] {
+  ///Operations are applied in order
+  return ops.map((op) => {
+    const key = buildKey(op.namespace, op.id)
+    //Set
+    if (op.type === 'set') {
+      memSet(key, op.value, memTtl(op.ttlSeconds))
+      return "OK"
+    }
+    //Del
+    if (op.type === 'del') {
+      memDelete(key);
+      return 1;
+    }
+    // Get: return the stored value, or null on a miss
+    return memGet(key);
+  })
+};
+
+export async function execOps<T>(ops: CacheOp<T>[]): Promise<unknown[]> {
+  //Developer or breaker open never touch redis
+  if (USE_MEMORY || redisIsDown()) return memApplyOpsToMemory(ops);
+
+  ///Production
+  const results = await runPipeline<unknown>((p) => {
+    ///Translate each op into per op
+    for (const op of ops) {
+      const key = buildKey(op.namespace, op.id);
+      if (op.type === "set") {
+        p.set(key, op.value, { ex: memTtl(op.ttlSeconds) });
+      } else if (op.type === "get") {
+        p.get(key);
+      } else {
+        p.del(key);
+      }
+    }
+  }, { count: ops.length, sets: ops.filter((op) => op.type === "set").length, gets: ops.filter((op) => op.type === "get").length, deletes: ops.filter((op) => op.type === "del").length })
+  if (results === null) return memApplyOpsToMemory(ops);
+  return results;
+}
+
 
 
 ///CacheOps with redis Pipeline

@@ -30,7 +30,7 @@ import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { useTheme } from "next-themes";
 export function AppSidebar() {
   const router = useRouter();
- const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const authUser = useAuthStore((state) => state.authUser);
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
   const setHasInitialized = useAuthStore((state) => state.setHasInitialized);
@@ -84,7 +84,7 @@ export function AppSidebar() {
                 href="/myprofile/mycertificates"
                 className="px-4 text-xl font-semibold"
               >
-                My Certificates{}
+                My Certificates{ }
               </Link>
             )}
           </nav>
@@ -110,27 +110,27 @@ export function AppSidebar() {
 
             {authUser &&
               (authUser.role === "instructor" ? (
-                <Link href="/course/manage">
+                <Link href="instructor/course/manage">
                   <Button className=" rounded-sm" variant="default"
-  size="sm"
-  >Manage</Button>
+                    size="sm"
+                  >Manage</Button>
                 </Link>
               ) : (
                 <Link href={"/course/manage"}>
                   <Button variant="default"
-  size="sm" className="ml-4 rounded-sm">
+                    size="sm" className="ml-4 rounded-sm">
                     Teach on Brainnest
                   </Button>
                 </Link>
               ))}
             {authUser ? (
               <Button className=""
-   variant="default"
-  size="sm" onClick={handleLogout}>Sign out</Button>
+                variant="default"
+                size="sm" onClick={handleLogout}>Sign out</Button>
             ) : (
               <Link href="/login">
                 <Button variant="default"
-  size="sm" className="rounded-sm">Login</Button>
+                  size="sm" className="rounded-sm">Login</Button>
               </Link>
             )}
           </div>
@@ -141,16 +141,16 @@ export function AppSidebar() {
           <SidebarMenuItem className="my-class">
             <DropdownMenu onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton  tooltip="Main Menu" className="">
+                <SidebarMenuButton tooltip="Main Menu" className="">
                   {authUser && (
                     <Avatar className="ml-4 relative">
                       <AvatarImage
-                      className="my-class"
+                        className="my-class"
                         src={authUser?.imageUrl || authUser?.profileImage}
                       />
                       <AvatarFallback className="my-class">
-                        
-                        {authUser?.firstName ?.charAt(0).toUpperCase()}
+
+                        {authUser?.firstName?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   )}{" "}
@@ -173,17 +173,17 @@ export function AppSidebar() {
                 className="w-[--radix-popper-anchor-width]"
               >
                 <DropdownMenuItem className=""
-  inset="" onClick={() => router.push("/myprofile")}>
+                  inset="" onClick={() => router.push("/myprofile")}>
                   <span onClick={() => router.push("/mycourses")}>Account</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className=""
-  inset="">
+                  inset="">
                   <span onClick={() => router.push("/course/manage")}>
                     Manage Courses
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className=""
-  inset="">
+                  inset="">
                   <span>
                     {authUser ? (
                       <p
