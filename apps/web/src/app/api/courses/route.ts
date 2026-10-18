@@ -31,29 +31,29 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     };
     //Custom query to fetch course by on the basis of params.
     const query: QueryFilter<ICourse> = {};
-    if (categoryIds.length > 0) query.category = { $in: categoryIds };
-    if (languages.length > 0) query.language = { $in: languages };
-    if (levels.length > 0) query.levels = { $in: levels };
+    if (categoryIds.length > 0) query.category = { $in: categoryIds, isDeleted: false };
+    if (languages.length > 0) query.language = { $in: languages, isDeleted: false };
+    if (levels.length > 0) query.levels = { $in: levels, isDeleted: false };
 
     const cacheId = `page-${page}-limit:${limit}-cat:${[...categoryIds].sort().join(",")}-lang:${[...languages].sort().join(",")}-level:${[...levels].sort().join(",")}`;//Dynamic Conditional Cache Key
     const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, cacheId);
     if (cached) {
         logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
         return successResponse({
-                message: "Courses Fetched Successfully",
-                data: cached.paginatedCourses,
-                currentPage: cached.currentPage,
-                hasNextPage: cached.hasNextPage,
-                hasPrevPage: cached.hasPrevPage,
-                totalPages: cached.totalPages,
-                totalCourses: cached.totalCourses
-            }, 200, undefined, undefined, true)
+            message: "Courses Fetched Successfully",
+            data: cached.paginatedCourses,
+            currentPage: cached.currentPage,
+            hasNextPage: cached.hasNextPage,
+            hasPrevPage: cached.hasPrevPage,
+            totalPages: cached.totalPages,
+            totalCourses: cached.totalCourses
+        }, 200, undefined, undefined, true)
     };
     await connectDB(process.env.MONGODB_URI!);
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
-            Course.countDocuments(query).lean().exec(),
-            Course.find(query).skip(skip).limit(limit).lean().exec()
+            Course.countDocuments({ query }).lean().exec(),
+            Course.find({ query, isDeleted: false }).skip(skip).limit(limit).lean().exec()
         ]);
         const totalCourses: number = totalCourseDoc;
         const courses: ICourse[] = coursesInDB;

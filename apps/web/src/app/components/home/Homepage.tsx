@@ -108,13 +108,8 @@ export default function HomePage({ initialCourses, fetchedReviews, allCategories
     setAllCourses(initialCourses)
   }, [initialCourses])
   useEffect(() => {
-
-    if (allReviews.length > 0 && allCourses.length > 0 && allCategories.length > 0) {
-
-      fetchCourses({ fetchedCategories: allCategories, fetchedReviews: allReviews, fetchedCourses: allCourses });
-    }
-
-  }, [allReviews, allCourses, allCategories])
+    fetchCourses({ fetchedCategories: allCategories, fetchedReviews: allReviews, fetchedCourses: allCourses });
+  }, [allReviews, allCourses, allCategories, fetchCourses])
 
   // Effect for fetching user location (if it's independent)
   useEffect(() => {

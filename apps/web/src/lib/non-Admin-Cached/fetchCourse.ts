@@ -1,5 +1,4 @@
 import axios from "axios";
-import { CCourse, CReview } from "@/types/client";
 import { ICourse } from '@repo/shared/server';
 import { logger } from "@repo/shared/server";
 
@@ -9,6 +8,7 @@ interface fetchSampleCoursesProps {
   limit?: number;
   paginatedAllCourses?: boolean;
 }
+///Client Side Code
 export async function fetchServerCourses({ page = 0, paginatedAllCourses = false, limit = 5 }: fetchSampleCoursesProps = {}): Promise<ICourse[]> {
   console.log("Fetching server courses");
   try {
