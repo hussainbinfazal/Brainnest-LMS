@@ -145,40 +145,29 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
 
 ///Single course by instructor with particular courseId
 export async function getInstructorCourseWithCache(instructorId: string, courseId: string): Promise<InstructorCourseResponse> {
+    const emptyResponse: InstructorCourseResponse = {
+        course: null,
+        sections: [],
+        lessons: []
+    }
     const session: Session | null = await auth()
     if (!session?.user) {
         logger.warn("Unauthorized", { user: session?.user })
-        return {
-            course: null,
-            sections: [],
-            lessons: []
-        }
+        return emptyResponse
     }
     const user: ISessionUser | null = session?.user
     // const user = await getSession()
     if (user?.role !== "instructor") {
         logger.error("Unauthorized", { user })
-        return {
-            course: null,
-            sections: [],
-            lessons: []
-        }
+        return emptyResponse
     }
     if (!validateMongooseId({ userId: instructorId })) {
         logger.error("Invalid User", { userId: instructorId });
-        return {
-            course: null,
-            sections: [],
-            lessons: []
-        };
+        return emptyResponse
     };
     if (!validateMongooseId({ courseId: courseId })) {
         logger.error("Invalid Course Details in Instructor Cached Course", { courseId });
-        return {
-            course: null,
-            sections: [],
-            lessons: []
-        };
+        return emptyResponse
     };
     const cacheId = `${courseId}:${instructorId}`;
     const cachedInstructorCourse = await getCached<InstructorCourseResponse>(INSTRUCTOR_COURSE_WITH_ID.namespace, cacheId);
@@ -224,11 +213,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
         }
         if (!courseSectionsFromDB || !Array.isArray(courseSectionsFromDB) || courseSectionsFromDB.length === 0 || !Array.isArray(courseLesonsFromDB) || courseLesonsFromDB.length === 0) {
             logger.error("Something went wrong while fetching instructor's course, sections and lessons", { courseId: courseId, instructorId: instructorId, sectionsLength: courseSectionsFromDB.length, lessonsLength: courseLesonsFromDB.length });
-            return {
-                course: null,
-                sections: [],
-                lessons: []
-            };
+            return emptyResponse
         }
 
         logger.info("Instuctor Courses fetched successfully");
@@ -244,10 +229,6 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Something went wrong while fetching instructor courses';
         logger.error("Error fetching courses", { message, error });
-        return {
-            course: null,
-            sections: [],
-            lessons: []
-        };
+        return emptyResponse
     }
 }
