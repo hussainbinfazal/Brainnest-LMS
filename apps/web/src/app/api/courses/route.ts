@@ -31,9 +31,9 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     };
     //Custom query to fetch course by on the basis of params.
     const query: QueryFilter<ICourse> = {};
-    if (categoryIds.length > 0) query.category = { $in: categoryIds, isDeleted: false };
-    if (languages.length > 0) query.language = { $in: languages, isDeleted: false };
-    if (levels.length > 0) query.levels = { $in: levels, isDeleted: false };
+    if (categoryIds.length > 0) query.category = { $in: categoryIds};
+    if (languages.length > 0) query.language = { $in: languages };
+    if (levels.length > 0) query.levels = { $in: levels };
 
     const cacheId = `page-${page}-limit:${limit}-cat:${[...categoryIds].sort().join(",")}-lang:${[...languages].sort().join(",")}-level:${[...levels].sort().join(",")}`;//Dynamic Conditional Cache Key
     const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, cacheId);
@@ -52,7 +52,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     await connectDB(process.env.MONGODB_URI!);
     try {
         const [totalCourseDoc, coursesInDB] = await Promise.all([
-            Course.countDocuments({ query }).lean().exec(),
+            Course.countDocuments({ query,isDeleted:false }).lean().exec(),
             Course.find({ query, isDeleted: false }).skip(skip).limit(limit).lean().exec()
         ]);
         const totalCourses: number = totalCourseDoc;

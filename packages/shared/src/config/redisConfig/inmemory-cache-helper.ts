@@ -1,5 +1,3 @@
-import { redisIsDown } from "./cache";
-import { buildKey, CacheOp, runPipeline, USE_MEMORY } from "./cache-helper";
 
 type Entry = {
     json: string; expiresAt: number | null
@@ -15,7 +13,7 @@ const g = globalThis as unknown as { __memCache?: Map<string, Entry> }
 
 
 //This map is created once and we could reuse it across mulitple reloads
-const store = (g.__memCache ?? new Map<string, Entry>());
+const store = g.__memCache ?? (g.__memCache ?? new Map<string, Entry>());
 
 
 
@@ -25,7 +23,6 @@ function live(key: string): Entry | undefined {
     ///Look up the raw entry
     const entry = store.get(key);
     if (!entry) return undefined;
-
     if (entry.expiresAt !== null && entry.expiresAt <= Date.now()) {
         ///Delete the entry if it has expired
         store.delete(key);
@@ -47,16 +44,9 @@ export function memGet<T>(key: string): T | null {
 ///Setter In Memory Helper
 export function memSet<T>(key: string, value: T, ttlSec: number): void {
     //Serialize like Upstash does; undefined becomes 'null' because JSON.stringify() return undefined for it
-    const json = JSON.stringify(value) ?? 'null';
     ///Delete first so teh key moves to the end of the Map's insertion order
-    store.delete(key);
-    if (store.size >= MAX_ENTRIES) {
-        //The first key in a MAP is the oldest one
-        const oldest = store.keys().next().value;
-        ///Guard for an empty Map
-        if (oldest !== undefined) store.delete(oldest);
-    };
-    store.set(key, { json, expiresAt: ttlSec > 0 ? Date.now() + ttlSec * 1000 : null });
+    const v = { json: JSON.stringify(value), expiresAt: ttlSec > 0 ? Date.now() + ttlSec * 1000 : null };
+    insert(key, v);
 };
 
 
@@ -82,7 +72,8 @@ export function memIncr(key: string, by: number, ttlSec: number): number {
     const next = (entry ? Number(JSON.parse(entry.json)) : 0) + by;
     const expiresAt = entry?.expiresAt ?? Date.now() + ttlSec * 1000;
     ///Save the new count
-    store.set(key, { json: String(next), expiresAt })
+    const v = { json: String(next), expiresAt };
+    insert(key, v)
     ///Return the new count
     return next;
 
@@ -97,7 +88,7 @@ export function memDecrIfExists(key: string, by: number): number | null {
     //Subtract and keep the original expiry 
     const next = Number(JSON.parse(entry.json)) - by;
     ///Save the new count
-    store.set(key, { json: String(next), expiresAt: entry.expiresAt });
+    insert(key, { json: String(next), expiresAt: entry.expiresAt });
     ///Return the new count
     return next;
 }
@@ -121,5 +112,28 @@ export function memDeleteByPrefix(prefix: string): void {
     }
 };
 
+export function memSweepExpired(): void {
+    ///Read the clock one per entry
+    const now = Date.now();
+    for (const [key, entry] of store) {
+        ////Remove windows that are already ended
+        if (entry.expiresAt !== null && entry.expiresAt <= now) store.delete(key)
+    }
+}
+
+
+// Single write path so memSet and memIncr both respect the cap
+function insert(key: string, entry: Entry): void {
+    ///Delete first so the key moves to the end of the Map's insertion order
+    store.delete(key);
+    if (store.size >= MAX_ENTRIES) memSweepExpired();
+    if (store.size >= MAX_ENTRIES) {
+        const oldest = store.keys().next().value
+        if (oldest !== undefined) store.delete(oldest)
+    };
+    const serialzed = JSON.stringify(entry) ?? 'null';
+    store.set(key, { json: serialzed, expiresAt: entry.expiresAt });
+
+}
 
 
