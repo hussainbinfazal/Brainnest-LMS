@@ -22,7 +22,7 @@ import { RxCross2 } from "react-icons/rx";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap/Tiptap";
-import { CSection} from "@/types/client";
+import { CSection } from "@/types/client";
 // import { CCreateCourseForm } from "@/types/forms/formValidators";
 // import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import {
@@ -51,8 +51,8 @@ import {
   FileField,
   SectionItem,
 } from "./courseFields";
-import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
 import z from "zod";
+import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 
 const LEVELS: string[] = ["Beginner", "Intermediate", "Expert"];
 
@@ -85,8 +85,8 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const [selectedParentId, setSelectedParentId] = useState<string>("");
-  const isLoading = useInstructorCourse((state) => state.isLoading);
-  const createCourse = useInstructorCourse((state) => state.createCourse);
+  const isLoading = useInstructorCoursesStore((state) => state.isLoading);
+  const createCourse = useInstructorCoursesStore((state) => state.createCourse);
   const form = useForm<
     z.input<typeof createCourseSchema>,
     undefined,

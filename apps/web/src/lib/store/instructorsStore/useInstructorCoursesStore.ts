@@ -3,8 +3,11 @@
 
 import { create } from "zustand";
 import axios from "axios";
-import { CCourse} from "@/types/client";
+import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
+import { getErrorMessage } from "@repo/shared";
+import { toast } from "sonner";
+import { CreateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 export interface CInstructorCourseStore {
     cachedPaginatedInstructorCourses: CCourse[];
     cachedCurrentPageNumber: number;
@@ -19,7 +22,7 @@ export interface CInstructorCourseStore {
         page: number; itemsPerPage: number, instructorId: string
     }) => Promise<{ paginatedInstructorCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
     setPaginatedInstructorCourses: (newPaginatedInstructorCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number) => void;
-
+    createCourse: (data: CreateCourseBody) => Promise<void>
     deleteInstructorCourse: (options: { page: number, itemsPerPage: number, courseId: string, instructorId: string }) => void;
     clearPaginatedInstructorCourses: () => void;
     setInstructorCourses: (courses: CCourse[]) => void;
@@ -86,6 +89,23 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
         }
         finally {
             set({ isLoading: false })
+        }
+    },
+    createCourse: async (data: CreateCourseBody) => {
+        set({ isLoading: true });
+        try {
+            const response = await axios.post('/api/admin/course/create', data);
+            if (!response.data.success) {
+                return
+            }
+            toast.success('Course created successfully');
+            set({ isLoading: false });
+        } catch (error: unknown) {
+            console.log("This is the error in create course function ", error, error instanceof Error && error.message)
+            const message = getErrorMessage(error, "Something went wrong, while creating course");
+            toast.error("Something went wrong")
+            clientLogger.error("Something went wrong, while creating course", { message, error });
+            throw new Error(message);
         }
     },
     deleteInstructorCourse: async ({ page, itemsPerPage, courseId, instructorId }: { page: number, itemsPerPage: number, courseId: string, instructorId: string }) => {

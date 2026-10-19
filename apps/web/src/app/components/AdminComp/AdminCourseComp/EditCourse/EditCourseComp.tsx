@@ -30,13 +30,12 @@ import { RxCrossCircled } from "react-icons/rx";
 import Tiptap from "@/components/Tiptap/Tiptap";
 import { CCourse, CLesson, CSection, } from "@/types/client";
 import { CUpdateCourseForm } from "@/types/forms/formValidators";
-import { useUpload } from "@/utils/hooks/Video/useUpload";
-import { useVideoParsing } from "@/hooks/Video/useVideoParsing";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
-import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
+// import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
 import { cn } from "@/lib/utils";
+import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
 type EditorCourseCompParams = {
   renderedCourse: CCourse,
   renderedCourseSections: CSection[],
@@ -45,51 +44,107 @@ type EditorCourseCompParams = {
   className?: string,
 }
 const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourseLessons, requestCourseId, className }: EditorCourseCompParams): JSX.Element => {
-  const [form, setForm] = useState<CUpdateCourseForm>({
-    title: "",
-    description: "",
-    price: 0,
-    discount: 0,
-    coverImage: "",
-    category: "",
-    subCategory: "",
-    level: "",
-    language: "",
-    tags: [],
-    whatYouWillLearn: [],
-    requirements: [],
-    previewVideo: "",
-    sections: [],
-    lessons: [],
-    topics: [],
-    faq: [],
-    dripType: "",
-    status: "",
-    instructorId: "",
-    durationInSeconds: 0
 
+  const updateCourse = useInstructorCourse((state) => state.createCourse);
+  const form = useForm<
+    z.input<typeof createCourseSchema>,
+    undefined,
+    CreateCourseBody
+  >({
+    resolver: zodResolver(createCourseSchema),
+    defaultValues: {
+      title: "Test JavaScript Course",
+      description: "<p>This is a test course description</p>",
+      price: 999,
+      discount: 10,
+      tags: ["javascript", "react", "nextjs"],
+      level: "Beginner",
+      whatYouWillLearn: ["Variables", "Functions", "Loops"],
+      requirements: ["HTML", "CSS"],
+      language: "english",
+      dripType: "free",
+      topics: [
+        {
+          name: "JavaScript Basics",
+          description: "Introduction to JS fundamentals",
+          isActive: true,
+        },
+      ],
+      sections: [
+        {
+          ...EMPTY_SECTION,
+          title: "Introduction Section",
+          description: "Getting started",
+          lessons: [
+            {
+              ...EMPTY_LESSON,
+              name: "Welcome Lesson",
+              description: "Course intro",
+            },
+          ],
+        },
+      ],
+      faq: [
+        {
+          question: "What is async/await?",
+          answer: "It's for handling promises",
+        },
+      ],
+    },
   });
-  const { uploadFile } = useUpload();
-  const { getVideoDuration } = useVideoParsing();
+  const {
+    register,
+    control,
+    setValue,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = form;
 
-  const [selectedLessonVideoNames, setSelectedLessonVideoNames] = useState<string[]>(
-    [],
+  // const lessons = useFieldArray({ control, name: "lessons" });
+  const router = useRouter();
+  const faq = useFieldArray({ control, name: "faq" });
+  const sections = useFieldArray({ control, name: "sections" });
+  const topics = useFieldArray({ control, name: "topics" });
+  const cover = useFileUploadField();
+  const previewVideo = useFileUploadField();
+
+  // parent category is UI-only state, not part of the payload
+  const [parentCategory, setParentCategory] = useState<string>("");
+  // derive subcategories instead of nested map + &&
+  const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
+  // total duration is derived, never typed by hand
+  const totalDurationInSeconds = (watch("sections") ?? []).reduce(
+    (sum, section) =>
+      sum +
+      section.lessons.reduce<number>(
+        (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
+        0
+      ),
+    0
   );
-  const [isLessonVideoUploading, setIsLessonVideoUploading] = useState<{ [key: string]: boolean }>({});
 
-  const [isVideoUploading, setIsVideoUploading] = useState<boolean>(false);
-  const [isImageUploading, setIsImageUploading] = useState<boolean>(false);
-  const [selectedVideoName, setSelectedVideoName] = useState<string>("");
-  const [selectedImageName, setSelectedImageName] = useState<string>("");
-  const [course, setCourse] = useState<CCourse>();
-  const [loading, setLoading] = useState<boolean>(false);
-  const { courseId } = useParams();
-  const authUser = useAuthStore((state) => state.authUser);
-  const [addNewImage, setAddNewImage] = useState<boolean>(false);
-  const [previewNewCover, setPreviewNewCover] = useState<string>("");
-  const [previewLessonVideo, setPreviewLessonVideo] = useState<string[]>([]);
-  const [isLoadingCourse, setIsLoadingCourse] = useState<boolean>(true);
-  const [description, setDescription] = useState<string>("");
+  const onSubmit = async (data: CreateCourseBody) => {
+    try {
+      const totalLessons = data.sections.reduce(
+        (acc, section) => acc + section.lessons.length,
+        0
+      );
+      //attach derived totals
+      await createCourse({ ...data, totalLessons, totalDurationInSeconds });
+      // feedback and redirect
+      toast.success("Course created successfully");
+      router.push("/course/manage");
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, "Failed to create course");
+      toast.error(message);
+    }
+  };
+
+  const onInvalidSubmit = () => {
+    toast.error("Please complete the required fields highlighted in the form.");
+  };
+
 
   const getCourseFromParams = useCallback(async (): Promise<void> => {
     setLoading(true);
