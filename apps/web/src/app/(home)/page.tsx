@@ -22,7 +22,7 @@ export default async function Home(): Promise<JSX.Element> {
       ? getAllUserCourseByIdWithCache(userSession.user.id)
       : Promise.resolve([]),
   ]);
-
+  console.log("These are the courses in the Homepage",courses.length)
   return (
     <HomePage
       initialCourses={courses}
