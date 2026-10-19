@@ -346,17 +346,33 @@ const ManageCoursePageComponent = ({
                                                                 >
                                                                     Delete
                                                                 </Button>
-                                                                <Button
+                                                                <Link href={`/instructor/course/edit/${course._id}`}>
+                                                                    <motion.span>
+                                                                        <MotionButton
+                                                                            size="default"
+                                                                            variant="default"
+                                                                            className={
+                                                                                "p-6 px-10 mr-2 rounded-sm cursor-pointer"
+                                                                            }
+                                                                            initial={{ scale: 1 }}
+                                                                            whileHover={{ scale: 1.2 }}
+                                                                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                                                                        >
+                                                                            Edit
+                                                                        </MotionButton>
+                                                                    </motion.span>
+                                                                </Link>
+                                                                {/* <Button
                                                                     type="button"
                                                                     size="default"
                                                                     variant="default"
                                                                     onClick={() =>
-                                                                        router.push(`instructor/course/edit/${course._id}`)
+                                                                        router.push(`/instructor/course/edit/${course._id}`)
                                                                     }
                                                                     className="p-6 px-10 mr-2 rounded-sm cursor-pointer"
                                                                 >
                                                                     Edit
-                                                                </Button>
+                                                                </Button> */}
                                                             </div>
                                                         </div>
                                                     </CardFooter>
