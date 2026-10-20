@@ -29,7 +29,9 @@ export default async function EditCoursePage({ params }: EditCoursePageProps): P
   };
   const response = await getInstructorCourseWithCache(instructorId, courseId);
 
-  if (!response.course) return redirect('/instructor/course/manage')
+  if (!response.course) {
+    console.error("This is the error in edit course page, while ssr", response);
+    return redirect('/instructor/course/manage')}
   return (
     <EditCourseComp
       renderedCourse={response.course}

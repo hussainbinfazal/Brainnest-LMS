@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/select";
 import { RxCross2 } from "react-icons/rx";
 import { useRouter } from "next/navigation";
-import axios from "axios";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
@@ -153,15 +152,15 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   // derive subcategories instead of nested map + &&
   const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
   // total duration is derived, never typed by hand
-  const totalDurationInSeconds = (watch("sections") ?? []).reduce(
-    (sum, section) =>
-      sum +
-      section.lessons.reduce<number>(
-        (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
-        0
-      ),
-    0
-  );
+  // const totalDurationInSeconds = (watch("sections") ?? []).reduce(
+  //   (sum, section) =>
+  //     sum +
+  //     section.lessons.reduce<number>(
+  //       (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
+  //       0
+  //     ),
+  //   0
+  // );
 
   const onSubmit = async (data: UpdateCourseBody) => {
     try {
@@ -170,7 +169,17 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
         0
       );
       //attach derived totals
-      await updateCourse({ ...data, totalLessons, totalDurationInSeconds });
+      await updateCourse({
+        ...data, totalLessons, totalDurationInSeconds: (watch("sections") ?? []).reduce(
+          (sum, section) =>
+            sum +
+            section.lessons.reduce<number>(
+              (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
+              0
+            ),
+          0
+        )
+      });
       // feedback and redirect
       toast.success("Course Updated successfully");
       router.push("/course/manage");
@@ -178,6 +187,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
       const message = getErrorMessage(error, "Failed to create course");
       toast.error(message);
     }
+
   };
 
   const onInvalidSubmit = () => {
@@ -197,7 +207,12 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
       language: fetchedCourse?.language,
       dripType: dripType === "free" || dripType === "sequential" || dripType === "drip-by-date" ? dripType : "free",
       topics: fetchedCourse?.topics,
-      sections: fetchedSections,
+      sections: fetchedSections.map((section) => ({
+        ...section,
+        lessons: fetchedLessons.filter(
+          (lesson) => section._id !== undefined && lesson.sectionId === section._id
+        ),
+      })),
       faq: fetchedCourse?.faq
     })
   }, [])
@@ -358,7 +373,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
               {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
                 errors.totalDurationInSeconds?.message
               } required={true}>
-                <Input readOnly value={totalDurationInSeconds} type="number" disabled />
+                <Input readOnly value={fetchedCourse?.totalDurationInSeconds} type="number" disabled />
               </Field>
               }
               <Field label="Level" error={errors.level?.message} required={true}>

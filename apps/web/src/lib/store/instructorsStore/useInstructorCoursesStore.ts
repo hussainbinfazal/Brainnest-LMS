@@ -77,6 +77,7 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
             };
         }
         catch (error: unknown) {
+            console.error("This is the error of fetchInstructorCourse in useCourseInstructor Store ", error instanceof Error ? error.message : "Error fetching paginated instructor courses through instructor Store")
             const message: string = error instanceof Error ? error.message : "Something went wrong";
             clientLogger.error("Error fetching paginated instructor courses through instructor Store", { message, error });
             return {
