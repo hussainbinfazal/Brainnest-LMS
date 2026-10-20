@@ -213,7 +213,9 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
           (lesson) => section._id !== undefined && lesson.sectionId === section._id
         ),
       })),
-      faq: fetchedCourse?.faq
+      faq: fetchedCourse?.faq,
+      coverImage: fetchedCourse?.coverImage,
+
     })
   }, [])
 
