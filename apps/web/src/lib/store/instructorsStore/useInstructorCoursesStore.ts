@@ -7,7 +7,7 @@ import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { getErrorMessage } from "@repo/shared";
 import { toast } from "sonner";
-import { CreateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { CreateCourseBody, UpdateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 export interface CInstructorCourseStore {
     cachedPaginatedInstructorCourses: CCourse[];
     cachedCurrentPageNumber: number;
@@ -22,7 +22,8 @@ export interface CInstructorCourseStore {
         page: number; itemsPerPage: number, instructorId: string
     }) => Promise<{ paginatedInstructorCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
     setPaginatedInstructorCourses: (newPaginatedInstructorCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number) => void;
-    createCourse: (data: CreateCourseBody) => Promise<void>
+    createCourse: (data: CreateCourseBody) => Promise<void>;
+    updateCourse: (data: UpdateCourseBody) => Promise<void>;
     deleteInstructorCourse: (options: { page: number, itemsPerPage: number, courseId: string, instructorId: string }) => void;
     clearPaginatedInstructorCourses: () => void;
     setInstructorCourses: (courses: CCourse[]) => void;
@@ -105,6 +106,24 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
             const message = getErrorMessage(error, "Something went wrong, while creating course");
             toast.error("Something went wrong")
             clientLogger.error("Something went wrong, while creating course", { message, error });
+            throw new Error(message);
+        }
+    },
+    updateCourse: async (data: UpdateCourseBody) => {
+        set({ isLoading: true });
+        try {
+            const response = await axios.put('/api/admin/course/update', data);
+            if (!response.data.success) {
+                toast.error(response.data.message);
+                return
+            }
+            toast.success('Course updated successfully');
+            set({ isLoading: false });
+        } catch (error: unknown) {
+            console.log("This is the error in update course function ", error, error instanceof Error && error.message)
+            const message = getErrorMessage(error, "Something went wrong, while updating course");
+            toast.error("Something went wrong")
+            clientLogger.error("Something went wrong, while updating course", { message, error });
             throw new Error(message);
         }
     },

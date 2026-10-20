@@ -155,6 +155,7 @@ export const createCourseSchema = z.object({
 
 // Inferred type, so the route never needs a hand-written interface
 export type CreateCourseBody = z.infer<typeof createCourseSchema>;
+export type UpdateCourseBody = z.infer<typeof createCourseSchema>;
 
 // export const zodCourseSchema = z.object({
 //     title: z.string().min(3, "Title must be at least 3 characters"),

@@ -22,7 +22,7 @@ import { RxCross2 } from "react-icons/rx";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Tiptap from "@/components/Tiptap/Tiptap";
-import { CSection } from "@/types/client";
+import { CCourse, CSection } from "@/types/client";
 // import { CCreateCourseForm } from "@/types/forms/formValidators";
 // import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import {
@@ -86,6 +86,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 }) => {
   const [selectedParentId, setSelectedParentId] = useState<string>("");
   const isLoading = useInstructorCoursesStore((state) => state.isLoading);
+
   const createCourse = useInstructorCoursesStore((state) => state.createCourse);
   const form = useForm<
     z.input<typeof createCourseSchema>,

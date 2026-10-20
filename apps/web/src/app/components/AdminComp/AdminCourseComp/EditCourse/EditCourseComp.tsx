@@ -31,11 +31,19 @@ import Tiptap from "@/components/Tiptap/Tiptap";
 import { CCourse, CLesson, CSection, } from "@/types/client";
 import { CUpdateCourseForm } from "@/types/forms/formValidators";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
-import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { CreateCourseBody, createCourseSchema, UpdateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 // import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
 import { cn } from "@/lib/utils";
-import { useInstructorCourse } from "@/lib/store/instructorsStore/useInstructorCourse";
+
+import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, FormProvider, useFieldArray, useForm } from "react-hook-form";
+import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
+import { categoryToSubcategories, LEVELS, uiLanguages } from "@/locales/locales";
+import { getErrorMessage } from "@repo/shared";
+import z from "zod";
+import { BooleanSelect, CommaListField, Field, FileField, SectionItem } from "../Create-Course/courseFields";
 type EditorCourseCompParams = {
   renderedCourse: CCourse,
   renderedCourseSections: CSection[],
@@ -43,9 +51,40 @@ type EditorCourseCompParams = {
   requestCourseId: string,
   className?: string,
 }
-const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourseLessons, requestCourseId, className }: EditorCourseCompParams): JSX.Element => {
 
-  const updateCourse = useInstructorCourse((state) => state.createCourse);
+// default lesson shape in one place (match your schema's field names!)
+const EMPTY_LESSON = {
+  name: "",
+  description: "",
+  videoUrl: "",
+  previewUrl: "",
+  previewPublicId: "",
+  durationInSeconds: 0,
+  videoPublicId: "",
+  sectionId: "",
+  previewDurationInSeconds: 0,
+  order: 0,
+  isPreview: false,
+};
+const EMPTY_SECTION: CSection = {
+  _id: "",
+  courseId: "",
+  title: "",
+  description: "",
+  order: 0,
+  lessons: [EMPTY_LESSON],
+  createdAt: "",
+  updatedAt: "",
+};
+
+const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourseLessons, requestCourseId, className }: EditorCourseCompParams): JSX.Element => {
+  const router = useRouter();
+  const [fetchedCourse, setFetchedCourse] = useState<CCourse | null>(renderedCourse)
+  const [fetchedSections, setFetchedSections] = useState<CSection[]>(renderedCourseSections)
+  const [fetchedLessons, setFetchedLessons] = useState<CLesson[]>(renderedCourseLessons)
+
+  const updateCourse = useInstructorCoursesStore((state) => state.createCourse);
+  const isLoading = useInstructorCoursesStore((state) => state.isLoading);
   const form = useForm<
     z.input<typeof createCourseSchema>,
     undefined,
@@ -102,7 +141,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   } = form;
 
   // const lessons = useFieldArray({ control, name: "lessons" });
-  const router = useRouter();
+
   const faq = useFieldArray({ control, name: "faq" });
   const sections = useFieldArray({ control, name: "sections" });
   const topics = useFieldArray({ control, name: "topics" });
@@ -124,16 +163,16 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
     0
   );
 
-  const onSubmit = async (data: CreateCourseBody) => {
+  const onSubmit = async (data: UpdateCourseBody) => {
     try {
       const totalLessons = data.sections.reduce(
         (acc, section) => acc + section.lessons.length,
         0
       );
       //attach derived totals
-      await createCourse({ ...data, totalLessons, totalDurationInSeconds });
+      await updateCourse({ ...data, totalLessons, totalDurationInSeconds });
       // feedback and redirect
-      toast.success("Course created successfully");
+      toast.success("Course Updated successfully");
       router.push("/course/manage");
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Failed to create course");
@@ -144,886 +183,447 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const onInvalidSubmit = () => {
     toast.error("Please complete the required fields highlighted in the form.");
   };
-
-
-  const getCourseFromParams = useCallback(async (): Promise<void> => {
-    setLoading(true);
-
-    try {
-      const response = await axios.get(`/api/admin/course/${courseId}`);
-      const courseData = await response.data.course;
-      // console.log("This is the course Data ", courseData);
-
-      setCourse(courseData);
-      setForm((prev: CUpdateCourseForm) => ({
-        ...prev,
-        title: courseData.title,
-        description: courseData.description,
-        coverImage: courseData.coverImage,
-        category: courseData.category.name,
-        subCategory: courseData.subCategory,
-        level: courseData.level,
-        language: courseData.language,
-        tags: courseData.tags,
-        whatYouWillLearn: courseData.whatYouWillLearn,
-        requirements: courseData.requirements,
-        previewVideo: courseData.previewVideo,
-        sections: courseData.sections,
-        lessons: courseData.lessons,
-        topics: courseData.topics,
-        faq: courseData.faq,
-        dripType: courseData.dripType,
-        status: courseData.status,
-        instructorId: courseData.instructorId
-      }))
-      setPreviewNewCover(courseData.coverImage);
-      setPreviewLessonVideo(courseData?.lessons?.map((lesson: CLesson) => lesson.videoUrl));
-      // console.log("THis is the course fetched from the DB ", course);
-      clientLogger.info("This is the course fetched from the DB ", courseData);
-    } catch (error: any) {
-      toast.error(error.response.data.message);
-      clientLogger.error("Course Fetch failed ", error);
-
-    } finally {
-      setIsLoadingCourse(false);
-
-    }
-  }, []);
-
-
-
   useEffect(() => {
-    const timer: NodeJS.Timeout = setTimeout((): void => {
-      getCourseFromParams();
-    }, 300); // Small delay to prevent immediate load
-    return (): void => clearTimeout(timer);
-  }, [getCourseFromParams]);
-  const router = useRouter();
-  const updateField = <K extends keyof CUpdateCourseForm>(key: K, value: CUpdateCourseForm[K]) => {
-    setForm((prev) => ({
-      ...prev,
-      [key]: value
-    }))
-  }
-  const handleTopicChange = (index: number, field: string, value: string): void => {
-    const newTopics = [...form.topics];
-    (newTopics[index] as any)[field] = value;
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      topics: newTopics
-    }))
-  };
-
-  const handleFaqChange = (index: number, field: string, value: string): void => {
-    const newFaq = [...form.faq];
-    (newFaq[index] as any)[field] = value;
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      faq: newFaq
-    }))
-  };
-
-  const handleLessonChange = (index: number, field: string, value: string): void => {
-    const newLessons = [...form.lessons];
-    (newLessons[index] as any)[field] = value;
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      lessons: newLessons
-    }))
-  };
-  const addTopic = (): void => {
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      topics: [...prev.topics, { name: "", description: "", slug: "", isActive: true }]
-    }))
-
-  };
-  const removeTopic = (index: number): void => {
-    const newTopics = [...form.topics];
-    newTopics.splice(index, 1);
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      topics: newTopics
-    }))
-  };
-
-  const addLesson = (): void => {
-    setForm(
-      (prev: CUpdateCourseForm) => ({
-        ...prev,
-        lessons: [
-          ...prev.lessons,
-          { isPreviewVideo: "", isPreview: false, durationInSeconds: 0, description: "", videoUrl: "", name: "", order: 0 },
-        ],
-      })
-    )
-    setIsLessonVideoUploading((prev) => ({
-      ...prev,
-      [form.lessons.length]: false, // New lesson at the last index
-    }));
-  };
-
-  const removeLesson = (index: number): void => {
-    const newLessons = [...form.lessons];
-    newLessons.splice(index, 1);
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      lessons: newLessons
-    }))
-  };
-  const addFaq = () => {
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      faq: [...prev.faq, { question: "", answer: "" }]
-    }))
-  };
-  const removeFaq = (index: number): void => {
-    const newFaq = [...form.faq];
-    newFaq.splice(index, 1);
-    setForm((prev: CUpdateCourseForm) => ({
-      ...prev,
-      faq: newFaq
-    }))
-  };
+    const dripType = fetchedCourse?.dripType;
+    form.reset({
+      title: fetchedCourse?.title,
+      description: fetchedCourse?.description,
+      price: fetchedCourse?.price,
+      discount: fetchedCourse?.discount,
+      tags: fetchedCourse?.tags,
+      level: fetchedCourse?.level === 'expert' ? 'advanced' : fetchedCourse?.level,
+      whatYouWillLearn: fetchedCourse?.whatYouWillLearn,
+      requirements: fetchedCourse?.requirements,
+      language: fetchedCourse?.language,
+      dripType: dripType === "free" || dripType === "sequential" || dripType === "drip-by-date" ? dripType : "free",
+      topics: fetchedCourse?.topics,
+      sections: fetchedSections,
+      faq: fetchedCourse?.faq
+    })
+  }, [])
 
 
-
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    try {
-      setIsVideoUploading(true);
-      setIsVideoUploading(true);
-      const target = e.target as HTMLInputElement;
-      if (!target.files) throw new Error("No file selected");
-      const file = target.files[0];
-      setSelectedVideoName(file.name);
-      const url = await uploadFile(file);
-      const seconds: number = await getVideoDuration(file);
-      updateField("durationInSeconds", Number(seconds));
-      clientLogger.info("Video uploaded succesfully")
-    } catch (error: any) {
-      clientLogger.error("Video upload failed")
-    } finally {
-      setIsVideoUploading(false);
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setIsImageUploading(true);
-      const target = e.target as HTMLInputElement;
-      if (!target.files) throw new Error("No file selected");
-      const file = target.files[0];
-      setSelectedImageName(file.name);
-      const url = await uploadFile(file);
-      updateField("coverImage", url);
-      setPreviewNewCover(url);
-      clientLogger.info("Image uploaded successfully")
-    } catch (error: any) {
-      clientLogger.error("Image upload failed", error?.response?.data?.message)
-      return alert(error.message);
-    } finally {
-      setIsImageUploading(false);
-    }
-  };
-
-  const handleUpdateCourse: React.FormEventHandler = async (): Promise<void | string | number> => {
-
-    try {
-
-      const payload = buildCoursePayload(form);
-      const validation = createCourseSchema.safeParse(payload);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors.map((error: any) => error.message).join("\n");
-        toast.error(errorMessage);
-        setLoading(false)
-        return
-      }
-      const response = await axios.put(
-        `/api/admin/course/${courseId}`,
-        payload
-      );
-      toast.success("Course Updated successfully");
-      setCourse(response.data.course);
-      router.push("/course/manage");
-      clientLogger.info("Course updated successfully")
-    } catch (error: any) {
-      clientLogger.error("Course update failed", error?.response?.data?.message)
-      return toast.error(error?.response?.data?.message);
-    }
-
-  }
-
-  const handleLessonVideoUpload = async (index: number, file: File): Promise<void> => {
-    setIsLessonVideoUploading((prev: { [key: number]: boolean }) => {
-      const newState = { ...prev }; // Create a shallow copy
-      newState[index] = true; // Set the specific index to true
-      return newState;
-    });
-
-    try {
-      setSelectedLessonVideoNames((prev: string[]): string[] => {
-        const updated = [...prev];
-        updated[index] = file.name;
-        return updated
-      });
-
-      const url = await uploadFile(file);
-      clientLogger.info("Video uploaded successfully")
-      const duration = await getVideoDuration(file);
-      clientLogger.info("Duration Parsed successfully")
-      const updatedLessons = [...form.lessons];
-      updatedLessons[index].videoUrl = url;
-      updatedLessons[index].durationInSeconds = duration;
-      setForm((prev: CUpdateCourseForm) => ({
-        ...prev,
-        lessons: updatedLessons
-      }));
-      setPreviewLessonVideo(updatedLessons.map((lesson) => lesson.videoUrl));
-    } catch (error: any) {
-      clientLogger.error("Video upload failed", error?.response?.data?.message)
-      toast.error(error?.response?.data?.message)
-      return
-    } finally {
-      setIsLessonVideoUploading((prev: { [key: number]: boolean }) => {
-        const newState = { ...prev }; // Create a shallow copy
-        newState[index] = false; // Set the specific index to false
-        return newState;
-      });
-    };
-
-  }
-  useEffect(() => {
-    // Initialize states for each lesson
-    const initialUploadingState: Record<number, boolean> = {};
-    const initialVideoNames = form.lessons.map(() => "");
-
-    form.lessons.forEach((_, index) => {
-      initialUploadingState[index] = false;
-    });
-
-    setIsLessonVideoUploading(initialUploadingState);
-    setSelectedLessonVideoNames(initialVideoNames);
-  }, []);
-  // useEffect(() => {
-  // }, [previewLessonVideo]);
-
-  const categories = [
-    "academics",
-    "business",
-    "design",
-    "development",
-    "finance",
-    "fitness",
-    "lifestyle",
-    "marketing",
-    "music",
-    "personal-development",
-    "photography",
-    "productivity",
-    "technology",
-  ];
-  const categoryToSubcategories = {
-    academics: ["math", "science", "history"],
-    business: ["entrepreneurship", "management", "sales"],
-    design: ["ui", "ux", "graphic-design"],
-    development: ["web", "mobile", "game"],
-    finance: ["investing", "accounting", "crypto"],
-    fitness: ["yoga", "cardio", "strength"],
-    lifestyle: ["travel", "food", "productivity"],
-    marketing: ["seo", "content", "ads"],
-    music: ["production", "instrument", "theory"],
-    "personal-development": ["mindfulness", "habits", "communication"],
-    photography: ["editing", "gear", "composition"],
-    productivity: ["time-management", "tools", "automation"],
-    technology: ["ai", "cloud", "iot"],
-  };
-  const handleCategoryChange = (value: string): void => {
-    setForm((prev) => {
-      return {
-        ...prev,
-        category: value,
-        subCategory: ""
-      }
-
-    });
-    // reset subcategory on category change
-  };
   return (
     <div className={cn("flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8", className)}>
-      <Card className="w-[550px] space-y-4">
-        <CardHeader className="">
-          <CardTitle className="">Edit project</CardTitle>
-          <CardDescription className="">Update Your Project.</CardDescription>
-        </CardHeader>
-        <CardContent className="">
-          <form className="space-y-4">
-            <div className="space-y-2 relative">
-              <Label className="">Image</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-w-full h-[200px] rounded-md" />
-              ) : (
-                <>
-                  <RxCrossCircled className="absolute top-6 right-1 cursor-pointer text-xl text-red-500 z-70" />
-                  <div className="w-full h-[200px] rounded-md overflow-hidden relative">
-                    {previewNewCover && (
-                      <Image
-                        alt=""
-                        src={previewNewCover}
-                        fill
-                        className="object-cover rounded-md"
-                      />
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Title</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Input
-                  type="text"
-                  className=""
-                  value={form.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. JavaScript Course"
-                />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="">Description</Label>
-              <div className="min-h-[150px]">
-                <Tiptap description={description} onChange={setDescription} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="">Video Upload</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
-              ) : isVideoUploading ? (
-                <Skeleton className="w-[500px] h-[30px] rounded-md" />
-              ) : (
-                <>
-                  <Input
-                    className=""
-                    type="file"
-                    accept="video/*"
-                    onChange={handleVideoUpload}
-                  />
-                  {selectedVideoName && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      {selectedVideoName}
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Cover Image Upload</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : isImageUploading ? (
-                <Skeleton className="full h-[30px] rounded-md" />
-              ) : (
-                <>
-                  <Input
-
-                    className=""
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                  {selectedImageName && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      {selectedImageName}
-                    </p>
-                  )}
-                </>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Price</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Input
-                  type="number" className=""
-                  value={form.price}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setForm((prev) => ({ ...prev, price: Number(e.target.value) })) }}
-                  placeholder="e.g. ₹ 69.99"
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Discount</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Input
-                  type="text"
-                  className=""
-                  value={form.discount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm(() => ({ ...form, discount: Number(e.target.value) }))}
-                  placeholder="e.g. '%' 10,20,40 "
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Category</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Select value={form.category} onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={form.category || "Select a  category"}
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="">
-                    {categories.map((cat) => (
-                      <SelectItem className="" key={cat} value={cat}>
-                        {cat
-                          .replace(/-/g, " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Subcategory</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Select value={form.subCategory} onValueChange={(value: string) => {
-                  setForm((prev) => ({ ...prev, subCategory: value }))
-                }}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={form.subCategory || "Select a subcategory"}
-                    />
-                  </SelectTrigger>
-                  <SelectContent className="">
-                    {(categoryToSubcategories[form.category as keyof typeof categoryToSubcategories] || []).map((sub) => (
-                      <SelectItem className="" key={sub} value={sub}>
-                        {sub
-                          .replace(/-/g, " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Tags</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Input
-                  type="text"
-                  className=""
-                  value={form.tags.join(", ")}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setForm((prev) => ({ ...prev, tags: e.target.value.split(",").map((item: string) => item.trim()) }))
-
+      <FormProvider {...form}>
+        <Card className="w-87.5 md:w-137.5 space-y-4">
+          <CardHeader className="">
+            <CardTitle className="">Edit project</CardTitle>
+            <CardDescription className="">Update Your Project.</CardDescription>
+          </CardHeader>
+          <CardContent className="">
+            <form
+              id='update-course-form'
+              onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
+              className="space-y-4 relative">
+              <FileField label="Course Cover Image" accept='image/*' {...cover}
+                onFile={async (f) => {
+                  const result = await cover.upload(f, "thumbnail");
+                  if (result) {
+                    setValue("coverImage", result.url, { shouldValidate: true });
+                    setValue("coverPublicId", result.public_id, { shouldValidate: true });
+                    // setPreviewNewCover(result.url);
                   }
-                  placeholder="e.g. JavaScript Basics, React, Next.js"
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Duration (hh:mm:ss or auto from video)</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
+                }}
+                error={errors.coverImage?.message ?? errors?.coverPublicId?.message} required={true}
+                onCancel={cover.cancel}
+                isUploading={cover.isUploading}
+                progress={cover.progress}
+                url={watch("coverImage") ?? ''}
+                fileKind='image'
+              />
+              <Field label="Title" error={errors.title?.message} required={true}>
                 <Input
-                  type="text"
-                  className=""
-                  value={form.durationInSeconds}
-                  disabled
-                  placeholder="e.g. seconds"
+                  {...register("title")}
+
                 />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Level</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
+              </Field>
+              <Field label="Description" error={errors.description?.message}>
+                <Controller
+                  name='description'
+                  control={control}
+                  render={({ field }) => (
+                    <Tiptap
+                      description={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </Field>
+              <FileField
+                label="Preview video"
+                accept='video/*'
+                {...previewVideo}
+                onFile={async (f: File) => {
+                  const result = await previewVideo.upload(f, "preview-video");
+                  if (result) {
+                    setValue("previewVideo", result.url, { shouldValidate: true });
+                    setValue('previewVideoPublicId', result.public_id, { shouldValidate: true });
+                  }
+                }}
+                onCancel={previewVideo.cancel}
+                isUploading={previewVideo.isUploading}
+                progress={previewVideo.progress}
+                url={watch("previewVideo") ?? ''}
+                fileKind={'video'}
+                error={
+                  errors.previewVideo?.message ?? errors?.previewVideoPublicId?.message
+                }
+              />
+              <Field label='Price' error={errors.price?.message}>
+                <Input
+                  required={true}
+                  type={'number'}
+                  step="1"
+                  min={0}
+                  max={100000}
+                  {...register('price', { valueAsNumber: true })}
+                  placeholder="e.g. ₹69/$69"
+                />
+
+              </Field>
+              <Field label="Discount (%)" error={errors.discount?.message}>
+                <Input
+                  type="number"
+                  min={0}
+                  {...register('discount', { valueAsNumber: true })}
+                  placeholder="e.g. 10,20,40"
+                />
+              </Field>
+              <Field
+                required={true}
+                label="Category"
+                error={errors.category?.name?.message ?? errors.category?.message}
+
+              >
                 <Select
-                  value={form.level.charAt(0).toUpperCase() + form.level.slice(1)}
-                  onValueChange={(value: string) => {
-                    setForm((prev) => ({ ...prev, level: value.toLowerCase() }))
+                  value={parentCategory}
+                  onValueChange={(v) => {
+                    setParentCategory(v);
+                    setValue('category.name', v, { shouldValidate: true })
                   }}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={
-                        form.level.charAt(0).toUpperCase() + form.level.slice(1) ||
-                        "Select a level"
-                      }
-                    />
+                    <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
-                  <SelectContent className="">
-                    {["Beginner", "Intermediate", "Expert"].map((lvl) => (
-                      <SelectItem className="" key={lvl} value={lvl}>
-                        {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+                  <SelectContent>
+                    {Object.keys(categoryToSubcategories).map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">What you will learn</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Input
-                  type="text"
-                  className=""
-                  value={form.whatYouWillLearn.join(", ")}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setForm((prev) => ({ ...prev, whatYouWillLearn: e.target.value.split(",").map((item: string) => item.trim()) }))
+              </Field>
+              <Field label="SubCategory" error={errors.subCategory?.message} required={true}>
+                <Controller
+                  name='subCategory'
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ''}
+                      onValueChange={field.onChange}
+                      disabled={!parentCategory}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a Subcategory" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subcategories.map((sub) => (
+                          <SelectItem key={sub} value={sub}>
+                            {sub}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-                  }
-                  placeholder="e.g. Variables, loops, functions"
+                  )}
+
                 />
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="">Requirements</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Input
-                  type="text"
-                  className=""
-                  value={form.requirements.join(", ")}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setForm((prev) => ({ ...prev, requirements: e.target.value.split(",").map((item: string) => item.trim()) }))
-
-                  }
-                  placeholder="e.g. Html, CSS, JavaScript"
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label className="">Language</Label>
-              {isLoadingCourse ? (
-                <Skeleton className="w-full h-[30px] rounded-md" />
-              ) : (
-                <Select value={form.language} onValueChange={(value: string) => {
-                  setForm((prev) => ({ ...prev, language: value }))
-                }}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={`${form.language.charAt(0).toUpperCase() + form.language.slice(1) ||
-                        "Select a language"
-                        }`}
+              </Field>
+              <Field label="Tags" error={errors.tags?.message} required={true}>
+                <Controller
+                  name="tags"
+                  control={control}
+                  render={({ field }) => (
+                    <CommaListField
+                      inputType='text'
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      placeholder="e.g. JavaScript Basics, React, Next.js"
                     />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[300px] overflow-y-auto">
-                    {[
-                      "English",
-                      "Spanish",
-                      "French",
-                      "German",
-                      "Hindi",
-                      "Chinese",
-                      "Japanese",
-                      "Korean",
-                      "Portuguese",
-                      "Arabic",
-                      "Russian",
-                      "Bengali",
-                      "Urdu",
-                      "Tamil",
-                      "Telugu",
-                      "Gujarati",
-                      "Marathi",
-                      "Punjabi",
-                      "Malayalam",
-                      "Dutch",
-                      "Italian",
-                      "Swedish",
-                      "Turkish",
-                      "Vietnamese",
-                      "Thai",
-                      "Hebrew",
-                      "Polish",
-                      "Ukrainian",
-                      "Czech",
-                      "Romanian",
-                      "Greek",
-                      "Hungarian",
-                      "Finnish",
-                      "Slovak",
-                      "Norwegian",
-                      "Danish",
-                      "Croatian",
-                      "Serbian",
-                      "Bulgarian",
-                      "Estonian",
-                      "Latvian",
-                      "Lithuanian",
-                    ].map((lang) => (
-                      <SelectItem className="" key={lang} value={lang.toLowerCase()}>
-                        {lang}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
+                  )}
+                />
+              </Field>
+              {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
+                errors.totalDurationInSeconds?.message
+              } required={true}>
+                <Input readOnly value={totalDurationInSeconds} type="number" disabled />
+              </Field>
+              }
+              <Field label="Level" error={errors.level?.message} required={true}>
+                <Controller
+                  name="level"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LEVELS.map((l) => (
+                          <SelectItem key={l} value={l}>
+                            {l}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
 
-            <Label className="my-4 mt-6">Topics to be covered</Label>
 
-            {form.topics?.map((item, index) => (
-              <div key={index} className="mb-4 space-y-2 relative">
-                { }
-                {isLoadingCourse ? (
-                  <Skeleton className="w-full h-[30px] rounded-md" />
-                ) : (
-                  form.topics.length > 1 &&
-                  index !== 0 && (
-                    <div
-                      className="absolute right-2 -top-0 text-lg cursor-pointer flex items-center"
-                      onClick={() => removeTopic(index)}
+
+                />
+              </Field>
+              <Field label="What you will learn" error={errors.whatYouWillLearn?.message} required={true}>
+                <Controller
+                  name="whatYouWillLearn"
+                  control={control}
+                  render={({ field }) => (
+                    <CommaListField
+                      inputType="text"
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+
+                      placeholder="e.g. Variables, loops"
+                    />
+                  )}
+                />
+              </Field>
+              <Field label="Requirements" error={errors.requirements?.message} required={true}>
+                <Controller
+                  name="requirements"
+                  control={control}
+                  render={({ field }) => (
+                    <CommaListField
+                      inputType="text"
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+
+                      placeholder="e.g. HTML, CSS"
+                    />
+                  )}
+                />
+              </Field>
+              <Field label="Language" error={errors.language?.message} required={true}>
+                <Controller
+                  name="language"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a language" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-75 overflow-y-auto">
+                        {uiLanguages.map((l: string) => (
+                          <SelectItem key={l} value={l.toLowerCase()}>
+                            {l}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Field>
+              <Field label="Lesson release schedule" error={errors.dripType?.message} required={true}>
+                <Controller
+                  name="dripType"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a release schedule" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="sequential">Sequential</SelectItem>
+                        <SelectItem value="drip-by-date">Drip by date</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Field>
+              <Label className="my-4 mt-6">Topics to be covered</Label>
+
+              <h3 className="mt-6 text-sm font-medium">Topics to be covered</h3>
+              {/* item.id is the stable key, not the index */}
+              {topics.fields.map((item, i) => (
+                <div key={item.id} className="relative mb-4 space-y-2">
+                  {/* remove button, hidden for the first topic */}
+                  {i > 0 && (
+                    <Button
+                      type="button"
+                      className="absolute right-2 top-0 text-lg"
+                      onClick={() => topics.remove(i)}
                     >
                       <RxCross2 />
-                    </div>
-                  )
-                )}
-                <div className="space-y-2">
-                  <Label className="">Topic</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="w-full rounded-md h-[30px]" />
-                  ) : (
+                    </Button>
+                  )}
+                  {/* topic name */}
+                  <Field
+                    label="Topic"
+                    required={true}
+                    error={errors.topics?.[i]?.name?.message}
+                  >
                     <Input
-                      type="text"
-                      className=""
-                      value={item.name}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleTopicChange(index, "topic", e.target.value)
-                      }
+                      {...register(`topics.${i}.name`)}
                       placeholder="e.g. JavaScript Basics"
                     />
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="">Description</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="w-full h-[30px] rounded-md" />
-                  ) : (
-                    <Input
-                      className=""
-                      type="text"
-                      value={item.description}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleTopicChange(index, "description", e.target.value)
-                      }
-                      placeholder="e.g. Variables, loops, functions"
+                  </Field>
+                  {/* topic description */}
+                  <Field
+                    label="Description"
+                    required={true}
+                    error={errors.topics?.[i]?.description?.message}
+                  >
+                    <Input {...register(`topics.${i}.description`)} />
+                  </Field>
+                  {/* active flag */}
+                  <Field label="IsActive" error={errors.topics?.[i]?.isActive?.message} required={true}>
+                    <Controller
+                      control={control}
+                      name={`topics.${i}.isActive`}
+                      render={({ field }) => (
+                        <BooleanSelect
+                          value={field.value ?? false}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
-                  )}
+                  </Field>
                 </div>
-              </div>
-            ))}
-            {isLoadingCourse ? (
-              <Skeleton className="h-10 px-4 w-[90px] rounded-md" />
-            ) : (
-              <Button className="" size="default" type="button" onClick={addTopic} variant="outline">
+              ))}
+              {/* add topic: pass a real object, not the click event */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  topics.append({
+                    name: "",
+                    description: "",
+                    isActive: true,
+
+                  })
+                }
+              >
                 + Add Topics
               </Button>
-            )}
-            <Label className={"my-4"}>Lessons</Label>
-            {form.lessons?.map((item, index) => (
-              <div key={index} className="mb-4 space-y-2 relative">
-                {form.lessons.length > 1 && index !== 0 && (
-                  <div
-                    className="absolute right-2 -top-0 text-lg cursor-pointer flex items-center"
-                    onClick={() => removeLesson(index)}
-                  >
-                    <RxCross2 />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label className="">Name</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className=" h-[30px] rounded-md w-full" />
-                  ) : (
-                    <Input
-                      type="text"
-                      className=""
-                      value={item.name}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleLessonChange(index, "name", e.target.value)
-                      }
-                      placeholder="e.g. JavaScript Basics"
-                    />
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="">Description</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="h-[30px] w-full rounded-md" />
-                  ) : (
-                    <Input
-                      type="text"
-                      className=""
-                      value={item.description}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleLessonChange(index, "description", e.target.value)
-                      }
-                      placeholder="e.g. Variables, loops, functions"
-                    />
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {isLoadingCourse ? (
-                    <Skeleton className="h-[500px] w-full rounded-md" />
-                  ) : (
-                    <video width="600" controls>
-                      <source
-                        src={previewLessonVideo[index]}
-                        type="video/mp4"
-                      />
-                      Your browser does not support the video tag.
-                    </video>
-                  )}
-                </div>
+              <h3 className="mt-6 text-sm font-medium">Sections</h3>
+              {errors.sections?.message && (
+                <p className="text-sm text-destructive">
+                  {errors.sections.message}
+                </p>
+              )}
+              {/* lessons section */}
+              {/* item.id is the stable key */}
+              {sections.fields.map((section, sectionIndex) => {
+                // Get the nested lessons field array for this specific section
+                // const sectionLessons = useFieldArray({
+                //   control,
+                //   name: `sections.${sectionIndex}.lessons`,
+                // });
 
-                <div className="space-y-2">
-                  <Label className="">video</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
-                  ) : isLessonVideoUploading[index] === true ? (
-                    <Skeleton className="w-full md:w-[500px] h-[30px] rounded-md" />
-                  ) : (
-                    <>
-                      <Input
-                        className=""
-                        type="file"
-                        accept="video/*"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          if (!e.target.files) return;
-                          const file = e.target.files[0];
-                          if (file) {
-                            handleLessonVideoUpload(index, file);
-                          }
-                        }}
-                        placeholder="e.g. video/*"
-                      />
-                      {selectedLessonVideoNames[index] && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {selectedLessonVideoNames[index]}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="">Duration</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="w-full h-[30px] rounded-md" />
-                  ) : (
-                    <Input
-                      className=""
-                      type="text"
-                      value={item.durationInSeconds}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleLessonChange(index, "duration", e.target.value)
-                      }
-                      placeholder="e.g. Variables, loops, functions"
+                return (
+                  <div key={section.id} className="relative">
+                    <SectionItem
+                      // Position of this section
+                      sectionIndex={sectionIndex}
+                      // First section cannot be removed
+                      canRemove={sectionIndex > 0}
+                      // Remove this section from the parent array
+                      onRemove={() => sections.remove(sectionIndex)}
                     />
-                  )}
-                </div>
-              </div>
-            ))}
-            {isLoadingCourse ? (
-              <Skeleton className="h-10 px-4 w-[90px] rounded-md" />
-            ) : (
-              <Button className="" size="default" type="button" onClick={addLesson} variant="outline">
-                + Add Lessons
+                  </div>
+                );
+              })}
+              {/* add section with a real object, not the click event */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  sections.append({
+                    ...EMPTY_SECTION,
+                    lessons: [EMPTY_LESSON], // Start with one empty lesson
+                  })
+                }
+              >
+                + Add Section
               </Button>
-            )}
-            <Label className={"my-4"}>Faqs</Label>
-
-            {form.faq?.map((item, index) => (
-              <div key={index} className="mb-4 space-y-2 relative ">
-                {form.faq.length > 1 && index !== 0 && (
-                  <div
-                    className="absolute right-2 -top-0 text-lg cursor-pointer flex items-center "
-                    onClick={() => removeFaq(index)}
+              <h3 className="mt-6 text-sm font-medium">Faqs</h3>
+              {/* faq now uses useFieldArray fields, not form.faq */}
+              {faq.fields.map((item, i) => (
+                <div key={item.id} className="relative mb-4 space-y-2">
+                  {/* remove button */}
+                  {i > 0 && (
+                    <Button
+                      type="button"
+                      className="absolute right-2 top-0 text-lg"
+                      onClick={() => faq.remove(i)}
+                    >
+                      <RxCross2 />
+                    </Button>
+                  )}
+                  {/* question: registered, so no manual onChange handler needed */}
+                  <Field
+                    label="Question"
+                    error={errors.faq?.[i]?.question?.message}
+                    required={true}
                   >
-                    <RxCross2 />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label className="">Name</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="w-full h-[30px] rounded-md" />
-                  ) : (
                     <Input
-                      type="text"
-                      className=""
-                      value={item.question}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleFaqChange(index, "question", e.target.value)
-                      }
-                      placeholder="e.g. what is async and await ?"
+                      {...register(`faq.${i}.question`)}
+                      placeholder="e.g. What is async/await?"
                     />
-                  )}
+                  </Field>
+                  {/* answer */}
+                  <Field
+                    label="Answer"
+                    error={errors.faq?.[i]?.answer?.message}
+                    required={true}
+                  >
+                    <Input {...register(`faq.${i}.answer`)} />
+                  </Field>
                 </div>
-                <div className="space-y-2">
-                  <Label className="">Answer</Label>
-                  {isLoadingCourse ? (
-                    <Skeleton className="w-full h-[30px] rounded-md" />
-                  ) : (
-                    <Input
-                      type=""
-                      className=""
-                      value={item.answer}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleFaqChange(index, "answer", e.target.value)
-                      }
-                      placeholder="e.g. async is responsible for executing code asynchronously like promises and await is used to wait for a promise to resolve before executing the next line of code."
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-            {isLoadingCourse ? (
-              <Skeleton className="h-10 px-4 w-[90px] rounded-md" />
-            ) : (
-              <Button className="" size="default" type="button" onClick={addFaq} variant="outline">
+              ))}
+              {/* add faq */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => faq.append({ question: "", answer: "" })}
+              >
                 + Add Faqs
               </Button>
-            )}
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          {isLoadingCourse ? (
-            <div className="w-full flex justify-between">
-              <Skeleton className="h-10 px-4 w-[90px] rounded-md" />
-              <Skeleton className="h-10 px-4 w-[90px] rounded-md" />
-            </div>
-          ) : (
-            <>
-              <Button className="" size="default" variant="outline" onClick={() => router.back()}>
-                Cancel
-              </Button>
-              <Button className="" size="default" variant="default" onClick={(e) => handleUpdateCourse(e)}>Update</Button>
-            </>
-          )}
-        </CardFooter>
-      </Card>
-    </div>
+              <Label className={"my-4"}>Faqs</Label>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            (
+
+            <Button className="" size="default" variant="outline" onClick={() => router.back()}>
+              Cancel
+            </Button>
+            <Button className="" type="submit" form="edit-course-form" disabled={isSubmitting} size="default" variant="default" >
+              {isSubmitting ? "Updating..." : "Update"}
+            </Button>
+
+            )
+          </CardFooter>
+        </Card>
+      </FormProvider>
+    </div >
   );
 }
 
