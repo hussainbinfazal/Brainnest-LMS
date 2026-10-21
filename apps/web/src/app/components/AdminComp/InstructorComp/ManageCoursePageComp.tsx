@@ -153,9 +153,9 @@ const ManageCoursePageComponent = ({
                 return title.includes(term) || instructorName.includes(term);
             });
 
-    useEffect(() => {
-        getPaginatedInstructorCourses();
-    }, [getPaginatedInstructorCourses]);
+    // useEffect(() => {
+    //     getPaginatedInstructorCourses();
+    // }, [getPaginatedInstructorCourses]);
     useEffect(() => {
         const timer: NodeJS.Timeout = setTimeout(
             (): void => setDebouncedSearchTerm(searchTerm),

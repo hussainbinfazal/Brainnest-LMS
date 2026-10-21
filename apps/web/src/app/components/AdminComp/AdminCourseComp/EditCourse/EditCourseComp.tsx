@@ -195,10 +195,15 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   };
   useEffect(() => {
     const dripType = fetchedCourse?.dripType;
+    const courseCategory = fetchedCourse?.category.parent?.name ?? fetchedCourse?.category.name;
+    const courseSubCategory = fetchedCourse?.category.parent ? fetchedCourse.category.name : "";
+    setParentCategory(courseCategory ?? "");
     form.reset({
       title: fetchedCourse?.title,
       description: fetchedCourse?.description,
       price: fetchedCourse?.price,
+      category: { name: courseCategory ?? "" },
+      subCategory: courseSubCategory,
       discount: fetchedCourse?.discount,
       tags: fetchedCourse?.tags,
       level: fetchedCourse?.level === 'expert' ? 'advanced' : fetchedCourse?.level,
@@ -218,6 +223,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
 
     })
   }, [])
+  console.log("This is the rendered course", fetchedCourse);
 
 
   return (
