@@ -32,11 +32,12 @@ async function ManageInstructorsCoursesPage({ searchParams }: ManageCoursesPageP
       return redirect('/')
     }
     const cachedInstructorCourses = await getInstructorCoursesWithCache(instructorId, page, limit, skip);
-    logger.info("Instructor Courses fetched from cache", { courseCount: cachedInstructorCourses.paginatedInstructorCourses.length });
+    // logger.info("Instructor Courses fetched from cache", { courseCount: cachedInstructorCourses.paginatedInstructorCourses.length });
 
     return <ManageCoursePageComponent paginatedInstructorCourses={cachedInstructorCourses.paginatedInstructorCourses} />
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Something went wrong while fetching Instructor Courses";
+    console.log("This is the error in manage Course Page", error, 'This is the error message in Homepage', message);
     logger.error("Error in ManagePage:", { error, message });
     return <ManageCoursePageComponent paginatedInstructorCourses={[]} />;
   }
