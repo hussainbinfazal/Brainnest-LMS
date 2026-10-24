@@ -174,6 +174,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
     };
     const cacheId = `${courseId}:${instructorId}`;
     const cachedInstructorCourse = await getCached<InstructorCourseResponse>(INSTRUCTOR_COURSE_WITH_ID.namespace, cacheId);
+    console.log("This is the cached instructor courses from redis------------------------>>>>>>>>>>",cachedInstructorCourse)
     if (cachedInstructorCourse) {
         logger.info("Instructor Course fetched Succesfully from Cache", {
             courseId,

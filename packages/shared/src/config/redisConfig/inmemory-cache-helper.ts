@@ -13,7 +13,7 @@ const g = globalThis as unknown as { __memCache?: Map<string, Entry> }
 
 
 //This map is created once and we could reuse it across mulitple reloads
-const store = g.__memCache ?? (g.__memCache ?? new Map<string, Entry>());
+const store = g.__memCache ?? (g.__memCache = new Map<string, Entry>());
 
 
 
@@ -45,7 +45,7 @@ export function memGet<T>(key: string): T | null {
 export function memSet<T>(key: string, value: T, ttlSec: number): void {
     //Serialize like Upstash does; undefined becomes 'null' because JSON.stringify() return undefined for it
     ///Delete first so teh key moves to the end of the Map's insertion order
-    const v = { json: JSON.stringify(value), expiresAt: ttlSec > 0 ? Date.now() + ttlSec * 1000 : null };
+    const v = { json: JSON.stringify(value) ?? 'null', expiresAt: ttlSec > 0 ? Date.now() + ttlSec * 1000 : null };
     insert(key, v);
 };
 
@@ -131,9 +131,7 @@ function insert(key: string, entry: Entry): void {
         const oldest = store.keys().next().value
         if (oldest !== undefined) store.delete(oldest)
     };
-    const serialzed = JSON.stringify(entry) ?? 'null';
-    store.set(key, { json: serialzed, expiresAt: entry.expiresAt });
+    store.set(key, entry);
 
 }
-
 

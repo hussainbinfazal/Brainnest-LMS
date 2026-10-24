@@ -148,7 +148,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const previewVideo = useFileUploadField();
 
   // parent category is UI-only state, not part of the payload
-  const [parentCategory, setParentCategory] = useState<string>("");
+  const [parentCategory, setParentCategory] = useState<string>(renderedCourse.category.parent?.name.toLowerCase() || "");
   // derive subcategories instead of nested map + &&
   const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
   // total duration is derived, never typed by hand
@@ -163,6 +163,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   // );
 
   const onSubmit = async (data: UpdateCourseBody) => {
+    console.log("Update course button clicked")
     try {
       const totalLessons = data.sections.reduce(
         (acc, section) => acc + section.lessons.length,
@@ -220,7 +221,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
         description: renderedCourse?.description,
         price: renderedCourse?.price,
         category: { name: parentKey },
-        subCategory: leafName.toLowerCase(),
+        subCategory: renderedCourse?.category.name.toLowerCase(),
         discount: renderedCourse?.discount,
         tags: renderedCourse?.tags,
         level: levelKey,
@@ -243,6 +244,8 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
       console.log("This is the rendered course", fetchedCourse);
       console.log("This is the rendered parent Category", parentName);
       console.log("This is the rendered childCategory", fetchedCourse?.category.name)
+      console.log("This is the rendered Sections", renderedCourseSections)
+      console.log("This is the rendered Lessons", renderedCourseLessons);
     }
   }, [fetchedCourse, fetchedSections, fetchedLessons, form, renderedCourse])
 
@@ -656,10 +659,10 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
           <CardFooter className="flex justify-between">
             (
 
-            <Button className="" size="default" variant="outline" onClick={() => router.back()}>
+            <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600" size="default" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button className="" type="submit" form="edit-course-form" disabled={isSubmitting} size="default" variant="default" >
+            <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600" type="submit" form="update-course-form" disabled={isSubmitting} size="default" variant="default" >
               {isSubmitting ? "Updating..." : "Update"}
             </Button>
 

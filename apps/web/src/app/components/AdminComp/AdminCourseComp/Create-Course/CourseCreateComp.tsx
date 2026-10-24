@@ -535,11 +535,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 />
               </div> */}
               {/* derived total duration, read-only */}
-              {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
+              {/* {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
                 errors.totalDurationInSeconds?.message
               } required={true}>
                 <Input readOnly value={totalDurationInSeconds} type="number" disabled />
-              </Field>}
+              </Field>} */}
               {/* <div className="space-y-2">
                 <Label className="">Level</Label>
                 <Controller

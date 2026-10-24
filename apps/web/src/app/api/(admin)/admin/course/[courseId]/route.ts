@@ -24,7 +24,7 @@ export async function GET(request: CustomNextRequest, context: { params: Promise
         const courseId = Array.isArray(params.courseId)
             ? params.courseId[0]
             : params.courseId;
-        logger.info("This is the courseId for the admin in the edit route", { courseId: courseId })
+        logger.info("This is the courseId for the admin in the GET route", { courseId: courseId })
         if (!courseId || !validateMongooseId({ courseId })) {
             return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         }
@@ -160,6 +160,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
 
 export async function PUT(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_UPDATE_IP_KEY.namespace, ADMIN_COURSE_UPDATE_IP_KEY.max, ADMIN_COURSE_UPDATE_IP_KEY.windowSec);
+
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
@@ -167,10 +168,10 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
     if (sessionUser?.role !== USER_ROLE.INSTRUCTOR) {
         logger.warn("Unauthorized access attempt in admin course update route");
         return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true);
-    }
+    };
     const userId: string = sessionUser.id
     const { allowed: userAllowed, retryAfterSec: userRetryAfterSec } = await checkUser(userId, ADMIN_COURSE_UPDATE_USER_KEY.namespace, ADMIN_COURSE_UPDATE_USER_KEY.max, ADMIN_COURSE_UPDATE_USER_KEY.windowSec);
-    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
+    if (!userAllowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(userRetryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession()
     try {
@@ -178,6 +179,10 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
         const courseId = Array.isArray(params.courseId)
             ? params.courseId[0]
             : params.courseId;
+        if (!courseId || !validateMongooseId({ courseId: courseId })) {
+            logger.warn("Course id is required in admin course update route");
+            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
+        }
         const parsedBody = await parseBody(request, updateCourseBodySchema);
         if (!parsedBody.ok) return parsedBody.response;
         const body = parsedBody.data;
@@ -192,10 +197,6 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
         } = body;
 
 
-        if (!courseId || !validateMongooseId({ courseId: courseId })) {
-            logger.warn("Course id is required in admin course update route");
-            return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
-        }
         const course: ICourse | null = await Course.findOne({ _id: courseId, instructorId: sessionUser.id });
         if (!course) {
             logger.warn("Course not found in admin course update route with this Id", { courseId: courseId });

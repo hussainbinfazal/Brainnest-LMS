@@ -4,6 +4,7 @@ import { LucideIcon } from "lucide-react";
 import mongoose from "mongoose";
 import { CCategoryWithChildren } from "@/lib/non-Admin-Cached/getCachedCategory";
 import { RESOURCE_TYPE } from "@repo/shared/server";
+import { CourseLevel } from "@/locales/locales";
 
 export interface CCertificate {
   _id: string;
@@ -251,7 +252,7 @@ export interface CCourse {
   price: number;
   averageRating: number;
   discount: number;
-  level: 'beginner' | 'intermediate' | 'advanced';
+  level: CourseLevel;
   totalEnrolledCount: number,
   language: string;
   status: "draft" | "published" | "archived" | "deleted";

@@ -68,11 +68,11 @@ function uploadTargetPublicId(folder: string, id: string): string {
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   const { allowed, remaining, retryAfterSec, ip } = await checkIp(
-      request,
-      ADMIN_COURSE_CREATE_IP_KEY.namespace,
-      ADMIN_COURSE_CREATE_IP_KEY.max,
-      ADMIN_COURSE_CREATE_IP_KEY.windowSec
-    );
+    request,
+    ADMIN_COURSE_CREATE_IP_KEY.namespace,
+    ADMIN_COURSE_CREATE_IP_KEY.max,
+    ADMIN_COURSE_CREATE_IP_KEY.windowSec
+  );
   if (!allowed)
     return failResponse(
       { message: "Too many requests" },
@@ -122,11 +122,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     remaining: remainingAttempts,
     retryAfterSec: retryAfter,
   } = await checkUser(
-        userInSession.id,
-        ADMIN_COURSE_CREATE_USER_KEY.namespace,
-        ADMIN_COURSE_CREATE_USER_KEY.max,
-        ADMIN_COURSE_CREATE_USER_KEY.windowSec
-      );
+    userInSession.id,
+    ADMIN_COURSE_CREATE_USER_KEY.namespace,
+    ADMIN_COURSE_CREATE_USER_KEY.max,
+    ADMIN_COURSE_CREATE_USER_KEY.windowSec
+  );
 
   if (!isUserAllowed) {
     return failResponse(
@@ -320,7 +320,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       body.topics.forEach((t) =>
         topicMap.set(t.name.trim().toLowerCase(), {
           name: t.name.trim(),
-          description: t.description,
+          description: t.description ?? '',
         })
       );
 
@@ -369,7 +369,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         .lean();
 
       ///Pre Assingn section Ids so lessons can reference them without index guessing
-      const sectionDocs: ISection[] = body.sections.map((s) => ({
+      const sectionDocs: (ISection & { _id: Types.ObjectId })[] = body.sections.map((s) => ({
         _id: new Types.ObjectId(),
         courseId,
         title: s.title,

@@ -12,7 +12,7 @@ export const uiCategories: string[] = [
   "photography",
   "productivity",
   "technology",
-];
+] as const;
 ///This will be seeded by the admin(At current stage)
 export const categoryToSubcategories: Record<string, string[]> = {
   academics: ["math", "science", "history"],
@@ -28,7 +28,7 @@ export const categoryToSubcategories: Record<string, string[]> = {
   photography: ["editing", "gear", "composition"],
   productivity: ["time-management", "tools", "automation"],
   technology: ["ai", "cloud", "iot"],
-};
+} as const;
 export const uiLanguages: string[] = [
   "English", "Spanish", "French", "German", "Hindi", "Chinese", "Japanese",
   "Korean", "Portuguese", "Arabic", "Russian", "Bengali", "Urdu", "Tamil",
@@ -36,5 +36,7 @@ export const uiLanguages: string[] = [
   "Swedish", "Turkish", "Vietnamese", "Thai", "Hebrew", "Polish", "Ukrainian",
   "Czech", "Romanian", "Greek", "Hungarian", "Finnish", "Slovak", "Norwegian",
   "Danish", "Croatian", "Serbian", "Bulgarian", "Estonian", "Latvian", "Lithuanian",
-];
-export const LEVELS: string[] = ["Beginner", "Intermediate", ""];
+] as const;
+export const LEVELS: string[] = ["beginner", "intermediate", "advanced"] as const;
+
+export type CourseLevel = (typeof LEVELS)[number];
