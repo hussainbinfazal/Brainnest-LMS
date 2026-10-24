@@ -1,6 +1,6 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { NextResponse } from "next/server";
-import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory, logger } from '@repo/shared/server';
+import { Section, Course, connectDB, ICourse, ILesson, ISection, IUser, Lesson, validateMongooseId, ICategory, logger, checkUser, ADMIN_COURSE_UPDATE_USER_KEY, ADMIN_COURSE_UPDATE_IP_KEY, ADMIN_COURSE_DETAIL_IP_KEY } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose from "mongoose";
 import { diffDocuments } from "@/lib/helpers/genericDiff";
@@ -8,7 +8,8 @@ import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
-import { ADMIN_COURSE_DETAIL_IP_KEY, checkIp } from "@repo/shared/server";
+import { checkIp } from "@repo/shared/server";
+import { USER_ROLE } from "@repo/shared";
 
 const updateCourseBodySchema = z.record(z.string(), z.any());
 export async function GET(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
@@ -18,7 +19,7 @@ export async function GET(request: CustomNextRequest, context: { params: Promise
         const session: Session | null = await auth()
         if (!session) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = session?.user;
-        if (!user || user?.role !== "instructor") { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
+        if (!user || user?.role !== USER_ROLE.INSTRUCTOR) { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
         const params = await context.params;
         const courseId = Array.isArray(params.courseId)
             ? params.courseId[0]
@@ -137,7 +138,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
-        if (user?.role !== "instructor") { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
+        if (user?.role !== USER_ROLE.INSTRUCTOR) { return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true); }
         if (!courseId || !validateMongooseId({ courseId })) {
             return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);
         }
@@ -158,7 +159,17 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
 
 
 export async function PUT(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_UPDATE_IP_KEY.namespace, ADMIN_COURSE_UPDATE_IP_KEY.max, ADMIN_COURSE_UPDATE_IP_KEY.windowSec);
+    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
+    const authSession: Session | null = await auth()
+    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
+    const sessionUser: ISessionUser | null = authSession?.user;
+    if (sessionUser?.role !== USER_ROLE.INSTRUCTOR) {
+        logger.warn("Unauthorized access attempt in admin course update route");
+        return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true);
+    }
+    const userId: string = sessionUser.id
+    const { allowed: userAllowed, retryAfterSec: userRetryAfterSec } = await checkUser(userId, ADMIN_COURSE_UPDATE_USER_KEY.namespace, ADMIN_COURSE_UPDATE_USER_KEY.max, ADMIN_COURSE_UPDATE_USER_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
     await connectDB(process.env.MONGODB_URI!);
     const session = await mongoose.startSession()
@@ -179,14 +190,8 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
             whatYouWillLearn,
             ...courseFields
         } = body;
-        const authSession: Session | null = await auth()
-        if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
-        const sessionUser: ISessionUser | null = authSession?.user;
 
-        if (sessionUser?.role !== "instructor") {
-            logger.warn("Unauthorized access attempt in admin course update route");
-            return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true);
-        }
+
         if (!courseId || !validateMongooseId({ courseId: courseId })) {
             logger.warn("Course id is required in admin course update route");
             return failResponse({ message: "Course id is required" }, 400, undefined, undefined, true);

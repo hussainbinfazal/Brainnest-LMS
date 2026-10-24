@@ -26,6 +26,7 @@ import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { useClickOutSide } from "@/hooks/useClickOutside";
+import { USER_ROLE } from "@repo/shared";
 ///Add Skeletons while loading
 export default function Header({ className }: { className?: string }): React.JSX.Element {
   const router = useRouter();
@@ -38,7 +39,6 @@ export default function Header({ className }: { className?: string }): React.JSX
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser)
   const updateUserRoleToInstructor = useAuthStore((state) => state.updateUserToInstructor);
   const isUpdating = useAuthStore((state) => state.isUpdatingRole)
-  console.log("This is the authUser in header", authUser)
   const sessionUser = session?.user
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
   const enrolledCourses = useUserCourseStore((state) => state.enrolledCourseIds);
@@ -190,7 +190,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                   Profile
                 </Link>
               )}
-              {sessionUser ? sessionUser?.role === "instructor" : authUser?.role === "instructor" && (
+              {sessionUser ? sessionUser?.role === USER_ROLE.INSTRUCTOR : authUser?.role === USER_ROLE.INSTRUCTOR && (
                 <Link
                   href={`/myprofile`}
                   className="px-4 hover:underline underline-offset-4"
@@ -203,7 +203,7 @@ export default function Header({ className }: { className?: string }): React.JSX
             <div className="flex items-center gap-4">
               <ModeToggle />
 
-              {sessionUser?.role === "instructor" ? (
+              {sessionUser?.role === USER_ROLE.INSTRUCTOR ? (
                 <Link href="instructor/course/manage">
                   <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
                 </Link>
@@ -268,7 +268,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                             <p className="whitespace-pre">Manage Courses</p>
                           </Link>
                         )}
-                        {sessionUser?.role === "instructor" && (
+                        {sessionUser?.role === USER_ROLE.INSTRUCTOR && (
                           <Link
                             href={`/`}
                             className={`${badgeVariants({

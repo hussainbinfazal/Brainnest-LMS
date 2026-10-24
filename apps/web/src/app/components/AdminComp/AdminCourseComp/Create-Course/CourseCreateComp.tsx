@@ -54,7 +54,7 @@ import {
 import z from "zod";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 
-const LEVELS: string[] = ["Beginner", "Intermediate", "Expert"];
+const LEVELS: string[] = ["Beginner", "Intermediate", "Advanced"];
 
 // default lesson shape in one place (match your schema's field names!)
 const EMPTY_LESSON = {
@@ -551,7 +551,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                         <SelectValue placeholder="Select a level" />
                       </SelectTrigger>
                       <SelectContent className="">
-                        {["Beginner", "Intermediate", "Expert"].map((lvl) => (
+                        {["Beginner", "Intermediate", "Advanced"].map((lvl) => (
                           <SelectItem className="" key={lvl} value={lvl}>
                             {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
                           </SelectItem>

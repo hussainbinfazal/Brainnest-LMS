@@ -6,6 +6,7 @@ import type { JWT } from "next-auth/jwt"
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
 import { checkIp, GLOBAL_IP_KEY } from '@repo/shared/server';
 import { failResponse } from "@/lib/helpers/failResponseHelper";
+import { USER_ROLE } from "@repo/shared";
 
 export async function proxy(req: NextRequest) {
   const { pathname }: { pathname: string } = req.nextUrl
@@ -79,14 +80,14 @@ export async function proxy(req: NextRequest) {
     log('No token, redirecting to login')
     return NextResponse.redirect(new URL("/login", req.url))
   }
-  const instructorRoutes = pathname.startsWith('/instructor') && token.role !== 'instructor' && token.role !== 'admin'
+  const instructorRoutes = pathname.startsWith('/instructor') && token.role !== USER_ROLE.INSTRUCTOR && token.role !== USER_ROLE.ADMIN
   if (instructorRoutes) {
     log('Non-instructor trying to access instructor route')
     return NextResponse.redirect(new URL("/", req.url))
 
   }
   // Check admin access for admin routes
-  if (pathname.startsWith("/admin") && token.role !== "instructor" && token.role !== "admin") {
+  if (pathname.startsWith("/admin") && token.role !== USER_ROLE.INSTRUCTOR && token.role !== USER_ROLE.ADMIN) {
     log('Non-admin trying to access admin route')
     return NextResponse.redirect(new URL("/", req.url))
   }

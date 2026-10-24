@@ -18,7 +18,7 @@ export interface ICourse {
   discount: number;
   totalDurationInSeconds: number;
   language: string;
-  level: "beginner" | "intermediate" | "expert";
+  level: "beginner" | "intermediate" | "advanced";
   certificate: boolean;
   faq: {
     question: string;

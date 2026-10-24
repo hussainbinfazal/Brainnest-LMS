@@ -20,7 +20,7 @@ export async function GET(request: CustomNextRequest, response: NextResponse): P
                     ],
                     //[{_id:"category id",count:1},{category:[{name:"category name",_id:"category id"}]}]
                     languages: [{ $group: { _id: "$language" } }], //["english","Hindi"]
-                    levels: [{ $group: { _id: "$level" } }], //["beginner","intermediate","expert"]
+                    levels: [{ $group: { _id: "$level" } }], //["beginner","intermediate","advanced"]
 
                 }
             }

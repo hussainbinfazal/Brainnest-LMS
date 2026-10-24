@@ -194,3 +194,9 @@ export const UPLOAD_PURPOSES = Object.keys(UPLOAD_POLICIES) as UploadPurpose[];
 
 // Lookup helper that returns the wide UploadPolicy type
 export const getPolicy = (purpose: UploadPurpose): UploadPolicy => UPLOAD_POLICIES[purpose];
+
+export const USER_ROLE: Record<string, string> = {
+    ADMIN: "admin",
+    INSTRUCTOR: "instructor",
+    STUDENT: "student"
+}

@@ -26,6 +26,7 @@ import PaginationSection from "../../sections/PaginationSection";
 import { usePageState } from "@/hooks/usePageState";
 import { useSession } from "next-auth/react";
 import { Session } from "next-auth";
+import { USER_ROLE } from "@repo/shared";
 const MotionButton = motion.create(Button);
 
 interface ManageCoursePageProps {
@@ -77,7 +78,7 @@ const ManageCoursePageComponent = ({
         let instructorId = sessionUser?.id;
         if (
             !sessionUser ||
-            sessionUser.role !== "instructor" ||
+            sessionUser.role !== USER_ROLE.INSTRUCTOR ||
             !instructorId
         ) {
             // toast.error("Unauthorized");
@@ -123,7 +124,7 @@ const ManageCoursePageComponent = ({
         if (
             !authUser ||
             authUser === null ||
-            authUser.role !== "instructor" ||
+            authUser.role !== USER_ROLE.INSTRUCTOR ||
             !instructorId
         ) {
             toast.error('Unauthorized')
@@ -166,6 +167,9 @@ const ManageCoursePageComponent = ({
     if (isLoading) {
         return <ManageCoursePageSkeleton />;
     }
+    useEffect(() => {
+        
+    },[authUser])
     return (
         <div className="min-h-screen w-full  flex flex-col  justify-start items-center  px-4 mt-0 mb-8 relative">
             {isLoading && (

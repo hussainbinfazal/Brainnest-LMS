@@ -2,15 +2,16 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 
 
 import { NextResponse } from "next/server";
-import { connectDB, INSTRUCTOR_COURSES_ALL, InstructorCoursesResponse } from '@repo/shared/server';
+import { connectDB, INSTRUCTOR_COURSES_ALL } from '@repo/shared/server';
 import { Course, ICourse, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@repo/shared/server";
-import { getCached, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { ADMIN_INSTRUCTOR_COURSES_IP_KEY, checkIp } from "@repo/shared/server";
+import { USER_ROLE } from "@repo/shared";
 
 
 
@@ -71,7 +72,7 @@ export async function GET(request: CustomNextRequest, context: { params: Promise
                 }
             }, 400, undefined, undefined, true)
         }
-        if (user.role !== "instructor") {
+        if (user.role !== USER_ROLE.INSTRUCTOR) {
             logger.info("Unauthorized access", { user, ip: ip });
             return failResponse({
                 message: "Unauthorized", data: {
@@ -84,20 +85,8 @@ export async function GET(request: CustomNextRequest, context: { params: Promise
                 }
             }, 401, undefined, undefined, true)
         }
-        const cacheId = `${page}-${limit}-${skip}-${InstructorId}`;
-        const cachedInstructorCourses = await getCached<InstructorCoursesResponse>(INSTRUCTOR_COURSES_ALL.namespace, cacheId);
-        if (cachedInstructorCourses) {
-            logger.info("Instructor Courses fetched from cache", {
-                courseCount: cachedInstructorCourses.paginatedInstructorCourses.length,
-            });
-            return successResponse({
-                message: "Instructor Courses fetched successfully",
-                data: cachedInstructorCourses
-            }, 200, undefined, undefined, true)
-
-        }
         const instructorCourses = await getInstructorCoursesWithCache(InstructorId, page, limit, skip);
-        logger.info("Instructor Courses fetched from database", {
+        logger.info("Instructor Courses fetched successfully", {
             courseCount: instructorCourses.paginatedInstructorCourses.length,
         });
         return successResponse({ message: "Instructor Courses fetched successfully", data: instructorCourses }, 200, undefined, undefined, true)
@@ -122,7 +111,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
         const authSession: Session | null = await auth()
         if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
         const user: ISessionUser | null = authSession?.user;
-        if (!user || user.role !== "instructor" || !user.id) {
+        if (!user || user.role !== USER_ROLE.INSTRUCTOR || !user.id) {
             logger.warn("Unauthorized access", { user, ip: ip });
             return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
         };

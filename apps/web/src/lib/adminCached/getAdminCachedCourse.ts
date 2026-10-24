@@ -2,10 +2,11 @@ import { auth } from "@/auth";
 import { CCourse, CLesson, CSection } from "@/types/client";
 import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
 import { connectDB, Course, COURSES_ALL, ICourse, ILesson, INSTRUCTOR_COURSE_WITH_ID, INSTRUCTOR_COURSES_ALL, ISection, ISessionUser, Lesson, logger, Section, validateMongooseId } from '@repo/shared/server';
-import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import { CACHE_TTL, getCached, invalidateCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { Session } from "next-auth";
 import { serializeLessons } from "@/utils/serializer/lesson.serializer";
 import { serializeSections } from "@/utils/serializer/section.serializer";
+import { USER_ROLE } from "@repo/shared";
 export type InstructorCoursesResponse = {
     paginatedInstructorCourses: CCourse[];
     hasNextPage: boolean;
@@ -29,6 +30,7 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
     totalInstructorCourses: number
 }> {
     const session: Session | null = await auth()
+
     if (!session?.user) {
         logger.warn("Unauthorized", { user: session?.user })
         return {
@@ -42,7 +44,7 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
     }
     const user: ISessionUser | null = session?.user
     // const user = await getSession()
-    if (user?.role !== "instructor") {
+    if (user?.role !== USER_ROLE.INSTRUCTOR) {
         logger.error("Unauthorized", { user })
         return {
             paginatedInstructorCourses: [] as CCourse[],
@@ -67,19 +69,20 @@ export async function getInstructorCoursesWithCache(instructorId: string, page: 
 
     const cacheId = `${page}-${limit}-${skip}-${instructorId}`;
     const cachedInstructorCourses = await getCached<InstructorCoursesResponse>(INSTRUCTOR_COURSES_ALL.namespace, cacheId);
-    if (cachedInstructorCourses) {
-        logger.info("Courses fetched Succesfully from Cache", {
-            courseCount: cachedInstructorCourses.paginatedInstructorCourses.length
-        })
-        let response = {
+    if (cachedInstructorCourses && Array.isArray(cachedInstructorCourses.paginatedInstructorCourses)) {
+        // logger.info("Courses fetched Succesfully from Cache", {
+        //     courseCount: cachedInstructorCourses.paginatedInstructorCourses.length
+        // })
+        return {
+            ...cachedInstructorCourses,
             paginatedInstructorCourses: cachedInstructorCourses.paginatedInstructorCourses,
-            hasNextPage: false,
-            hasPrevPage: false,
             currentPage: page,
-            totalPages: 1,
-            totalInstructorCourses: cachedInstructorCourses.paginatedInstructorCourses.length
+            totalInstructorCourses: cachedInstructorCourses.totalInstructorCourses ?? cachedInstructorCourses.paginatedInstructorCourses.length
         }
-        return response;
+    }
+    if (cachedInstructorCourses) {
+        logger.warn("Invalid instructor courses cache entry; fetching fresh data", { cacheId, instructorId });
+        await invalidateCached(INSTRUCTOR_COURSES_ALL.namespace, cacheId);
     }
     // await invaidateCached("Courses", "all")
     // console.log("This is the url of mongodb", process.env.MONGODB_URI)
@@ -157,7 +160,7 @@ export async function getInstructorCourseWithCache(instructorId: string, courseI
     }
     const user: ISessionUser | null = session?.user
     // const user = await getSession()
-    if (user?.role !== "instructor") {
+    if (user?.role !== USER_ROLE.INSTRUCTOR) {
         logger.error("Unauthorized", { user })
         return emptyResponse
     }

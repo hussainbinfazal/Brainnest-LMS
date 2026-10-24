@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/card";
 import { CAuthUser, CCourse, CLesson } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
+import { USER_ROLE } from "@repo/shared";
 
 export const MyProfilePageComp = (): JSX.Element => {
     const router = useRouter();
@@ -222,7 +223,7 @@ export const MyProfilePageComp = (): JSX.Element => {
                     <span>
                         {loading ? <Skeleton className="h-4 w-30" /> : authUser?.name}
                     </span>
-                    {authUser?.role === "instructor" && (
+                    {authUser?.role === USER_ROLE.INSTRUCTOR && (
                         <span className="text-sm cursor-pointer">
                             {loading ? (
                                 <Skeleton className="h-4 w-30" />

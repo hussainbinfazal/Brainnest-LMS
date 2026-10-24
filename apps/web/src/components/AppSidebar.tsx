@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HiChevronUp, HiChevronDown } from "react-icons/hi";
 import { useTheme } from "next-themes";
+import { USER_ROLE } from "@repo/shared";
 export function AppSidebar() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -105,7 +106,7 @@ export function AppSidebar() {
             </Button>
 
             {authUser &&
-              (authUser.role === "instructor" ? (
+              (authUser.role === USER_ROLE.INSTRUCTOR ? (
                 <Link href="instructor/course/manage">
                   <Button className=" rounded-sm" variant="default"
                     size="sm"

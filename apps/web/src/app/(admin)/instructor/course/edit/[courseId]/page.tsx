@@ -27,11 +27,19 @@ export default async function EditCoursePage({ params }: EditCoursePageProps): P
     logger.error("Course id is required", { courseId })
     throw new Error()
   };
-  const response = await getInstructorCourseWithCache(instructorId, courseId);
-
-  if (!response.course) {
-    console.error("This is the error in edit course page, while ssr", response);
-    return redirect('/instructor/course/manage')}
+  let response;
+  try {
+    response = await getInstructorCourseWithCache(instructorId, courseId);
+    if (!response.course) {
+      console.error("This is the error in edit course page, while ssr", response);
+      return redirect('/instructor/course/manage')
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Something went wrong while fetching Instructor Courses";
+    console.log("This is the error in edit course page, while ssr", error, 'This is the error message in Homepage', message);
+    logger.error("Error in EditPage:", { error, message });
+    return redirect('/instructor/course/manage')
+  }
   return (
     <EditCourseComp
       renderedCourse={response.course}
@@ -39,5 +47,5 @@ export default async function EditCoursePage({ params }: EditCoursePageProps): P
       renderedCourseLessons={response.lessons}
       requestCourseId={courseId}
     />
-  );
+  )
 };

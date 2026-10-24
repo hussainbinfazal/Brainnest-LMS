@@ -86,7 +86,7 @@ const courseSchema = new mongoose.Schema<ICourse>({
   },
   level: {
     type: String,
-    enum: ['beginner', 'intermediate', 'expert'],
+    enum: ['beginner', 'intermediate', 'advanced'],
     default: 'beginner'
   },
   totalEnrolledCount: {

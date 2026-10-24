@@ -251,7 +251,7 @@ export interface CCourse {
   price: number;
   averageRating: number;
   discount: number;
-  level: 'beginner' | 'intermediate' | 'expert';
+  level: 'beginner' | 'intermediate' | 'advanced';
   totalEnrolledCount: number,
   language: string;
   status: "draft" | "published" | "archived" | "deleted";

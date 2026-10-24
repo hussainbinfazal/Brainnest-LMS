@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { Session } from "next-auth";
 import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
 import { auth } from "@/auth";
+import { USER_ROLE } from "@repo/shared";
 
 type ManageCoursesPageProps = {
   searchParams: Promise<{
@@ -22,7 +23,7 @@ async function ManageInstructorsCoursesPage({ searchParams }: ManageCoursesPageP
     const skip = (page - 1) * limit;
     const user = session?.user;
     if (!user) return redirect('/login')
-    if (user?.role !== "instructor") {
+    if (user?.role !== USER_ROLE.INSTRUCTOR) {
       logger.warn("nauthorized", { userId: user?.id, role: user?.role });
       return redirect('/')
     }

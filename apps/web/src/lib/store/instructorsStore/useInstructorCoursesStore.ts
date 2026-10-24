@@ -23,7 +23,7 @@ export interface CInstructorCourseStore {
     }) => Promise<{ paginatedInstructorCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
     setPaginatedInstructorCourses: (newPaginatedInstructorCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number) => void;
     createCourse: (data: CreateCourseBody) => Promise<void>;
-    updateCourse: (data: UpdateCourseBody) => Promise<void>;
+    updateCourse: (data: UpdateCourseBody, courseId: string) => Promise<void>;
     deleteInstructorCourse: (options: { page: number, itemsPerPage: number, courseId: string, instructorId: string }) => void;
     clearPaginatedInstructorCourses: () => void;
     setInstructorCourses: (courses: CCourse[]) => void;
@@ -110,10 +110,10 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
             throw new Error(message);
         }
     },
-    updateCourse: async (data: UpdateCourseBody) => {
+    updateCourse: async (data: UpdateCourseBody,courseId: string) => {
         set({ isLoading: true });
         try {
-            const response = await axios.put('/api/admin/course/update', data);
+            const response = await axios.put(`/api/admin/course/${courseId}`, data);
             if (!response.data.success) {
                 toast.error(response.data.message);
                 return

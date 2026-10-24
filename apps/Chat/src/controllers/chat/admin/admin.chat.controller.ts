@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { connectDB, IUser, logger, User, Chat, validateMongooseId } from '@repo/shared/server';
+import { USER_ROLE } from '@repo/shared';
 
 export async function getChatOfAdmin(request: Request, response: Response): Promise<Response> {
     try {
@@ -31,7 +32,7 @@ export async function getChatStatsAdmin(request: Request, response: Response): P
             User.exists({ _id: userId }).select("role").lean(),
             Chat.findOne({ receiver: userId }).populate('paymentsByUser', 'amount paymentAt paymentBy').populate('paymentResult', 'status update_time email_address').populate('allMessages').lean()
         ])
-        if (userDB?.role !== 'instructor') return response.status(401).json({ message: "You are not authorized to access this route" });
+        if (userDB?.role !== USER_ROLE.INSTRUCTOR) return response.status(401).json({ message: "You are not authorized to access this route" });
         return response.status(200).json({ chats });
 
     } catch (error: unknown) {

@@ -82,7 +82,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const [fetchedSections, setFetchedSections] = useState<CSection[]>(renderedCourseSections)
   const [fetchedLessons, setFetchedLessons] = useState<CLesson[]>(renderedCourseLessons)
 
-  const updateCourse = useInstructorCoursesStore((state) => state.createCourse);
+  const updateCourse = useInstructorCoursesStore((state) => state.updateCourse);
   const isLoading = useInstructorCoursesStore((state) => state.isLoading);
   const form = useForm<
     z.input<typeof createCourseSchema>,
@@ -169,17 +169,22 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
         0
       );
       //attach derived totals
-      await updateCourse({
-        ...data, totalLessons, totalDurationInSeconds: (watch("sections") ?? []).reduce(
-          (sum, section) =>
-            sum +
-            section.lessons.reduce<number>(
-              (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
-              0
-            ),
-          0
-        )
-      });
+      await updateCourse(
+        {
+          ...data,
+          totalLessons,
+          totalDurationInSeconds: (watch("sections") ?? []).reduce(
+            (sum, section) =>
+              sum +
+              section.lessons.reduce<number>(
+                (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
+                0
+              ),
+            0
+          ),
+        },
+        requestCourseId
+      );
       // feedback and redirect
       toast.success("Course Updated successfully");
       router.push("/course/manage");
@@ -194,36 +199,52 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
     toast.error("Please complete the required fields highlighted in the form.");
   };
   useEffect(() => {
-    const dripType = fetchedCourse?.dripType;
-    const courseCategory = fetchedCourse?.category.name;
-    const courseSubCategory = fetchedCourse?.category.parent?.name ?? "";
-    setParentCategory(watch("category.name") ?? "");
-    form.reset({
-      title: fetchedCourse?.title,
-      description: fetchedCourse?.description,
-      price: fetchedCourse?.price,
-      category: { name: courseCategory ?? "" },
-      subCategory: courseSubCategory,
-      discount: fetchedCourse?.discount,
-      tags: fetchedCourse?.tags,
-      level: fetchedCourse?.level === 'expert' ? 'advanced' : fetchedCourse?.level,
-      whatYouWillLearn: fetchedCourse?.whatYouWillLearn,
-      requirements: fetchedCourse?.requirements,
-      language: fetchedCourse?.language,
-      dripType: dripType === "free" || dripType === "sequential" || dripType === "drip-by-date" ? dripType : "free",
-      topics: fetchedCourse?.topics,
-      sections: fetchedSections.map((section) => ({
-        ...section,
-        lessons: fetchedLessons.filter(
-          (lesson) => section._id !== undefined && lesson.sectionId === section._id
-        ),
-      })),
-      faq: fetchedCourse?.faq,
-      coverImage: fetchedCourse?.coverImage,
+    if (renderedCourse) {
+      const dripType = renderedCourse.dripType;
+      const leafName = renderedCourse.category?.name.toLowerCase() ?? "";
+      const parentName = renderedCourse.category.parent?.name.toLowerCase() ?? "";
 
-    })
-  }, [fetchedCourse, fetchedSections, fetchedLessons, form])
-  console.log("This is the rendered course", fetchedCourse);
+      // match against the real map keys (case-insensitive) so the Select value lines up
+      const parentKey =
+        Object.keys(categoryToSubcategories).find(
+          (k) => k.toLowerCase() === parentName.toLowerCase()
+        ) ?? parentName.toLowerCase();
+
+      const levelKey =
+        LEVELS.find(
+          (l) => l.toLowerCase() === (renderedCourse.level ?? "").toLowerCase()
+        ) ?? renderedCourse.level.toLowerCase();
+      setParentCategory(parentKey);
+      form.reset({
+        title: renderedCourse?.title,
+        description: renderedCourse?.description,
+        price: renderedCourse?.price,
+        category: { name: parentKey },
+        subCategory: leafName.toLowerCase(),
+        discount: renderedCourse?.discount,
+        tags: renderedCourse?.tags,
+        level: levelKey,
+        whatYouWillLearn: renderedCourse?.whatYouWillLearn,
+        requirements: renderedCourse?.requirements,
+        language: renderedCourse?.language,
+        dripType: dripType === "free" || dripType === "sequential" || dripType === "drip-by-date" ? dripType : "free",
+        topics: renderedCourse?.topics,
+        sections: fetchedSections.map((section) => ({
+          ...section,
+          lessons: fetchedLessons.filter(
+            (lesson) => section._id !== undefined && lesson.sectionId === section._id
+          ),
+        })),
+        faq: fetchedCourse?.faq,
+        coverImage: fetchedCourse?.coverImage,
+        previewVideo: fetchedCourse?.previewVideo,
+
+      })
+      console.log("This is the rendered course", fetchedCourse);
+      console.log("This is the rendered parent Category", parentName);
+      console.log("This is the rendered childCategory", fetchedCourse?.category.name)
+    }
+  }, [fetchedCourse, fetchedSections, fetchedLessons, form, renderedCourse])
 
 
   return (

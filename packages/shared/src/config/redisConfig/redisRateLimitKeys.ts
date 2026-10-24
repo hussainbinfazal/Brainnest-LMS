@@ -314,8 +314,8 @@ export const ADMIN_COUPON_IP_KEY = {
 } as const;
 
 export const ADMIN_COURSE_CREATE_USER_KEY = {
-  namespace: 'limit-admin-course-create:ip',
-  id: 'ip',
+  namespace: 'limit-admin-course-create:user',
+  id: 'userId',
   max: 10,
   windowSec: 60,
   description: 'Rate limits instructor course creation by client IP',
@@ -333,6 +333,22 @@ export const ADMIN_COURSE_CREATE_IP_KEY = {
 export const ADMIN_COURSE_DETAIL_IP_KEY = {
   namespace: 'limit-admin-course-detail:ip',
   id: 'ip',
+  max: 20,
+  windowSec: 60,
+  description: 'Rate limits instructor course detail reads and mutations by client IP',
+  usedIn: ['Admin Course Detail API'],
+} as const;
+export const ADMIN_COURSE_UPDATE_IP_KEY = {
+  namespace: 'limit-admin-course-update:ip',
+  id: 'ip',
+  max: 20,
+  windowSec: 60,
+  description: 'Rate limits instructor course detail reads and mutations by client IP',
+  usedIn: ['Admin Course Detail API'],
+} as const;
+export const ADMIN_COURSE_UPDATE_USER_KEY = {
+  namespace: 'limit-user-admin-course-update:user',
+  id: 'userId',
   max: 20,
   windowSec: 60,
   description: 'Rate limits instructor course detail reads and mutations by client IP',

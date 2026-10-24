@@ -37,4 +37,4 @@ export const uiLanguages: string[] = [
   "Czech", "Romanian", "Greek", "Hungarian", "Finnish", "Slovak", "Norwegian",
   "Danish", "Croatian", "Serbian", "Bulgarian", "Estonian", "Latvian", "Lithuanian",
 ];
-export const LEVELS: string[] = ["Beginner", "Intermediate", "Expert"];
+export const LEVELS: string[] = ["Beginner", "Intermediate", ""];
