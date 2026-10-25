@@ -83,62 +83,14 @@ const updateLessonSchema = lessonBase
 
 const createSectionSchema = sectionBase.extend({
     lessons: z.array(createLessonSchema).min(1, 'Add at least one lesson to this section'),
+    _id: z.string().optional(),
+    courseId: z.string().optional()
 
 })
+const updateSectionSchema = sectionBase.extend({
+    lessons: z.array(createLessonSchema).min(1, 'Add at least one lesson to this section'),
 
-
-// One lesson inside a section; the *PublicId fields point to files already uploaded to the pending folder
-// const lessonSchema = z.object({
-//     // Lesson title shown in the player sidebar
-//     name: z.string({ error: "Enter a lesson name" }).trim()
-//         .min(1, "Enter a lesson name")
-//         .max(200, "Lesson name must be 200 characters or fewer"),
-//     videoUrl: z.string({ error: "Upload a lesson video" }).trim()
-//         .min(1, "Upload a lesson video"),
-//     // Optional lesson description
-//     description: z.string({ error: "Enter a lesson description" }).trim()
-//         .min(3, "Lesson description must be at least 3 characters")
-//         .max(2000, "Lesson description must be 2000 characters or fewer"),
-//     // Cloudinary public_id of the main lecture video (required for every lesson)
-//     videoPublicId: z.string({ error: "Upload a lesson video" })
-//         .min(1, "Upload a lesson video"),
-//     // Cloudinary public_id of an optional preview clip
-//     previewPublicId: z.string().optional(),
-//     durationInSeconds: z.number({ error: "Lesson duration must be a number" })
-//         .int("Lesson duration must be a whole number of seconds")
-//         .min(0, "Lesson duration cannot be negative")
-//         .default(0),
-//     // Whether non-enrolled users can watch this lesson
-//     isPreview: z.boolean().default(false),
-//     previewUrl: z.string({ error: "Preview video URL must be text" }).trim().optional(),
-//     previewDurationInSeconds: z.number({ error: "Preview duration must be a number" })
-//         .int("Preview duration must be a whole number of seconds")
-//         .min(0, "Preview duration cannot be negative")
-//         .default(0),
-//     // Position of the lesson inside its section
-//     order: z.number({ error: "Enter a lesson order" })
-//         .int("Lesson order must be a whole number")
-//         .min(0, "Lesson order cannot be negative"),
-// });
-
-// One section (chapter) of the course
-// const sectionSchema = z.object({
-//     // Section title
-//     title: z.string({ error: "Enter a section title" }).trim()
-//         .min(3, "Section title must be at least 3 characters")
-//         .max(200, "Section title must be 200 characters or fewer"),
-//     // Optional section description
-//     description: z.string({ error: "Enter a section description" }).trim()
-//         .min(1, "Enter a section description")
-//         .max(2000, "Section description must be 2000 characters or fewer"),
-//     // Position of the section inside the course
-//     order: z.number({ error: "Enter a section order" })
-//         .int("Section order must be a whole number")
-//         .min(0, "Section order cannot be negative"),
-//     // A section without lessons makes no sense, so require at least one
-//     lessons: z.array(lessonSchema)
-//         .min(1, "Add at least one lesson to this section"),
-// });
+})
 
 export const createCourseSchema = courseBase.extend({
     discount: courseBase.shape.discount.default(0),
@@ -261,7 +213,7 @@ export const updateCourseFieldsSchema =
                     _id: z.string().optional(),
                     lessons: z.array(updateLessonSchema).optional(),
                 })
-            ).optional()
+            )
         })
         .strict()
 export const updateCourseSchema = updateCourseFieldsSchema.superRefine((c, ctx) => {

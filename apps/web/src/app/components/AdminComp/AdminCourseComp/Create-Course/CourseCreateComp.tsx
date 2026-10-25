@@ -173,7 +173,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
         0
       );
       //attach derived totals
-      await createCourse({ ...data, totalLessons, totalDurationInSeconds });
+      await createCourse({ ...data, totalLessons});
       // feedback and redirect
       toast.success("Course created successfully");
       router.push("/course/manage");

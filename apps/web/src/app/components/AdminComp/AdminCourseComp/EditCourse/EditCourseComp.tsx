@@ -165,8 +165,8 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const onSubmit = async (data: UpdateCourseBody) => {
     console.log("Update course button clicked")
     try {
-      const totalLessons = data.sections.reduce(
-        (acc, section) => acc + section.lessons.length,
+      const totalLessons = data.sections?.reduce(
+        (acc, section) => acc + (section.lessons?.length || 0),
         0
       );
       //attach derived totals
@@ -174,15 +174,15 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
         {
           ...data,
           totalLessons,
-          totalDurationInSeconds: (watch("sections") ?? []).reduce(
-            (sum, section) =>
-              sum +
-              section.lessons.reduce<number>(
-                (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
-                0
-              ),
-            0
-          ),
+          // totalDurationInSeconds: (watch("sections") ?? []).reduce(
+          //   (sum, section) =>
+          //     sum +
+          //     section.lessons.reduce<number>(
+          //       (acc, lesson) => acc + (lesson.durationInSeconds ?? 0),
+          //       0
+          //     ),
+          //   0
+          // ),
         },
         requestCourseId
       );
@@ -221,7 +221,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
         description: renderedCourse?.description,
         price: renderedCourse?.price,
         category: { name: parentKey },
-        subCategory: renderedCourse?.category.name.toLowerCase(),
+        subCategory: leafName ,
         discount: renderedCourse?.discount,
         tags: renderedCourse?.tags,
         level: levelKey,
@@ -402,12 +402,12 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   )}
                 />
               </Field>
-              {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
+              {/* {sections.fields.length > 1 && <Field label="Total duration (seconds)" error={
                 errors.totalDurationInSeconds?.message
               } required={true}>
                 <Input readOnly value={fetchedCourse?.totalDurationInSeconds} type="number" disabled />
               </Field>
-              }
+              } */}
               <Field label="Level" error={errors.level?.message} required={true}>
                 <Controller
                   name="level"

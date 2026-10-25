@@ -113,7 +113,7 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
     updateCourse: async (data: UpdateCourseBody,courseId: string) => {
         set({ isLoading: true });
         try {
-            const response = await axios.put(`/api/admin/course/${courseId}`, data);
+            const response = await axios.patch(`/api/admin/course/${courseId}`, data);
             if (!response.data.success) {
                 toast.error(response.data.message);
                 return

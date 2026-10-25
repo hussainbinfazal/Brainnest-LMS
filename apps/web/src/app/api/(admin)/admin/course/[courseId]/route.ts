@@ -7,11 +7,11 @@ import { diffDocuments } from "@/lib/helpers/genericDiff";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
-import { z } from "zod";
+import { updateCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { checkIp } from "@repo/shared/server";
 import { USER_ROLE } from "@repo/shared";
 
-const updateCourseBodySchema = z.record(z.string(), z.any());
+const updateCourseBodySchema = updateCourseSchema;
 export async function GET(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_DETAIL_IP_KEY.namespace, ADMIN_COURSE_DETAIL_IP_KEY.max, ADMIN_COURSE_DETAIL_IP_KEY.windowSec);
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
@@ -158,7 +158,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
 }
 
 
-export async function PUT(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
+export async function PATCH(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, ADMIN_COURSE_UPDATE_IP_KEY.namespace, ADMIN_COURSE_UPDATE_IP_KEY.max, ADMIN_COURSE_UPDATE_IP_KEY.windowSec);
 
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
@@ -187,7 +187,6 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
         if (!parsedBody.ok) return parsedBody.response;
         const body = parsedBody.data;
         const {
-            lessons,
             sections,
             topics,
             faq,
@@ -195,8 +194,7 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
             whatYouWillLearn,
             ...courseFields
         } = body;
-
-
+        const lessons = body.sections.flatMap((section) => section.lessons || []);
         const course: ICourse | null = await Course.findOne({ _id: courseId, instructorId: sessionUser.id });
         if (!course) {
             logger.warn("Course not found in admin course update route with this Id", { courseId: courseId });
@@ -207,9 +205,12 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
 
         await session.withTransaction(async () => {
             const existingLessons: ILesson[] = await Lesson.find({ course: course._id }).lean()
-            const lessonDiff = diffDocuments(existingLessons, body.lessons, ["name", "videoUrl", "durationInSeconds", "description", "isPreview", "previewUrl", "order"]);
+            const lessonDiff = diffDocuments(existingLessons, lessons, ["name", "videoUrl", "durationInSeconds", "description", "isPreview", "previewUrl", "order"]);
             const categoryToBeUpdate: ICategory = body.category;
             const subCategoryToBeUpdate = body.subCategory;
+            const totalDurationInSeconds = parseInt(lessons.reduce((acc, lesson) => acc + (lesson.durationInSeconds || 0), 0).toString());
+            const totalLessons = lessons.length;
+            const totalSections = body.sections.length;
             if (lessonDiff.toInsert.length) {
                 await Lesson.insertMany(lessonDiff.toInsert, { session });
             }
@@ -253,10 +254,13 @@ export async function PUT(request: CustomNextRequest, context: { params: Promise
                 }, { session })
             }
             const coursePayload: Partial<ICourse> = {
-                ...courseFields
-            };
+                ...courseFields,
+                totalDurationInSeconds,
+                totalLessons,
 
-            if (categoryToBeUpdate) coursePayload.category = categoryToBeUpdate;
+            };
+            
+
             if (subCategoryToBeUpdate) coursePayload.subCategory = subCategoryToBeUpdate;
 
             if (Object.keys(coursePayload).length) {
