@@ -200,3 +200,11 @@ export const USER_ROLE: Record<string, string> = {
     INSTRUCTOR: "instructor",
     STUDENT: "student"
 }
+
+export function toSlug(name: string): string {
+    return name.trim().toLowerCase().replace(/\s+/g, "-"); ////turns web development to web-development
+}
+
+export function uploadTargetPublicId(folder: string, id: string): string {
+    return uploadFolder(folder, id).replace(/\/$/, "");
+}

@@ -88,6 +88,8 @@ const createSectionSchema = sectionBase.extend({
 
 })
 const updateSectionSchema = sectionBase.extend({
+    sectionId: z.string().optional(),
+    courseId: z.string().optional(),
     lessons: z.array(createLessonSchema).min(1, 'Add at least one lesson to this section'),
 
 })
@@ -206,11 +208,15 @@ export const createCourseSchema = courseBase.extend({
 // });
 export const updateCourseFieldsSchema =
     createCourseSchema
-        .partial()
+        // .partial()
         .extend({
+            category: courseBase.shape.category,
+            subCategory: courseBase.shape.subCategory,
+            level: courseBase.shape.level,
             sections: z.array(
-                sectionBase.partial().extend({
+                sectionBase.extend({
                     _id: z.string().optional(),
+                    courseId: z.string().optional(),
                     lessons: z.array(updateLessonSchema).optional(),
                 })
             )

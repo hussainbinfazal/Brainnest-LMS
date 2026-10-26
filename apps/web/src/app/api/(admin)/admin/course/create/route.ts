@@ -41,7 +41,9 @@ import {
   PENDING_PREVIEW_VIDEO_SUBFOLDER,
   PENDING_THUMBNAIL_SUBFOLDER,
   TOPIC_FOLDER,
+  toSlug,
   uploadFolder,
+  uploadTargetPublicId,
 } from "@repo/shared";
 import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import {
@@ -58,13 +60,7 @@ import {
 //2)
 
 ///Slug Helper
-function toSlug(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, "-"); ////turns web development to web-development
-}
 
-function uploadTargetPublicId(folder: string, id: string): string {
-  return uploadFolder(folder, id).replace(/\/$/, "");
-}
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   const { allowed, remaining, retryAfterSec, ip } = await checkIp(

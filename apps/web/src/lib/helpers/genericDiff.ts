@@ -1,16 +1,17 @@
 import { Types } from "mongoose"
 
-interface DiffResult<T> {
+type Diffable = { _id?: string | Types.ObjectId }
+type DiffResult<T> = {
     toInsert: T[],
     toDelete: string[],
     toUpdate: T[]
 }
 
-export function diffDocuments<T extends { _id?: string | Types.ObjectId }>(
-    existingDocs: T[],
-    incomingDocs: T[],
-    compareFields: (keyof T)[]
-): DiffResult<T> {
+export function diffDocuments<TExisting extends Diffable, TIncoming extends Diffable>(
+    existingDocs: TExisting[],
+    incomingDocs: TIncoming[],
+    compareFields: (keyof TExisting & keyof TIncoming)[]
+): DiffResult<TIncoming> {
     const existingMap = new Map(
         existingDocs.map((doc) => [doc._id!.toString() as string, doc])
     )
@@ -18,8 +19,8 @@ export function diffDocuments<T extends { _id?: string | Types.ObjectId }>(
         incomingDocs.filter(doc => doc._id).map((doc) => [doc._id!.toString() as string, doc])
 
     )
-    const toInsert: T[] = []
-    const toUpdate: T[] = []
+    const toInsert: TIncoming[] = []
+    const toUpdate: TIncoming[] = []
     const toDelete: string[] = []
 
     for (const doc of incomingDocs) {
@@ -34,7 +35,7 @@ export function diffDocuments<T extends { _id?: string | Types.ObjectId }>(
         }
         let changed = false
         for (const field of compareFields) {
-            if (existingDoc[field] !== doc[field]) {
+            if (!Object.is(existingDoc[field], doc[field])) {
                 changed = true
                 break
             }
@@ -42,13 +43,14 @@ export function diffDocuments<T extends { _id?: string | Types.ObjectId }>(
         if (changed) {
             toUpdate.push(doc)
         }
-        for (const existing of existingDocs) {
-            if (!incomingMap.has(existing._id!.toString())) {
-                toDelete.push(existing._id!.toString())
-            }
-        }
-
     }
+
+    for (const existing of existingDocs) {
+        if (existing._id && !incomingMap.has(existing._id.toString())) {
+            toDelete.push(existing._id.toString())
+        }
+    }
+
     return { toInsert, toDelete, toUpdate }
 
 }

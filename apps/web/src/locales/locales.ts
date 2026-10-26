@@ -37,6 +37,6 @@ export const uiLanguages: string[] = [
   "Czech", "Romanian", "Greek", "Hungarian", "Finnish", "Slovak", "Norwegian",
   "Danish", "Croatian", "Serbian", "Bulgarian", "Estonian", "Latvian", "Lithuanian",
 ] as const;
-export const LEVELS: string[] = ["beginner", "intermediate", "advanced"] as const;
+export const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 
 export type CourseLevel = (typeof LEVELS)[number];
