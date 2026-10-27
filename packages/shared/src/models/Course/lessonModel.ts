@@ -11,7 +11,9 @@ const lessonSchema = new mongoose.Schema<ILesson>({
   durationInSeconds: { type: Number, required: true },
   isPreview: { type: Boolean, default: false },
   previewUrl: { type: String },
-  order: { type: Number, required: true }
+  order: { type: Number, required: true },
+  isDeleted:{type:Boolean, default:false} ///flag for soft delete
+
 }, { timestamps: true });
 
 const Lesson: Model<ILesson> = mongoose.models.Lesson || mongoose.model<ILesson>('Lesson', lessonSchema);

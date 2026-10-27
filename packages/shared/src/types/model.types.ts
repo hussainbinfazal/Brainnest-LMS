@@ -75,6 +75,7 @@ export interface ILesson {
   order: number;
   createdAt?: Date;
   updatedAt?: Date;
+  isDeleted?: boolean;
   status?: "completed" | "incomplete";
 }
 export interface IReview {

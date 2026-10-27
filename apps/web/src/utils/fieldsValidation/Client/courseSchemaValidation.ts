@@ -1,112 +1,147 @@
 import { LEVELS } from "@/locales/locales";
 import { z } from "zod";
 
-
-
 const courseBase = z.object({
-    title: z.string().trim().min(3, "Course title must be at least 3 characters").max(200),
-    description: z.string().trim().min(3, 'Course description must be at least 3 characters').max(2000),
-    price: z.number({ error: 'Enter a valid price' }).min(0, 'Price cannot be negative'),
-    discount: z.number().min(0).max(100, 'Discount cannot exceed 100%'),
-    category: z.object({ name: z.string().trim().min(1, "Select a category") }),
-    subCategory: z.string().trim().min(1, 'Select a subcategory'),
-    faq: z.array(z.object({
-        question: z.string().trim().min(1, 'Enter a question'),
-        answer: z.string().trim().min(1, 'Enter an answer'),
-
-    })),
-    requirements: z.array(z.string().trim().min(1, 'Requirement cannot be empty')),
-    whatYouWillLearn: z.array(z.string().trim().min(1, "Learning outcome cannot be empty")),
-    status: z.enum(['draft', 'published']),
-    language: z.string().trim().min(1, 'Select a language'),
-    level: z.enum(LEVELS),
-    certificate: z.boolean(),
-    tags: z.array(z.string().trim().min(1, 'Tag cannot be empty'))
-        .refine((t) => t.every((x) => !Number.isFinite(Number(x))), "Tags cannot be only numbers"),
-    topics: z.array(z.object({
-        name: z.string().trim().min(1, 'Enter a topic name'),
-        description: z.string().optional(),
-        isActive: z.boolean(),
-
-    })),
-    dripType: z.enum(['free', 'sequential', 'drip-by-date']),
-    coverImage: z.string().min(1, 'Upload a course cover image'),
-    coverPublicId: z.string().min(1, "Upload a course cover image"),
-    previewVideo: z.string().min(3, 'Upload a course preview video'),
-    previewVideoPublicId: z.string().min(1, 'Upload a course preview video'),
-    totalLessons: z.number().min(0, 'Total Lessons must be at least 1').default(0),
-
-})
+  title: z
+    .string()
+    .trim()
+    .min(3, "Course title must be at least 3 characters")
+    .max(200),
+  description: z
+    .string()
+    .trim()
+    .min(3, "Course description must be at least 3 characters")
+    .max(2000),
+  price: z
+    .number({ error: "Enter a valid price" })
+    .min(0, "Price cannot be negative"),
+  discount: z.number().min(0).max(100, "Discount cannot exceed 100%"),
+  category: z.object({ name: z.string().trim().min(1, "Select a category") }),
+  subCategory: z.string().trim().min(1, "Select a subcategory"),
+  faq: z.array(
+    z.object({
+      question: z.string().trim().min(1, "Enter a question"),
+      answer: z.string().trim().min(1, "Enter an answer"),
+    })
+  ),
+  requirements: z.array(
+    z.string().trim().min(1, "Requirement cannot be empty")
+  ),
+  whatYouWillLearn: z.array(
+    z.string().trim().min(1, "Learning outcome cannot be empty")
+  ),
+  status: z.enum(["draft", "published"]),
+  language: z.string().trim().min(1, "Select a language"),
+  level: z.enum(LEVELS),
+  certificate: z.boolean(),
+  tags: z
+    .array(z.string().trim().min(1, "Tag cannot be empty"))
+    .refine(
+      (t) => t.every((x) => !Number.isFinite(Number(x))),
+      "Tags cannot be only numbers"
+    ),
+  topics: z.array(
+    z.object({
+      name: z.string().trim().min(1, "Enter a topic name"),
+      description: z.string().optional(),
+      isActive: z.boolean(),
+    })
+  ),
+  dripType: z.enum(["free", "sequential", "drip-by-date"]),
+  coverImage: z.string().min(1, "Upload a course cover image"),
+  coverPublicId: z.string().min(1, "Upload a course cover image"),
+  previewVideo: z.string().min(3, "Upload a course preview video"),
+  previewVideoPublicId: z.string().min(1, "Upload a course preview video"),
+  totalLessons: z
+    .number()
+    .min(0, "Total Lessons must be at least 1")
+    .default(0),
+});
 const lessonBase = z.object({
-    name: z.string().trim().min(1, 'Enter a lesson name').max(200),
-    videoUrl: z.string().trim().min(1, 'Upload a lesson video'),
-    description: z.string().min(3).max(2000),
-    videoPublicId: z.string().min(1, 'Upload a lesson video'),
-    previewPublicId: z.string().optional(),
-    durationInSeconds: z.number().int().min(0),
-    isPreview: z.boolean(),
-    previewUrl: z.string().trim().optional(),
-    previewDurationInSeconds: z.number().int().min(0),
-    order: z.number().int().min(0),
-})
+  name: z.string().trim().min(1, "Enter a lesson name").max(200),
+  videoUrl: z.string().trim().min(1, "Upload a lesson video"),
+  description: z.string().min(3).max(2000),
+  videoPublicId: z.string().min(1, "Upload a lesson video"),
+  previewPublicId: z.string().optional(),
+  durationInSeconds: z.number().int().min(0),
+  isPreview: z.boolean(),
+  previewUrl: z.string().trim().optional(),
+  previewDurationInSeconds: z.number().int().min(0),
+  order: z.number().int().min(0),
+});
 
 const sectionBase = z.object({
-    title: z.string().trim().min(3).max(2000),
-    description: z.string().trim().min(1).max(2000),
-    order: z.number().int().min(0)
-})
+  title: z.string().trim().min(3).max(2000),
+  description: z.string().trim().min(1).max(2000),
+  order: z.number().int().min(0),
+});
 
 const createLessonSchema = lessonBase.extend({
-    durationInSeconds: lessonBase.shape.durationInSeconds.default(0),
-    isPreview: lessonBase.shape.isPreview.default(false),
-    previewDurationInSeconds: lessonBase.shape.previewDurationInSeconds.default(0),
+  durationInSeconds: lessonBase.shape.durationInSeconds.default(0),
+  isPreview: lessonBase.shape.isPreview.default(false),
+  previewDurationInSeconds:
+    lessonBase.shape.previewDurationInSeconds.default(0),
 });
-const updateLessonSchema = lessonBase
-    // unchanged lessons send only what changed
-    .partial()
-    .extend({ _id: z.string().optional() })
-    .superRefine((lesson, ctx) => {
-        ///no id means brand new lesson
-        const isNew = !lesson._id;
-        const videoChanged = lesson.videoUrl !== undefined;
-        // new or replaced video must come with its cloudinary id
-        if ((isNew || videoChanged) && !lesson.videoPublicId) {
-            // attach the error to the exact field
-            ctx.addIssue({ code: 'custom', path: ['videoPublicId'], message: "Upload a lesson video" })
-        }
-        // a new lesson must be complete
-        if (isNew && (!lesson.name || !lesson.videoUrl || lesson.order === undefined)) {
-            ctx.addIssue({ code: "custom", path: ['name'], message: "New lessons need a name" })
-        }
 
-    })
+const updateLessonSchema = lessonBase
+  // unchanged lessons send only what changed
+  .extend({ _id: z.string().optional() })
+  .superRefine((lesson, ctx) => {
+    if (lesson._id) return;
+    const required = [
+      "name",
+      "description",
+      "order",
+      "durationInSeconds",
+      "videoPublicId",
+    ] as const;
+    ///no id means brand new lesson
+    for (const key of required) {
+      if (lesson[key] === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: [key],
+          message: `New lesson need ${key}`,
+        });
+      }
+    }
+  });
 
 const createSectionSchema = sectionBase.extend({
-    lessons: z.array(createLessonSchema).min(1, 'Add at least one lesson to this section'),
-    _id: z.string().optional(),
-    courseId: z.string().optional()
-
-})
+  lessons: z
+    .array(createLessonSchema)
+    .min(1, "Add at least one lesson to this section"),
+  _id: z.string().optional(),
+  courseId: z.string().optional(),
+});
 const updateSectionSchema = sectionBase.extend({
-    sectionId: z.string().optional(),
-    courseId: z.string().optional(),
-    lessons: z.array(createLessonSchema).min(1, 'Add at least one lesson to this section'),
-
-})
+  sectionId: z.string().optional(),
+  courseId: z.string().optional(),
+  lessons: z
+    .array(createLessonSchema)
+    .min(1, "Add at least one lesson to this section"),
+});
 
 export const createCourseSchema = courseBase.extend({
-    discount: courseBase.shape.discount.default(0),
-    faq: courseBase.shape.faq.default([]),
-    requirements: courseBase.shape.requirements.default([]),
-    whatYouWillLearn: courseBase.shape.whatYouWillLearn.default([]),
-    status: courseBase.shape.status.default('draft'),
-    level: courseBase.shape.level.default('beginner'),
-    certificate: courseBase.shape.certificate.default(false),
-    tags: courseBase.shape.tags.default([]),
-    topics: courseBase.shape.topics.default([]),
-    sections: z.array(createSectionSchema).min(1, 'Add at least one course section'),
-    totalLessons: courseBase.shape.totalLessons.default(0),
-})
+  discount: courseBase.shape.discount.default(0),
+  faq: courseBase.shape.faq.default([]),
+  requirements: courseBase.shape.requirements.default([]),
+  whatYouWillLearn: courseBase.shape.whatYouWillLearn.default([]),
+  status: courseBase.shape.status.default("draft"),
+  level: courseBase.shape.level.default("beginner"),
+  certificate: courseBase.shape.certificate.default(false),
+  tags: courseBase.shape.tags.default([]),
+  topics: courseBase.shape.topics.default([]),
+  sections: z
+    .array(createSectionSchema)
+    .min(1, "Add at least one course section"),
+  totalLessons: courseBase.shape.totalLessons.default(0),
+});
+
+const objectId = z.string().regex(/^[a-f/d]{24}$/i, "Invalid Id");
+const updateLessonBase = lessonBase.extend({
+  _id: objectId,
+});
 // The full request body for POST /courses
 // export const createCourseSchema = z.object({
 //     // Course title
@@ -206,31 +241,64 @@ export const createCourseSchema = courseBase.extend({
 //     totalEnrolledCount: z.string().min(0, "Total Enrolled Count must be at least 0").default("0"),
 //     totalDurationInSeconds: z.number().min(0).optional(),
 // });
-export const updateCourseFieldsSchema =
-    createCourseSchema
-        // .partial()
-        .extend({
-            category: courseBase.shape.category,
-            subCategory: courseBase.shape.subCategory,
-            level: courseBase.shape.level,
-            sections: z.array(
-                sectionBase.extend({
-                    _id: z.string().optional(),
-                    courseId: z.string().optional(),
-                    lessons: z.array(updateLessonSchema).optional(),
-                })
-            )
+export const updateCourseSchema = courseBase
+  .pick({
+    title: true,
+    description: true,
+    price: true,
+    discount: true,
+    category: true,
+    subCategory: true,
+    faq: true,
+    requirements: true,
+    whatYouWillLearn: true,
+    status: true,
+    language: true,
+    level: true,
+    certificate: true,
+    tags: true,
+    dripType: true,
+  })
+  .partial()
+  .extend({
+    // Topics are shared across courses, so only name + description matter here
+    topics: z
+      .array(
+        z.object({
+          _id: z.string().optional(),
+          name: z.string().trim().min(1, "Enter a topic name"),
+          description: z.string().optional(),
+          isActive: z.boolean(),
         })
-        .strict()
-export const updateCourseSchema = updateCourseFieldsSchema.superRefine((c, ctx) => {
-    if (c.coverImage !== undefined && !c.coverPublicId) {
-        ctx.addIssue({ code: 'custom', path: ['coverPublicId'], message: 'Upload a cover image' })
+      )
+      .optional(),
+    // New cover upload (pending id) or the existing one echoed back
+    coverPublicId: z.string().min(1).optional(),
+    // New preview video upload (pending id) or the existing one echoed back
+    previewVideoPublicId: z.string().min(1).optional(),
+    // Send sections only when they changed; omitting leaves them untouched
+    sections: z
+      .array(updateSectionSchema)
+      .min(1, "Add at least one course section"),
+  })
+  // Reject unknown keys so typos fail loudly instead of being dropped
+  .strict()
+  // Cross-field rule
+  .superRefine((course, ctx) => {
+    // Category and subcategory only make sense as a pair
+    if (
+      (course.category === undefined) !==
+      (course.subCategory === undefined)
+    ) {
+      // Point the error at the missing half
+      ctx.addIssue({
+        code: "custom",
+        path: [course.category === undefined ? "category" : "subCategory"],
+        message: "Send category and subCategory together",
+      });
     }
-    if (c.previewVideo !== undefined && !c.previewVideoPublicId) {
-        ctx.addIssue({ code: 'custom', path: ['previewVideoPublicId'], message: "Upload a course preview video" })
-    }
+  });
 
-})
 // .extend({ sections: z.array(updateSectionSchema) })
 // Inferred type, so the route never needs a hand-written interface
 export type CreateCourseBody = z.infer<typeof createCourseSchema>;
