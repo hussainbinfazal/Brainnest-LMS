@@ -23,6 +23,8 @@ import {
     ITopic,
     Topic,
     Enrollment,
+    invalidateCached,
+    COURSES_ALL,
 } from "@repo/shared/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose, { Types } from "mongoose";
@@ -52,8 +54,14 @@ import {
     verifyAssets,
 } from "@/utils/CloudinaryAssets";
 import { ClientSession } from "mongoose";
-import { computeTotals, isPendingId, Lessonfields, PlannedLesson, PlannedSection, RequestError, resolveCategory, resolveTopic, stripUndefined } from "./updateCourseHelpers";
-
+import { computeTotals, isPendingId, Lessonfields, PlannedLesson, PlannedSection, RequestError, resolveCategory, resolveTopic, stripUndefined, syncLessons, syncSections } from "./updateCourseHelpers";
+const COVER_PENDING_PREFIX = uploadFolder(TOPIC_FOLDER["thumbnail"], PENDING_THUMBNAIL_SUBFOLDER);
+// Same for the course preview video
+const PREVIEW_PENDING_PREFIX = uploadFolder(TOPIC_FOLDER["preview-video"], PENDING_PREVIEW_VIDEO_SUBFOLDER);
+// Same for lecture videos
+const LECTURE_PENDING_PREFIX = uploadFolder(TOPIC_FOLDER["lecture-video"], PENDING_LECTURES_SUBFOLDER);
+// Same for lecture preview clips
+const LECTURE_PREVIEW_PENDING_PREFIX = uploadFolder(TOPIC_FOLDER["lecture_preview-video"], PENDING_PREVIEW_LECTURES_SUBFOLDER);
 const updateCourseBodySchema = updateCourseSchema;
 export async function GET(
     request: CustomNextRequest,
@@ -323,6 +331,7 @@ interface LessonDraft {
     // Pending id of a newly uploaded preview clip, if any
     previewPendingId?: string;
 }
+
 export async function PATCH(
     request: CustomNextRequest,
     context: { params: Promise<{ courseId: string | string[] }> }
@@ -403,20 +412,20 @@ export async function PATCH(
         subCategory,
         coverPublicId,
         previewVideoPublicId,
-        faq,
-        requirements,
-        whatYouWillLearn,
         ...courseFields
     } = body;
 
+    await connectDB(process.env.MONGODB_URI!);
+    const session = await mongoose.startSession();
+    let moved: Map<string, MovedAsset> = new Map();
     try {
-        await connectDB(process.env.MONGODB_URI!);
-        const session = await mongoose.startSession();
         let dbSession: ClientSession = session;
         const course = (await Course.findOne({
             _id: courseId,
             instructorId: sessionUser.id,
-        }).lean().exec()) as ICourse | null;
+        })
+            .lean()
+            .exec()) as ICourse | null;
         if (!course) {
             logger.warn(
                 "Course not found in admin course update route with this Id",
@@ -429,154 +438,193 @@ export async function PATCH(
                 undefined,
                 true
             );
-        };
+        }
         const courseObjectId = course._id as Types.ObjectId;
         const pendingAssets: PendingAsset[] = [];
         // Old files to delete after a successful commit
         const staleUrls: string[] = [];
 
         //  Only a pending id is a new upload; an echoed existing id is ignored
-        const coverPendingId = isPendingId(coverPublicId, PENDING_THUMBNAIL_SUBFOLDER) ? coverPublicId : undefined;
+        const coverPendingId = isPendingId(
+            coverPublicId,
+            COVER_PENDING_PREFIX
+        )
+            ? coverPublicId
+            : undefined;
         ///Course cover is an image ( the old code treated it as a video)
         if (coverPendingId) {
+
             pendingAssets.push({
                 publicId: coverPendingId,
                 kind: "image",
-                pendingPrefix: uploadFolder(
-                    TOPIC_FOLDER["thumbnail"],
-                    PENDING_THUMBNAIL_SUBFOLDER
-                ),
+                pendingPrefix: COVER_PENDING_PREFIX,
                 targetPublicId: uploadTargetPublicId(
                     TOPIC_FOLDER["thumbnail"],
-                    courseId.toString()
+                    freshTarget("thumbnail")
                 ),
             });
             // The old cover becomes garbage after commit
-            if (course.coverImage) staleUrls.push(course.coverImage)
-        };
-        const previewPendingId = isPendingId(previewVideoPublicId, PENDING_PREVIEW_VIDEO_SUBFOLDER)
+            if (course.coverImage) staleUrls.push(course.coverImage);
+        }
+        const previewPendingId = isPendingId(
+            previewVideoPublicId,
+            PREVIEW_PENDING_PREFIX
+        )
             ? previewVideoPublicId
             : undefined;
         if (previewPendingId) {
+
             pendingAssets.push({
+
                 publicId: previewPendingId,
                 kind: "video",
-                pendingPrefix: uploadFolder(
-                    TOPIC_FOLDER["preview-video"],
-                    PENDING_PREVIEW_VIDEO_SUBFOLDER
-                ),
+                pendingPrefix: PREVIEW_PENDING_PREFIX,
                 targetPublicId: uploadTargetPublicId(
                     TOPIC_FOLDER["preview-video"],
-                    courseId.toString()
+                    freshTarget("preview-video")
                 ),
             });
             // The old preview video becomes garbage after commit
-            if (course.previewVideo) staleUrls.push(course.previewVideo)
-        };
+            if (course.previewVideo) staleUrls.push(course.previewVideo);
+        }
         const sectionDocs: PlannedSection[] = [];
         const lessonDrafts: LessonDraft[] = [];
-        let existingSections = [] as (ISection & { _Id: Types.ObjectId })[]
-        let existingLessons = [] as (ILesson & { _Id: Types.ObjectId })[]
+        let existingSections = [] as (ISection & { _id: Types.ObjectId })[];
+        let existingLessonDocuments: ILesson[] = [];
+        let existingLessons: PlannedLesson[] = [];
         let removedLessonCount = 0;
 
         if (sections) {
             const [sectionsDB, lessonsDB] = await Promise.all([
                 Section.find({ courseId: courseObjectId }).lean().exec(),
-                Lesson.find({ courseId: courseObjectId }).lean().exec()
-            ])
+                Lesson.find({ courseId: courseObjectId }).lean().exec(),
+            ]);
             existingSections = sectionsDB;
-            existingLessons = lessonsDB;
-        }
-        const lessonById = new Map(
-            existingLessons.map((l) => [l._id.toString(), l])
-        )
-        const seenLessonIds = new Set<string>();
-        sections.forEach((section, sIdx) => {
-            if (section._id && !existingSections.find((s) => s._id.toString() === section._id.toString())) {
-                throw new RequestError("Unknown section id", 400);
-            };
-            const sectionId = section._id ? new Types.ObjectId(section._id) : new Types.ObjectId();
-            sectionDocs.push({
-                _id: sectionId,
-                courseId: courseObjectId,
-                title: section.title,
-                description: section.description,
-                order: section.order,
+            existingLessonDocuments = lessonsDB;
+            existingLessons = lessonsDB.map((lesson) => ({
+                _id: lesson._id,
+                courseId: lesson.courseId,
+                sectionId: lesson.sectionId,
+                fields: stripUndefined({
+                    name: lesson.name,
+                    description: lesson.description,
+                    order: lesson.order,
+                    durationInSeconds: lesson.durationInSeconds,
+                    videoUrl: lesson.videoUrl,
+                    isPreview: lesson.isPreview,
+                    previewUrl: lesson.previewUrl,
+                    previewDurationInSeconds: lesson.previewDurationInSeconds,
+                }),
+            }));
+
+            const lessonById = new Map(
+                existingLessonDocuments.map((lesson) => [
+                    lesson._id.toString(),
+                    lesson,
+                ])
+            );
+            const seenLessonIds = new Set<string>();
+            sections.forEach((section, sIdx) => {
+                const existingSectionId = section._id;
+                if (
+                    existingSectionId &&
+                    !existingSections.find(
+                        (s) => s._id?.toString() === existingSectionId.toString()
+                    )
+                ) {
+                    throw new RequestError("Unknown section id", 400);
+                }
+                const sectionId = section._id
+                    ? new Types.ObjectId(section._id)
+                    : new Types.ObjectId();
+                sectionDocs.push({
+                    _id: sectionId,
+                    courseId: courseObjectId,
+                    title: section.title,
+                    description: section.description,
+                    order: section.order,
+                });
+
+                section.lessons.forEach((lesson, lIdx) => {
+                    if (lesson._id && !lessonById.has(lesson._id.toString())) {
+                        throw new RequestError("Unknown lesson Id", 400);
+                    }
+                    if (lesson._id && seenLessonIds.has(lesson._id)) {
+                        throw new RequestError("Duplicate Lesson Id", 400);
+                    }
+                    if (lesson._id) seenLessonIds.add(lesson._id);
+
+                    const lessonId = lesson._id
+                        ? new Types.ObjectId(lesson._id)
+                        : new Types.ObjectId();
+                    const videoPendingId = isPendingId(
+                        lesson.videoPublicId,
+                        LECTURE_PENDING_PREFIX
+
+                    )
+                        ? lesson.videoPublicId
+                        : undefined;
+
+                    if (!lesson._id && !videoPendingId) {
+                        throw new RequestError("Upload a lesson Video", 400);
+                    }
+                    if (videoPendingId) {
+                        const lessonFinal = uploadTargetPublicId(
+                            TOPIC_FOLDER["lecture-video"],
+                            freshTarget("lecture-video")
+                        );
+
+                        // Main lecture video
+
+                        pendingAssets.push({
+                            publicId: videoPendingId,
+                            kind: "video",
+                            pendingPrefix: LECTURE_PENDING_PREFIX,
+                            targetPublicId: lessonFinal,
+                        });
+                        if (lesson.videoUrl) staleUrls.push(lesson.videoUrl);
+                    }
+                    const lessonPreviewPendingId = isPendingId(
+                        lesson.previewPublicId,
+                        LECTURE_PREVIEW_PENDING_PREFIX
+                    )
+                        ? lesson.previewPublicId
+                        : undefined;
+
+                    if (lessonPreviewPendingId) {
+                        const previewLessonFinal = uploadTargetPublicId(
+                            TOPIC_FOLDER["lecture_preview-video"],
+                            freshTarget("lecture_preview-video")
+                        );
+                        // Optional preview clip
+                        pendingAssets.push({
+                            publicId: lessonPreviewPendingId,
+                            kind: "video",
+                            pendingPrefix: PENDING_PREVIEW_LECTURES_SUBFOLDER,
+                            targetPublicId: previewLessonFinal,
+                        });
+                        if (lesson.previewUrl) staleUrls.push(lesson.previewUrl);
+                    }
+                    lessonDrafts.push({
+                        _id: lessonId,
+                        sectionId,
+                        videoPendingId,
+                        previewPendingId: lessonPreviewPendingId,
+                        // Only fields the client actually sent
+                        fields: stripUndefined({
+                            name: lesson.name,
+                            description: lesson.description,
+                            order: lesson.order,
+                            durationInSeconds: lesson.durationInSeconds,
+                            isPreview: lesson.isPreview,
+                        }),
+                    });
+                });
             });
 
-            section.lessons.forEach((lesson, lIdx) => {
-                if (lesson._id && !lessonById.has(lesson._id.toString())) {
-                    throw new RequestError("Unknown lesson Id", 400);
-                }
-                if (lesson._id && seenLessonIds.has(lesson._id)) {
-                    throw new RequestError('Duplicate Lesson Id', 400)
-                }
-                if (lesson._id) seenLessonIds.add(lesson._id);
-
-                const lessonId = lesson._id ? new Types.ObjectId(lesson._id) : new Types.ObjectId();
-                const old = lesson._id ? lessonById.get(lesson._id.toString()) : undefined;
-                const videoPendingId = isPendingId(lesson.videoPublicId, PENDING_LECTURES_SUBFOLDER) ? lesson.videoPublicId : undefined;
-
-                if (!lesson._id && !videoPendingId) {
-                    throw new RequestError('Upload a lesson Video', 400);
-                };
-                if (videoPendingId) {
-                    const lessonFinal = uploadTargetPublicId(
-                        TOPIC_FOLDER["lecture-video"],
-                        `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
-                    );
-
-                    // Main lecture video
-
-                    pendingAssets.push({
-                        publicId: videoPendingId,
-                        kind: "video",
-                        pendingPrefix: uploadFolder(
-                            TOPIC_FOLDER["lecture-video"],
-                            PENDING_LECTURES_SUBFOLDER
-                        ),
-                        targetPublicId: lessonFinal,
-                    });
-
-                };
-                const lessonPreviewPendingId = isPendingId(
-                    lesson.previewPublicId,
-                    PENDING_PREVIEW_LECTURES_SUBFOLDER
-                ) ? lesson.previewPublicId : undefined;
-
-                if (lessonPreviewPendingId) {
-                    const previewLessonFinal = uploadTargetPublicId(
-                        TOPIC_FOLDER["lecture_preview-video"],
-                        `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
-                    );
-                    // Optional preview clip
-                    pendingAssets.push({
-                        publicId: lessonPreviewPendingId,
-                        kind: "video",
-                        pendingPrefix: uploadFolder(
-                            TOPIC_FOLDER["lecture_preview-video"],
-                            PENDING_PREVIEW_LECTURES_SUBFOLDER
-                        ),
-                        targetPublicId: previewLessonFinal,
-                    });
-                }
-                lessonDrafts.push({
-                    _id: lessonId,
-                    sectionId,
-                    videoPendingId,
-                    previewPendingId: lessonPreviewPendingId,
-                    // Only fields the client actually sent
-                    fields: stripUndefined({
-                        name: lesson.name,
-                        description: lesson.description,
-                        order: lesson.order,
-                        durationInSeconds: lesson.durationInSeconds,
-                        isPreview: lesson.isPreview,
-                    }),
-                });
-            },);
-
-            const removedRows = existingLessons.filter((l) => !seenLessonIds.has(l._id.toString()));
+            const removedRows = existingLessonDocuments.filter(
+                (lesson) => !seenLessonIds.has(lesson._id.toString())
+            );
             // Remember how many for the guard below
             removedLessonCount = removedRows.length;
             // Their files become garbage after commit
@@ -586,214 +634,199 @@ export async function PATCH(
                 // Preview clip
                 if (l.previewUrl) staleUrls.push(l.previewUrl);
             });
-            // Never hard-delete lessons that paying students may have progress on
-            // ASSUMPTION: replace with a soft delete if you add an isDeleted flag later
-            if (removedLessonCount > 0) {
-                const hasEnrollments = await Enrollment.exists({ courseId: courseObjectId });
-                if (hasEnrollments) {
-                    throw new RequestError('Cannot delete lessons that have enrollments', 400)
-                }
-            };
-            // The same pending file referenced twice would collide during the move
-            if (new Set(pendingAssets.map((a) => a.publicId)).size !== pendingAssets.length) {
-                throw new RequestError("Each upload can only be used once", 400);
-            }
-
-            // Check every pending file exists and is the right kind (AssetError carries a 
-            // const sectionWithIds = body.sections.map((section) => ({
-            //     ...section,
-            //     _id: section._id || new mongoose.Types.ObjectId(),
-            //     courseId: course._id,
-            // }));
-            // Ensure that the instructor can only update their own course and make this compatible with the new schema changes
-
-            // body.sections.forEach((section, sIdx) => {
-            //     section.lessons?.forEach((lesson, lIdx) => {
-            //         // Unique folder per lesson so names never collide
-            //         if (lesson.videoPublicId) {
-            //             const lessonFinal = uploadTargetPublicId(
-            //                 TOPIC_FOLDER["lecture-video"],
-            //                 `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
-            //             );
-            //             const previewLessonFinal = uploadTargetPublicId(
-            //                 TOPIC_FOLDER["lecture_preview-video"],
-            //                 `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
-            //             );
-            //             // Main lecture video
-            //             if (lesson.videoPublicId) {
-            //                 pendingAssets.push({
-            //                     publicId: lesson.videoPublicId,
-            //                     kind: "video",
-            //                     pendingPrefix: uploadFolder(
-            //                         TOPIC_FOLDER["lecture-video"],
-            //                         PENDING_LECTURES_SUBFOLDER
-            //                     ),
-            //                     targetPublicId: lessonFinal,
-            //                 });
-            //             }
-            //             // Optional preview clip
-            //             if (lesson.previewPublicId) {
-            //                 pendingAssets.push({
-            //                     publicId: lesson.previewPublicId,
-            //                     kind: "video",
-            //                     pendingPrefix: uploadFolder(
-            //                         TOPIC_FOLDER["lecture_preview-video"],
-            //                         PENDING_PREVIEW_LECTURES_SUBFOLDER
-            //                     ),
-            //                     targetPublicId: previewLessonFinal,
-            //                 });
-            //             }
-            //         }
-            //     });
-            // });
-            try {
-                await verifyAssets(pendingAssets);
-            } catch (err: unknown) {
-                console.error(
-                    "This is the error in verifyAsset function ",
-                    err,
-                    err instanceof Error ? err.message : "Unknown error"
-                );
-                const status = err instanceof AssetError ? err.status : 500;
-                // Safe to show: AssetError messages never contain Cloudinary internals
-                console.log("This is the error in asset verification ", err);
-                const message =
-                    err instanceof AssetError ? err.message : "Asset verification failed";
-                logger.error("verifyAssets failed in course create route", {
-                    // The real message
-                    message: err instanceof Error ? err.message : String(err),
-                    // The stack shows the exact line that threw
-                    stack: err instanceof Error ? err.stack : undefined,
-                });
-                return failResponse({ message }, status, undefined, undefined, true);
-            }
-
-            ///Move files from pending to final
-            let moved: Map<string, MovedAsset>;
-            try {
-                moved = await moveAssets(pendingAssets); ///Move all the pending assets
-            } catch (err: unknown) {
-                console.error(
-                    "This is the error in moveAssets",
-                    err,
-                    err instanceof Error ? err.message : "Unknown error"
-                );
-
-                // Same mapping as above
-                const status = err instanceof AssetError ? err.status : 500;
-                logger.error(
-                    "This is the error in move Asset process in the course create route,",
-                    { error: err }
-                );
-                return failResponse(
-                    { message: "Failed to process uploaded files" },
-                    status,
-                    undefined,
-                    undefined,
-                    true
-                );
-            }
-            // Small helper: pending public_id -> final URL
-            // Look up the moved asset for this pending id
-            const urlOf = (pendingId: string): string => {
-                // Get the entry from the move results
-                const asset = moved.get(pendingId);
-                // Fail loudly with the id, instead of a vague TypeError
-                if (!asset) {
-                    logger.error("Asset not present in the moved state,");
-                    throw new Error(`No moved asset for ${pendingId}`);
-                }
-                // Return the final HTTPS URL
-                return asset.url;
-            };
-            // Lessons with their final URLs, ready to write
-            const lessonDocs: PlannedLesson[] = lessonDrafts.map((d) => ({
-                _id: d._id,
-                courseId: courseObjectId,
-                sectionId: d.sectionId,
-                // URLs are ONLY ever derived on the server, never taken from the client
-                fields: stripUndefined({
-                    ...d.fields,
-                    videoUrl: d.videoPendingId ? urlOf(d.videoPendingId) : undefined,
-                    previewUrl: d.previewPendingId ? urlOf(d.previewPendingId) : undefined,
-                }),
-            }));
-            // Final course cover URL, only when a new one was uploaded
-            const coverUrl = coverPendingId ? urlOf(coverPendingId) : undefined;
-            // Final course preview URL, only when a new one was uploaded
-            const previewUrl = previewPendingId ? urlOf(previewPendingId) : undefined;
-            await session.withTransaction(async () => {
-                const categoryId = category && subCategory ? await resolveCategory(dbSession, category.name, subCategory
-                ) : undefined
-                const topicIds = topics ? await resolveTopic(dbSession, topics) : []
-                const totals = computeTotals(dbSession, courseObjectId);
-                const parentName = body.category ? body.category.name : undefined;
-                const childName = body.subCategory ? body.subCategory.name : undefined;
-
-                if(sections){
-                    await syncSections(session, courseObjectId, existingSections,sectionDocs);
-                    await syncLessons(session, courseObjectId, existingLessons, lessonDocs);
-                    totals = await computeTotals(session, courseObjectId)
-                }
-               
-
-
-                const coursePayload: Partial<ICourse> =stripUndefined( {
-                    title: body.title,
-                    description: body.description,
-                    price: body.price,
-                    discount: body.discount,
-                    faq: body.faq,
-                    requirements: body.requirements,
-                    whatYouWillLearn: body.whatYouWillLearn,
-                    status: body.status,
-                    level: body.level,
-                    certificate: body.certificate,
-                    tags: body.tags,
-                    topics: topicsDoc.map((topic) => topic._id),
-                    language: body.language,
-                    previewvideo: body.previewVideoPublicId
-                        ? urlOf(body.previewVideoPublicId)
-                        : undefined,
-                    coverImage: body.coverPublicId ? urlOf(body.coverPublicId) : undefined,
-                    category: parentId,
-
-                    totalDurationInSeconds,
-                    totalLessons,
-                });
-                if (Object.keys(coursePayload).length) {
-                    await Course.updateOne(
-                        { _id: courseId },
-
-                        { $set: coursePayload },
-                        { session }
-                    );
-                }
-            });
-
-            logger.info("Course updated successfully");
-            return successResponse(
-                { message: "Course updated successfully" },
-                200,
-                undefined,
-                undefined,
-                true
-            );
-        } catch (error: unknown) {
-            const message =
-                error instanceof Error ? error.message : "Internal server error";
-            logger.error(`Error in updating course: ${message}`);
-            return failResponse(
-                { message: `Error in updating course:${message}` },
-                500,
-                undefined,
-                undefined,
-                true
-            );
-        } finally {
-            session.endSession();
         }
+        // Never hard-delete lessons that paying students may have progress on
+        // ASSUMPTION: replace with a soft delete if you add an isDeleted flag later
+        if (removedLessonCount > 0) {
+            const hasEnrollments = await Enrollment.exists({
+                courseId: courseObjectId,
+            });
+            if (hasEnrollments) {
+                throw new RequestError(
+                    "Cannot delete lessons that have enrollments",
+                    400
+                );
+            }
+        }
+        // The same pending file referenced twice would collide during the move
+        if (
+            new Set(pendingAssets.map((a) => a.publicId)).size !==
+            pendingAssets.length
+        ) {
+            throw new RequestError("Each upload can only be used once", 400);
+        }
+
+        // Check every pending file exists and is the right kind (AssetError carries a
+        // const sectionWithIds = body.sections.map((section) => ({
+        //     ...section,
+        //     _id: section._id || new mongoose.Types.ObjectId(),
+        //     courseId: course._id,
+        // }));
+        // Ensure that the instructor can only update their own course and make this compatible with the new schema changes
+
+        // body.sections.forEach((section, sIdx) => {
+        //     section.lessons?.forEach((lesson, lIdx) => {
+        //         // Unique folder per lesson so names never collide
+        //         if (lesson.videoPublicId) {
+        //             const lessonFinal = uploadTargetPublicId(
+        //                 TOPIC_FOLDER["lecture-video"],
+        //                 `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
+        //             );
+        //             const previewLessonFinal = uploadTargetPublicId(
+        //                 TOPIC_FOLDER["lecture_preview-video"],
+        //                 `c${courseId.toString()}-s${sIdx.toString()}-l${lIdx.toString()}`
+        //             );
+        //             // Main lecture video
+        //             if (lesson.videoPublicId) {
+        //                 pendingAssets.push({
+        //                     publicId: lesson.videoPublicId,
+        //                     kind: "video",
+        //                     pendingPrefix: uploadFolder(
+        //                         TOPIC_FOLDER["lecture-video"],
+        //                         PENDING_LECTURES_SUBFOLDER
+        //                     ),
+        //                     targetPublicId: lessonFinal,
+        //                 });
+        //             }
+        //             // Optional preview clip
+        //             if (lesson.previewPublicId) {
+        //                 pendingAssets.push({
+        //                     publicId: lesson.previewPublicId,
+        //                     kind: "video",
+        //                     pendingPrefix: uploadFolder(
+        //                         TOPIC_FOLDER["lecture_preview-video"],
+        //                         PENDING_PREVIEW_LECTURES_SUBFOLDER
+        //                     ),
+        //                     targetPublicId: previewLessonFinal,
+        //                 });
+        //             }
+        //         }
+        //     });
+        // });
+
+        await verifyAssets(pendingAssets);
+
+        ///Move files from pending to final
+        moved = await moveAssets(pendingAssets);
+        // Small helper: pending public_id -> final URL
+        // Look up the moved asset for this pending id
+        const urlOf = (pendingId: string): string => {
+            // Get the entry from the move results
+            const asset = moved.get(pendingId);
+            // Fail loudly with the id, instead of a vague TypeError
+            if (!asset) {
+                logger.error("Asset not present in the moved state,");
+                throw new Error(`No moved asset for ${pendingId}`);
+            }
+            // Return the final HTTPS URL
+            return asset.url;
+        };
+        // Lessons with their final URLs, ready to write
+        const lessonDocs: PlannedLesson[] = lessonDrafts.map((d) => ({
+            _id: d._id,
+            courseId: courseObjectId,
+            sectionId: d.sectionId,
+            // URLs are ONLY ever derived on the server, never taken from the client
+            fields: stripUndefined({
+                ...d.fields,
+                videoUrl: d.videoPendingId ? urlOf(d.videoPendingId) : undefined,
+                previewUrl: d.previewPendingId ? urlOf(d.previewPendingId) : undefined,
+            }),
+        }));
+        // Final course cover URL, only when a new one was uploaded
+        const coverUrl = coverPendingId ? urlOf(coverPendingId) : undefined;
+        // Final course preview URL, only when a new one was uploaded
+        const previewUrl = previewPendingId ? urlOf(previewPendingId) : undefined;
+        await session.withTransaction(async () => {
+            const categoryId =
+                category && subCategory
+                    ? await resolveCategory(dbSession, category.name, subCategory)
+                    : undefined;
+            const topicIds = topics ? await resolveTopic(dbSession, topics) : undefined;
+            let totals: { totalDurationInSeconds: number; totalLessons: number } | undefined;
+            totals = await computeTotals(dbSession, courseObjectId);
+            // const parentName = body.category ? body.category.name : undefined;
+            // const childName = body.subCategory ? body.subCategory : undefined;
+
+            if (sections) {
+                await syncSections(
+                    session,
+                    courseObjectId,
+                    existingSections,
+                    sectionDocs
+                );
+                await syncLessons(session, courseObjectId, existingLessons, lessonDocs);
+                totals = await computeTotals(session, courseObjectId);
+            }
+
+            const coursePayload: Partial<ICourse> = stripUndefined({
+                ...courseFields,
+                title: body.title,
+                description: body.description,
+                price: body.price,
+                discount: body.discount,
+                faq: body.faq,
+                requirements: body.requirements,
+                whatYouWillLearn: body.whatYouWillLearn,
+                status: body.status,
+                level: body.level,
+                certificate: body.certificate,
+                tags: body.tags,
+                topics: topicIds,
+                language: body.language,
+                previewvideo: previewUrl,
+                coverImage: coverUrl,
+                category: categoryId,
+                totalDurationInSeconds: totals.totalDurationInSeconds,
+                totalLessons: totals.totalLessons,
+            });
+            if (Object.keys(coursePayload).length) {
+                await Course.updateOne(
+                    { _id: courseId },
+
+                    { $set: coursePayload },
+                    { session }
+                );
+            }
+        });
+
+        logger.info("Course updated successfully");
+        await invalidateCached(COURSES_ALL.namespace, "all");
+        return successResponse(
+            { message: "Course updated successfully" },
+            200,
+            undefined,
+            undefined,
+            true
+        );
+    } catch (error: unknown) {
+        if (moved.size > 0) {
+            // A failed rollback must not hide the real error
+            await rollbackMoves([...moved.values()]).catch((e: unknown) =>
+                logger.error("rollbackMoves failed", { error: e instanceof Error ? e.message : String(e) })
+            );
+        }
+        // One structured log with message and stack
+        logger.error("Error in updating course", {
+            courseId,
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+        });
+        // Your own validation errors carry a safe message and the right status
+        if (error instanceof RequestError)
+            // Return that status, not a blanket 500
+            return failResponse({ message: error.message }, error.status, undefined, undefined, true);
+        // AssetError messages never contain Cloudinary internals
+        if (error instanceof AssetError)
+            // Same pattern
+            return failResponse({ message: error.message }, error.status, undefined, undefined, true);
+        // Everything else: generic message, never leak Mongo internals
+        return failResponse({ message: "Error in updating course" }, 500, undefined, undefined, true);
+
+    } finally {
+        session.endSession();
     }
+}
 
 // export async function PUT(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
 //     const params = await context.params

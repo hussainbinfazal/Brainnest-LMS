@@ -6,7 +6,17 @@ type DiffResult<T> = {
     toDelete: string[],
     toUpdate: T[]
 }
+// Duck-typed on purpose: in a monorepo two copies of mongoose break `instanceof`
+const isObjectId = (v: unknown): boolean => typeof v === 'object' && v !== null && (v as { _bsontype?: string })._bsontype === 'ObjectId'
 
+const isSame = (a: unknown, b: unknown): boolean => {
+    ///Compare ids by their hex string
+    if (isObjectId(a) || isObjectId(b)) return String(a) === String(b)
+    // Compare Timestamps
+    if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+    // Primitives: Object.is
+    return Object.is(a, b)
+}
 export function diffDocuments<TExisting extends Diffable, TIncoming extends Diffable>(
     existingDocs: TExisting[],
     incomingDocs: TIncoming[],
@@ -28,29 +38,31 @@ export function diffDocuments<TExisting extends Diffable, TIncoming extends Diff
             toInsert.push(doc)
             continue
         }
-        const existingDoc = existingMap.get(doc._id.toString() as string)
+        const existingDoc = existingMap.get(doc._id.toString() as string);
         if (!existingDoc) {
             toInsert.push(doc)
             continue
         }
-        let changed = false
-        for (const field of compareFields) {
-            if (!Object.is(existingDoc[field], doc[field])) {
-                changed = true
-                break
-            }
-        }
-        if (changed) {
+        // let changed = false
+        // for (const field of compareFields) {
+        //     if (!Object.is(existingDoc[field], doc[field])) {
+        //         changed = true
+        //         break
+        //     };
+        // }
+        if (compareFields.some((f) => !isSame(existingDoc[f], doc[f]))) {
+            // Queue the update
             toUpdate.push(doc)
         }
-    }
-
+        // if (changed) {
+        //     toUpdate.push(doc)
+        // }
+    };
     for (const existing of existingDocs) {
         if (existing._id && !incomingMap.has(existing._id.toString())) {
             toDelete.push(existing._id.toString())
         }
-    }
-
+    };
     return { toInsert, toDelete, toUpdate }
 
 }

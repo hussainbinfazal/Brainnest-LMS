@@ -84,6 +84,7 @@ const createLessonSchema = lessonBase.extend({
 });
 
 const updateLessonSchema = lessonBase
+  .partial()
   // unchanged lessons send only what changed
   .extend({ _id: z.string().optional() })
   .superRefine((lesson, ctx) => {
@@ -115,10 +116,10 @@ const createSectionSchema = sectionBase.extend({
   courseId: z.string().optional(),
 });
 const updateSectionSchema = sectionBase.extend({
-  sectionId: z.string().optional(),
+  _id: z.string().optional(),
   courseId: z.string().optional(),
   lessons: z
-    .array(createLessonSchema)
+    .array(updateLessonSchema)
     .min(1, "Add at least one lesson to this section"),
 });
 
