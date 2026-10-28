@@ -145,20 +145,54 @@ export async function syncSections(
         );
     };
 }
+type FlatLesson = Lessonfields & {
+    // Lesson id
+    _id: Types.ObjectId
+    // Owning course
+    courseId: Types.ObjectId
+    // Owning section
+    sectionId: Types.ObjectId
+}
+// Nested PlannedLesson -> flat doc
+const flatten = (l: PlannedLesson): FlatLesson => ({
+    // Identity fields
+    _id: l._id, courseId: l.courseId, sectionId: l.sectionId,
+    // Editable fields (already stripped of undefined)
+    ...l.fields,
+})
 export async function syncLessons(
     session: ClientSession,
     courseId: Types.ObjectId,
     existingLessons: PlannedLesson[],
     incoming: PlannedLesson[]
 ): Promise<void> {
-    const plan = diffDocuments(existingLessons, incoming, ['fields']);
+    // Old versions by id string
+    const oldById = new Map(existingLessons.map((l) => [l._id.toString(), l]))
+    // Existing lessons as flat docs
+    const flatExisting = existingLessons.map(flatten)
+    // Final state: DB values first, client changes on top, so partial payloads keep their old fields
+    const flatIncoming: FlatLesson[] = incoming.map((l) => {
+        // The DB version, if this lesson already exists
+        const old = oldById.get(l._id.toString())
+        // Merge old under new
+        return { ...(old ? flatten(old) : {}), ...flatten(l) } as FlatLesson
+    })
+    const plan = diffDocuments(flatExisting, flatIncoming, ["sectionId", "name", "description", "order", "durationInSeconds",
+        "isPreview", "videoUrl", "previewUrl", "previewDurationInSeconds",]);
     if (plan.toInsert.length) {
         await Lesson.insertMany(plan.toInsert.map((l) => (
             {
                 _id: l._id,
                 courseId: l.courseId,
                 sectionId: l.sectionId,
-                ...l.fields
+                name: l.name,
+                description: l.description,
+                order: l.order,
+                durationInSeconds: l.durationInSeconds,
+                isPreview: l.isPreview,
+                videoUrl: l.videoUrl,
+                previewUrl: l.previewUrl,
+                previewDurationInSeconds: l.previewDurationInSeconds
             }
         )),
             { session }
@@ -173,7 +207,14 @@ export async function syncLessons(
                     update: {
                         $set: {
                             sectionId: l.sectionId,
-                            ...l.fields
+                            name: l.name,
+                            description: l.description,
+                            order: l.order,
+                            durationInSeconds: l.durationInSeconds,
+                            isPreview: l.isPreview,
+                            videoUrl: l.videoUrl,
+                            previewUrl: l.previewUrl,
+                            previewDurationInSeconds: l.previewDurationInSeconds
                         }
                     }
 
