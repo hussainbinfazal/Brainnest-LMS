@@ -300,6 +300,13 @@ export const updateCourseSchema = courseBase
     }
   });
 
+export const updateCourseFormSchema = updateCourseSchema
+  .safeExtend({
+    coverImage: z.string().optional(),
+    previewVideo: z.string().optional(),
+  })
+  .transform(({ coverImage, previewVideo, ...course }) => course);
+
 // .extend({ sections: z.array(updateSectionSchema) })
 // Inferred type, so the route never needs a hand-written interface
 export type CreateCourseBody = z.infer<typeof createCourseSchema>;

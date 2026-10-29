@@ -30,7 +30,10 @@ import Tiptap from "@/components/Tiptap/Tiptap";
 import { CCourse, CLesson, CSection, } from "@/types/client";
 import { CUpdateCourseForm } from "@/types/forms/formValidators";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
-import { CreateCourseBody, createCourseSchema, UpdateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import {
+  UpdateCourseBody,
+  updateCourseFormSchema,
+} from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 // import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
 import { cn } from "@/lib/utils";
@@ -85,18 +88,18 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const updateCourse = useInstructorCoursesStore((state) => state.updateCourse);
   const isLoading = useInstructorCoursesStore((state) => state.isLoading);
   const form = useForm<
-    z.input<typeof createCourseSchema>,
+    z.input<typeof updateCourseFormSchema>,
     undefined,
-    CreateCourseBody
+    UpdateCourseBody
   >({
-    resolver: zodResolver(createCourseSchema),
+    resolver: zodResolver(updateCourseFormSchema),
     defaultValues: {
       title: "Test JavaScript Course",
       description: "<p>This is a test course description</p>",
       price: 999,
       discount: 10,
       tags: ["javascript", "react", "nextjs"],
-      level: "Beginner",
+      level: LEVELS[0],
       whatYouWillLearn: ["Variables", "Functions", "Loops"],
       requirements: ["HTML", "CSS"],
       language: "english",
@@ -165,16 +168,12 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const onSubmit = async (data: UpdateCourseBody) => {
     console.log("Update course button clicked")
     try {
-      const totalLessons = data.sections?.reduce(
-        (acc, section) => acc + (section.lessons?.length || 0),
-        0
-      );
       //attach derived totals
       await updateCourse(
         {
           ...data,
-          totalLessons,
-          // totalDurationInSeconds: (watch("sections") ?? []).reduce(
+          // totalLessons,
+          // // totalDurationInSeconds: (watch("sections") ?? []).reduce(
           //   (sum, section) =>
           //     sum +
           //     section.lessons.reduce<number>(
@@ -214,17 +213,17 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
       const levelKey =
         LEVELS.find(
           (l) => l.toLowerCase() === (renderedCourse.level ?? "").toLowerCase()
-        ) ?? renderedCourse.level.toLowerCase();
+        ) ?? LEVELS[0];
       setParentCategory(parentKey);
       form.reset({
         title: renderedCourse?.title,
         description: renderedCourse?.description,
         price: renderedCourse?.price,
         category: { name: parentKey },
-        subCategory: leafName ,
+        subCategory: leafName,
         discount: renderedCourse?.discount,
         tags: renderedCourse?.tags,
-        level: levelKey,
+        level: levelKey ?? LEVELS[0],
         whatYouWillLearn: renderedCourse?.whatYouWillLearn,
         requirements: renderedCourse?.requirements,
         language: renderedCourse?.language,
@@ -291,7 +290,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   control={control}
                   render={({ field }) => (
                     <Tiptap
-                      description={field.value}
+                      description={field.value ?? ""}
                       onChange={field.onChange}
                     />
                   )}
