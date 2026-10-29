@@ -100,7 +100,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
       price: 999,
       discount: 10,
       tags: ["javascript", "react", "nextjs"],
-      level: "Beginner",
+      level: "beginner",
       whatYouWillLearn: ["Variables", "Functions", "Loops"],
       requirements: ["HTML", "CSS"],
       language: "english",
@@ -173,7 +173,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
         0
       );
       //attach derived totals
-      await createCourse({ ...data, totalLessons});
+      await createCourse({ ...data, totalLessons });
       // feedback and redirect
       toast.success("Course created successfully");
       router.push("/course/manage");

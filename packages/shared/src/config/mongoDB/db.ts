@@ -56,7 +56,10 @@ export const connectDB = async (mongoDbUrl?: string) => {
       cached!.promise = null;
     }
     if (!cached!.promise) {
-      cached!.promise = mongoose.connect(mongoDbUrl, {
+      const connectionUrl = new URL(mongoDbUrl);
+      connectionUrl.searchParams.set("retryWrites", "false");
+
+      cached!.promise = mongoose.connect(connectionUrl.toString(), {
         bufferCommands: false,
         maxPoolSize: Number(process.env.DB_MAX_POOL_SIZE) || 10,
         autoIndex: process.env.NODE_ENV !== "production",

@@ -18,7 +18,6 @@ import {
   COURSES_ALL,
 } from "@repo/shared/server";
 import {
-  CourseDocument,
   ICategory,
   ICourse,
   ILesson,
@@ -27,12 +26,11 @@ import {
 } from "@repo/shared/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@repo/shared/server";
-import mongoose, { ObjectId, Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
-import { z } from "zod";
 import { ADMIN_COURSE_CREATE_IP_KEY, checkIp } from "@repo/shared/server";
 // import { uploadFolder } from "@/utils/upload/uploadSubFolderCreation";
 import {
@@ -63,7 +61,7 @@ import {
 
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-  const { allowed, remaining, retryAfterSec, ip } = await checkIp(
+  const { allowed, retryAfterSec, ip } = await checkIp(
     request,
     ADMIN_COURSE_CREATE_IP_KEY.namespace,
     ADMIN_COURSE_CREATE_IP_KEY.max,

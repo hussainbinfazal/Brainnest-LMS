@@ -46,6 +46,7 @@ import { categoryToSubcategories, LEVELS, uiLanguages } from "@/locales/locales"
 import { getErrorMessage } from "@repo/shared";
 import z from "zod";
 import { BooleanSelect, CommaListField, Field, FileField, SectionItem } from "../Create-Course/courseFields";
+import { set } from "mongoose";
 type EditorCourseCompParams = {
   renderedCourse: CCourse,
   renderedCourseSections: CSection[],
@@ -79,6 +80,59 @@ const EMPTY_SECTION: CSection = {
   updatedAt: "",
 };
 
+const getParentCategoryKey = (course: CCourse): string => {
+  const parentName = course.category.parent?.name.toLowerCase() ?? "";
+
+  return (
+    Object.keys(categoryToSubcategories).find(
+      (key) => key.toLowerCase() === parentName
+    ) ?? parentName
+  );
+};
+
+const getCourseFormValues = (
+  course: CCourse,
+  sections: CSection[],
+  lessons: CLesson[]
+) => {
+  const parentKey = getParentCategoryKey(course);
+  const level =
+    LEVELS.find(
+      (item) => item.toLowerCase() === (course.level ?? "").toLowerCase()
+    ) ?? LEVELS[0];
+  const dripType: "free" | "sequential" | "drip-by-date" =
+    course.dripType === "sequential"
+      ? "sequential"
+      : course.dripType === "drip-by-date"
+        ? "drip-by-date"
+        : "free";
+
+  return {
+    title: course.title,
+    description: course.description,
+    price: course.price,
+    category: { name: parentKey },
+    subCategory: course.category.name.toLowerCase(),
+    discount: course.discount,
+    tags: course.tags,
+    level,
+    whatYouWillLearn: course.whatYouWillLearn,
+    requirements: course.requirements,
+    language: course.language,
+    dripType,
+    topics: course.topics,
+    sections: sections.map((section) => ({
+      ...section,
+      lessons: lessons.filter(
+        (lesson) => section._id !== undefined && lesson.sectionId === section._id
+      ),
+    })),
+    faq: course.faq,
+    coverImage: course.coverImage,
+    previewVideo: course.previewVideo,
+  };
+};
+
 const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourseLessons, requestCourseId, className }: EditorCourseCompParams): JSX.Element => {
   const router = useRouter();
   const [fetchedCourse, setFetchedCourse] = useState<CCourse | null>(renderedCourse)
@@ -93,45 +147,11 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
     UpdateCourseBody
   >({
     resolver: zodResolver(updateCourseFormSchema),
-    defaultValues: {
-      title: "Test JavaScript Course",
-      description: "<p>This is a test course description</p>",
-      price: 999,
-      discount: 10,
-      tags: ["javascript", "react", "nextjs"],
-      level: LEVELS[0],
-      whatYouWillLearn: ["Variables", "Functions", "Loops"],
-      requirements: ["HTML", "CSS"],
-      language: "english",
-      dripType: "free",
-      topics: [
-        {
-          name: "JavaScript Basics",
-          description: "Introduction to JS fundamentals",
-          isActive: true,
-        },
-      ],
-      sections: [
-        {
-          ...EMPTY_SECTION,
-          title: "Introduction Section",
-          description: "Getting started",
-          lessons: [
-            {
-              ...EMPTY_LESSON,
-              name: "Welcome Lesson",
-              description: "Course intro",
-            },
-          ],
-        },
-      ],
-      faq: [
-        {
-          question: "What is async/await?",
-          answer: "It's for handling promises",
-        },
-      ],
-    },
+    defaultValues: getCourseFormValues(
+      renderedCourse,
+      renderedCourseSections,
+      renderedCourseLessons
+    ),
   });
   const {
     register,
@@ -151,7 +171,9 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const previewVideo = useFileUploadField();
 
   // parent category is UI-only state, not part of the payload
-  const [parentCategory, setParentCategory] = useState<string>(renderedCourse.category.parent?.name.toLowerCase() || "");
+  const [parentCategory, setParentCategory] = useState<string>(
+    getParentCategoryKey(renderedCourse)
+  );
   // derive subcategories instead of nested map + &&
   const subcategories: string[] = categoryToSubcategories[parentCategory] ?? [];
   // total duration is derived, never typed by hand
@@ -200,49 +222,15 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   };
   useEffect(() => {
     if (renderedCourse) {
-      const dripType = renderedCourse.dripType;
-      const leafName = renderedCourse.category?.name.toLowerCase() ?? "";
-      const parentName = renderedCourse.category.parent?.name.toLowerCase() ?? "";
-
-      // match against the real map keys (case-insensitive) so the Select value lines up
-      const parentKey =
-        Object.keys(categoryToSubcategories).find(
-          (k) => k.toLowerCase() === parentName.toLowerCase()
-        ) ?? parentName.toLowerCase();
-
-      const levelKey =
-        LEVELS.find(
-          (l) => l.toLowerCase() === (renderedCourse.level ?? "").toLowerCase()
-        ) ?? LEVELS[0];
-      setParentCategory(parentKey);
-      form.reset({
-        title: renderedCourse?.title,
-        description: renderedCourse?.description,
-        price: renderedCourse?.price,
-        category: { name: parentKey },
-        subCategory: leafName,
-        discount: renderedCourse?.discount,
-        tags: renderedCourse?.tags,
-        level: levelKey ?? LEVELS[0],
-        whatYouWillLearn: renderedCourse?.whatYouWillLearn,
-        requirements: renderedCourse?.requirements,
-        language: renderedCourse?.language,
-        dripType: dripType === "free" || dripType === "sequential" || dripType === "drip-by-date" ? dripType : "free",
-        topics: renderedCourse?.topics,
-        sections: fetchedSections.map((section) => ({
-          ...section,
-          lessons: fetchedLessons.filter(
-            (lesson) => section._id !== undefined && lesson.sectionId === section._id
-          ),
-        })),
-        faq: fetchedCourse?.faq,
-        coverImage: fetchedCourse?.coverImage,
-        previewVideo: fetchedCourse?.previewVideo,
-
-      })
+      const course = fetchedCourse ?? renderedCourse;
+      setParentCategory(getParentCategoryKey(course));
+      form.reset(getCourseFormValues(course, fetchedSections, fetchedLessons));
       console.log("This is the rendered course", fetchedCourse);
-      console.log("This is the rendered parent Category", parentName);
-      console.log("This is the rendered childCategory", fetchedCourse?.category.name)
+      console.log(
+        "This is the rendered parent Category",
+        course.category.parent?.name
+      );
+      console.log("This is the rendered childCategory", course.category.name)
       console.log("This is the rendered Sections", renderedCourseSections)
       console.log("This is the rendered Lessons", renderedCourseLessons);
     }
