@@ -22,24 +22,29 @@ export function stripUndefined<T extends Record<string, unknown>>(obj: T): Parti
 }
 
 export async function resolveCategory(session: ClientSession, parentRaw: string, subRaw: string): Promise<Types.ObjectId> {
-    const parentName = parentRaw.trim().toLowerCase();
-    const subName = subRaw.trim().toLowerCase();
-    const parent = await Category.findOneAndUpdate({
-        name: parentName,
-        parent: null
-    }, {
-        $setOnInsert: { name: parentName, slug: toSlug(parentName) },
-        parent: null,
-    }, {
-        upsert: true,
-        returnDocument: 'after', session
-    });
-    const sub = await Category.findOneAndUpdate({ name: subName, parent: parent._id }, {
-        $setOnInsert: { name: subName, slug: toSlug(subName), parent: parent._id },
-    }, {
-        upsert: true, new: true, returnDocument: 'after', session
-    })
-    return sub._id;
+    try {
+        const parentName = parentRaw.trim().charAt(0).toUpperCase() + parentRaw.trim().slice(1).toLowerCase() + parentRaw.trim().slice(1).toLowerCase();
+        const subName = subRaw.trim().charAt(0).toUpperCase() + subRaw.trim().slice(1).toLowerCase();
+        const parent = await Category.findOneAndUpdate({
+            name: parentName,
+            parent: null
+        }, {
+            $setOnInsert: { name: parentName, slug: toSlug(parentName) },
+            parent: null,
+        }, {
+            upsert: true,
+            new: true,
+            returnDocument: 'after', session
+        });
+        const sub = await Category.findOneAndUpdate({ name: subName, parent: parent._id }, {
+            $setOnInsert: { name: subName, slug: toSlug(subName), parent: parent._id },
+        }, {
+            upsert: true, new: true, returnDocument: 'after', session
+        })
+        return sub._id;
+    } catch (resolveCategoryError: any) {
+        throw resolveCategoryError
+    }
 };
 
 
@@ -68,6 +73,7 @@ export async function resolveTopic(session: ClientSession, topics: { name: strin
                     }
                 },
                 upsert: true,
+                new: true,
             },
         })),
         { session }
