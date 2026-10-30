@@ -756,7 +756,7 @@ export async function PATCH(
                     sectionDocs
                 );
                 await syncLessons(session, courseObjectId, existingLessons, lessonDocs);
-                totals = await computeTotals(session, courseObjectId);
+                
             }
 
             const coursePayload: Partial<ICourse> = stripUndefined({

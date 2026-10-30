@@ -23,7 +23,7 @@ export function stripUndefined<T extends Record<string, unknown>>(obj: T): Parti
 
 export async function resolveCategory(session: ClientSession, parentRaw: string, subRaw: string): Promise<Types.ObjectId> {
     try {
-        const parentName = parentRaw.trim().charAt(0).toUpperCase() + parentRaw.trim().slice(1).toLowerCase() + parentRaw.trim().slice(1).toLowerCase();
+        const parentName = parentRaw.trim().charAt(0).toUpperCase() + parentRaw.trim().slice(1).toLowerCase();
         const subName = subRaw.trim().charAt(0).toUpperCase() + subRaw.trim().slice(1).toLowerCase();
         const parent = await Category.findOneAndUpdate({
             name: parentName,
@@ -183,7 +183,7 @@ export async function syncLessons(
     existingLessons: PlannedLesson[],
     incoming: PlannedLesson[]
 ): Promise<void> {
-    {// Old versions by id string
+    try {// Old versions by id string
         const oldById = new Map(existingLessons.map((l) => [l._id.toString(), l]))
         // Existing lessons as flat docs
         const flatExisting = existingLessons.map(flatten)
@@ -246,6 +246,9 @@ export async function syncLessons(
                 )
             };
         }
+    } catch (syncLessonError: any) {
+        logger.error("This is the error in sync Lesson", { syncLessonError })
+        throw syncLessonError;
     }
 };
 
@@ -274,7 +277,6 @@ export async function computeTotals(
         throw computeTotalError
     }
 }
-
 
 
 
