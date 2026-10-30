@@ -25,6 +25,7 @@ import {
     Enrollment,
     invalidateCached,
     COURSES_ALL,
+    INSTRUCTOR_COURSE_WITH_ID,
 } from "@repo/shared/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose, { Types } from "mongoose";
@@ -120,7 +121,7 @@ export async function GET(
         await connectDB(process.env.MONGODB_URI!);
         const course: ICourse | null = await Course.findById(courseId).lean();
 
-        if (!course) {
+        if (!course || String(course?.instructorId) !== user.id) {
             return failResponse(
                 { message: "Course not found" },
                 404,
@@ -756,7 +757,7 @@ export async function PATCH(
                     sectionDocs
                 );
                 await syncLessons(session, courseObjectId, existingLessons, lessonDocs);
-                
+
             }
 
             const coursePayload: Partial<ICourse> = stripUndefined({
@@ -792,6 +793,9 @@ export async function PATCH(
 
         logger.info("Course updated successfully");
         await invalidateCached(COURSES_ALL.namespace, "all");
+        // const cacheId = `${page}-${limit}-${skip}-${user.id}`;
+        // await invalidateCached(COURSES_INSTRUCTOR.namespace, cacheId);
+        await invalidateCached(INSTRUCTOR_COURSE_WITH_ID.namespace, `${courseId}:${sessionUser.id}`)
         return successResponse(
             { message: "Course updated successfully" },
             200,
