@@ -357,5 +357,5 @@ export type CreateCourseBody = z.infer<typeof createCourseSchema>;
 // update body type, now a different shape
 export type UpdateCourseBody = z.infer<typeof updateCourseSchema>;
 
-const result = createCourseSchema.partial().safeParse({ title: "abc" });
-console.log(result.success && result.data);
+// const result = createCourseSchema.partial().safeParse({ title: "abc" });
+// console.log(result.success && result.data);

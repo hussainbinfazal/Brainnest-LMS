@@ -47,6 +47,17 @@ export function getNextCourseLessonOrder(
 
   return lessonOrders.length ? Math.max(...lessonOrders) + 1 : 0;
 }
+export function getNextCourseSectionOrder(
+  sections: { order?: number }[] | undefined
+): number {
+
+  let sectionOrder: number[] = (sections ?? []).map((section) => section.order)
+    .filter((order): order is number => typeof order === "number" && Number.isFinite(order));
+
+
+
+  return sectionOrder.length ? Math.max(...sectionOrder) + 1 : 0;
+}
 
 ////Course --------------------------------------------
 ///Label + input slot + error.message used by every field

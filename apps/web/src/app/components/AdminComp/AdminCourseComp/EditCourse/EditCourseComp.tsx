@@ -51,6 +51,7 @@ import {
   Field,
   FileField,
   getNextCourseLessonOrder,
+  getNextCourseSectionOrder,
   SectionItem,
 } from "../Create-Course/courseFields";
 import { set } from "mongoose";
@@ -586,6 +587,9 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   onClick={() =>
                     sections.append({
                       ...EMPTY_SECTION,
+                      order: form.getValues("dripType") === "free"
+                        ? getNextCourseSectionOrder(form.getValues("sections"))
+                        : EMPTY_LESSON.order,
                       lessons: [{
                         ...EMPTY_LESSON,
                         order: form.getValues("dripType") === "free"
