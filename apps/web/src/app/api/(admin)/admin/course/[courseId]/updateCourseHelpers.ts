@@ -37,7 +37,7 @@ export async function resolveCategory(session: ClientSession, parentRaw: string,
     const sub = await Category.findOneAndUpdate({ name: subName, parent: parent._id }, {
         $setOnInsert: { name: subName, slug: toSlug(subName), parent: parent._id },
     }, {
-        upsert: true, returnDocument: 'after', session
+        upsert: true, new: true, returnDocument: 'after', session
     })
     return sub._id;
 };

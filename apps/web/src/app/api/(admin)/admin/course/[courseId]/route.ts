@@ -739,7 +739,7 @@ export async function PATCH(
         const previewUrl = previewPendingId ? urlOf(previewPendingId) : undefined;
         const categoryId =
             category && subCategory
-                ? await resolveCategory(dbSession, category.name, subCategory)
+                ? await resolveCategory(dbSession, category.name.charAt(0).toUpperCase() + category.name.slice(1), subCategory)
                 : undefined;
         await session.withTransaction(async () => {
             const topicIds = topics ? await resolveTopic(dbSession, topics) : undefined;
