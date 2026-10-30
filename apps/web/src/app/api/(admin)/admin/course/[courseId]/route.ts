@@ -737,11 +737,11 @@ export async function PATCH(
         const coverUrl = coverPendingId ? urlOf(coverPendingId) : undefined;
         // Final course preview URL, only when a new one was uploaded
         const previewUrl = previewPendingId ? urlOf(previewPendingId) : undefined;
+        const categoryId =
+            category && subCategory
+                ? await resolveCategory(dbSession, category.name, subCategory)
+                : undefined;
         await session.withTransaction(async () => {
-            const categoryId =
-                category && subCategory
-                    ? await resolveCategory(dbSession, category.name, subCategory)
-                    : undefined;
             const topicIds = topics ? await resolveTopic(dbSession, topics) : undefined;
             let totals: { totalDurationInSeconds: number; totalLessons: number } | undefined;
             totals = await computeTotals(dbSession, courseObjectId);
