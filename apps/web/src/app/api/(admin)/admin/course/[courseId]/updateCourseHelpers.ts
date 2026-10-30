@@ -1,6 +1,6 @@
 import { diffDocuments } from "@/lib/helpers/genericDiff";
 import { toSlug } from "@repo/shared";
-import { Category, Lesson, Section, Topic } from "@repo/shared/server";
+import { Category, Lesson, logger, Section, Topic } from "@repo/shared/server";
 import { ClientSession, Types } from "mongoose";
 
 export class RequestError extends Error {
@@ -33,56 +33,62 @@ export async function resolveCategory(session: ClientSession, parentRaw: string,
             parent: null,
         }, {
             upsert: true,
-            new: true,
+
             returnDocument: 'after', session
         });
         const sub = await Category.findOneAndUpdate({ name: subName, parent: parent._id }, {
             $setOnInsert: { name: subName, slug: toSlug(subName), parent: parent._id },
         }, {
-            upsert: true, new: true, returnDocument: 'after', session
+            upsert: true, returnDocument: 'after', session
         })
         return sub._id;
     } catch (resolveCategoryError: any) {
+        logger.error("This is the error in resolve Category", { resolveCategoryError })
         throw resolveCategoryError
     }
 };
 
 
 export async function resolveTopic(session: ClientSession, topics: { name: string; description?: string }[]): Promise<Types.ObjectId[]> {
-    const byKey = new Map<string, { name: string; description: string }>();
-    topics.forEach((t) => byKey.set(t.name.trim().toLowerCase(),
-        {
-            name: t.name.trim(),
-            description: t.description ?? '',
-        }
-    ));
+    try {
+        const byKey = new Map<string, { name: string; description: string }>();
+        topics.forEach((t) => byKey.set(t.name.trim().toLowerCase(),
+            {
+                name: t.name.trim(),
+                description: t.description ?? '',
+            }
+        ));
 
-    const clean = [...byKey.values()];
+        const clean = [...byKey.values()];
 
-    if (clean.length === 0) return [];
-    await Topic.bulkWrite(
-        clean.map((t) => ({
-            updateOne: {
-                filter: { name: t.name },
-                update: {
-                    $setOnInsert: {
-                        name: t.name,
-                        description: t.description,
-                        slug: toSlug(t.name),
-                        isActive: true,
-                    }
+        if (clean.length === 0) return [];
+        await Topic.bulkWrite(
+            clean.map((t) => ({
+                updateOne: {
+                    filter: { name: t.name },
+                    update: {
+                        $setOnInsert: {
+                            name: t.name,
+                            description: t.description,
+                            slug: toSlug(t.name),
+                            isActive: true,
+                        }
+                    },
+                    upsert: true,
+                    new: true,
                 },
-                upsert: true,
-                new: true,
-            },
-        })),
-        { session }
-    );
-    const topicDocs = await Topic.find({ name: { $in: clean.map((t) => t.name) } })
-        .select("_id")
-        .session(session)
-        .lean();
-    return topicDocs.map((t) => t._id as Types.ObjectId);
+            })),
+            { session }
+        );
+        const topicDocs = await Topic.find({ name: { $in: clean.map((t) => t.name) } })
+            .select("_id")
+            .session(session)
+            .lean();
+        return topicDocs.map((t) => t._id as Types.ObjectId);
+    } catch (topicError: any) {
+        logger.error("This is the error in resolve Topic", { topicError })
+        throw topicError
+    }
 };
 
 
@@ -119,37 +125,42 @@ export async function syncSections(
     existingSections: PlannedSection[],
     incoming: PlannedSection[]
 ): Promise<void> {
-    const plan = diffDocuments(existingSections, incoming, ['title', 'description', 'order']);
+    try {
+        const plan = diffDocuments(existingSections, incoming, ['title', 'description', 'order']);
 
-    // New sections first, so lessons can reference them
-    if (plan.toInsert.length) {
-        await Section.insertMany(plan.toInsert, { session })
-    }
-    if (plan.toUpdate.length) {
-        await Section.bulkWrite(
-            plan.toUpdate.map((s) => ({
-                updateOne: {
-                    filter: { _id: s._id, courseId },
-                    update: {
-                        $set: {
-                            title: s.title,
-                            description: s.description,
-                            order: s.order
+        // New sections first, so lessons can reference them
+        if (plan.toInsert.length) {
+            await Section.insertMany(plan.toInsert, { session })
+        }
+        if (plan.toUpdate.length) {
+            await Section.bulkWrite(
+                plan.toUpdate.map((s) => ({
+                    updateOne: {
+                        filter: { _id: s._id, courseId },
+                        update: {
+                            $set: {
+                                title: s.title,
+                                description: s.description,
+                                order: s.order
+                            }
                         }
                     }
-                }
-            })),
-            { session }
-        )
-    };
-    // Sections missing from the payload are removed
-    if (plan.toDelete.length) {
-        // Scoped to this course for safety
-        await Section.deleteMany(
-            { _id: { $in: plan.toDelete }, courseId },
-            { session }
-        );
-    };
+                })),
+                { session }
+            )
+        };
+        // Sections missing from the payload are removed
+        if (plan.toDelete.length) {
+            // Scoped to this course for safety
+            await Section.deleteMany(
+                { _id: { $in: plan.toDelete }, courseId },
+                { session }
+            );
+        };
+    } catch (syncSectionError: any) {
+        logger.error("This is the error in sync Section", { syncSectionError })
+        throw syncSectionError;
+    }
 }
 type FlatLesson = Lessonfields & {
     // Lesson id
@@ -172,68 +183,69 @@ export async function syncLessons(
     existingLessons: PlannedLesson[],
     incoming: PlannedLesson[]
 ): Promise<void> {
-    // Old versions by id string
-    const oldById = new Map(existingLessons.map((l) => [l._id.toString(), l]))
-    // Existing lessons as flat docs
-    const flatExisting = existingLessons.map(flatten)
-    // Final state: DB values first, client changes on top, so partial payloads keep their old fields
-    const flatIncoming: FlatLesson[] = incoming.map((l) => {
-        // The DB version, if this lesson already exists
-        const old = oldById.get(l._id.toString())
-        // Merge old under new
-        return { ...(old ? flatten(old) : {}), ...flatten(l) } as FlatLesson
-    })
-    const plan = diffDocuments(flatExisting, flatIncoming, ["sectionId", "name", "description", "order", "durationInSeconds",
-        "isPreview", "videoUrl", "previewUrl", "previewDurationInSeconds",]);
-    if (plan.toInsert.length) {
-        await Lesson.insertMany(plan.toInsert.map((l) => (
-            {
-                _id: l._id,
-                courseId: l.courseId,
-                sectionId: l.sectionId,
-                name: l.name,
-                description: l.description,
-                order: l.order,
-                durationInSeconds: l.durationInSeconds,
-                isPreview: l.isPreview,
-                videoUrl: l.videoUrl,
-                previewUrl: l.previewUrl,
-                previewDurationInSeconds: l.previewDurationInSeconds
-            }
-        )),
-            { session }
-
-        )
-    };
-    if (plan.toUpdate.length) {
-        await Lesson.bulkWrite(
-            plan.toUpdate.map((l) => ({
-                updateOne: {
-                    filter: { _id: l._id, courseId },
-                    update: {
-                        $set: {
-                            sectionId: l.sectionId,
-                            name: l.name,
-                            description: l.description,
-                            order: l.order,
-                            durationInSeconds: l.durationInSeconds,
-                            isPreview: l.isPreview,
-                            videoUrl: l.videoUrl,
-                            previewUrl: l.previewUrl,
-                            previewDurationInSeconds: l.previewDurationInSeconds
-                        }
-                    }
-
-                },
-            })),
-            { session }
-        )
-        if (plan.toDelete.length) {
-            await Lesson.deleteMany(
-                { _id: { $in: plan.toDelete }, courseId },
+    {// Old versions by id string
+        const oldById = new Map(existingLessons.map((l) => [l._id.toString(), l]))
+        // Existing lessons as flat docs
+        const flatExisting = existingLessons.map(flatten)
+        // Final state: DB values first, client changes on top, so partial payloads keep their old fields
+        const flatIncoming: FlatLesson[] = incoming.map((l) => {
+            // The DB version, if this lesson already exists
+            const old = oldById.get(l._id.toString())
+            // Merge old under new
+            return { ...(old ? flatten(old) : {}), ...flatten(l) } as FlatLesson
+        })
+        const plan = diffDocuments(flatExisting, flatIncoming, ["sectionId", "name", "description", "order", "durationInSeconds",
+            "isPreview", "videoUrl", "previewUrl", "previewDurationInSeconds",]);
+        if (plan.toInsert.length) {
+            await Lesson.insertMany(plan.toInsert.map((l) => (
+                {
+                    _id: l._id,
+                    courseId: l.courseId,
+                    sectionId: l.sectionId,
+                    name: l.name,
+                    description: l.description,
+                    order: l.order,
+                    durationInSeconds: l.durationInSeconds,
+                    isPreview: l.isPreview,
+                    videoUrl: l.videoUrl,
+                    previewUrl: l.previewUrl,
+                    previewDurationInSeconds: l.previewDurationInSeconds
+                }
+            )),
                 { session }
+
             )
         };
+        if (plan.toUpdate.length) {
+            await Lesson.bulkWrite(
+                plan.toUpdate.map((l) => ({
+                    updateOne: {
+                        filter: { _id: l._id, courseId },
+                        update: {
+                            $set: {
+                                sectionId: l.sectionId,
+                                name: l.name,
+                                description: l.description,
+                                order: l.order,
+                                durationInSeconds: l.durationInSeconds,
+                                isPreview: l.isPreview,
+                                videoUrl: l.videoUrl,
+                                previewUrl: l.previewUrl,
+                                previewDurationInSeconds: l.previewDurationInSeconds
+                            }
+                        }
+
+                    },
+                })),
+                { session }
+            )
+            if (plan.toDelete.length) {
+                await Lesson.deleteMany(
+                    { _id: { $in: plan.toDelete }, courseId },
+                    { session }
+                )
+            };
+        }
     }
 };
 
@@ -241,21 +253,26 @@ export async function computeTotals(
     session: ClientSession,
     courseId: Types.ObjectId
 ): Promise<{ totalDurationInSeconds: number, totalLessons: number }> {
-    const [row] = await Lesson.aggregate<
-        {
-            totalDurationInSeconds: number,
-            totalLessons: number
-        }>([
-            { $match: { courseId } },
+    try {
+        const [row] = await Lesson.aggregate<
             {
-                $group: {
-                    _id: null,
-                    totalDurationInSeconds: { $sum: '$durationInSeconds' },
-                    totalLessons: { $sum: 1 }
+                totalDurationInSeconds: number,
+                totalLessons: number
+            }>([
+                { $match: { courseId } },
+                {
+                    $group: {
+                        _id: null,
+                        totalDurationInSeconds: { $sum: '$durationInSeconds' },
+                        totalLessons: { $sum: 1 }
+                    }
                 }
-            }
-        ]).session(session)
-    return { totalDurationInSeconds: row?.totalDurationInSeconds ?? 0, totalLessons: row?.totalLessons ?? 0 }
+            ]).session(session)
+        return { totalDurationInSeconds: row?.totalDurationInSeconds ?? 0, totalLessons: row?.totalLessons ?? 0 }
+    } catch (computeTotalError: any) {
+        logger.error("This is the error in computeTotal", { computeTotalError })
+        throw computeTotalError
+    }
 }
 
 
