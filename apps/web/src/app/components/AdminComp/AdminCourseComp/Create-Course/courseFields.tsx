@@ -382,7 +382,7 @@ export function LessonItem({
         />
       </Field>
       {/* lesson order */}
-      <Field label="Order" error={err?.order?.message} required={true}>
+      <Field label="Lesson Order" error={err?.order?.message} required={true}>
         <Input
           readOnly={watch("dripType") === "free"}
           min={0}
@@ -471,7 +471,7 @@ export const SectionItem: React.FC<{
       <Field label="Description" error={errors.sections?.[sectionIndex]?.description?.message} required={true}>
         <Input {...register(`sections.${sectionIndex}.description`)} />
       </Field>
-      <Field label="Order" error={errors.sections?.[sectionIndex]?.order?.message} required={true}>
+      <Field label="Section Order" error={errors.sections?.[sectionIndex]?.order?.message} required={true}>
         <Input
           readOnly={watch("dripType") === "free"}
           min={0}

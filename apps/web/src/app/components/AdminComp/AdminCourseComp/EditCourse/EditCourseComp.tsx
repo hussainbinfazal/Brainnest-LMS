@@ -608,15 +608,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                 {faq.fields.map((item, i) => (
                   <div key={item.id} className="relative mb-4 space-y-2 border border-border rounded-md flex-1 p-2">
                     {/* remove button */}
-                    {i > 0 && (
-                      <Button
-                        type="button"
-                        className="absolute right-2 top-0 bottom-0 text-lg"
-                        onClick={() => faq.remove(i)}
-                      >
-                        <RxCross2 />
-                      </Button>
-                    )}
+
                     {/* question: registered, so no manual onChange handler needed */}
                     <Field
                       label="Question"
@@ -636,6 +628,27 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                     >
                       <Input {...register(`faq.${i}.answer`)} />
                     </Field>
+                    {i > 0 && (
+                      <Button
+                        type="button"
+                        className=" w-full bottom-0 text-md my-3"
+                        onClick={() => faq.remove(i)}
+                      >
+                        Remove Faq
+                        {/* <RxCross2 /> */}
+                      </Button>
+                    )}
+                    {i === 0 && (
+                      <Button
+                        type="button"
+                        className="w-full my-3 text-md"
+                        onClick={() =>
+                          faq.insert(i + 1, { question: "", answer: "" })
+                        }
+                      >
+                        Add Faq
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -646,22 +659,22 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                 variant="outline"
                 onClick={() => faq.append({ question: "", answer: "" })}
               >
-                + Add Faqs
+                + Add All Faqs
               </Button>
-              <Label className={"my-4"}>Faqs</Label>
+              
             </form>
           </CardContent>
           <CardFooter className="flex justify-between">
-            (
+            
 
-            <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600" size="default" variant="outline" onClick={() => router.back()}>
+            <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600 " size="default" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
             <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600" type="submit" form="update-course-form" disabled={isSubmitting} size="default" variant="default" >
               {isSubmitting ? "Updating..." : "Update"}
             </Button>
 
-            )
+            
           </CardFooter>
         </Card>
       </FormProvider>

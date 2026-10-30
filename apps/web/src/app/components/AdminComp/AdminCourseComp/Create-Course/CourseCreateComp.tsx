@@ -95,45 +95,45 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
     CreateCourseBody
   >({
     resolver: zodResolver(createCourseSchema),
-    defaultValues: {
-      title: "Test JavaScript Course",
-      description: "<p>This is a test course description</p>",
-      price: 999,
-      discount: 10,
-      tags: ["javascript", "react", "nextjs"],
-      level: "beginner",
-      whatYouWillLearn: ["Variables", "Functions", "Loops"],
-      requirements: ["HTML", "CSS"],
-      language: "english",
-      dripType: "free",
-      topics: [
-        {
-          name: "JavaScript Basics",
-          description: "Introduction to JS fundamentals",
-          isActive: true,
-        },
-      ],
-      sections: [
-        {
-          ...EMPTY_SECTION,
-          title: "Introduction Section",
-          description: "Getting started",
-          lessons: [
-            {
-              ...EMPTY_LESSON,
-              name: "Welcome Lesson",
-              description: "Course intro",
-            },
-          ],
-        },
-      ],
-      faq: [
-        {
-          question: "What is async/await?",
-          answer: "It's for handling promises",
-        },
-      ],
-    },
+    // defaultValues: {
+    //   title: "Test JavaScript Course",
+    //   description: "<p>This is a test course description</p>",
+    //   price: 999,
+    //   discount: 10,
+    //   tags: ["javascript", "react", "nextjs"],
+    //   level: "beginner",
+    //   whatYouWillLearn: ["Variables", "Functions", "Loops"],
+    //   requirements: ["HTML", "CSS"],
+    //   language: "english",
+    //   dripType: "free",
+    //   topics: [
+    //     {
+    //       name: "JavaScript Basics",
+    //       description: "Introduction to JS fundamentals",
+    //       isActive: true,
+    //     },
+    //   ],
+    //   sections: [
+    //     {
+    //       ...EMPTY_SECTION,
+    //       title: "Introduction Section",
+    //       description: "Getting started",
+    //       lessons: [
+    //         {
+    //           ...EMPTY_LESSON,
+    //           name: "Welcome Lesson",
+    //           description: "Course intro",
+    //         },
+    //       ],
+    //     },
+    //   ],
+    //   faq: [
+    //     {
+    //       question: "What is async/await?",
+    //       answer: "It's for handling promises",
+    //     },
+    //   ],
+    // },
   });
   const {
     register,
