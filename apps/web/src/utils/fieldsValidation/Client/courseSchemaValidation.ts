@@ -123,6 +123,42 @@ const updateSectionSchema = sectionBase.extend({
     .min(1, "Add at least one lesson to this section"),
 });
 
+function getCourseOrderIssues(
+  sections: { order: number; lessons: { order?: number }[] }[] | undefined
+): { path: (string | number)[]; message: string }[] {
+  if (!sections) return [];
+
+  const issues: { path: (string | number)[]; message: string }[] = [];
+  const sectionOrders = new Set<number>();
+  const lessonOrders = new Set<number>();
+
+  sections.forEach((section, sectionIndex) => {
+    if (sectionOrders.has(section.order)) {
+      issues.push({
+        path: ["sections", sectionIndex, "order"],
+        message: "Section order must be unique",
+      });
+    } else {
+      sectionOrders.add(section.order);
+    }
+
+    section.lessons.forEach((lesson, lessonIndex) => {
+      if (lesson.order === undefined) return;
+
+      if (lessonOrders.has(lesson.order)) {
+        issues.push({
+          path: ["sections", sectionIndex, "lessons", lessonIndex, "order"],
+          message: "Lesson order must be unique across the course",
+        });
+      } else {
+        lessonOrders.add(lesson.order);
+      }
+    });
+  });
+
+  return issues;
+}
+
 export const createCourseSchema = courseBase.extend({
   discount: courseBase.shape.discount.default(0),
   faq: courseBase.shape.faq.default([]),
@@ -137,6 +173,10 @@ export const createCourseSchema = courseBase.extend({
     .array(createSectionSchema)
     .min(1, "Add at least one course section"),
   totalLessons: courseBase.shape.totalLessons.default(0),
+}).superRefine((course, ctx) => {
+  getCourseOrderIssues(course.sections).forEach((issue) =>
+    ctx.addIssue({ code: "custom", ...issue })
+  );
 });
 
 const objectId = z.string().regex(/^[a-f/d]{24}$/i, "Invalid Id");
@@ -286,6 +326,10 @@ export const updateCourseSchema = courseBase
   .strict()
   // Cross-field rule
   .superRefine((course, ctx) => {
+    getCourseOrderIssues(course.sections).forEach((issue) =>
+      ctx.addIssue({ code: "custom", ...issue })
+    );
+
     // Category and subcategory only make sense as a pair
     if (
       (course.category === undefined) !==

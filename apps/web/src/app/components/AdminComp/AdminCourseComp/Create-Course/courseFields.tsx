@@ -36,6 +36,18 @@ const EMPTY_LESSON = {
   order: 0,
   isPreview: false,
 };
+
+export function getNextCourseLessonOrder(
+  sections: { lessons?: { order?: number }[] }[] | undefined
+): number {
+  const lessonOrders = (sections ?? [])
+    .flatMap((section) => section.lessons ?? [])
+    .map((lesson) => lesson.order)
+    .filter((order): order is number => typeof order === "number" && Number.isFinite(order));
+
+  return lessonOrders.length ? Math.max(...lessonOrders) + 1 : 0;
+}
+
 ////Course --------------------------------------------
 ///Label + input slot + error.message used by every field
 export function Field({
@@ -283,6 +295,11 @@ export function LessonItem({
   const preview = useFileUploadField();
   // shortcut to this lesson's errors
   const err = errors.sections?.[sectionIndex]?.lessons?.[lessonIndex];
+  const totalLessonCount = (watch("sections") ?? []).reduce(
+    (total, section) => total + (section.lessons?.length ?? 0),
+    0
+  );
+  const maxLessonOrder = Math.max(totalLessonCount - 1, 0);
   ///main video: upload, the store the url and duration
   const handleVideo = async (file: File) => {
     //uplaod and get url
@@ -303,7 +320,7 @@ export function LessonItem({
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
   };
   return (
-    <div className="relative mb-4 space-y-2">
+    <div className="relative mb-4 space-y-2 rounded-md border border-border p-2">
       {/* remove button, hidden for the first lesson */}
       {canRemove && (
         <button
@@ -356,7 +373,9 @@ export function LessonItem({
       {/* lesson order */}
       <Field label="Order" error={err?.order?.message} required={true}>
         <Input
+          readOnly={watch("dripType") === "free"}
           min={0}
+          max={maxLessonOrder}
           type="number"
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.order`, { valueAsNumber: true })}
         />
@@ -407,17 +426,26 @@ export const SectionItem: React.FC<{
     control,
     setValue,
     watch,
+    getValues,
     formState: { errors }, } = useFormContext<CCreateCourse>();
   // Safe here: top level of a component, called once per render
   const lessons = useFieldArray({
     control,
     name: `sections.${sectionIndex}.lessons`,
   });
+  const sectionCount = watch("sections")?.length ?? 0;
+  const addLesson = () => {
+    const isFree = getValues("dripType") === "free";
+    const order = isFree
+      ? getNextCourseLessonOrder(getValues("sections"))
+      : EMPTY_LESSON.order;
+    lessons.append({ ...EMPTY_LESSON, order });
+  };
 
   // Render this one section
   return (
     // Wrapper for the section
-    <div className="relative mb-4 space-y-2">
+    <div className="relative mb-4 space-y-2 rounded-md border border-border p-2">
       {/* Remove button, only for sections after the first */}
       {canRemove && (
         <button type="button" className="absolute right-2 top-0 text-lg rounded-full bg-red" onClick={onRemove}>
@@ -434,7 +462,9 @@ export const SectionItem: React.FC<{
       </Field>
       <Field label="Order" error={errors.sections?.[sectionIndex]?.order?.message} required={true}>
         <Input
+          readOnly={watch("dripType") === "free"}
           min={0}
+          max={Math.max(sectionCount - 1, 0)}
           type="number"
           {...register(`sections.${sectionIndex}.order`, { valueAsNumber: true })}
         />
@@ -450,7 +480,7 @@ export const SectionItem: React.FC<{
         />
       ))}
       {/* Add a lesson, spread so each lesson is a fresh object */}
-      <Button type="button" variant="outline" onClick={() => lessons.append({ ...EMPTY_LESSON })}>
+      <Button type="button" variant="outline" onClick={addLesson}>
         + Add Lesson
       </Button>
     </div>

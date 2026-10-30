@@ -121,7 +121,7 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
             toast.success('Course updated successfully');
             set({ isLoading: false });
         } catch (error: unknown) {
-            console.log("This is the error in update course function ", error, error instanceof Error && error.message)
+            console.error("This is the error in update course function ", error, error instanceof Error && error.message)
             const message = getErrorMessage(error, "Something went wrong, while updating course");
             toast.error("Something went wrong")
             clientLogger.error("Something went wrong, while updating course", { message, error });

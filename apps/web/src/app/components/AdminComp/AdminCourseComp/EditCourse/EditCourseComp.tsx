@@ -45,7 +45,14 @@ import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
 import { categoryToSubcategories, LEVELS, uiLanguages } from "@/locales/locales";
 import { getErrorMessage } from "@repo/shared";
 import z from "zod";
-import { BooleanSelect, CommaListField, Field, FileField, SectionItem } from "../Create-Course/courseFields";
+import {
+  BooleanSelect,
+  CommaListField,
+  Field,
+  FileField,
+  getNextCourseLessonOrder,
+  SectionItem,
+} from "../Create-Course/courseFields";
 import { set } from "mongoose";
 type EditorCourseCompParams = {
   renderedCourse: CCourse,
@@ -209,7 +216,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
       );
       // feedback and redirect
       toast.success("Course Updated successfully");
-      router.push("/course/manage");
+      // router.push("/course/manage");
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Failed to create course");
       toast.error(message);
@@ -491,147 +498,144 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   )}
                 />
               </Field>
-              <Label className="my-4 mt-6">Topics to be covered</Label>
-
-              <h3 className="mt-6 text-sm font-medium">Topics to be covered</h3>
-              {/* item.id is the stable key, not the index */}
-              {topics.fields.map((item, i) => (
-                <div key={item.id} className="relative mb-4 space-y-2">
-                  {/* remove button, hidden for the first topic */}
-                  {i > 0 && (
-                    <Button
-                      type="button"
-                      className="absolute right-2 top-0 text-lg"
-                      onClick={() => topics.remove(i)}
+              <div className="relative flex flex-col gap-2 rounded-md border border-border p-2">
+                <h3 className="pl-1 text-sm font-medium">Topics to be covered</h3>
+                {/* item.id is the stable key, not the index */}
+                {topics.fields.map((item, i) => (
+                  <div key={item.id} className="relative mb-4 space-y-2 rounded-md border border-border p-2">
+                    {/* remove button, hidden for the first topic */}
+                    {i > 0 && (
+                      <Button
+                        type="button"
+                        className="absolute right-2 top-0 text-lg"
+                        onClick={() => topics.remove(i)}
+                      >
+                        <RxCross2 />
+                      </Button>
+                    )}
+                    {/* topic name */}
+                    <Field
+                      label="Topic"
+                      required={true}
+                      error={errors.topics?.[i]?.name?.message}
                     >
-                      <RxCross2 />
-                    </Button>
-                  )}
-                  {/* topic name */}
-                  <Field
-                    label="Topic"
-                    required={true}
-                    error={errors.topics?.[i]?.name?.message}
-                  >
-                    <Input
-                      {...register(`topics.${i}.name`)}
-                      placeholder="e.g. JavaScript Basics"
-                    />
-                  </Field>
-                  {/* topic description */}
-                  <Field
-                    label="Description"
-                    required={true}
-                    error={errors.topics?.[i]?.description?.message}
-                  >
-                    <Input {...register(`topics.${i}.description`)} />
-                  </Field>
-                  {/* active flag */}
-                  <Field label="IsActive" error={errors.topics?.[i]?.isActive?.message} required={true}>
-                    <Controller
-                      control={control}
-                      name={`topics.${i}.isActive`}
-                      render={({ field }) => (
-                        <BooleanSelect
-                          value={field.value ?? false}
-                          onChange={field.onChange}
-                        />
-                      )}
-                    />
-                  </Field>
-                </div>
-              ))}
-              {/* add topic: pass a real object, not the click event */}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  topics.append({
-                    name: "",
-                    description: "",
-                    isActive: true,
-
-                  })
-                }
-              >
-                + Add Topics
-              </Button>
-              <h3 className="mt-6 text-sm font-medium">Sections</h3>
-              {errors.sections?.message && (
-                <p className="text-sm text-destructive">
-                  {errors.sections.message}
-                </p>
-              )}
-              {/* lessons section */}
-              {/* item.id is the stable key */}
-              {sections.fields.map((section, sectionIndex) => {
-                // Get the nested lessons field array for this specific section
-                // const sectionLessons = useFieldArray({
-                //   control,
-                //   name: `sections.${sectionIndex}.lessons`,
-                // });
-
-                return (
-                  <div key={section.id} className="relative">
-                    <SectionItem
-                      // Position of this section
-                      sectionIndex={sectionIndex}
-                      // First section cannot be removed
-                      canRemove={sectionIndex > 0}
-                      // Remove this section from the parent array
-                      onRemove={() => sections.remove(sectionIndex)}
-                    />
+                      <Input
+                        {...register(`topics.${i}.name`)}
+                        placeholder="e.g. JavaScript Basics"
+                      />
+                    </Field>
+                    {/* topic description */}
+                    <Field
+                      label="Description"
+                      required={true}
+                      error={errors.topics?.[i]?.description?.message}
+                    >
+                      <Input {...register(`topics.${i}.description`)} />
+                    </Field>
+                    {/* active flag */}
+                    <Field label="IsActive" error={errors.topics?.[i]?.isActive?.message} required={true}>
+                      <Controller
+                        control={control}
+                        name={`topics.${i}.isActive`}
+                        render={({ field }) => (
+                          <BooleanSelect
+                            value={field.value ?? false}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </Field>
                   </div>
-                );
-              })}
-              {/* add section with a real object, not the click event */}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  sections.append({
-                    ...EMPTY_SECTION,
-                    lessons: [EMPTY_LESSON], // Start with one empty lesson
-                  })
-                }
-              >
-                + Add Section
-              </Button>
-              <h3 className="mt-6 text-sm font-medium">Faqs</h3>
-              {/* faq now uses useFieldArray fields, not form.faq */}
-              {faq.fields.map((item, i) => (
-                <div key={item.id} className="relative mb-4 space-y-2">
-                  {/* remove button */}
-                  {i > 0 && (
-                    <Button
-                      type="button"
-                      className="absolute right-2 top-0 text-lg"
-                      onClick={() => faq.remove(i)}
+                ))}
+                {/* add topic: pass a real object, not the click event */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    topics.append({
+                      name: "",
+                      description: "",
+                      isActive: true,
+
+                    })
+                  }
+                >
+                  + Add Topics
+                </Button>
+              </div>
+              <div className="relative flex flex-col gap-2 rounded-md border border-border p-2">
+                <h3 className="pl-1 text-sm font-medium">Sections</h3>
+                {errors.sections?.message && (
+                  <p className="text-sm text-destructive">
+                    {errors.sections.message}
+                  </p>
+                )}
+                {/* item.id is the stable key */}
+                {sections.fields.map((section, sectionIndex) => (
+                  <SectionItem
+                    key={section.id}
+                    sectionIndex={sectionIndex}
+                    canRemove={sectionIndex > 0}
+                    onRemove={() => sections.remove(sectionIndex)}
+                  />
+                ))}
+                {/* add section with a real object, not the click event */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    sections.append({
+                      ...EMPTY_SECTION,
+                      lessons: [{
+                        ...EMPTY_LESSON,
+                        order: form.getValues("dripType") === "free"
+                          ? getNextCourseLessonOrder(form.getValues("sections"))
+                          : EMPTY_LESSON.order,
+                      }],
+                    })
+                  }
+                >
+                  + Add Section
+                </Button>
+              </div>
+              <div className="relative border border-border rounded-md p-2 flex flex-col gap-2">
+                <h3 className=" text-sm font-medium pl-1">Faqs</h3>
+                {/* faq now uses useFieldArray fields, not form.faq */}
+                {faq.fields.map((item, i) => (
+                  <div key={item.id} className="relative mb-4 space-y-2 border border-border rounded-md flex-1 p-2">
+                    {/* remove button */}
+                    {i > 0 && (
+                      <Button
+                        type="button"
+                        className="absolute right-2 top-0 bottom-0 text-lg"
+                        onClick={() => faq.remove(i)}
+                      >
+                        <RxCross2 />
+                      </Button>
+                    )}
+                    {/* question: registered, so no manual onChange handler needed */}
+                    <Field
+                      label="Question"
+                      error={errors.faq?.[i]?.question?.message}
+                      required={true}
                     >
-                      <RxCross2 />
-                    </Button>
-                  )}
-                  {/* question: registered, so no manual onChange handler needed */}
-                  <Field
-                    label="Question"
-                    error={errors.faq?.[i]?.question?.message}
-                    required={true}
-                  >
-                    <Input
-                      {...register(`faq.${i}.question`)}
-                      placeholder="e.g. What is async/await?"
-                    />
-                  </Field>
-                  {/* answer */}
-                  <Field
-                    label="Answer"
-                    error={errors.faq?.[i]?.answer?.message}
-                    required={true}
-                  >
-                    <Input {...register(`faq.${i}.answer`)} />
-                  </Field>
-                </div>
-              ))}
+                      <Input
+                        {...register(`faq.${i}.question`)}
+                        placeholder="e.g. What is async/await?"
+                      />
+                    </Field>
+                    {/* answer */}
+                    <Field
+                      label="Answer"
+                      error={errors.faq?.[i]?.answer?.message}
+                      required={true}
+                    >
+                      <Input {...register(`faq.${i}.answer`)} />
+                    </Field>
+                  </div>
+                ))}
+              </div>
+
               {/* add faq */}
               <Button
                 type="button"

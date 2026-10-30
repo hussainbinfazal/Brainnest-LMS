@@ -49,6 +49,7 @@ import {
   CommaListField,
   Field,
   FileField,
+  getNextCourseLessonOrder,
   SectionItem,
 } from "./courseFields";
 import z from "zod";
@@ -879,7 +880,12 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 onClick={() =>
                   sections.append({
                     ...EMPTY_SECTION,
-                    lessons: [EMPTY_LESSON], // Start with one empty lesson
+                    lessons: [{
+                      ...EMPTY_LESSON,
+                      order: form.getValues("dripType") === "free"
+                        ? getNextCourseLessonOrder(form.getValues("sections"))
+                        : EMPTY_LESSON.order,
+                    }],
                   })
                 }
               >
