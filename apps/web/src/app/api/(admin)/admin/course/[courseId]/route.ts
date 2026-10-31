@@ -56,6 +56,8 @@ import {
 } from "@/utils/CloudinaryAssets";
 import { ClientSession } from "mongoose";
 import { computeTotals, isPendingId, Lessonfields, PlannedLesson, PlannedSection, RequestError, resolveCategory, resolveTopic, stripUndefined, syncLessons, syncSections } from "./updateCourseHelpers";
+import axios from "axios";
+import { deleteStaleCourseAssets } from "@/utils/deleteStaleCourseAssets/deleteStaleCourseAssets";
 const COVER_PENDING_PREFIX = uploadFolder(TOPIC_FOLDER["thumbnail"], PENDING_THUMBNAIL_SUBFOLDER);
 // Same for the course preview video
 const PREVIEW_PENDING_PREFIX = uploadFolder(TOPIC_FOLDER["preview-video"], PENDING_PREVIEW_VIDEO_SUBFOLDER);
@@ -343,7 +345,6 @@ export async function PATCH(
         ADMIN_COURSE_UPDATE_IP_KEY.max,
         ADMIN_COURSE_UPDATE_IP_KEY.windowSec
     );
-
     if (!allowed)
         return failResponse(
             { message: "Too many requests" },
@@ -459,10 +460,7 @@ export async function PATCH(
                 publicId: coverPendingId,
                 kind: "image",
                 pendingPrefix: COVER_PENDING_PREFIX,
-                targetPublicId: uploadTargetPublicId(
-                    TOPIC_FOLDER["thumbnail"],
-                    freshTarget("thumbnail")
-                ),
+                targetPublicId: freshTarget("thumbnail"),
             });
             // The old cover becomes garbage after commit
             if (course.coverImage) staleUrls.push(course.coverImage);
@@ -480,10 +478,7 @@ export async function PATCH(
                 publicId: previewPendingId,
                 kind: "video",
                 pendingPrefix: PREVIEW_PENDING_PREFIX,
-                targetPublicId: uploadTargetPublicId(
-                    TOPIC_FOLDER["preview-video"],
-                    freshTarget("preview-video")
-                ),
+                targetPublicId: freshTarget("preview-video"),
             });
             // The old preview video becomes garbage after commit
             if (course.previewVideo) staleUrls.push(course.previewVideo);
@@ -570,10 +565,7 @@ export async function PATCH(
                         throw new RequestError("Upload a lesson Video", 400);
                     }
                     if (videoPendingId) {
-                        const lessonFinal = uploadTargetPublicId(
-                            TOPIC_FOLDER["lecture-video"],
-                            freshTarget("lecture-video")
-                        );
+                        const lessonFinal = freshTarget("lecture-video")
 
                         // Main lecture video
 
@@ -596,10 +588,7 @@ export async function PATCH(
                         : undefined;
 
                     if (lessonPreviewPendingId) {
-                        const previewLessonFinal = uploadTargetPublicId(
-                            TOPIC_FOLDER["lecture_preview-video"],
-                            freshTarget("lecture_preview-video")
-                        );
+                        const previewLessonFinal = freshTarget("lecture_preview-video");
                         // Optional preview clip
                         pendingAssets.push({
                             publicId: lessonPreviewPendingId,
@@ -751,7 +740,6 @@ export async function PATCH(
         await session.withTransaction(async () => {
             const topicIds = topics ? await resolveTopic(dbSession, topics) : undefined;
             let totals: { totalDurationInSeconds: number; totalLessons: number } | undefined;
-            totals = await computeTotals(dbSession, courseObjectId);
             // const parentName = body.category ? body.category.name : undefined;
             // const childName = body.subCategory ? body.subCategory : undefined;
 
@@ -764,7 +752,8 @@ export async function PATCH(
                 );
                 await syncLessons(session, courseObjectId, existingLessons, lessonDocs);
 
-            }
+            };
+            totals = await computeTotals(dbSession, courseObjectId);
 
             const coursePayload: Partial<ICourse> = stripUndefined({
                 ...courseFields,
@@ -781,7 +770,7 @@ export async function PATCH(
                 tags: body.tags,
                 topics: topicIds,
                 language: body.language,
-                previewvideo: previewUrl,
+                previewVideo: previewUrl,
                 coverImage: coverUrl,
                 category: categoryId,
                 totalDurationInSeconds: totals.totalDurationInSeconds,
@@ -801,7 +790,9 @@ export async function PATCH(
         await invalidateCached(COURSES_ALL.namespace, "all");
         // const cacheId = `${page}-${limit}-${skip}-${user.id}`;
         // await invalidateCached(COURSES_INSTRUCTOR.namespace, cacheId);
-        await invalidateCached(INSTRUCTOR_COURSE_WITH_ID.namespace, `${courseId}:${sessionUser.id}`)
+        await invalidateCached(INSTRUCTOR_COURSE_WITH_ID.namespace, `${courseId}:${sessionUser.id}`);
+        ///Enqueue the deletion of old assets
+        await deleteStaleCourseAssets(staleUrls, courseId)
         return successResponse(
             { message: "Course updated successfully" },
             200,
@@ -832,6 +823,7 @@ export async function PATCH(
             return failResponse({ message: error.message }, error.status, undefined, undefined, true);
         // Everything else: generic message, never leak Mongo internals
         return failResponse({ message: "Error in updating course" }, 500, undefined, undefined, true);
+
 
     } finally {
         session.endSession();
