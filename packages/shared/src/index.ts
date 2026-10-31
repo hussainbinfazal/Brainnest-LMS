@@ -208,3 +208,11 @@ export function toSlug(name: string): string {
 export function uploadTargetPublicId(folder: string, id: string): string {
     return uploadFolder(folder, id).replace(/\/$/, "");
 }
+
+// A file to delete: Cloudinary needs the id AND the type
+export interface AssetRef {
+    // Cloudinary public id, no extension
+    publicId: string;
+    // Images and videos live in separate namespaces
+    resourceType: "image" | "video";
+}

@@ -583,7 +583,10 @@ export async function PATCH(
                             pendingPrefix: LECTURE_PENDING_PREFIX,
                             targetPublicId: lessonFinal,
                         });
-                        if (lesson.videoUrl) staleUrls.push(lesson.videoUrl);
+                        // if (lesson.videoUrl) staleUrls.push(lesson.videoUrl);
+                        const existing = lesson._id ? lessonById.get(lesson._id.toString()) : undefined;
+                        // Old video is stale only when a new one replaces it
+                        if (videoPendingId && existing?.videoUrl) staleUrls.push(existing.videoUrl);
                     }
                     const lessonPreviewPendingId = isPendingId(
                         lesson.previewPublicId,
@@ -604,7 +607,10 @@ export async function PATCH(
                             pendingPrefix: PENDING_PREVIEW_LECTURES_SUBFOLDER,
                             targetPublicId: previewLessonFinal,
                         });
-                        if (lesson.previewUrl) staleUrls.push(lesson.previewUrl);
+                        // if (lesson.previewUrl) staleUrls.push(lesson.previewUrl);
+                        const existing = lesson._id ? lessonById.get(lesson._id.toString()) : undefined;
+                        // Old preview is stale only when a new one replaces it
+                        if (lessonPreviewPendingId && existing?.previewUrl) staleUrls.push(existing.previewUrl);
                     }
                     lessonDrafts.push({
                         _id: lessonId,
