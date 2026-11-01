@@ -1,6 +1,6 @@
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { uploadFileClient } from "@/utils/upload/uploadFile";
-import { getErrorMessage, UploadPurpose } from "@repo/shared";
+import { getErrorMessage, UploadPurpose, USER_ROLE } from "@repo/shared";
 import axios from "axios";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +31,7 @@ export function useFileUploadField() { //Hook to upload file
                     signal: abortRef.current.signal,
                     // Progress callback
                     onProgress: setProgress,
+
                 });
             return isVideo && duration != undefined ? { ...result, duration } : result
         } catch (error: unknown) {

@@ -54,7 +54,6 @@ import {
   getNextCourseSectionOrder,
   SectionItem,
 } from "../Create-Course/courseFields";
-import { set } from "mongoose";
 type EditorCourseCompParams = {
   renderedCourse: CCourse,
   renderedCourseSections: CSection[],

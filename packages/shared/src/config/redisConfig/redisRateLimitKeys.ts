@@ -346,6 +346,22 @@ export const ADMIN_COURSE_UPDATE_IP_KEY = {
   description: 'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin Course Detail API'],
 } as const;
+export const ADMIN_AI_LESSON_DRAFT_IP_KEY = {
+  namespace: 'limit-admin-ai-lesson-draft:ip',
+  id: 'ip',
+  max: 20,
+  windowSec: 60,
+  description: 'Rate limits instructor course detail reads and mutations by client IP', 
+  usedIn: ['Admin AI Lesson Draft API'],
+}
+export const ADMIN_AI_LESSON_DRAFT_USER_KEY = {
+  namespace: 'limit-admin-ai-lesson-draft:user',
+  id: 'userId',
+  max: 20,
+  windowSec: 60,
+  description: 'Rate limits instructor course detail reads and mutations by client userId', 
+  usedIn: ['Admin AI Lesson Draft API'],
+}
 export const ADMIN_COURSE_UPDATE_USER_KEY = {
   namespace: 'limit-user-admin-course-update:user',
   id: 'userId',

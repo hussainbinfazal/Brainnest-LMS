@@ -784,6 +784,7 @@ export type UploadOptions = {
   onProgress?: (percent: number) => void;
   // Lets the caller cancel the upload
   signal?: AbortSignal;
+  userId?: string;
 };
 
 export type CFacets = {

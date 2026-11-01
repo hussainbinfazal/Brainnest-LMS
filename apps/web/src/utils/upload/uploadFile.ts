@@ -7,6 +7,7 @@ import { MAX_FILE_SIZE, RESOURCE_TYPE, type UploadPurpose } from "@repo/shared";
 import { CUploadResult, UploadOptions } from "@/types/client";
 import axios from "axios";
 import { toast } from "sonner";
+import { transcribeVideoToText } from "../transcribeVideo/transcribeVideo";
 
 
 

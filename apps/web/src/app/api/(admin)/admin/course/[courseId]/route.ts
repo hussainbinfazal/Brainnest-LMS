@@ -26,6 +26,7 @@ import {
     invalidateCached,
     COURSES_ALL,
     INSTRUCTOR_COURSE_WITH_ID,
+    LessonTranscript,
 } from "@repo/shared/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose, { Types } from "mongoose";
@@ -36,6 +37,7 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { updateCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { checkIp } from "@repo/shared/server";
 import {
+    freshTarget,
     PENDING_LECTURES_SUBFOLDER,
     PENDING_PREVIEW_LECTURES_SUBFOLDER,
     PENDING_PREVIEW_VIDEO_SUBFOLDER,
@@ -318,9 +320,6 @@ export async function DELETE(
     }
 }
 // Every moved file gets a brand-new id: replacing a video can never overwrite the old file or hit stale CDN cache
-const freshTarget = (folderKey: keyof typeof TOPIC_FOLDER): string =>
-    // Unique id per asset, independent of array positions
-    uploadTargetPublicId(TOPIC_FOLDER[folderKey], new Types.ObjectId().toString());
 
 // Per-lesson data gathered BEFORE any file moves
 interface LessonDraft {
@@ -810,24 +809,21 @@ export async function PATCH(
             // Queue transcription for each lesson that got a new video
             const lessonsToTranscribe = lessonDocs.flatMap((lesson) =>
                 lesson.fields.mp3Url
-                    ? [{courseId, lessonId: lesson._id.toString(), mp3Url: lesson.fields.mp3Url }]
+                    ? [{ courseId, lessonId: lesson._id.toString(), mp3Url: lesson.fields.mp3Url }]
                     : []
             );
-            
-            // for (const d of lessonDrafts) {
-            //     // Skip lessons whose video did not change
-            //     if (!d.videoPendingId) continue;
-            //     // Add the job, using "-" because newer BullMQ rejects ":" in custom ids
-            //     const lesson
-            //     await transcribeQueue.add(
-            //         // Job name the worker listens for
-            //         "transcribe-lesson",
-            //         // Only ids go into Redis
-            //         { lessonId: d._id.toString(), courseId },
-            //         // Dedupe key plus retry settings
-            //         { jobId: `transcribe-${d._id}-${Date.now()}`, attempts: 3, backoff: { type: "exponential", delay: 5000 } }
-            //     );
-            // }
+
+            for (const d of lessonDrafts) {
+                // Skip lessons whose video did not change
+                if (!d.videoPendingId) continue;
+                // Link by pending id, and clear the expiry so it is kept
+                await LessonTranscript.updateOne(
+                    // Only this user's transcript for this upload
+                    { publicId: d.videoPendingId, userId: sessionUser.id },
+                    // Attach the real ids, and keep the document forever
+                    { $set: { uploadId: d.videoPendingId, userId: sessionUser.id, lessonId: d._id, courseId: courseObjectId }, $unset: { expiresAt: 1 } }
+                );
+            }
         } catch (postCommitError) {
             // Log it, but the update itself succeeded, so we still return 200
             logger.error("Post-commit step failed", { courseId, error: String(postCommitError) });

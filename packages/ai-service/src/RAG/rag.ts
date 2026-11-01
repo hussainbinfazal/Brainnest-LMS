@@ -5,23 +5,40 @@ import { llm } from "../LLM/llm";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 
 
-const RAG_PROMPT: ChatPromptTemplate = ChatPromptTemplate.fromTemplate(`
-You are a helpful teaching assistant for an online course platform brainnest.
-Answer the question using ONLY the context below. If the answer isn't
-in the context, say you don't know — don't make things up.
+const RAG_LESSON_DESCRIPTION_PROMPT: ChatPromptTemplate = ChatPromptTemplate.fromTemplate(`
+Write one concise lesson description using only the transcript context below.
+Mention the lesson's main topics and learning outcomes when the context supports them.
+Do not add facts that are not in the context or include commentary about the task.
 
 Context:
 {context}
 
-Question: {question}
+Description request: {question}
 `);
+const RAG_PROMPT: ChatPromptTemplate = ChatPromptTemplate.fromTemplate(`
+// Write one concise lesson description using only the transcript context below.
+// Mention the lesson's main topics and learning outcomes when the context supports them.
+// Do not add facts that are not in the context or include commentary about the task.
+
+// Context:
+// {context}
+
+// Description request: {question}
+// `);
+
 
 function formatDocs(docs: { pageContent: string }[]): string {
+    if (docs.length === 0) {
+        throw new Error("No lesson transcript chunks matched the retrieval filter");
+    }
     return docs.map((d) => d.pageContent).join("\n\n");
 }
 
-export function buildRagChain(vectorStore: MongoDBAtlasVectorSearch): RunnableSequence<string, string> {
-    const retriever = vectorStore.asRetriever({ k: 5 }); // top 3 relevant chunks
+export function buildRagChain(
+    vectorStore: MongoDBAtlasVectorSearch,
+    filter: MongoDBAtlasVectorSearch["FilterType"]
+): RunnableSequence<string, string> {
+    const retriever = vectorStore.asRetriever({ k: 5, filter });
 
     return RunnableSequence.from([
         {
@@ -33,3 +50,21 @@ export function buildRagChain(vectorStore: MongoDBAtlasVectorSearch): RunnableSe
         new StringOutputParser(),
     ]);
 }
+
+export function buildRagChainForLesson(
+    vectorStore: MongoDBAtlasVectorSearch,
+    filter: MongoDBAtlasVectorSearch["FilterType"]
+): RunnableSequence<string, string> {
+    const retriever = vectorStore.asRetriever({ k: 5, filter });
+
+    return RunnableSequence.from([
+        {
+            context: retriever.pipe(formatDocs),
+            question: new RunnablePassthrough(),
+        },
+        RAG_LESSON_DESCRIPTION_PROMPT,
+        llm,
+        new StringOutputParser(),
+    ]);
+}
+

@@ -41,6 +41,7 @@ export const INSTRUCTOR_COURSES_ALL = {
   description: "All Available courses by an instructor",
   usedIn: ["Instructor Dashboard"],
 }
+
 export const INSTRUCTOR_COURSE_WITH_ID = {
   namespace: "instructor-course",
   id: "courseId:instructorId",

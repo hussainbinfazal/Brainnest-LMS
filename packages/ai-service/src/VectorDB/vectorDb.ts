@@ -43,6 +43,8 @@ export async function getVectorStore(): Promise<MongoDBAtlasVectorSearch> {
 export async function addChunks(texts: string[], metadata: Record<string, unknown>[]): Promise<void> {
     const vectorStore = await getVectorStore();
     const docs = texts.map((text, i) => new Document({ pageContent: text, metadata: metadata[i] }));
+    // Atlas vector index filter fields must include metadata keys used by retrieval filters.
+    // LangChain calls `embeddings.embedDocuments` for these docs and stores the resulting vectors.
     await vectorStore.addDocuments(docs);
 
 
