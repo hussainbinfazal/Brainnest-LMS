@@ -107,6 +107,7 @@ export type Lessonfields = {
     order?: number;
     durationInSeconds?: number,
     videoUrl?: string;
+    mp3Url?: string;
     isPreview?: boolean;
     previewUrl?: string;
     previewDurationInSeconds?: number;

@@ -4,6 +4,7 @@ export { default as Category } from "./Course/categoryModel";
 export { default as Progress } from "./Course/progressModel";
 export { default as Enrollment } from "./Course/enrolledStudent";
 export { default as Lesson } from "./Course/lessonModel";
+export { LessonTranscript } from "./Course/lessonTranscriptSchema";
 export { default as Section } from "./Course/sectionModel";
 export { default as Topic } from "./Course/topicModel";
 export { default as Review } from "./Course/reviewModel";
@@ -18,6 +19,5 @@ export {default as Message} from "./Chat/messageModel"
 export {default as Chat} from "./Chat/chatModel"
 export {default as Order} from "./Cart/orderModel"
 export {default as LessonProgress} from "./Course/lessonProgressModel"
-
 
 

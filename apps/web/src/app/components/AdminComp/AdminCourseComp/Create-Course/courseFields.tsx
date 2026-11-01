@@ -27,6 +27,7 @@ const EMPTY_LESSON = {
   name: "",
   description: "",
   videoUrl: "",
+  mp3Url: "",
   previewUrl: "",
   previewPublicId: "",
   durationInSeconds: 0,
@@ -109,6 +110,7 @@ export function FileField(props: {
   fileName: string;
   fileKind: "image" | "video" | "other";
   url: string;
+  // mp3Url: string,
   onFile: (file: File) => void;
   error?: string;
   onCancel?: () => void;
@@ -317,6 +319,7 @@ export function LessonItem({
     const result = await video.upload(file, "lecture-video");
     if (!result) return;
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`, result.url, { shouldValidate: true });
+    // setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.mp3Url`, result.mp3Url, { shouldValidate: true });
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoPublicId`, result.public_id, { shouldValidate: true });
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
   };
@@ -327,6 +330,7 @@ export function LessonItem({
     if (!result) return;
     ///Field in schema, value and validation
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`, result.url, { shouldValidate: true });
+    // setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.mp3Url`, result.mp3Url, { shouldValidate: true });
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewPublicId`, result.public_id, { shouldValidate: true });
     setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
   };

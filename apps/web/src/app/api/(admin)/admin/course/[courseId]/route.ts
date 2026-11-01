@@ -40,6 +40,7 @@ import {
     PENDING_PREVIEW_LECTURES_SUBFOLDER,
     PENDING_PREVIEW_VIDEO_SUBFOLDER,
     PENDING_THUMBNAIL_SUBFOLDER,
+    toMp3Url,
     TOPIC_FOLDER,
     toSlug,
     uploadFolder,
@@ -507,6 +508,7 @@ export async function PATCH(
                     order: lesson.order,
                     durationInSeconds: lesson.durationInSeconds,
                     videoUrl: lesson.videoUrl,
+                    mp3Url: lesson.mp3Url,
                     isPreview: lesson.isPreview,
                     previewUrl: lesson.previewUrl,
                     previewDurationInSeconds: lesson.previewDurationInSeconds,
@@ -605,6 +607,7 @@ export async function PATCH(
                         _id: lessonId,
                         sectionId,
                         videoPendingId,
+
                         previewPendingId: lessonPreviewPendingId,
                         // Only fields the client actually sent
                         fields: stripUndefined({
@@ -613,6 +616,7 @@ export async function PATCH(
                             order: lesson.order,
                             durationInSeconds: lesson.durationInSeconds,
                             isPreview: lesson.isPreview,
+
                         }),
                     });
                 });
@@ -726,6 +730,7 @@ export async function PATCH(
             fields: stripUndefined({
                 ...d.fields,
                 videoUrl: d.videoPendingId ? urlOf(d.videoPendingId) : undefined,
+                mp3Url: d.videoPendingId ? toMp3Url(d.videoPendingId) : undefined,
                 previewUrl: d.previewPendingId ? urlOf(d.previewPendingId) : undefined,
             }),
         }));
@@ -737,6 +742,7 @@ export async function PATCH(
             category && subCategory
                 ? await resolveCategory(dbSession, category.name.charAt(0).toUpperCase() + category.name.slice(1), subCategory)
                 : undefined;
+        let committed = false;
         await session.withTransaction(async () => {
             const topicIds = topics ? await resolveTopic(dbSession, topics) : undefined;
             let totals: { totalDurationInSeconds: number; totalLessons: number } | undefined;
@@ -785,14 +791,47 @@ export async function PATCH(
                 );
             }
         });
+        committed = true;
 
         logger.info("Course updated successfully");
-        await invalidateCached(COURSES_ALL.namespace, "all");
-        // const cacheId = `${page}-${limit}-${skip}-${user.id}`;
-        // await invalidateCached(COURSES_INSTRUCTOR.namespace, cacheId);
-        await invalidateCached(INSTRUCTOR_COURSE_WITH_ID.namespace, `${courseId}:${sessionUser.id}`);
-        ///Enqueue the deletion of old assets
-        await deleteStaleCourseAssets(staleUrls, courseId)
+        // await invalidateCached(COURSES_ALL.namespace, "all");
+        // // const cacheId = `${page}-${limit}-${skip}-${user.id}`;
+        // // await invalidateCached(COURSES_INSTRUCTOR.namespace, cacheId);
+        // await invalidateCached(INSTRUCTOR_COURSE_WITH_ID.namespace, `${courseId}:${sessionUser.id}`);
+        // ///Enqueue the deletion of old assets
+        // await deleteStaleCourseAssets(staleUrls, courseId)
+        try {
+            // Clear the cached course lists
+            await invalidateCached(COURSES_ALL.namespace, "all");
+            // Clear this instructor's cached course
+            await invalidateCached(INSTRUCTOR_COURSE_WITH_ID.namespace, `${courseId}:${sessionUser.id}`);
+            // Queue deletion of the old assets
+            await deleteStaleCourseAssets(staleUrls, courseId);
+            // Queue transcription for each lesson that got a new video
+            const lessonsToTranscribe = lessonDocs.flatMap((lesson) =>
+                lesson.fields.mp3Url
+                    ? [{courseId, lessonId: lesson._id.toString(), mp3Url: lesson.fields.mp3Url }]
+                    : []
+            );
+            
+            // for (const d of lessonDrafts) {
+            //     // Skip lessons whose video did not change
+            //     if (!d.videoPendingId) continue;
+            //     // Add the job, using "-" because newer BullMQ rejects ":" in custom ids
+            //     const lesson
+            //     await transcribeQueue.add(
+            //         // Job name the worker listens for
+            //         "transcribe-lesson",
+            //         // Only ids go into Redis
+            //         { lessonId: d._id.toString(), courseId },
+            //         // Dedupe key plus retry settings
+            //         { jobId: `transcribe-${d._id}-${Date.now()}`, attempts: 3, backoff: { type: "exponential", delay: 5000 } }
+            //     );
+            // }
+        } catch (postCommitError) {
+            // Log it, but the update itself succeeded, so we still return 200
+            logger.error("Post-commit step failed", { courseId, error: String(postCommitError) });
+        }
         return successResponse(
             { message: "Course updated successfully" },
             200,

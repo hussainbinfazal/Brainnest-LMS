@@ -770,6 +770,7 @@ export interface CUploadResult {
   // HTTPS URL, use it for previews
   url: string;
   // Cloudinary id, send this to the server on registration
+  mp3Url: string;
   public_id: string;
   // Pixels, set for both images and videos
   width: number;

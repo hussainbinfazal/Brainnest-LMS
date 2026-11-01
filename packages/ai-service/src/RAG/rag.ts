@@ -6,7 +6,7 @@ import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 
 
 const RAG_PROMPT: ChatPromptTemplate = ChatPromptTemplate.fromTemplate(`
-You are a helpful teaching assistant for an online course platform.
+You are a helpful teaching assistant for an online course platform brainnest.
 Answer the question using ONLY the context below. If the answer isn't
 in the context, say you don't know — don't make things up.
 

@@ -1,4 +1,5 @@
 import { ChatGroq } from "@langchain/groq";
+import Groq from "groq-sdk";
 
 
 if (!process.env.GROQ_API_KEY) {
@@ -11,6 +12,9 @@ export const llm = new ChatGroq({
     temperature: 0.3,
 });
 
+export const voiceLLM = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+});
 
 
 // // packages/ai-service/src/test-llm.ts

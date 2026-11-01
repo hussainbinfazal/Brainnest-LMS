@@ -55,16 +55,17 @@ export async function uploadDirectToCloudinary(file: File, purpose: UploadPurpos
                 opts?.onProgress?.(Math.min(99, Math.round((e.loaded / total) * 100)))
             }
         });
-
         const data = response.data;
         if (data.error) {
             clientLogger.error("Cloudinary upload failed", { status: response.status, response: data });
             throw new Error(data.error.message || "Cloudinary upload failed");
         }
+        const mp3Url = data.secure_url.replace("/upload/", "upload/f_mp3");
         clientLogger.info("File uploaded successfully to Cloudinary", { url: data.secure_url, public_id: data.public_id });
         opts?.onProgress?.(100) //Progress Completes here 
         return {
             url: data.secure_url,
+            mp3Url,
             public_id: data.public_id,
             width: data.width,
             height: data.height,

@@ -37,6 +37,7 @@ export interface ICourse {
   deletedAt: Date;
   createdAt: Date;
   updatedAt: Date;
+
 }
 export interface IFaq {
   question: string;
@@ -64,6 +65,7 @@ export interface IEnrollment {
 export interface ILesson {
   _id: Types.ObjectId;
   courseId: Types.ObjectId;
+  mp3Url: string;
   name: string;
   videoUrl: string;
   sectionId: Types.ObjectId;

@@ -113,6 +113,7 @@ const courseSchema = new mongoose.Schema<ICourse>({
     type: String,
 
   },
+
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
@@ -133,8 +134,6 @@ const courseSchema = new mongoose.Schema<ICourse>({
     default: null,
     required: false
   },
-
-
 
 }, {
   timestamps: true,

@@ -216,3 +216,13 @@ export interface AssetRef {
     // Images and videos live in separate namespaces
     resourceType: "image" | "video";
 }
+export const toMp3Url = (videoUrl: string): string =>
+    // Start from the final video URL
+    videoUrl
+        // Ask Cloudinary to deliver the audio format (handles URLs with no extension)
+        .replace("/upload/", "/upload/f_mp3/")
+        // Also make the extension match, so the stored URL reads as an mp3
+        .replace(/\.[^/.]+$/, ".mp3");
+export const createMp3UrlFromId = (pendingId: string, cloudName: string): string =>
+    // Start from the final video URL
+    `https://res.cloudinary.com/${cloudName}/video/upload/f_mp3/${pendingId}.mp3`;

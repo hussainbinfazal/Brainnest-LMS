@@ -138,11 +138,12 @@ export async function uploadChunkedToCloudinary(file: File, purpose: UploadPurpo
 
         });
         // After axios.post("/api/upload/complete", ...) succeeds
+        const mp3Url = finalResponse.secure_url.replace("/upload/", "upload/f_mp3");
         report(100);
-
         localStorage.removeItem(key); ///Remove the saved state
         return {
             url: finalResponse.secure_url,
+            mp3Url: mp3Url,
             public_id: finalResponse.public_id,
             width: finalResponse.width,
             height: finalResponse.height,

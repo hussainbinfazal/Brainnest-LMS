@@ -361,7 +361,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         .select("_id")
         .session(session)
         .lean();
-
       ///Pre Assingn section Ids so lessons can reference them without index guessing
       const sectionDocs: (ISection & { _id: Types.ObjectId })[] = body.sections.map((s) => ({
         _id: new Types.ObjectId(),

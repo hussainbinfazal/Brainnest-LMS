@@ -62,6 +62,7 @@ const EMPTY_LESSON = {
   name: "",
   description: "",
   videoUrl: "",
+  mp3Url: "",
   previewUrl: "",
   previewPublicId: "",
   durationInSeconds: 0,
