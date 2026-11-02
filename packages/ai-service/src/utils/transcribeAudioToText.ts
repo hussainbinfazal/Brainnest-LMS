@@ -22,6 +22,7 @@ export async function transcribeVideoToText({
         })
         throw new Error(`Audio download failed: ${res.status}`);
     }
+    console.log("This is the response in transcribeVideoToText", res);
     // Read the whole body into memory
     const buffer = Buffer.from(await res.arrayBuffer());
     // Fail clearly instead of letting the API reject an oversized file
@@ -41,6 +42,7 @@ export async function transcribeVideoToText({
         temperature: 0,
         response_format: "verbose_json",
     });
+    console.log("This is the transcription in transcribeVideoToText", transcription);
     logger.info("Transcription on audio completed on package");
     return {
         courseId,
