@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import type { CreateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { useLessonDraft } from "@/hooks/useLessonDraft";
 import { requestLessonDraft } from "@/utils/transcribeVideo/transcribeVideo";
-import { PENDING_LECTURES_SUBFOLDER, TOPIC_FOLDER } from "@repo/shared";
+import { getErrorMessage, PENDING_LECTURES_SUBFOLDER, TOPIC_FOLDER } from "@repo/shared";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 const LECTURE_PENDING_PATH = `${TOPIC_FOLDER["lecture-video"]}/${PENDING_LECTURES_SUBFOLDER}/`;
 
@@ -39,7 +40,10 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
             language: v.language,
         }])
             // Tell the instructor if queuing failed
-            .catch(() => toast.error("Could not start AI draft"));
+            .catch((error) => {
+                toast.error("Could not start AI draft");
+                clientLogger.error(getErrorMessage(error, "Failed to request lesson draft"), { publicId, title: v.title, category: v.category?.name, level: v.level, language: v.language, });
+            });
         setRequestedPublicId(publicId);
         // getValues is stable, so only the upload id matters
     }, [isPending, publicId]);
@@ -62,6 +66,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
             setRequestedPublicId(publicId);
         } catch {
             toast.error("Could not start AI draft");
+            clientLogger.error("Failed to request lesson draft", { publicId, title: v.title, category: v.category?.name, level: v.level, language: v.language });
         }
     };
 

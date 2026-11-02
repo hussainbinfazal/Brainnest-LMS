@@ -3,6 +3,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
 import { llm } from "../LLM/llm";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
+import { logger } from "@repo/shared/server";
 
 
 const RAG_LESSON_DESCRIPTION_PROMPT: ChatPromptTemplate = ChatPromptTemplate.fromTemplate(`
@@ -29,6 +30,7 @@ const RAG_PROMPT: ChatPromptTemplate = ChatPromptTemplate.fromTemplate(`
 
 function formatDocs(docs: { pageContent: string }[]): string {
     if (docs.length === 0) {
+        logger.error("No lesson transcript chunks matched the retrieval filter");
         throw new Error("No lesson transcript chunks matched the retrieval filter");
     }
     return docs.map((d) => d.pageContent).join("\n\n");
@@ -39,7 +41,7 @@ export function buildRagChain(
     filter: MongoDBAtlasVectorSearch["FilterType"]
 ): RunnableSequence<string, string> {
     const retriever = vectorStore.asRetriever({ k: 5, filter });
-
+    logger.info("Building RAG chain", { filter, retrieverType: retriever.constructor.name, vectorStoreType: vectorStore.constructor.name });
     return RunnableSequence.from([
         {
             context: retriever.pipe(formatDocs),
@@ -56,7 +58,7 @@ export function buildRagChainForLesson(
     filter: MongoDBAtlasVectorSearch["FilterType"]
 ): RunnableSequence<string, string> {
     const retriever = vectorStore.asRetriever({ k: 5, filter });
-
+    logger.info("Building RAG chain for lesson", { filter, retrieverType: retriever.constructor.name, vectorStoreType: vectorStore.constructor.name });
     return RunnableSequence.from([
         {
             context: retriever.pipe(formatDocs),

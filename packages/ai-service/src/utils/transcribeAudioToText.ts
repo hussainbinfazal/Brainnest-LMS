@@ -26,6 +26,10 @@ export async function transcribeVideoToText({
     const buffer = Buffer.from(await res.arrayBuffer());
     // Fail clearly instead of letting the API reject an oversized file
     if (buffer.length > MAX_AUDIO_BYTES) {
+        logger.error("Audio too large for transcription", {
+            size: buffer.length,
+            maxSize: MAX_AUDIO_BYTES,
+        });
         // TODO: split the audio into chunks for long lessons
         throw new Error(`Audio too large: ${buffer.length} bytes`);
     }
@@ -37,7 +41,7 @@ export async function transcribeVideoToText({
         temperature: 0,
         response_format: "verbose_json",
     });
-
+    logger.info("Transcription on audio completed on package");
     return {
         courseId,
         lessonId,

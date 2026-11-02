@@ -19,11 +19,12 @@ export type LessonDraftInput = {
 
 export async function requestLessonDraft(input: LessonDraftInput[]) {
     try {
-        const response = await axios.post("/api/instructor/course/ai/lesson-draft", input);
+        const response = await axios.post("/api/admin/course/instructor/ai/lesson-draft", input);
         clientLogger.info("Transcription job queued", { status: response.status, message: response.data.message });
     } catch (error: unknown) {
-        console.error("This is the error in requestLessonDraft function ", error, error instanceof Error && error.message)
+        // console.error("This is the error in requestLessonDraft function ", error, error instanceof Error && error.message)
         const message = getErrorMessage(error, "Unknown error in requestLessonDraft");
+        console.error("This is the error in requestLessonDraft job", { error, message });
         clientLogger.error("Failed to queue transcription job", { error, message });
         throw error;
     }

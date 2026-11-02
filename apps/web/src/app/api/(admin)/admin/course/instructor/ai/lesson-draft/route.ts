@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
         await axios.post(
             // Worker address from a server-only env var
-            `${workerUrl.replace(/\/+$/, "")}/transcribe/audioToText`,
+            `${workerUrl}/transcribe/audioToText`,
             {
                 videos: body.data.map(({ publicId, courseId, lessonId, title, category, level, language }) => ({
                     publicId,

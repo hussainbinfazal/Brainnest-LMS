@@ -11,7 +11,7 @@ export async function deleteStaleCourseAssets(staleUrls: string[], courseId: str
             }
 
             await axios.delete(
-                `${workerUrl.replace(/\/+$/, "")}/internal/cloudinary/delete-assets`,
+                `${workerUrl}/cloudinary/delete-assets`,
                 {
                     data: { urls: staleUrls },
                     headers: { "x-internal-secret": internalAuthSecret },

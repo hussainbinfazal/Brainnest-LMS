@@ -1,4 +1,5 @@
 // packages/ai-service/src/scraper.ts
+import { logger } from "@repo/shared/server";
 import * as cheerio from "cheerio";
 
 export interface ScrapedPage {
@@ -10,6 +11,7 @@ export interface ScrapedPage {
 export async function scrapePage(url: string): Promise<ScrapedPage> {
   const res = await fetch(url);
   if (!res.ok) {
+    logger.error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
     throw new Error(`Failed to fetch ${url}: ${res.status}`);
   }
   const html = await res.text();
@@ -38,6 +40,7 @@ export async function extractInternalLinks(url: string, baseUrl: string): Promis
       const resolved = new URL(href, baseUrl).toString().split("#")[0];
       if (resolved.startsWith(baseUrl)) links.add(resolved);
     } catch {
+      logger.error(`Failed to resolve URL on page `, { href, baseUrl, url });
       // ignore malformed hrefs
     }
   });

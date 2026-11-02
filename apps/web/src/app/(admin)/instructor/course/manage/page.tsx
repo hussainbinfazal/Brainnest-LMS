@@ -1,0 +1,47 @@
+import React from "react";
+import ManageCoursePageComponent from "@/app/components/AdminComp/InstructorComp/ManageCoursePageComp";
+import { logger, validateMongooseId } from '@repo/shared/server';
+import { JSX } from "react/jsx-runtime";
+import { notFound, redirect } from "next/navigation";
+import { Session } from "next-auth";
+import { getInstructorCoursesWithCache } from "@/lib/adminCached/getAdminCachedCourse";
+import { auth } from "@/auth";
+import { USER_ROLE } from "@repo/shared";
+
+type ManageCoursesPageProps = {
+  searchParams: Promise<{
+    page?: string,
+    limit?: string,
+  }>
+}
+async function ManageInstructorsCoursesPage({ searchParams }: ManageCoursesPageProps): Promise<JSX.Element> {
+  try {
+    const session: Session | null = await auth() // replace actual next auth in prod
+    const params = await searchParams;
+    const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+    const limit = Math.max(1, Number.parseInt(params.limit ?? "5", 10) || 5);
+    const skip = (page - 1) * limit;
+    const user = session?.user;
+    if (!user) return redirect('/login')
+    if (user?.role !== USER_ROLE.INSTRUCTOR) {
+      logger.warn("nauthorized", { userId: user?.id, role: user?.role });
+      return redirect('/')
+    }
+    const instructorId: string = user.id
+    if (!validateMongooseId({ userId: instructorId })) {
+      logger.warn("Invalid user id", { userId: instructorId });
+      return redirect('/')
+    }
+    const cachedInstructorCourses = await getInstructorCoursesWithCache(instructorId, page, limit, skip);
+    // logger.info("Instructor Courses fetched from cache", { courseCount: cachedInstructorCourses.paginatedInstructorCourses.length });
+
+    return <ManageCoursePageComponent paginatedInstructorCourses={cachedInstructorCourses.paginatedInstructorCourses} />
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Something went wrong while fetching Instructor Courses";
+    console.log("This is the error in manage Course Page", error, 'This is the error message in Homepage', message);
+    logger.error("Error in ManagePage:", { error, message });
+    return <ManageCoursePageComponent paginatedInstructorCourses={[]} />;
+  }
+};
+
+export default ManageInstructorsCoursesPage;
