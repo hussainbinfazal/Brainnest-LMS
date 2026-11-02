@@ -361,7 +361,10 @@ export function LessonItem({
           placeholder="e.g. Variables, loops, functions"
         />
       </Field>
-      <LessonAiSuggestion sectionIndex={sectionIndex} lessonIndex={lessonIndex} />
+      <div className="flex items-center justify-between gap-2 bg-white">
+        <LessonAiSuggestion sectionIndex={sectionIndex} lessonIndex={lessonIndex} />
+      </div>
+
       {/* main video upload */}
       <FileField
         label="Lesson Video"
