@@ -23,6 +23,7 @@ import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
 import { CreateCourseBody as CCreateCourse } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { ProgressScroller } from "@/app/components/Scroller";
 import { Button } from "@/components/ui/button";
+import { LessonAiSuggestion } from "@/app/components/AILessonSuggestion/LessonAiSuggestion";
 const EMPTY_LESSON = {
   name: "",
   description: "",
@@ -360,6 +361,7 @@ export function LessonItem({
           placeholder="e.g. Variables, loops, functions"
         />
       </Field>
+      <LessonAiSuggestion sectionIndex={sectionIndex} lessonIndex={lessonIndex} />
       {/* main video upload */}
       <FileField
         label="Video"

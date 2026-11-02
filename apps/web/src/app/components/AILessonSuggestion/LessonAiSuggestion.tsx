@@ -1,0 +1,81 @@
+"use client";
+
+// Import React, form context and UI helpers
+import { useEffect } from "react";
+import { useFormContext } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import type { CreateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import { useLessonDraft } from "@/hooks/useLessonDraft";
+import { requestLessonDraft } from "@/utils/transcribeVideo/transcribeVideo";
+import { PENDING_LECTURES_SUBFOLDER, TOPIC_FOLDER } from "@repo/shared";
+
+const LECTURE_PENDING_PATH = `${TOPIC_FOLDER["lecture-video"]}/${PENDING_LECTURES_SUBFOLDER}/`;
+
+// Props: which lesson in which section
+export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex: number; lessonIndex: number }) {
+    // Access the parent form (this component lives inside <FormProvider>)
+    const { setValue, getValues, watch } = useFormContext<CreateCourseBody>();
+    // Path of the description field this component fills
+    const descPath = `sections.${sectionIndex}.lessons.${lessonIndex}.description` as const;
+    // Watch the pending id that the upload handler stores
+    const publicId = watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoPublicId`);
+    // Only brand-new uploads are pending; existing lessons hold final ids and must not trigger
+    const isPending = !!publicId && publicId.includes(LECTURE_PENDING_PATH);
+
+    // Start the draft once per new upload
+    useEffect(() => {
+        // Skip when there is no new upload
+        if (!isPending) return;
+        // Read the course context at this moment (it may still be empty)
+        const v = getValues();
+        // Fire and forget; the hook below handles progress
+        requestLessonDraft([{
+            publicId,
+            title: v.title,
+            category: v.category?.name,
+            level: v.level,
+            language: v.language,
+        }])
+            // Tell the instructor if queuing failed
+            .catch(() => toast.error("Could not start AI draft"));
+        // getValues is stable, so only the upload id matters
+    }, [isPending, publicId]);
+
+    // Poll for the result
+    const { status, draft } = useLessonDraft(isPending ? publicId : undefined);
+    // Current text in the description field
+    const current = watch(descPath);
+
+    // Auto-fill only when the field is still empty
+    useEffect(() => {
+        // Wait for a finished draft
+        if (status !== "ready" || !draft) return;
+        // Never overwrite what the instructor already typed
+        if (getValues(descPath)) return;
+        // Fill the field and mark the form as edited so it validates and saves
+        setValue(descPath, draft.description, { shouldDirty: true, shouldValidate: true });
+        // Run when the draft arrives
+    }, [status, draft]);
+
+    // Nothing to show for old lessons
+    if (status === "idle") return null;
+    // Progress message
+    if (status === "processing") return <p className="text-sm text-muted-foreground">Generating AI description...</p>;
+    // Error message, the form still works manually
+    if (status === "failed") return <p className="text-sm text-destructive">AI draft failed. Write the description yourself.</p>;
+    // The draft is already in the field, so there is nothing more to offer
+    if (!draft || current === draft.description) return <p className="text-sm text-muted-foreground">AI-generated. Please review it.</p>;
+    // The instructor typed something else, so offer the suggestion instead of overwriting
+    return (
+        <Button
+            // Not a submit button, or it would submit the whole course form
+            type="button"
+            variant="outline"
+            // Replace only when the instructor asks
+            onClick={() => setValue(descPath, draft.description, { shouldDirty: true, shouldValidate: true })}
+        >
+            Replace with AI suggestion
+        </Button>
+    );
+}

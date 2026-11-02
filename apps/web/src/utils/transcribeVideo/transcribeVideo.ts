@@ -16,9 +16,9 @@ export type LessonDraftInput = {
     language?: string;
 };
 
-export async function transcribeVideoToText(input: LessonDraftInput[]) {
+export async function requestLessonDraft(input: LessonDraftInput[]) {
     try {
-        const response = await axios.post("/api/admin/ai/lesson-draft", input);
+        const response = await axios.post("/api/instructor/course/ai/lesson-draft", input);
         clientLogger.info("Transcription job queued", { status: response.status, message: response.data.message });
     } catch (error) {
         clientLogger.error("Failed to queue transcription job", { error });
