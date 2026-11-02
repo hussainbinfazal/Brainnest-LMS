@@ -3,6 +3,7 @@
 // Import React hooks and axios
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 // What the status route returns
 type Draft = { description: string; faqs: { question: string; answer: string }[] };
@@ -37,7 +38,8 @@ export function useLessonDraft(publicId: string | undefined): DraftState {
                 setState(res.data);
                 // Keep polling only while the worker is still busy
                 if (res.data.status === "processing" && ++tries < 120) timer = setTimeout(poll, 5000);
-            } catch {
+            } catch (pollError) {
+                clientLogger.error("Failed to poll lesson draft status", { publicId, error: pollError instanceof Error ? pollError : undefined, message: pollError instanceof Error ? pollError.message : "Unknown error" });
                 // Network or server error: stop and show failed
                 if (!cancelled) setState({ status: "failed" });
             }

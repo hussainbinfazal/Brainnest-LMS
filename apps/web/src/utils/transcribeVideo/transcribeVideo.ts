@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import { clientLogger } from "../clientLogger/clientLogger";
+import { getErrorMessage } from "@repo/shared";
 
 // Payload the browser sends to request an AI lesson draft.
 export type LessonDraftInput = {
@@ -20,8 +21,10 @@ export async function requestLessonDraft(input: LessonDraftInput[]) {
     try {
         const response = await axios.post("/api/instructor/course/ai/lesson-draft", input);
         clientLogger.info("Transcription job queued", { status: response.status, message: response.data.message });
-    } catch (error) {
-        clientLogger.error("Failed to queue transcription job", { error });
+    } catch (error: unknown) {
+        console.error("This is the error in requestLessonDraft function ", error, error instanceof Error && error.message)
+        const message = getErrorMessage(error, "Unknown error in requestLessonDraft");
+        clientLogger.error("Failed to queue transcription job", { error, message });
         throw error;
     }
 }
