@@ -1,10 +1,18 @@
-import "@repo/shared/src/config/env";
+
+import { configDotenv } from 'dotenv';
+
+// console.log("=== DEBUG START ===");
+// console.log("cwd:", process.cwd());
+// console.log("__dirname:", __dirname);
+
+const result = configDotenv({ path: "./.env" });
+
 import mongoose, { type mongo } from "mongoose";
 import { MongoClient } from "mongodb";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { Document } from "@langchain/core/documents";
 import { embeddings } from "../Embeddings/embeddings";
-import { connectDB } from '@repo/shared/server'
+
 
 // This is prod with mongo db atlas search
 // export async function getVectorStore(): Promise<MongoDBAtlasVectorSearch> {

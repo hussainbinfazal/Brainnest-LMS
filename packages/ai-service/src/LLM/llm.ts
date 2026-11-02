@@ -1,3 +1,11 @@
+
+import { configDotenv } from 'dotenv';
+
+console.log("=== DEBUG START AI SERVICE ===");
+console.log("cwd:", process.cwd());
+console.log("__dirname:", __dirname);
+
+const result = configDotenv({ path: "./.env" });
 import { ChatGroq } from "@langchain/groq";
 import Groq from "groq-sdk";
 
