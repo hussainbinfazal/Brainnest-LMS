@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 
 
 
@@ -205,9 +204,6 @@ export const USER_ROLE: Record<string, string> = {
 export function toSlug(name: string): string {
     return name.trim().toLowerCase().replace(/\s+/g, "-"); ////turns web development to web-development
 }
-export const freshTarget = (folderKey: keyof typeof TOPIC_FOLDER): string =>
-    // Unique id per asset, independent of array positions
-    uploadTargetPublicId(TOPIC_FOLDER[folderKey], new Types.ObjectId().toString());
 
 export function uploadTargetPublicId(folder: string, id: string): string {
     return uploadFolder(folder, id).replace(/\/$/, "");

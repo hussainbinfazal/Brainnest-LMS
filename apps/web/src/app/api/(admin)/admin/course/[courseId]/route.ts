@@ -37,7 +37,6 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { updateCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import { checkIp } from "@repo/shared/server";
 import {
-    freshTarget,
     PENDING_LECTURES_SUBFOLDER,
     PENDING_PREVIEW_LECTURES_SUBFOLDER,
     PENDING_PREVIEW_VIDEO_SUBFOLDER,
@@ -334,6 +333,9 @@ interface LessonDraft {
     // Pending id of a newly uploaded preview clip, if any
     previewPendingId?: string;
 }
+export const freshTarget = (folderKey: keyof typeof TOPIC_FOLDER): string =>
+    // Unique id per asset, independent of array positions
+    uploadTargetPublicId(TOPIC_FOLDER[folderKey], new Types.ObjectId().toString());
 
 export async function PATCH(
     request: CustomNextRequest,

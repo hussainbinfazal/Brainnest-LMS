@@ -1,7 +1,6 @@
 "use client";
 
-// Import React, form context and UI helpers
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +21,8 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
     const publicId = watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoPublicId`);
     // Only brand-new uploads are pending; existing lessons hold final ids and must not trigger
     const isPending = !!publicId && publicId.includes(LECTURE_PENDING_PATH);
+    const [requestedPublicId, setRequestedPublicId] = useState<string>();
+    const isActive = isPending || requestedPublicId === publicId;
 
     // Start the draft once per new upload
     useEffect(() => {
@@ -39,13 +40,30 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
         }])
             // Tell the instructor if queuing failed
             .catch(() => toast.error("Could not start AI draft"));
+        setRequestedPublicId(publicId);
         // getValues is stable, so only the upload id matters
     }, [isPending, publicId]);
 
     // Poll for the result
-    const { status, draft } = useLessonDraft(isPending ? publicId : undefined);
+    const { status, draft } = useLessonDraft(isActive ? publicId : undefined);
     // Current text in the description field
     const current = watch(descPath);
+    const requestDraft = async () => {
+        if (!publicId) return;
+        const v = getValues();
+        try {
+            await requestLessonDraft([{
+                publicId,
+                title: v.title,
+                category: v.category?.name,
+                level: v.level,
+                language: v.language,
+            }]);
+            setRequestedPublicId(publicId);
+        } catch {
+            toast.error("Could not start AI draft");
+        }
+    };
 
     // Auto-fill only when the field is still empty
     useEffect(() => {
@@ -58,12 +76,27 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
         // Run when the draft arrives
     }, [status, draft]);
 
-    // Nothing to show for old lessons
-    if (status === "idle") return null;
+    if (!publicId) return null;
+    if (status === "idle") {
+        return (
+            <Button type="button" variant="outline" className="text-sm" onClick={requestDraft}>
+                Generate AI suggestion
+            </Button>
+        );
+    }
     // Progress message
     if (status === "processing") return <p className="text-sm text-muted-foreground">Generating AI description...</p>;
     // Error message, the form still works manually
-    if (status === "failed") return <p className="text-sm text-destructive">AI draft failed. Write the description yourself.</p>;
+    if (status === "failed") {
+        return (
+            <div className="flex items-center gap-2">
+                <p className="text-sm text-destructive">AI draft failed. Write the description yourself.</p>
+                <Button type="button" variant="outline" className="text-sm" onClick={requestDraft}>
+                    Try again
+                </Button>
+            </div>
+        );
+    }
     // The draft is already in the field, so there is nothing more to offer
     if (!draft || current === draft.description) return <p className="text-sm text-muted-foreground">AI-generated. Please review it.</p>;
     // The instructor typed something else, so offer the suggestion instead of overwriting
@@ -74,6 +107,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
             variant="outline"
             // Replace only when the instructor asks
             onClick={() => setValue(descPath, draft.description, { shouldDirty: true, shouldValidate: true })}
+            className="text-sm bg-amber-200 px-2 py-3"
         >
             Replace with AI suggestion
         </Button>

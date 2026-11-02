@@ -27,7 +27,10 @@ export function useLessonDraft(publicId: string | undefined): DraftState {
         const poll = async () => {
             try {
                 // Ask the server for the current status (adjust to your successResponse shape)
-                const res = await axios.get("/api/ai/lesson-draft", { params: { publicId, signal: controller.signal } },);
+                const res = await axios.get("/api/instructor/course/ai/lesson-draft", {
+                    params: { publicId },
+                    signal: controller.signal,
+                });
                 // Ignore late responses
                 if (cancelled) return;
                 // Save status and draft

@@ -355,7 +355,7 @@ export function LessonItem({
         />
       </Field>
       {/* lesson description */}
-      <Field label="Description" error={err?.description?.message} required={true}>
+      <Field label="Lesson Description" error={err?.description?.message} required={true}>
         <Input
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.description`)}
           placeholder="e.g. Variables, loops, functions"
@@ -364,7 +364,7 @@ export function LessonItem({
       <LessonAiSuggestion sectionIndex={sectionIndex} lessonIndex={lessonIndex} />
       {/* main video upload */}
       <FileField
-        label="Video"
+        label="Lesson Video"
         accept="video/*"
         {...video}
         onFile={handleVideo}
@@ -377,7 +377,7 @@ export function LessonItem({
         required={true}
       />
       {/* readOnly, NOT disabled: disabled inputs submit undefined in RHF */}
-      <Field label="Duration (seconds)" error={err?.durationInSeconds?.message} required={true}>
+      <Field label="Lesson Duration (seconds)" error={err?.durationInSeconds?.message} required={true}>
         <Input
           type="number"
           min={0}
@@ -398,7 +398,7 @@ export function LessonItem({
         />
       </Field>
       {/* is this lesson a free preview */}
-      <Field label="IsPreview" error={err?.isPreview?.message} required={true}>
+      <Field label="Lesson IsPreview" error={err?.isPreview?.message} required={true}>
         <Controller
           control={control}
           name={`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`}
@@ -409,7 +409,7 @@ export function LessonItem({
       </Field>
       {/* preview video upload */}
       <FileField
-        label="Preview video"
+        label="Lesson Preview Video"
         accept="video/*"
         {...preview}
         onFile={handlePreview}

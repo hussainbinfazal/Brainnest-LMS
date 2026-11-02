@@ -4,7 +4,7 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { LEVELS } from "@/locales/locales";
 import { ISessionUser } from "@/types/server";
 import { getErrorMessage, USER_ROLE } from "@repo/shared";
-import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, logger } from "@repo/shared/server";
+import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, connectDB, LessonTranscript, logger } from "@repo/shared/server";
 import axios from "axios";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
@@ -110,5 +110,50 @@ export async function POST(request: NextRequest) {
             undefined,
             true
         );
+    }
+}
+
+
+export async function GET(request: NextRequest) {
+    try {
+        const authSession: Session | null = await auth();
+        if (!authSession) {
+            return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true);
+        }
+
+        const sessionUser: ISessionUser | null = authSession.user;
+        if (sessionUser?.role !== USER_ROLE.INSTRUCTOR) {
+            return failResponse({ message: "You are not authorized" }, 401, undefined, undefined, true);
+        }
+
+        const publicId = z.string().trim().min(1).max(255).safeParse(
+            request.nextUrl.searchParams.get("publicId")
+        );
+        if (!publicId.success) {
+            return failResponse({ message: "A valid publicId is required" }, 400, undefined, undefined, true);
+        }
+
+        await connectDB(process.env.MONGODB_URI);
+        const transcript = await LessonTranscript.findOne({
+            publicId: publicId.data,
+            userId: sessionUser.id,
+        })
+            .select({ status: 1, draft: 1, _id: 0 })
+            .lean();
+
+        return successResponse(
+            { status: transcript?.status ?? "idle", draft: transcript?.draft },
+            200,
+            undefined,
+            undefined,
+            true
+        );
+    } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error, "Unknown error in lesson draft status route");
+        logger.error("Error in lesson draft status route", {
+            error: error instanceof Error ? error : undefined,
+            message: errorMessage,
+        });
+        return failResponse({ message: "Internal server error" }, 500, undefined, undefined, true);
     }
 }
