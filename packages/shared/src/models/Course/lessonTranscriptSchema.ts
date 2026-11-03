@@ -46,6 +46,7 @@ const LessonTranscriptSchema = new Schema<ILessonTranscript>(
         status: { type: String, enum: ["processing", "ready", "failed"], default: "processing" },
         // Nested draft object, plain fields without extra ids
         draft: {
+            source: String,
             // Suggested lesson description
             description: String,
             // Suggested FAQ pairs

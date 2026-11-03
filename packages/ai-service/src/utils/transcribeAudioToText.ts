@@ -3,6 +3,16 @@ import { toFile } from "groq-sdk";
 import { voiceLLM } from "../LLM/llm";
 
 const MAX_AUDIO_BYTES = 24 * 1024 * 1024;
+type TranscriptionSegment = { text: string; no_speech_prob?: number };
+
+function isTranscriptionSegment(value: unknown): value is TranscriptionSegment {
+    if (typeof value !== "object" || value === null || !("text" in value) || typeof value.text !== "string") {
+        return false;
+    }
+
+    return !("no_speech_prob" in value) || typeof value.no_speech_prob === "number";
+}
+
 export async function transcribeVideoToText({
     userId,
     courseId,
@@ -13,7 +23,12 @@ export async function transcribeVideoToText({
     courseId?: string;
     lessonId?: string;
     mp3Url: string;
-}) {
+}): Promise<{
+    courseId: string | undefined;
+    lessonId: string | undefined;
+    transcript: string;
+    segments: TranscriptionSegment[];
+}> {
     const res = await fetch(mp3Url, { signal: AbortSignal.timeout(120_000) });
     // Throw on any non-200 so BullMQ retries (Cloudinary answers 423 while still generating)
     if (!res.ok) {
@@ -44,10 +59,11 @@ export async function transcribeVideoToText({
     });
     console.log("This is the transcription in transcribeVideoToText", transcription);
     logger.info("Transcription on audio completed on package");
+    const rawSegments: unknown = (transcription as { segments?: unknown }).segments;
     return {
         courseId,
         lessonId,
         transcript: transcription.text,
-        segments: (transcription as { segments?: unknown[] }).segments ?? [],
+        segments: Array.isArray(rawSegments) ? rawSegments.filter(isTranscriptionSegment) : [],
     };
 };

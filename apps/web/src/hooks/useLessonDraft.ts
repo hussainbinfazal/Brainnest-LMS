@@ -36,8 +36,13 @@ export function useLessonDraft(publicId: string | undefined): DraftState {
                 if (cancelled) return;
                 // Save status and draft
                 setState(res.data);
-                // Keep polling only while the worker is still busy
-                if (res.data.status === "processing" && ++tries < 120) timer = setTimeout(poll, 5000);
+                // The worker may not have created its transcript record when the first poll arrives.
+                if (
+                    (res.data.status === "idle" || res.data.status === "processing") &&
+                    ++tries < 120
+                ) {
+                    timer = setTimeout(poll, 5000);
+                }
                 clientLogger.info("Polled lesson draft status", { publicId, status: res.data.status });
             } catch (pollError) {
                 clientLogger.error("Failed to poll lesson draft status", { publicId, error: pollError instanceof Error ? pollError : undefined, message: pollError instanceof Error ? pollError.message : "Unknown error" });

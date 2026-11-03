@@ -50,7 +50,7 @@ export function buildRagChain(
 ): RunnableSequence<string, string> {
     const retriever = vectorStore.asRetriever({ k: 5, filter });
     logger.info("Building RAG chain", { filter, retrieverType: retriever.constructor.name, vectorStoreType: vectorStore.constructor.name });
-    return RunnableSequence.from([
+    let ragResponse = RunnableSequence.from([
         {
             context: retriever.pipe(formatDocs),
             question: new RunnablePassthrough(),
@@ -59,22 +59,31 @@ export function buildRagChain(
         llm,
         new StringOutputParser(),
     ]);
+    console.log("RAG chain built", { ragResponseType: ragResponse.constructor.name, ragResponse: ragResponse });
+    return ragResponse;
 }
 
 export function buildRagChainForLesson(
     vectorStore: MongoDBAtlasVectorSearch,
     filter: MongoDBAtlasVectorSearch["FilterType"]
 ): RunnableSequence<string, string> {
-    const retriever = vectorStore.asRetriever({ k: 5, filter });
-    logger.info("Building RAG chain for lesson", { filter, retrieverType: retriever.constructor.name, vectorStoreType: vectorStore.constructor.name });
-    return RunnableSequence.from([
-        {
-            context: retriever.pipe(formatDocs),
-            question: new RunnablePassthrough(),
-        },
-        RAG_LESSON_DESCRIPTION_PROMPT,
-        llm,
-        new StringOutputParser(),
-    ]);
+    try {
+        const retriever = vectorStore.asRetriever({ k: 5, filter });
+        logger.info("Building RAG chain for lesson", { filter, retrieverType: retriever.constructor.name, vectorStoreType: vectorStore.constructor.name });
+        let ragResponse = RunnableSequence.from([
+            {
+                context: retriever.pipe(formatDocs),
+                question: new RunnablePassthrough(),
+            },
+            RAG_LESSON_DESCRIPTION_PROMPT,
+            llm,
+            new StringOutputParser(),
+        ]);
+        console.log("RAG chain for lesson built", { ragResponseType: ragResponse.constructor.name, ragResponse: ragResponse });
+        return ragResponse;
+    } catch (error) {
+        console.log("Error building RAG chain for lesson", { error, message: error instanceof Error ? error.message : "Unknown error" });
+        logger.error("Error building RAG chain for lesson", { error, message: error instanceof Error ? error.message : "Unknown error" });
+        throw error;
+    }
 }
-
