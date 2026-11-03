@@ -13,10 +13,11 @@ import Groq from "groq-sdk";
 if (!process.env.GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY is not set in environment variables");
 }
+const GROQ_MODEL: string = process.env.GROQ_MODEL ?? "openai/gpt-oss-120b";
 
 export const llm = new ChatGroq({
     apiKey: process.env.GROQ_API_KEY,
-    model: "llama-3.3-70b-versatile",
+    model: GROQ_MODEL,
     temperature: 0.3,
 });
 
