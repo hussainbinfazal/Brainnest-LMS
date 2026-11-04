@@ -254,6 +254,7 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     <Tiptap
                       description={field.value}
                       onChange={field.onChange}
+                      placeholder="Write a brief description of your course here..."
                     />
                   )}
                 />
