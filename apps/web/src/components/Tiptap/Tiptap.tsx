@@ -24,7 +24,7 @@ const EDITOR_CLASSES = [
 ].join(" ");
 
 
-const Tiptap = ({ description, onChange }: { description: string; onChange: (html: string) => void }) => {
+const Tiptap = ({ description, onChange, placeholder }: { description: string; onChange: (html: string) => void; placeholder: string }) => {
   const editor = useEditor({
     extensions: [StarterKit, Underline],
     content: description || "",
@@ -91,6 +91,7 @@ const Tiptap = ({ description, onChange }: { description: string; onChange: (htm
       {/* Editor */}
       <EditorContent
         editor={editor}
+        placeholder={placeholder}
       // className="min-h-37.5 border rounded-md p-3 "
       />
     </div>

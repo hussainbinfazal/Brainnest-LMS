@@ -24,6 +24,7 @@ import { CreateCourseBody as CCreateCourse } from "@/utils/fieldsValidation/Clie
 import { ProgressScroller } from "@/app/components/Scroller";
 import { Button } from "@/components/ui/button";
 import { LessonAiSuggestion } from "@/app/components/AILessonSuggestion/LessonAiSuggestion";
+import Tiptap from "@/components/Tiptap/Tiptap";
 const EMPTY_LESSON = {
   name: "",
   description: "",
@@ -356,6 +357,18 @@ export function LessonItem({
       </Field>
       {/* lesson description */}
       <Field label="Lesson Description" error={err?.description?.message} required={true}>
+        <Controller
+          name={`sections.${sectionIndex}.lessons.${lessonIndex}.description`}
+          control={control}
+          render={({ field }) => (
+            <Tiptap
+              description={field.value ?? ""}
+              onChange={field.onChange}
+              placeholder="e.g. Variables, loops, functions"
+
+            />
+          )}
+        />
         <Input
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.description`)}
           placeholder="e.g. Variables, loops, functions"
@@ -478,7 +491,17 @@ export const SectionItem: React.FC<{
       </Field>
       {/* Section description */}
       <Field label="Description" error={errors.sections?.[sectionIndex]?.description?.message} required={true}>
-        <Input {...register(`sections.${sectionIndex}.description`)} />
+        <Controller
+          name={`sections.${sectionIndex}.description`}
+          control={control}
+          render={({ field }) => (
+            <Tiptap
+              description={field.value ?? ""}
+              onChange={field.onChange}
+              placeholder="Write a brief description of this section here..."
+            />
+          )}
+        />
       </Field>
       <Field label="Section Order" error={errors.sections?.[sectionIndex]?.order?.message} required={true}>
         <Input

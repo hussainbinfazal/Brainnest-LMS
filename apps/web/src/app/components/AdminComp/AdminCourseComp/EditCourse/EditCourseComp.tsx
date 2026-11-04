@@ -287,6 +287,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                     <Tiptap
                       description={field.value ?? ""}
                       onChange={field.onChange}
+                      placeholder="Write a brief description of your course here..."
                     />
                   )}
                 />
