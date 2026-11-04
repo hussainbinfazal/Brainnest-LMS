@@ -33,3 +33,19 @@ export async function requestLessonDraft(input: LessonDraftInput[]) {
         throw error;
     }
 }
+export type LessonDraftStatusInput = Pick<LessonDraftInput, "publicId">;
+
+export async function getLessonDraftStatus(input: LessonDraftStatusInput): Promise<void> {
+    try {
+        const response = await axios.get("/api/admin/course/instructor/ai/lesson-draft", {
+            params: input,
+        });
+        clientLogger.info("[getLessonDraftStatus]", { status: response.status, message: response.data.message });
+    } catch (error: unknown) {
+        // console.error("This is the error in requestLessonDraft function ", error, error instanceof Error && error.message)
+        const message = getErrorMessage(error, "Unknown error in requestLessonDraft status ");
+        console.error("This is the error in requestLessonDraft status", { error, message });
+        clientLogger.error("Failed to fetch lesson draft status", { error, message });
+        throw error;
+    }
+}

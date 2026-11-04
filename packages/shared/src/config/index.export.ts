@@ -11,4 +11,5 @@ export * from "./redisConfig/rate-limiters/rate-limit";
 export * from "./redisConfig/rate-limiters/rate-limit-user";
 export * from "./redisConfig/sessionCounter/concurrentSessionCounter";
 export * from './uploadConfig/upload'
+export * from './redisConfig/ioredis-cache-helpers';
 

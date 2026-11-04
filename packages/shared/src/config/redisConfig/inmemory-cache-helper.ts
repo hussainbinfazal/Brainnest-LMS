@@ -49,6 +49,17 @@ export function memSet<T>(key: string, value: T, ttlSec: number): void {
     insert(key, v);
 };
 
+export function memHSet(key: string, fields: Record<string, string>, ttlSec: number): void {
+    const entry = live(key);
+    const current = entry ? JSON.parse(entry.json) as Record<string, string> : {};
+    if (entry && (typeof current !== "object" || current === null || Array.isArray(current))) {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
+
+    const expiresAt = entry?.expiresAt ?? (ttlSec > 0 ? Date.now() + ttlSec * 1000 : null);
+    insert(key, { json: JSON.stringify({ ...current, ...fields }), expiresAt });
+};
+
 
 ///Set NX: write only if the key does not exist: returns true when it wrote
 export function memSetNX(key: string, value: unknown, ttlSec: number): boolean {
@@ -134,4 +145,3 @@ function insert(key: string, entry: Entry): void {
     store.set(key, entry);
 
 }
-

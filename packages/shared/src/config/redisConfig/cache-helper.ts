@@ -6,7 +6,7 @@ export const CACHE_TTL = {
   SHORT: 60, //1 min - volatile data (session type data)
   MEDIUM: 60 * 15, // 15 min -  semi-stable (course listing like this )
   LONG: 60 * 60, // 1 hour
-  VERY_LONG: 60 * 60 * 24 //24 hour - rarely changes(static config)
+  VERY_LONG: 24 * 60 * 60 //24 hour - rarely changes(static config)
 } as const
 
 
@@ -52,7 +52,7 @@ export async function setCached<T>(
     const redisClient = getRedisClient()
     const response = await redisClient.ping();
     logger.info("Redis ping successful", { response });
-    await redisClient.set(key, value, { ex: memTtl(ttlSeconds) })
+    await redisClient.set(key, value, { ex: memTtl(ttlSeconds) });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err
     logger.error(`[cache] setCached failed for key :`, { key, err: message, namespace: namespace })

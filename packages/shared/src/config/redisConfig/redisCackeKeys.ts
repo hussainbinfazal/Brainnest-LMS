@@ -481,6 +481,13 @@ export const ATTEMPT_EMAIL_VERIFICATION = {
   usedIn: ["User Verification"],
 };
 
+export const GENERATE_DESCRIPTION_STATUS = {
+  namespace: "draft:transcription",
+  id: "uploadId:userId",
+  ttl: "MEDIUM", //15 minutes
+  description: "To get transcription status for a lesson",
+  usedIn: ["Transcription Status API"],
+}
 
 /**
  * Queue Names (Used in apps/Worker/src/queue/)
@@ -506,6 +513,11 @@ export const QUEUE_KEYS = {
     name: "reconcile",
     description: "Payment reconciliation queue",
     usedIn: ["Razorpay payment verification"],
+  },
+  TRANSCRIPT: {
+    name: "transcript",
+    description: "Transcription queue for audio/video content",
+    usedIn: ["Audio/Video transcription for lessons"],
   },
   INGEST: {
     name: "ingest",
