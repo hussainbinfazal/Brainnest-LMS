@@ -57,3 +57,8 @@ export async function addChunks(texts: string[], metadata: Record<string, unknow
 
 
 }
+
+export async function deleteChunks(uploadId: string, userId: string): Promise<void> {
+    await client.connect();
+    await client.db("LMS").collection("documents").deleteMany({ uploadId, userId });
+}

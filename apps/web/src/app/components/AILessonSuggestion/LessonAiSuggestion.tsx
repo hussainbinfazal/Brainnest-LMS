@@ -9,6 +9,7 @@ import { useLessonDraft } from "@/hooks/useLessonDraft";
 import { requestLessonDraft } from "@/utils/transcribeVideo/transcribeVideo";
 import { getErrorMessage, PENDING_LECTURES_SUBFOLDER, TOPIC_FOLDER } from "@repo/shared";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
+import { LoaderCircle } from "lucide-react";
 
 const LECTURE_PENDING_PATH = `${TOPIC_FOLDER["lecture-video"]}/${PENDING_LECTURES_SUBFOLDER}/`;
 
@@ -105,7 +106,14 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
         );
     }
     // Progress message
-    if (status === "processing") return <p className="text-sm text-muted-foreground">Generating AI description...</p>;
+    if (status === "processing") {
+        return (
+            <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+                <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Generating AI description...
+            </p>
+        );
+    }
     // Error message, the form still works manually
     if (status === "failed") {
         return (

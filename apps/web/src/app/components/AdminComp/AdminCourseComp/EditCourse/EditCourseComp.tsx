@@ -145,7 +145,6 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   const [fetchedCourse, setFetchedCourse] = useState<CCourse | null>(renderedCourse)
   const [fetchedSections, setFetchedSections] = useState<CSection[]>(renderedCourseSections)
   const [fetchedLessons, setFetchedLessons] = useState<CLesson[]>(renderedCourseLessons)
-
   const updateCourse = useInstructorCoursesStore((state) => state.updateCourse);
   const isLoading = useInstructorCoursesStore((state) => state.isLoading);
   const form = useForm<
