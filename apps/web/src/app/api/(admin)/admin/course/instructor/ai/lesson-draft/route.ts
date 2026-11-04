@@ -15,7 +15,11 @@ const lessonDraftRequestSchema = z.array(z.object({
     publicId: z.string().trim().min(1).max(255),
     courseId: z.string().trim().optional(),
     lessonId: z.string().trim().optional(),
-    title: z.string().trim().optional(),
+    courseTitle: z.string().trim().optional(),
+    courseDescription: z.string().trim().optional(),
+    lessonTitle:z.string().trim().optional(),
+    sectionTitle: z.string().trim().optional(),
+    sectionDescription: z.string().trim().optional(),
     category: z.string().trim().optional(),
     level: z.enum(LEVELS).optional(),
     language: z.string().trim().optional(),
@@ -88,12 +92,12 @@ export async function POST(request: NextRequest) {
             // Worker address from a server-only env var
             `${workerUrl}/transcribe/audioToText`,
             {
-                videos: body.data.map(({ publicId, courseId, lessonId, title, category, level, language }) => ({
+                videos: body.data.map(({ publicId, courseId, lessonId, courseTitle, courseDescription, lessonTitle, sectionTitle, sectionDescription, category, level, language }) => ({
                     publicId,
                     userId,
                     courseId,
                     lessonId,
-                    course: { title, category, level, language },
+                    course: { courseTitle, courseDescription, lessonTitle, sectionTitle, sectionDescription, category, level, language },
                 })),
             },
             // Internal secret header plus a timeout so the route cannot hang

@@ -11,7 +11,11 @@ export type LessonDraftInput = {
     courseId?: string;
     lessonId?: string;
     // Course context for the prompt, all optional
-    title?: string;
+    courseTitle?: string;
+    sectionTitle?: string;
+    sectionDescription?: string;
+    courseDescription?: string;
+    lessonTitle?: string;
     category?: string;
     level?: string;
     language?: string;

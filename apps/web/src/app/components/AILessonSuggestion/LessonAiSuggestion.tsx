@@ -24,17 +24,27 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
     const isPending = !!publicId && publicId.includes(LECTURE_PENDING_PATH);
     const [requestedPublicId, setRequestedPublicId] = useState<string>();
     const isActive = isPending || requestedPublicId === publicId;
-
+    const v = getValues();
+    const sectionTitle: string | undefined = v.sections[sectionIndex]?.title;
+    const lessonTitle: string | undefined = v.sections[sectionIndex]?.lessons[lessonIndex]?.name;
+    const courseTitle: string | undefined = v.title;
+    const sectionDescription: string | undefined = v.sections[sectionIndex]?.description;
+    const courseDescription: string | undefined = v.description;
     // Start the draft once per new upload
     useEffect(() => {
         // Skip when there is no new upload
         if (!isPending) return;
         // Read the course context at this moment (it may still be empty)
-        const v = getValues();
+
+
         // Fire and forget; the hook below handles progress
         requestLessonDraft([{
             publicId,
-            title: v.title,
+            lessonTitle: lessonTitle,
+            sectionTitle: sectionTitle,
+            sectionDescription: sectionDescription,
+            courseDescription: courseDescription,
+            courseTitle: courseTitle,
             category: v.category?.name,
             level: v.level,
             language: v.language,
@@ -42,7 +52,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
             // Tell the instructor if queuing failed
             .catch((error) => {
                 toast.error("Could not start AI draft");
-                clientLogger.error(getErrorMessage(error, "Failed to request lesson draft"), { publicId, title: v.title, category: v.category?.name, level: v.level, language: v.language, });
+                clientLogger.error(getErrorMessage(error, "Failed to request lesson draft"), { publicId, courseTitle: courseTitle, sectionTitle: sectionTitle, lessonTitle: lessonTitle, category: v.category?.name, level: v.level, language: v.language, });
             });
         setRequestedPublicId(publicId);
         // getValues is stable, so only the upload id matters
@@ -57,8 +67,13 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
         const v = getValues();
         try {
             await requestLessonDraft([{
+                courseTitle: courseTitle,
+                sectionTitle: sectionTitle,
+                sectionDescription: sectionDescription,
+                courseDescription: courseDescription,
+                lessonTitle: lessonTitle,
                 publicId,
-                title: v.title,
+                // title: v.title,
                 category: v.category?.name,
                 level: v.level,
                 language: v.language,
