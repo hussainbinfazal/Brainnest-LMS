@@ -54,11 +54,13 @@ import {
 } from "./courseFields";
 import z from "zod";
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
+import { ObjectId } from "bson";
 
 const LEVELS: string[] = ["Beginner", "Intermediate", "Advanced"];
 
 // default lesson shape in one place (match your schema's field names!)
 const EMPTY_LESSON = {
+  _id: new ObjectId().toHexString(),
   name: "",
   description: "",
   videoUrl: "",
@@ -73,7 +75,7 @@ const EMPTY_LESSON = {
   isPreview: false,
 };
 const EMPTY_SECTION: CSection = {
-  _id: "",
+  _id: new ObjectId().toHexString(),
   courseId: "",
   title: "",
   description: "",

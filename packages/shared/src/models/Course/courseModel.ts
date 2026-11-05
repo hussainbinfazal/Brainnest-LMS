@@ -19,6 +19,9 @@ const courseSchema = new mongoose.Schema<ICourse>({
   {
     type: String,
 
+  },
+  mp3Url: {
+    type: String,
   }
   ,
   instructorId: {

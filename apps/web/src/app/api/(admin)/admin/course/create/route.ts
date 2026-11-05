@@ -40,6 +40,7 @@ import {
   PENDING_THUMBNAIL_SUBFOLDER,
   TOPIC_FOLDER,
   toSlug,
+  toMp3Url,
   uploadFolder,
   uploadTargetPublicId,
 } from "@repo/shared";
@@ -372,10 +373,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       ///Flatten lessons while keeping the each one linked to its section
       const lessonDocs: ILesson[] = body.sections.flatMap((s, sIndex) =>
         s.lessons.map((l, lIndex) => ({
-          _id: new Types.ObjectId(),
+          _id: l._id ? new Types.ObjectId(l._id) : new Types.ObjectId(),
           sectionId: sectionDocs[sIndex]._id,
           courseId,
           name: l.name,
+          mp3Url: toMp3Url(urlOf(l.videoPublicId)),
           description: l.description,
           videoUrl: urlOf(l.videoPublicId),
           isPreview: l.isPreview,
@@ -405,6 +407,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
             faq: body.faq,
             requirements: body.requirements,
             whatYouWillLearn: body.whatYouWillLearn,
+            mp3Url: toMp3Url(urlOf(body.previewVideoPublicId)),
             previewVideo: urlOf(body.previewVideoPublicId),
             coverImage: urlOf(body.coverPublicId),
             status: body.status,

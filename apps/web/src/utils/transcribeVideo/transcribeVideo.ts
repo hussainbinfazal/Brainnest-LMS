@@ -33,7 +33,7 @@ export async function requestLessonDraft(input: LessonDraftInput[]) {
         throw error;
     }
 }
-export type LessonDraftStatusInput = Pick<LessonDraftInput, "publicId">;
+export type LessonDraftStatusInput = Pick<LessonDraftInput, "publicId" | "lessonId">;
 
 export async function getLessonDraftStatus(input: LessonDraftStatusInput): Promise<void> {
     try {

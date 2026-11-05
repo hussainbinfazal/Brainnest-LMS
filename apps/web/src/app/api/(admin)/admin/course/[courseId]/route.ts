@@ -778,6 +778,7 @@ export async function PATCH(
                 topics: topicIds,
                 language: body.language,
                 previewVideo: previewUrl,
+                mp3Url: previewUrl && toMp3Url(previewUrl),
                 coverImage: coverUrl,
                 category: categoryId,
                 totalDurationInSeconds: totals.totalDurationInSeconds,
@@ -815,17 +816,17 @@ export async function PATCH(
                     : []
             );
 
-            for (const d of lessonDrafts) {
-                // Skip lessons whose video did not change
-                if (!d.videoPendingId) continue;
-                // Link by pending id, and clear the expiry so it is kept
-                await LessonTranscript.updateOne(
-                    // Only this user's transcript for this upload
-                    { publicId: d.videoPendingId, userId: sessionUser.id },
-                    // Attach the real ids, and keep the document forever
-                    { $set: { uploadId: d.videoPendingId, userId: sessionUser.id, lessonId: d._id, courseId: courseObjectId }, $unset: { expiresAt: 1 } }
-                );
-            }
+            // for (const d of lessonDrafts) {
+            //     // Skip lessons whose video did not change
+            //     if (!d.videoPendingId) continue;
+            //     // Link by pending id, and clear the expiry so it is kept
+            //     await LessonTranscript.updateOne(
+            //         // Only this user's transcript for this upload
+            //         { publicId: d.videoPendingId, userId: sessionUser.id },
+            //         // Attach the real ids, and keep the document forever
+            //         { $set: { uploadId: d.videoPendingId, userId: sessionUser.id, lessonId: d._id, courseId: courseObjectId }, $unset: { expiresAt: 1 } }
+            //     );
+            // }
         } catch (postCommitError) {
             // Log it, but the update itself succeeded, so we still return 200
             logger.error("Post-commit step failed", { courseId, error: String(postCommitError) });

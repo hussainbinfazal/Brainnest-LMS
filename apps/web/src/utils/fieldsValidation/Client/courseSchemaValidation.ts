@@ -58,6 +58,7 @@ const courseBase = z.object({
     .default(0),
 });
 const lessonBase = z.object({
+  _id: z.string().regex(/^[a-f\d]{24}$/i, "Invalid lesson id"),
   name: z.string().trim().min(1, "Enter a lesson name").max(200),
   videoUrl: z.string().trim().min(1, "Upload a lesson video"),
   description: z.string().min(3).max(2000),
@@ -71,12 +72,14 @@ const lessonBase = z.object({
 });
 
 const sectionBase = z.object({
+  _id: z.string().regex(/^[a-f\d]{24}$/i, "Invalid Section id"),
   title: z.string().trim().min(3).max(2000),
   description: z.string().trim().min(1).max(2000),
   order: z.number().int().min(0),
 });
 
 const createLessonSchema = lessonBase.extend({
+
   durationInSeconds: lessonBase.shape.durationInSeconds.default(0),
   isPreview: lessonBase.shape.isPreview.default(false),
   previewDurationInSeconds:
@@ -180,9 +183,9 @@ export const createCourseSchema = courseBase.extend({
 });
 
 const objectId = z.string().regex(/^[a-f/d]{24}$/i, "Invalid Id");
-const updateLessonBase = lessonBase.extend({
-  _id: objectId,
-});
+// const updateLessonBase = lessonBase.extend({
+//   _id: objectId,
+// });
 // The full request body for POST /courses
 // export const createCourseSchema = z.object({
 //     // Course title

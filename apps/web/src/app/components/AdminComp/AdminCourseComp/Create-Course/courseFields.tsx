@@ -1,7 +1,7 @@
 // small reusable pieces that kill the repeated JSX
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-
+import { ObjectId } from "bson";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { LessonAiSuggestion } from "@/app/components/AILessonSuggestion/LessonAiSuggestion";
 import Tiptap from "@/components/Tiptap/Tiptap";
 const EMPTY_LESSON = {
+  _id: new ObjectId().toHexString(),
   name: "",
   description: "",
   videoUrl: "",

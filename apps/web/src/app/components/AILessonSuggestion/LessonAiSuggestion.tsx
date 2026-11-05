@@ -27,6 +27,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
     const isActive = isPending || requestedPublicId === publicId;
     const v = getValues();
     const sectionTitle: string | undefined = v.sections[sectionIndex]?.title;
+    const lessonId: string = v.sections[sectionIndex]?.lessons[lessonIndex]?._id;
     const lessonTitle: string | undefined = v.sections[sectionIndex]?.lessons[lessonIndex]?.name;
     const courseTitle: string | undefined = v.title;
     const sectionDescription: string | undefined = v.sections[sectionIndex]?.description;
@@ -60,7 +61,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
     }, [isPending, publicId]);
 
     // Poll for the result
-    const { status, draft } = useLessonDraft(isActive ? publicId : undefined);
+    const { status, draft } = useLessonDraft(isActive ? publicId : undefined, lessonId);
     // Current text in the description field
     const current = watch(descPath);
     const requestDraft = async () => {
@@ -74,6 +75,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
                 courseDescription: courseDescription,
                 lessonTitle: lessonTitle,
                 publicId,
+                lessonId,
                 // title: v.title,
                 category: v.category?.name,
                 level: v.level,

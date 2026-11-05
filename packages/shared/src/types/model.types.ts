@@ -12,6 +12,7 @@ export interface ICourse {
   ratingDistribution: number[];
   totalLessons: number;
   coverImage: string;
+  mp3Url:string;
   tags: string[];
   status: "draft" | "published" | "archived" | "deleted";
   isPaid: boolean;

@@ -37,6 +37,7 @@ import {
 // import { buildCoursePayload } from "@/utils/buildPayload/buildCoursePayload";
 import { JSX } from "react/jsx-runtime";
 import { cn } from "@/lib/utils";
+import { ObjectId } from "bson";
 
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +65,7 @@ type EditorCourseCompParams = {
 
 // default lesson shape in one place (match your schema's field names!)
 const EMPTY_LESSON = {
+  _id: new ObjectId().toHexString(),
   name: "",
   description: "",
   videoUrl: "",
@@ -76,8 +78,8 @@ const EMPTY_LESSON = {
   order: 0,
   isPreview: false,
 };
-const EMPTY_SECTION: CSection = {
-  _id: "",
+const createEmptySection = (): CSection => ({
+  _id: new ObjectId().toHexString(),
   courseId: "",
   title: "",
   description: "",
@@ -85,7 +87,7 @@ const EMPTY_SECTION: CSection = {
   lessons: [EMPTY_LESSON],
   createdAt: "",
   updatedAt: "",
-};
+});
 
 const getParentCategoryKey = (course: CCourse): string => {
   const parentName = course.category.parent?.name.toLowerCase() ?? "";
@@ -585,7 +587,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   variant="outline"
                   onClick={() =>
                     sections.append({
-                      ...EMPTY_SECTION,
+                      ...createEmptySection(),
                       order: form.getValues("dripType") === "free"
                         ? getNextCourseSectionOrder(form.getValues("sections"))
                         : EMPTY_LESSON.order,

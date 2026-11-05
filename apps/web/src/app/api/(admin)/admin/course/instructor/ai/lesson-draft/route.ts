@@ -4,7 +4,7 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { LEVELS } from "@/locales/locales";
 import { ISessionUser } from "@/types/server";
 import { getErrorMessage, USER_ROLE } from "@repo/shared";
-import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, connectDB, LessonTranscript, logger } from "@repo/shared/server";
+import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, connectDB, GENERATE_DESCRIPTION_STATUS, getCached, LessonTranscript, logger } from "@repo/shared/server";
 import axios from "axios";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
@@ -17,7 +17,7 @@ const lessonDraftRequestSchema = z.array(z.object({
     lessonId: z.string().trim().optional(),
     courseTitle: z.string().trim().optional(),
     courseDescription: z.string().trim().optional(),
-    lessonTitle:z.string().trim().optional(),
+    lessonTitle: z.string().trim().optional(),
     sectionTitle: z.string().trim().optional(),
     sectionDescription: z.string().trim().optional(),
     category: z.string().trim().optional(),
@@ -134,20 +134,28 @@ export async function GET(request: NextRequest) {
         const publicId = z.string().trim().min(1).max(255).safeParse(
             request.nextUrl.searchParams.get("publicId")
         );
+        const lessonId = z.string().trim().min(1).max(255).safeParse(request.nextUrl.searchParams.get("lessonId"));
         if (!publicId.success) {
             return failResponse({ message: "A valid publicId is required" }, 400, undefined, undefined, true);
         }
-
-        await connectDB(process.env.MONGODB_URI);
-        const transcript = await LessonTranscript.findOne({
-            publicId: publicId.data,
-            userId: sessionUser.id,
-        })
-            .select({ status: 1, draft: 1, _id: 0 })
-            .lean();
+        const transcript = await getCached<{
+            status?: "processing" | "ready" | "failed";
+            draft?: {
+                description?: string;
+                source?: "transcript" | "metadata";
+                faqs?: { question: string; answer: string }[];
+            };
+        }>(GENERATE_DESCRIPTION_STATUS.namespace, `:${publicId}:${sessionUser.id}:${lessonId}`);
+        // await connectDB(process.env.MONGODB_URI);
+        // const transcript = await LessonTranscript.findOne({
+        //     publicId: publicId.data,
+        //     userId: sessionUser.id,
+        // })
+        //     .select({ status: 1, draft: 1, _id: 0 })
+        //     .lean();
 
         return successResponse(
-            { status: transcript?.status ?? "idle", draft: transcript?.draft },
+            { status: transcript?.status ?? "idle", draft: transcript?.draft ?? {} },
             200,
             undefined,
             undefined,

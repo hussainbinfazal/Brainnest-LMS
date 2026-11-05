@@ -483,7 +483,7 @@ export const ATTEMPT_EMAIL_VERIFICATION = {
 
 export const GENERATE_DESCRIPTION_STATUS = {
   namespace: "draft:transcription",
-  id: "uploadId:userId",
+  id: "uploadId:userId:lessonId",
   ttl: "MEDIUM", //15 minutes
   description: "To get transcription status for a lesson",
   usedIn: ["Transcription Status API"],
