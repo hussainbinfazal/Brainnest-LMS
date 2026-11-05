@@ -226,4 +226,4 @@ export const toMp3Url = (videoUrl: string): string =>
         .replace(/\.[^/.]+$/, ".mp3");
 export const createMp3UrlFromId = (pendingId: string, cloudName: string): string =>
     // Start from the final video URL
-    `https://res.cloudinary.com/${cloudName}/video/upload/f_mp3/${pendingId}.mp3`;
+    `${process.env.CLOUDINARY_CLIENT_URL}/${cloudName}/${process.env.CLOUDINARY_MP3_PATH}/${pendingId}.${process.env.CLOUDINARY_MP3_EXTENSION}`;
