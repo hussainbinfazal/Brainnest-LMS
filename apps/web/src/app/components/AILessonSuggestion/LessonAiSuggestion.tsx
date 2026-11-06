@@ -42,6 +42,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
         // Fire and forget; the hook below handles progress
         requestLessonDraft([{
             publicId,
+            lessonId,
             lessonTitle: lessonTitle,
             sectionTitle: sectionTitle,
             sectionDescription: sectionDescription,
@@ -64,6 +65,7 @@ export function LessonAiSuggestion({ sectionIndex, lessonIndex }: { sectionIndex
     const { status, draft } = useLessonDraft(isActive ? publicId : undefined, lessonId);
     // Current text in the description field
     const current = watch(descPath);
+    console.log('This is the draft on LessonAiSuggestion Component', draft);
     const requestDraft = async () => {
         if (!publicId) return;
         const v = getValues();

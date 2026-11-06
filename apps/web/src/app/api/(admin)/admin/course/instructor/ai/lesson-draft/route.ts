@@ -4,7 +4,7 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { LEVELS } from "@/locales/locales";
 import { ISessionUser } from "@/types/server";
 import { getErrorMessage, USER_ROLE } from "@repo/shared";
-import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, connectDB, GENERATE_DESCRIPTION_STATUS, getCached, LessonTranscript, logger } from "@repo/shared/server";
+import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, GENERATE_DESCRIPTION_STATUS, getCachedHashIO, logger } from "@repo/shared/server";
 import axios from "axios";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
@@ -134,18 +134,32 @@ export async function GET(request: NextRequest) {
         const publicId = z.string().trim().min(1).max(255).safeParse(
             request.nextUrl.searchParams.get("publicId")
         );
-        const lessonId = z.string().trim().min(1).max(255).safeParse(request.nextUrl.searchParams.get("lessonId"));
+        const lessonId = z.string().trim().min(1).max(255).optional().safeParse(
+            request.nextUrl.searchParams.get("lessonId") ?? undefined
+        );
         if (!publicId.success) {
             return failResponse({ message: "A valid publicId is required" }, 400, undefined, undefined, true);
         }
-        const transcript = await getCached<{
-            status?: "processing" | "ready" | "failed";
-            draft?: {
-                description?: string;
-                source?: "transcript" | "metadata";
-                faqs?: { question: string; answer: string }[];
-            };
-        }>(GENERATE_DESCRIPTION_STATUS.namespace, `:${publicId}:${sessionUser.id}:${lessonId}`);
+        if (!lessonId.success) {
+            return failResponse({ message: "A valid lessonId is required" }, 400, undefined, undefined, true);
+        }
+
+        const cachedDraft = await getCachedHashIO(
+            GENERATE_DESCRIPTION_STATUS.namespace,
+            `${publicId.data}:${sessionUser.id}:${lessonId.data}`
+        );
+        const status = cachedDraft?.status;
+        const transcriptStatus =
+            status === "processing" || status === "ready" || status === "failed"
+                ? status
+                : "idle";
+        const draftSource = cachedDraft?.["draft.source"];
+        const transcriptDraft = {
+            description: cachedDraft?.["draft.description"],
+            ...(draftSource === "transcript" || draftSource === "metadata"
+                ? { source: draftSource }
+                : {}),
+        };
         // await connectDB(process.env.MONGODB_URI);
         // const transcript = await LessonTranscript.findOne({
         //     publicId: publicId.data,
@@ -155,7 +169,7 @@ export async function GET(request: NextRequest) {
         //     .lean();
 
         return successResponse(
-            { status: transcript?.status ?? "idle", draft: transcript?.draft ?? {} },
+            { status: transcriptStatus, draft: transcriptDraft },
             200,
             undefined,
             undefined,

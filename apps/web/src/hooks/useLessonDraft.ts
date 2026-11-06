@@ -10,7 +10,7 @@ type Draft = { description: string; faqs: { question: string; answer: string }[]
 type DraftState = { status: "idle" | "processing" | "ready" | "failed"; draft?: Draft };
 
 // Poll the status route until the draft is ready or failed
-export function useLessonDraft(publicId: string | undefined, lessonId: string): DraftState {
+export function useLessonDraft(publicId: string | undefined, lessonId?: string): DraftState {
     // Local state with the current status and draft
     const [state, setState] = useState<DraftState>({ status: "idle" });
     // Restart polling whenever the pending id changes (new video uploaded)
@@ -26,12 +26,14 @@ export function useLessonDraft(publicId: string | undefined, lessonId: string): 
         let tries = 0;
         // One poll
         const poll = async () => {
+            console.log("this is the public Id in the useLessonDraft Hook ", publicId, "This is the lesson Id on the worker side", lessonId)
             try {
                 // Ask the server for the current status (adjust to your successResponse shape)
                 const res = await axios.get("/api/admin/course/instructor/ai/lesson-draft", {
                     params: { publicId, lessonId },
                     signal: controller.signal,
                 });
+                console.log("This is the data on useLessonDraft Hook")
                 // Ignore late responses
                 if (cancelled) return;
                 // Save status and draft
@@ -56,7 +58,7 @@ export function useLessonDraft(publicId: string | undefined, lessonId: string): 
         poll();
         // Cleanup when the id changes or the component unmounts
         return () => { cancelled = true; clearTimeout(timer); };
-    }, [publicId]);
+    }, [publicId, lessonId]);
     // Expose the state to the component
     return state;
 }

@@ -49,6 +49,23 @@ export async function getCachedIO<T>(
     }
 }
 
+export async function getCachedHashIO(
+    namespace: string,
+    id: string | number
+): Promise<Record<string, string> | null> {
+    const key = buildKey(namespace, id);
+    if (USE_MEMORY || redisIsDown()) return memGet<Record<string, string>>(key);
+    try {
+        const value = await getIORedisClient().hgetall(key);
+        return Object.keys(value).length > 0 ? value : null;
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : err;
+        logger.error("[cache] getCachedHash failed for key:", { key, err: message, namespace });
+        markRedisDownFailure(err);
+        return null;
+    }
+}
+
 export async function setCachedIO<T>(
     namespace: string,
     id: string | number,
@@ -306,7 +323,9 @@ export async function setUpsertCachedIO<T extends object>(namespace: string, id:
     const key = buildKey(namespace, id);
     const clean = Object.fromEntries(Object.entries(value).filter(([, value]) => value !== undefined)) as Record<string, string>;
     const redisClient = getIORedisClient();
-    await redisClient.multi().hset(key, toIORedis(clean)).expire(key, ttlSeconds, "NX").exec();
+   const results = await redisClient.multi().hset(key, clean).expire(key, ttlSeconds, "NX").exec();
+   const commandError = results?.find(([error]) => error !== null)?.[0];
+   if (commandError) throw commandError;
 
 }
 ///Hash set helper to partial update same document,
