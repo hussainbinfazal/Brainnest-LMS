@@ -4,7 +4,7 @@ export { default as Category } from "./Course/categoryModel";
 export { default as Progress } from "./Course/progressModel";
 export { default as Enrollment } from "./Course/enrolledStudent";
 export { default as Lesson } from "./Course/lessonModel";
-export { LessonTranscript } from "./Course/lessonTranscriptSchema";
+// export { LessonTranscript } from "./Course/lessonTranscriptSchema";
 export { default as Section } from "./Course/sectionModel";
 export { default as Topic } from "./Course/topicModel";
 export { default as Review } from "./Course/reviewModel";
