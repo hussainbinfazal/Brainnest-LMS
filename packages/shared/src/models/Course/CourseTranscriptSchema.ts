@@ -9,6 +9,8 @@ type TranscriptSegment = {
 type LessonTranscriptEntry = {
     lessonId: string;
     lessonTranscript: string;
+    lessonTitle: string;
+    lessonDescription: string;
     lessonPreviewTranscript: string;
     lessonSegemnts: TranscriptSegment[];
     lessonPreviewSegments: TranscriptSegment[];
@@ -16,6 +18,8 @@ type LessonTranscriptEntry = {
 
 type ICourseTranscript = {
     courseId: string;
+    courseTitle: string;
+    courseDescription: string;
     previewTranscript: string;
     coursePreviewTranscript: string;
     lessonsTranscript: LessonTranscriptEntry[];
@@ -26,6 +30,14 @@ type ICourseTranscript = {
 const CourseTranscriptSchema = new Schema<ICourseTranscript>(
     {
         courseId: {
+            type: String,
+            required: true,
+        },
+        courseTitle: {
+            type: String,
+            required: true,
+        },
+        courseDescription: {
             type: String,
             required: true,
         },
@@ -40,6 +52,14 @@ const CourseTranscriptSchema = new Schema<ICourseTranscript>(
         lessonsTranscript: [
             {
                 lessonId: {
+                    type: String,
+                    required: true,
+                },
+                lessonTitle: {
+                    type: String,
+                    required: true,
+                },
+                lessonDescripton:{
                     type: String,
                     required: true,
                 },
