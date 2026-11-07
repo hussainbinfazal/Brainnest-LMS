@@ -22,7 +22,14 @@ export const OTP_VERIFY_EMAIL_IP_KEY = {
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
 } as const;
-
+export const WORKER_ENQUEUE_TRANSCRIBE = {
+  namespace: 'limit-worker-enqueue-transcribe',
+  id: 'ip',
+  max: 30,
+  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  description: 'Rate limit IPs on the verify-email-OTP route',
+  usedIn: ['User Verification'],
+}
 export const INTERNAL_AUTH_IP_KEY = {
   namespace: 'limit-internal-auth:ip',
   id: 'ip',
@@ -351,7 +358,7 @@ export const ADMIN_AI_LESSON_DRAFT_IP_KEY = {
   id: 'ip',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client IP', 
+  description: 'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin AI Lesson Draft API'],
 }
 export const ADMIN_AI_LESSON_DRAFT_USER_KEY = {
@@ -359,7 +366,7 @@ export const ADMIN_AI_LESSON_DRAFT_USER_KEY = {
   id: 'userId',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client userId', 
+  description: 'Rate limits instructor course detail reads and mutations by client userId',
   usedIn: ['Admin AI Lesson Draft API'],
 }
 export const ADMIN_COURSE_UPDATE_USER_KEY = {

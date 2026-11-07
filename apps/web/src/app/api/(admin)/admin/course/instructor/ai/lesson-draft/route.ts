@@ -4,7 +4,7 @@ import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { LEVELS } from "@/locales/locales";
 import { ISessionUser } from "@/types/server";
 import { getErrorMessage, USER_ROLE } from "@repo/shared";
-import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, GENERATE_DESCRIPTION_STATUS, getCachedHashIO, logger } from "@repo/shared/server";
+import { ADMIN_AI_LESSON_DRAFT_IP_KEY, ADMIN_AI_LESSON_DRAFT_USER_KEY, checkIp, checkUser, GENERATE_DESCRIPTION_STATUS, getCachedHash, logger } from "@repo/shared/server";
 import axios from "axios";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
             return failResponse({ message: "A valid lessonId is required" }, 400, undefined, undefined, true);
         }
 
-        const cachedDraft = await getCachedHashIO(
+        const cachedDraft = await getCachedHash(
             GENERATE_DESCRIPTION_STATUS.namespace,
             `${publicId.data}:${sessionUser.id}:${lessonId.data}`
         );
@@ -160,6 +160,13 @@ export async function GET(request: NextRequest) {
                 ? { source: draftSource }
                 : {}),
         };
+        logger.info("This the generated transcription on the server side of the lesson draft status route", {
+            publicId: publicId.data,
+            userId: sessionUser.id,
+            lessonId: lessonId.data,
+            status: transcriptStatus,
+            draft: transcriptDraft,
+        });
         // await connectDB(process.env.MONGODB_URI);
         // const transcript = await LessonTranscript.findOne({
         //     publicId: publicId.data,

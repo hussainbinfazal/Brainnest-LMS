@@ -54,11 +54,12 @@ export async function getCachedHashIO(
     id: string | number
 ): Promise<Record<string, string> | null> {
     const key = buildKey(namespace, id);
-    if (USE_MEMORY || redisIsDown()) return memGet<Record<string, string>>(key);
+    // if (USE_MEMORY || redisIsDown()) return memGet<Record<string, string>>(key);
     try {
         const value = await getIORedisClient().hgetall(key);
         return Object.keys(value).length > 0 ? value : null;
     } catch (err: unknown) {
+        console.log("This is the error on the cache")
         const message = err instanceof Error ? err.message : err;
         logger.error("[cache] getCachedHash failed for key:", { key, err: message, namespace });
         markRedisDownFailure(err);
@@ -319,8 +320,9 @@ export function draftStatusKeyIO(userId: string, uploadId: string) { return `${G
 
 
 export async function setUpsertCachedIO<T extends object>(namespace: string, id: string | number, value: T, ttlSeconds: number = CACHE_TTL.MEDIUM): Promise<void> {
-    if (USE_MEMORY || redisIsDown()) return memSet(buildKey(namespace, id), value, memTtlIO(ttlSeconds));
+    // if (USE_MEMORY || redisIsDown()) return memSet(buildKey(namespace, id), value, memTtlIO(ttlSeconds));
     const key = buildKey(namespace, id);
+    logger.info("set Upsert function is called with this key ", { key });
     const clean = Object.fromEntries(Object.entries(value).filter(([, value]) => value !== undefined)) as Record<string, string>;
     const redisClient = getIORedisClient();
    const results = await redisClient.multi().hset(key, clean).expire(key, ttlSeconds, "NX").exec();

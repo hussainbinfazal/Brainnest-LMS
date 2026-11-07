@@ -33,7 +33,7 @@ export function useLessonDraft(publicId: string | undefined, lessonId?: string):
                     params: { publicId, lessonId },
                     signal: controller.signal,
                 });
-                console.log("This is the data on useLessonDraft Hook")
+                console.log("This is the data on useLessonDraft Hook", res)
                 // Ignore late responses
                 if (cancelled) return;
                 // Save status and draft

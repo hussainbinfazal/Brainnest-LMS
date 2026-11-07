@@ -39,7 +39,24 @@ export async function getCached<T>(
     return null // fail open — don't let cache errors break the app
   }
 }
-
+export async function getCachedHash(
+  namespace: string,
+  id: string | number
+): Promise<Record<string, string> | null> {
+  const key = buildKey(namespace, id);
+  // if (USE_MEMORY || redisIsDown()) return memGet<Record<string, string>>(key);
+  try {
+    const redisClient = getRedisClient();
+    const value = await redisClient.hgetall<Record<string, string>>(key);
+    return value && Object.keys(value).length > 0 ? value : null;
+  } catch (err: unknown) {
+    console.log("This is the error on the cache web")
+    const message = err instanceof Error ? err.message : err;
+    logger.error("[Cache (web)] getCachedHash failed for key:", { key, err: message, namespace });
+    markRedisDownFailure(err);
+    return null;
+  };
+};
 export async function setCached<T>(
   namespace: string,
   id: string | number,
