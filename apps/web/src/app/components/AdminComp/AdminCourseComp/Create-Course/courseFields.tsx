@@ -370,10 +370,10 @@ export function LessonItem({
             />
           )}
         />
-        <Input
+        {/* <Input
           {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.description`)}
           placeholder="e.g. Variables, loops, functions"
-        />
+        /> */}
       </Field>
 
       <LessonAiSuggestion sectionIndex={sectionIndex} lessonIndex={lessonIndex} />
