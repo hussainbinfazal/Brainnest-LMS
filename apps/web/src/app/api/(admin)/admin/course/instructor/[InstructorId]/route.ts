@@ -2,7 +2,7 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 
 
 import { NextResponse } from "next/server";
-import { connectDB, INSTRUCTOR_COURSES_ALL, LIKED_COURSES_BY_USER } from '@repo/shared/server';
+import { connectDB, COURSE_EXISTS, INSTRUCTOR_COURSES_ALL, LIKED_COURSES_BY_USER } from '@repo/shared/server';
 import { Course, ICourse, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@repo/shared/server";
@@ -152,10 +152,11 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
         }
         await invalidateCached(INSTRUCTOR_COURSES_ALL.namespace, cacheId);
         await invalidateCached(LIKED_COURSES_BY_USER.namespace);
+        await invalidateCached(COURSE_EXISTS.namespace, courseId);
         logger.info("Course deleted successfully", { courseId });
         return successResponse({ message: "Course deleted successfully" }, 200, undefined, undefined, true)
     } catch (error: unknown) {
-        console.error("This is the error in delete instructor route",error)
+        console.error("This is the error in delete instructor route", error)
         const message: string = error instanceof Error ? error.message : "Something went wrong";
         logger.error("Something went wrong while deleting course", { error, message });
         return failResponse({ message: "Error in deleting course" }, 500, undefined, undefined, true)
