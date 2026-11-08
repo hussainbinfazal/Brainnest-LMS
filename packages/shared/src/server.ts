@@ -3,6 +3,7 @@ export * from "./types";
 export { logger } from "./logger/logger";
 export { nodeLogger, loggerInstance as nodeLoggerInstance } from "./logger/logger.node";
 export * from "./validators";
+export * from "./bodyValidator/bodyValidator";
 export * from "./timeFormat"
 export * from "./date";
 export * from "./schemaValidation/schema.validator.export";
@@ -18,5 +19,4 @@ export * from "./helper/controllerHelper";
 
 //Uplaod Config
 // packages/shared: single source of truth for upload purposes
-
 

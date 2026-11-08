@@ -2,7 +2,7 @@ import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper"
 
 
 import { NextResponse } from "next/server";
-import { connectDB, INSTRUCTOR_COURSES_ALL } from '@repo/shared/server';
+import { connectDB, INSTRUCTOR_COURSES_ALL, LIKED_COURSES_BY_USER } from '@repo/shared/server';
 import { Course, ICourse, validateMongooseId } from '@repo/shared/server';
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import { logger } from "@repo/shared/server";
@@ -151,6 +151,7 @@ export async function DELETE(request: CustomNextRequest, context: { params: Prom
             return failResponse({ message: "Course not found" }, 404, undefined, undefined, true);
         }
         await invalidateCached(INSTRUCTOR_COURSES_ALL.namespace, cacheId);
+        await invalidateCached(LIKED_COURSES_BY_USER.namespace);
         logger.info("Course deleted successfully", { courseId });
         return successResponse({ message: "Course deleted successfully" }, 200, undefined, undefined, true)
     } catch (error: unknown) {

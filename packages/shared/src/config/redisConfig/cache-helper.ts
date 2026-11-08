@@ -1,6 +1,6 @@
 import { getRedisClient, markRedisDownFailure, redisIsDown } from "./cache";
 import { logger } from "../../logger/logger";
-import { FALLBACK_TTL_SEC, memDecrIfExists, memDelete, memDeleteByPrefix, memGet, memIncr, memSet, memSetNX } from "./inmemory-cache-helper";
+import { FALLBACK_TTL_SEC, memDecrIfExists, memDelete, memDeleteByPrefix, memGet, memIncr, memSAdd, memSet, memSetNX } from "./inmemory-cache-helper";
 
 export const CACHE_TTL = {
   SHORT: 60, //1 min - volatile data (session type data)
@@ -180,6 +180,25 @@ export async function decrementIfExists(
     logger.error(`[cache] decrementIfExists failed for key :`, { key, err: message, namespace: namespace });
     markRedisDownFailure(err);
     return memDecrIfExists(key, by);
+  }
+}
+export async function setCachedSet(
+  namespace: string,
+  id: string | number,
+  data: string[],
+): Promise<number> {
+  const key = buildKey(namespace, id);
+  if (USE_MEMORY || redisIsDown()) return memSAdd(key, data);
+  if (data.length === 0) return 0;
+  try {
+    const redisClient = getRedisClient();
+    return await redisClient.sadd(key, data);
+  }
+  catch (err: unknown) {
+    const message = err instanceof Error ? err.message : err;
+    logger.error(`[cache] setCachedSet failed for key :`, { key, err: message, namespace: namespace });
+    markRedisDownFailure(err);
+    return memSAdd(key, data);
   }
 }
 

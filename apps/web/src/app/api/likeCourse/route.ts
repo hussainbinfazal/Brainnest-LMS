@@ -60,7 +60,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         };
         const courseIds = userCourses.map((uc) => uc.courseId);
         const courses: ICourse[] = await Course.find({
-            _id: { $in: courseIds }
+            _id: { $in: courseIds },
+            isDeleted: false
         })
             .populate("instructorId", "_id name email")
             .populate({
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             .limit(limit)
             .lean({ virtuals: true })
             .exec();
-        const totalCourseCount = await Course.countDocuments({ _id: { $in: courseIds } }).lean().exec();
+        const totalCourseCount = await Course.countDocuments({ _id: { $in: courseIds }, isDeleted: false }).lean().exec();
         const totalPages = Math.ceil(totalCourseCount / limit);
         const hasNextPage: boolean = page < totalPages;
         const hasPrevPage: boolean = page > 1;

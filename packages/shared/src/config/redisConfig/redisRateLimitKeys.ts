@@ -30,6 +30,14 @@ export const WORKER_ENQUEUE_TRANSCRIBE = {
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
 }
+export const WORKE_SYNC_USERCOURE_LIKE = {
+  namespace: 'limit-worker-sync-likes',
+  id: 'ip',
+  max: 30,
+  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  description: 'Rate limit IPs on the verify-email-OTP route',
+  usedIn: ['User Verification'],
+}
 export const INTERNAL_AUTH_IP_KEY = {
   namespace: 'limit-internal-auth:ip',
   id: 'ip',

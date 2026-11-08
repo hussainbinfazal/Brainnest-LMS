@@ -1,6 +1,8 @@
 
 type Entry = {
-    json: string; expiresAt: number | null
+    json: string;
+    expiresAt: number | null;
+    type?: "string" | "hash" | "set";
 };
 
 // Upper limit so a long dev session cannot grow memory forever
@@ -38,6 +40,9 @@ export function memGet<T>(key: string): T | null {
     const entry = live(key);
     ///Missing or expired
     if (!entry) return null;
+    if ((entry.type ?? "string") !== "string") {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
     return JSON.parse(entry.json) as T
 };
 
@@ -45,19 +50,48 @@ export function memGet<T>(key: string): T | null {
 export function memSet<T>(key: string, value: T, ttlSec: number): void {
     //Serialize like Upstash does; undefined becomes 'null' because JSON.stringify() return undefined for it
     ///Delete first so teh key moves to the end of the Map's insertion order
-    const v = { json: JSON.stringify(value) ?? 'null', expiresAt: ttlSec > 0 ? Date.now() + ttlSec * 1000 : null };
+    const v = { json: JSON.stringify(value) ?? 'null', expiresAt: ttlSec > 0 ? Date.now() + ttlSec * 1000 : null, type: "string" as const };
     insert(key, v);
 };
 
 export function memHSet(key: string, fields: Record<string, string>, ttlSec: number): void {
     const entry = live(key);
+    if (entry && (entry.type ?? "string") !== "hash") {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
     const current = entry ? JSON.parse(entry.json) as Record<string, string> : {};
     if (entry && (typeof current !== "object" || current === null || Array.isArray(current))) {
         throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
     }
 
     const expiresAt = entry?.expiresAt ?? (ttlSec > 0 ? Date.now() + ttlSec * 1000 : null);
-    insert(key, { json: JSON.stringify({ ...current, ...fields }), expiresAt });
+    insert(key, { json: JSON.stringify({ ...current, ...fields }), expiresAt, type: "hash" });
+};
+
+export function memSAdd(key: string, members: string[]): number {
+    if (members.length === 0) return 0;
+
+    const entry = live(key);
+    if (entry && (entry.type ?? "string") !== "set") {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
+
+    const currentMembers = entry ? JSON.parse(entry.json) as unknown : [];
+    if (!Array.isArray(currentMembers) || !currentMembers.every((member) => typeof member === "string")) {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
+
+    const nextMembers = new Set(currentMembers);
+    const previousSize = nextMembers.size;
+    for (const member of members) nextMembers.add(member);
+
+    insert(key, {
+        json: JSON.stringify([...nextMembers]),
+        expiresAt: entry?.expiresAt ?? null,
+        type: "set",
+    });
+
+    return nextMembers.size - previousSize;
 };
 
 
@@ -79,11 +113,14 @@ export function memSetNX(key: string, value: unknown, ttlSec: number): boolean {
 export function memIncr(key: string, by: number, ttlSec: number): number {
     ///Look up the current counter, if any
     const entry = live(key);
+    if (entry && (entry.type ?? "string") !== "string") {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
     //A missing key starts from 0, like Redis
     const next = (entry ? Number(JSON.parse(entry.json)) : 0) + by;
     const expiresAt = entry?.expiresAt ?? Date.now() + ttlSec * 1000;
     ///Save the new count
-    const v = { json: String(next), expiresAt };
+    const v = { json: String(next), expiresAt, type: "string" as const };
     insert(key, v)
     ///Return the new count
     return next;
@@ -96,10 +133,13 @@ export function memDecrIfExists(key: string, by: number): number | null {
     const entry = live(key);
     ///Missing or expired 
     if (!entry) return null;
+    if ((entry.type ?? "string") !== "string") {
+        throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+    }
     //Subtract and keep the original expiry 
     const next = Number(JSON.parse(entry.json)) - by;
     ///Save the new count
-    insert(key, { json: String(next), expiresAt: entry.expiresAt });
+    insert(key, { json: String(next), expiresAt: entry.expiresAt, type: "string" });
     ///Return the new count
     return next;
 }

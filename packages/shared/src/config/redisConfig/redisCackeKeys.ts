@@ -489,6 +489,36 @@ export const GENERATE_DESCRIPTION_STATUS = {
   usedIn: ["Transcription Status API"],
 }
 
+
+export const COURSE_LIKERS_STATUS = {
+  namespace: "course:likers",
+  id: "courseId:ready",
+  ttl: "MEDIUM", //15 minutes
+  description: "To get transcription status for a lesson",
+  usedIn: ["Transcription Status API"],
+}
+export const COURSE_LIKERS = {
+  namespace: "course:likers",
+  id: "courseId",
+  ttl: "MEDIUM", //15 minutes
+  description: "To get transcription status for a lesson",
+  usedIn: ["Transcription Status API"],
+}
+export const SYNC_LIKES = {
+  namespace: "likes",
+  id: "courseId",
+  ttl: "MEDIUM", //15 minutes
+  description: "To get transcription status for a lesson",
+  usedIn: ["Transcription Status API"],
+}
+export const COURSE_EXISTS = {
+  namespace: "course:exists",
+  id: "courseId",
+  ttl: "MEDIUM", //15 minutes
+  description: "To get transcription status for a lesson",
+  usedIn: ["Transcription Status API"],
+}
+
 /**
  * Queue Names (Used in apps/Worker/src/queue/)
  * These are handled by BullMQ and stored in Redis
