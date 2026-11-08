@@ -13,7 +13,7 @@ const razorpayService: RazorpayService = new RazorpayService(); // ✅ instantia
 export async function reconcileStuckOrders() {
     const tenMinutesAgo: Date = new Date(Date.now() - 10 * 60 * 1000);
     const stuckOrders: OrderDocument[] | null = await Order.find({
-        status: 'Pending',        
+        status: 'Pending',
         createdAt: { $lt: tenMinutesAgo }
     }).limit(50);
 
@@ -24,7 +24,7 @@ export async function reconcileStuckOrders() {
             const payment: PaymentsDocument | null = await Payment.findOne({ paymentOf: order._id });
             if (!payment) continue;
 
-          
+
             const razorpayPayment = await razorpayService.fetchPayment(payment.paymentId);
 
             if (razorpayPayment.status === 'captured') {
@@ -41,7 +41,8 @@ export async function reconcileStuckOrders() {
 
         } catch (error: unknown) {
             logger.error('Reconcile failed for order', { orderId: order._id, error });
-            continue;
+            // continue;
+            throw error;
         }
     }
 }
@@ -130,8 +131,8 @@ async function reconcileCoursePayment({ payment, session }: { payment: PaymentsD
                 { session }
             )
         ])
-    } catch (error: unknown) { 
-        
+    } catch (error: unknown) {
+        throw error
     };
 }
 
