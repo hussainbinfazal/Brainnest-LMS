@@ -110,18 +110,6 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
   const [reviews, setReviews] = useState<CReview[] | null>(initialReviews ?? null);
   const [userCourse, setUserCourse] = useState<CUserCourse | null>(userCourseStats ?? null)
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const isLiked = useUserCourseStore(
-    (state) =>
-      courseId
-        ? state.userCourseByCourseId[courseId]?.isLiked ?? false
-        : false
-  );
-  const isEnrolled = useUserCourseStore((
-    state) =>
-    courseId
-      ? state.userCourseByCourseId[courseId]?.isEnrolled ?? false
-      : false
-  );
   // console.log(" ----- > This is the isLiked state in the useUserCouresStore on courseId Page", isLiked);
   // console.log("This is the userCourse in zustand", userCourseByCourseId);
   const [viewSection, setViewSection] = useState<boolean>(false);
@@ -154,6 +142,19 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
     }
 
   });
+  const isLiked = useUserCourseStore(
+    (state) =>
+      courseId
+        ? state.userCourseByCourseId[courseId]?.isLiked ?? false
+        : false
+  );
+  const isEnrolled = useUserCourseStore((
+    state) =>
+    courseId
+      ? state.userCourseByCourseId[courseId]?.isEnrolled ?? false
+      : false
+  );
+  ///usecheckout hook 
   const fetchCourseProgress = useProgressStore(
     (state) => state.fetchCourseProgress
   );
