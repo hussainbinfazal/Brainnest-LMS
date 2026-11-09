@@ -11,9 +11,13 @@ export const PAYMENT_PROVIDER = {
 export const ORDER_STATUS = {
   PENDING: "Pending",
   COMPLETED: "Completed",
-  FAILED:"Failed",
+  FAILED: "Failed",
 } as const
 
+export const PAYMENT_SOURCE = {
+  WEB: "Web",
+  CHAT: "Chat",
+} as const
 
 export const RECONCILE_QUEUE = 'reconcileQueue';
 

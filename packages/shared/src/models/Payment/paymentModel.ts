@@ -19,14 +19,27 @@ export const paymentsSchema: Schema<IPayments> = new mongoose.Schema({
         ref: 'User'
     },
     paymentOf: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,///ChatId/ CourseId
         required: true,
         refPath: 'paymentOnModel'
+    },
+    error_code: String,
+    error_description: String,
+    error_source: String,
+    error_step: String,
+    error_reason: String,
+    paymentMethod: {
+        type: String,
+        required: true
     },
     paymentOnModel: {
         type: String,
         required: true,
         enum: ['Course', 'Chat']
+    },
+    razorpayOrderId: {
+        type: String,
+        required: true
     },
     paymentStatus: {
         type: String,

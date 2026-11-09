@@ -12,7 +12,7 @@ export interface ICourse {
   ratingDistribution: number[];
   totalLessons: number;
   coverImage: string;
-  mp3Url:string;
+  mp3Url: string;
   tags: string[];
   status: "draft" | "published" | "archived" | "deleted";
   isPaid: boolean;
@@ -215,6 +215,13 @@ export interface IPayments {
   paymentAt: Date;
   paymentBy: Types.ObjectId;
   paymentOf: Types.ObjectId;
+  paymentMethod: string;
+  razorpayOrderId: string;
+  error_code?: string;
+  error_description?: string;
+  error_source?: string;
+  error_step?: string;
+  error_reason?: string;
   paymentOnModel: 'Course' | 'Chat' | 'Order';
   paymentStatus: 'Pending' | 'Completed' | 'Failed';
 
@@ -335,6 +342,7 @@ export type CouponDocument = HydratedDocument<ICoupon>;
 export type CouponUsageDocument = HydratedDocument<ICouponUsage>;
 export type MessageDocument = HydratedDocument<IMessage>;
 export type OrderDocument = HydratedDocument<IOrder>;
+export type PaymentDocument = HydratedDocument<IPayments>;
 export type PaymentsDocument = HydratedDocument<IPayments>;
 export type ProgressDocument = HydratedDocument<IProgress>;
 export type UserDocument = HydratedDocument<IUser>;

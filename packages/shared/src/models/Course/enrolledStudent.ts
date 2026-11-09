@@ -21,3 +21,4 @@ enrollmentSchema.index({ courseId: 1, enrolledAt: -1 });
 const Enrollment: Model<IEnrollment> = mongoose.models.Enrollment || mongoose.model<IEnrollment>('Enrollment', enrollmentSchema);
 
 export default Enrollment;
+    

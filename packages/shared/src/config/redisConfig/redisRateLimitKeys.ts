@@ -30,6 +30,14 @@ export const WORKER_ENQUEUE_TRANSCRIBE = {
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
 }
+export const WORKER_SETTLE_PAYMENT = {
+  namespace: 'limit-worker-settle-payment',
+  id: 'ip',
+  max: 30,
+  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  description: 'Rate limit IPs on the verify-email-OTP route',
+  usedIn: ['User Verification'],
+}
 export const WORKE_SYNC_USERCOURE_LIKE = {
   namespace: 'limit-worker-sync-likes',
   id: 'ip',

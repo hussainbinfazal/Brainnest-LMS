@@ -1,6 +1,7 @@
   // models/Review.js
   import mongoose, { Model, Schema } from "mongoose";
   import { IReview } from "src/types";
+  import { ReviewStatus } from "./Enums";
 
 
 
@@ -12,8 +13,8 @@
     spamScore: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ["clean", "suspicious", "spam"],
-      default: "clean"
+      enum: Object.values(ReviewStatus),
+      default: ReviewStatus.Clean
     },
     ipAdress: { type: String },
     score: { type: Number, default: 0 }, // ⭐ IMPORTANT

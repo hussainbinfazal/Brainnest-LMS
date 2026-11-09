@@ -1,4 +1,5 @@
 import { Model, model, models, Schema } from "mongoose";
+import { CourseTranscriptStatus } from "./Enums";
 
 type TranscriptSegment = {
     start: number;
@@ -24,7 +25,7 @@ type ICourseTranscript = {
     coursePreviewTranscript: string;
     lessonsTranscript: LessonTranscriptEntry[];
     previewSegments: TranscriptSegment[];
-    status: "processing" | "ready" | "failed";
+    status: CourseTranscriptStatus;
 };
 
 const CourseTranscriptSchema = new Schema<ICourseTranscript>(
@@ -96,8 +97,8 @@ const CourseTranscriptSchema = new Schema<ICourseTranscript>(
         ],
         status: {
             type: String,
-            enum: ["processing", "ready", "failed"],
-            default: "processing",
+            enum: Object.values(CourseTranscriptStatus),
+            default: CourseTranscriptStatus.Processing,
             required: true,
         },
     },

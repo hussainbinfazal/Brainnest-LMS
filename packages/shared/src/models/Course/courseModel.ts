@@ -2,6 +2,7 @@ import mongoose, { Model } from "mongoose";
 import Lesson from "./lessonModel";
 import Section from "./sectionModel";
 import { ICourse } from "src/types";
+import { CourseDripType, CourseLevel, CourseStatus } from "./Enums";
 
 
 const courseSchema = new mongoose.Schema<ICourse>({
@@ -67,8 +68,8 @@ const courseSchema = new mongoose.Schema<ICourse>({
   ],
   status: {
     type: String,
-    enum: ['draft', 'published'],
-    default: 'draft'
+    enum: Object.values(CourseStatus),
+    default: CourseStatus.Draft
   },
   discount: {
     type: Number,
@@ -89,8 +90,8 @@ const courseSchema = new mongoose.Schema<ICourse>({
   },
   level: {
     type: String,
-    enum: ['beginner', 'intermediate', 'advanced'],
-    default: 'beginner'
+    enum: Object.values(CourseLevel),
+    default: CourseLevel.Beginner
   },
   totalEnrolledCount: {
     type: Number,
@@ -125,8 +126,8 @@ const courseSchema = new mongoose.Schema<ICourse>({
   },
   dripType: {
     type: String,
-    enum: ['free', 'sequential', 'drip-by-date'],
-    default: 'free'
+    enum: Object.values(CourseDripType),
+    default: CourseDripType.Free
   },
   isDeleted: {
     type: Boolean,

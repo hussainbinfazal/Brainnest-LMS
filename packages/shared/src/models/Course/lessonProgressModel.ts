@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import { ILessonProgress } from "src/types";
+import { LessonProgressStatus } from "./Enums";
 
 
 const lessonProgressSchema = new mongoose.Schema<ILessonProgress>({
@@ -9,8 +10,8 @@ const lessonProgressSchema = new mongoose.Schema<ILessonProgress>({
   lessonId: { type: Schema.Types.ObjectId, ref: "Lesson", required: true },
   status: {
     type: String,
-    enum: ["in_progress", "completed"],
-    default: "in_progress"
+    enum: Object.values(LessonProgressStatus),
+    default: LessonProgressStatus.InProgress
   },
   lastPositionSeconds: {
     type: Number,

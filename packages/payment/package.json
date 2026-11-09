@@ -18,6 +18,7 @@
   "type": "module",
   "dependencies": {
     "@repo/shared": "workspace:*",
+    "axios": "^1.21.0",
     "ioredis": "5.10.1",
     "razorpay": "^2.9.6"
   },

@@ -1,5 +1,6 @@
 export { default as Certificate } from "./Course/certificateModel";
 export { default as Course } from "./Course/courseModel";
+export * from "./Course/Enums";
 export { default as Category } from "./Course/categoryModel";
 export { default as Progress } from "./Course/progressModel";
 export { default as Enrollment } from "./Course/enrolledStudent";
@@ -12,12 +13,12 @@ export { default as User } from "./User/userModel";
 export { default as Coupon } from "./Coupon/couponModel";
 export { default as CouponUsage } from "./Coupon/couponUsageModel";
 export { default as Payment } from "./Payment/paymentModel";
-export {default as userCourse} from "./User/userCourse"
-export {default as UserToken} from "./User/userToken"
-export {default as Cart} from "./Cart/cartModel"
-export {default as Message} from "./Chat/messageModel"
-export {default as Chat} from "./Chat/chatModel"
-export {default as Order} from "./Cart/orderModel"
-export {default as LessonProgress} from "./Course/lessonProgressModel"
+export { default as userCourse } from "./User/userCourse"
+export { default as UserToken } from "./User/userToken"
+export { default as Cart } from "./Cart/cartModel"
+export { default as Message } from "./Chat/messageModel"
+export { default as Chat } from "./Chat/chatModel"
+export { default as Order } from "./Cart/orderModel"
+export { default as LessonProgress } from "./Course/lessonProgressModel"
 
 
