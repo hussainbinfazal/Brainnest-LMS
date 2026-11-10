@@ -1,14 +1,13 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument, } from '@repo/shared/server';
+import { Payment, User, Course, userCourse, Order, logger, connectDB, Enrollment, validateMongooseId, PaymentsDocument, OrderDocument, checkIp, } from '@repo/shared/server';
 import { ICourse, IOrder, IPayments, IUser } from '@repo/shared/server';
 import mongoose from 'mongoose';
 import { markPaymentCompleted, PaymentService } from '@repo/payment';
 import axios from 'axios';
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
-const paymentService: PaymentService = new PaymentService();
 const verifyPaymentBodySchema = z.object({
   orderId: z.string(),
   paymentId: z.string(),
@@ -18,6 +17,9 @@ const verifyPaymentBodySchema = z.object({
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const { allowed:ipAllowed, retryAfterSec:retryAfter, ip } = await checkIp(
+    
+  )
   await connectDB(process.env.MONGODB_URI!);
   const session: mongoose.ClientSession = await mongoose.startSession();
   let razorpayPaymentID: string | undefined = "";

@@ -291,13 +291,21 @@ export const ORDER_CREATE_CART_IP_KEY = {
   usedIn: ['Cart Order API'],
 } as const;
 
-export const ORDER_CREATE_COURSE_IP_KEY = {
-  namespace: 'limit-order-create-course:ip',
+export const INIT_PAYMENT_IP_KEY = {
+  namespace: 'limit-init-payment:ip',
   id: 'ip',
   max: 10,
   windowSec: 60,
-  description: 'Rate limits course checkout order creation by client IP',
-  usedIn: ['Course Order API'],
+  description: 'Rate limits initiate payment attempt by client IP',
+  usedIn: ['Initiate Payment API'],
+} as const;
+export const INIT_PAYMENT_USER_KEY = {
+  namespace: 'limit-init-payment:user',
+  id: 'user',
+  max: 10,
+  windowSec: 60,
+  description: 'Rate limits initiate payment attempt by userId',
+  usedIn: ['Initiate Payment API'],
 } as const;
 
 export const ORDER_UPDATE_IP_KEY = {
@@ -443,17 +451,17 @@ export const CRON_RECONCILE_IP_KEY = {
 
 export const PAYMENT_STATUS_IP_KEY = {
   namespace: `limit-order-status:ip`,
-  id:'ip',
-  max:100,
-  windowSec:60,
+  id: 'ip',
+  max: 100,
+  windowSec: 60,
   description: 'Rate limits order status requests by client IP',
   usedIn: ['Order Status API'],
 }
 export const PAYMENT_STATUS_USER_KEY = {
   namespace: `limit-order-status:user`,
-  id:'user',
-  max:100,
-  windowSec:60,
+  id: 'user',
+  max: 100,
+  windowSec: 60,
   description: 'Rate limits order status requests by client Id',
   usedIn: ['Order Status API'],
 }

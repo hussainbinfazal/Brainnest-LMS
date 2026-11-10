@@ -1,5 +1,5 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { User, Order, Course, checkIp, connectDB, validateMongooseId, logger, Enrollment, ORDER_CREATE_COURSE_IP_KEY, Payment } from '@repo/shared/server';
+import { User, Order, Course, checkIp, connectDB, validateMongooseId, logger, Enrollment, Payment, INIT_PAYMENT_USER_KEY, checkUser, INIT_PAYMENT_IP_KEY } from '@repo/shared/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
 
@@ -15,14 +15,32 @@ const createOrderBodySchema = z.object({
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
 
-    const { allowed, retryAfterSec, ip } = await checkIp(request, ORDER_CREATE_COURSE_IP_KEY.namespace, ORDER_CREATE_COURSE_IP_KEY.max, ORDER_CREATE_COURSE_IP_KEY.windowSec);
+    const { allowed, retryAfterSec, ip } = await checkIp(request, INIT_PAYMENT_IP_KEY.namespace, INIT_PAYMENT_IP_KEY.max, INIT_PAYMENT_IP_KEY.windowSec);
 
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
 
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
 
-
+    const {
+        allowed: isUserAllowed,
+        retryAfterSec: retryAfter,
+    } = await checkUser(
+        authSession.user.id,
+        INIT_PAYMENT_USER_KEY.namespace,
+        INIT_PAYMENT_USER_KEY.max,
+        INIT_PAYMENT_USER_KEY.windowSec
+    );
+    if (!isUserAllowed) {
+        logger.warn("Too many requests in order status route", { user: authSession.user.id });
+        return failResponse(
+            { message: "Too many requests" },
+            429,
+            undefined,
+            { "Retry-After": String(retryAfter) },
+            true
+        );
+    }
     const user: ISessionUser | null = authSession?.user;
     const userId: string | null = user.id;
     if (!user || !validateMongooseId({ userId })) {
