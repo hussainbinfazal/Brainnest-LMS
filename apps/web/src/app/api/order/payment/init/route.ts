@@ -44,7 +44,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
                 user: userId,
                 'orderItems.course': courseId,
                 isPaid: true
-            })
+            }).lean().exec()
         ])
 
         if (!course) {
