@@ -209,7 +209,7 @@ export function useRazorpayCheckout(options: UseRazorpayCheckoutOptions) {
                                 verifyError.response.status < 500
                             ) {
                                 clientLogger.error("Payment Verify Error", verifyError)
-                                fail(getErrorMessage(verifyError, "Payment verification failed."));
+                                return fail(getErrorMessage(verifyError, "Payment verification failed."));
                             }
                             //Could be network error or 500: the money may already captured by the server
                             update(CheckoutStatus.confirming);

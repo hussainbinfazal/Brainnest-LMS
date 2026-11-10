@@ -66,6 +66,7 @@ import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 import { useProgressStore } from "@/lib/store/usersStore/useProgressStore";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
+import { useRazorpayCheckout } from "@/hooks/Userazorpaycheckout";
 
 type UserProgressResult = { currentProgress: CProgress; lessons: CLessonProgress[] };
 interface CourseIdPageCompProps {
@@ -154,7 +155,19 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       ? state.userCourseByCourseId[courseId]?.isEnrolled ?? false
       : false
   );
+  ///Payment Hook
   ///usecheckout hook 
+  const { checkout, isBusy } = useRazorpayCheckout({
+    createOrderUrl: '/api/order/payment/init',
+    verifyUrl: '/api/order/payment/verify',
+    statusUrl: '/api/order/status',
+    brandName: 'Brainnest-LMS',
+    onSuccess: () => {
+      toast.success("Payment successful! You now have access to the course.");
+      fetchUser();
+
+    }
+  })
   const fetchCourseProgress = useProgressStore(
     (state) => state.fetchCourseProgress
   );
@@ -430,98 +443,105 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       }
     }
   };
-  const handleBuyNow = async (): Promise<void> => {
-    try {
-      // Check if user is logged in
-      if (!user) {
-        toast.error("Please login first");
-        return router.push("/login");
-      }
-
-      // Show loading state
-      toast.loading("Processing your purchase...");
-
-      // Create an order object with course details
-      const orderData = {
-        courseId: course?._id,
-        amount: course?.price,
-      };
-
-      // Call API to create order and process payment
-      const response = await axios.post(`/api/order/create`, orderData);
-      const data = response?.data;
-      setOrder(data);
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: Number(course?.price) * 100, // Amount in paisa
-        currency: "INR",
-        name: "Brainnest LMS",
-        description: `Purchase: ${course?.title}`,
-        order_id: data.razorpayOrderId,
-        handler: async function (response: any) {
-          try {
-            // Verify payment on backend
-            toast.loading("Verifying payment...");
-            const verification = await verifyPayment(response);
-
-            if (verification.success) {
-              toast.success(
-                "Payment successful! You now have access to the course."
-              );
-              setIsPaid(true);
-              // Redirect to course CourseIdPage or dashboard
-              toast.dismiss();
-              router.push(`/courses/${course?._id}`);
-              fetchUser();
-            } else {
-              toast.error(
-                "Payment verification failed. Please contact support."
-              );
-              // add verification failure handling here like order failed
-              toast.error(verification.data.message);
-            }
-          } catch (error: any) {
-            alert("Payment verification failed. Please contact support.");
-            toast.error(error.message || "Payment verification failed");
-            toast.dismiss();
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: user.phoneNumber || "",
-        },
-        theme: {
-          color: "#3399cc",
-        },
-        modal: {
-          ondismiss: function () {
-            setLoading(false);
-          },
-        },
-      };
-
-      const razor = new (window as any).Razorpay(options);
-      razor.open();
-      toast.dismiss();
-
-      if (response.data.success) {
-        toast.success("Course purchased successfully!");
-
-        // Refresh user data to update enrolled courses
-        await fetchUser();
-
-        // Redirect to course view CourseIdPage
-      } else {
-        toast.error(response.data.message || "Failed to process payment");
-      }
-    } catch (error: unknown) {
-      toast.dismiss();
-      // error.response?.data?.message || 
-      toast.error("Something went wrong");
-      alert("Failed to initiate payment. Please try again.");
+  const handleBuyNow = (): void => {
+    // Check if user is logged in
+    if (!user) {
+      toast.error("Please login first");
+      return router.push("/login");
     }
+    // if(!course._id)
+    checkout({
+      payload: {
+        courseId: course._id,
+      },
+      description: `Purchase: ${course.title}`,
+      prefill: { name: user.name, email: user.email },
+    })
+
+    // // Show loading state
+    // toast.loading("Processing your purchase...");
+
+    // Create an order object with course details
+    //   const orderData = {
+    //     courseId: course?._id,
+    //     amount: course?.price,
+    //   };
+
+    //   // Call API to create order and process payment
+    //   const response = await axios.post(`/api/order/create`, orderData);
+    //   const data = response?.data;
+    //   setOrder(data);
+
+    //   const options = {
+    //     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+    //     amount: Number(course?.price) * 100, // Amount in paisa
+    //     currency: "INR",
+    //     name: "Brainnest LMS",
+    //     description: `Purchase: ${course?.title}`,
+    //     order_id: data.razorpayOrderId,
+    //     handler: async function (response: any) {
+    //       try {
+    //         // Verify payment on backend
+    //         toast.loading("Verifying payment...");
+    //         const verification = await verifyPayment(response);
+
+    //         if (verification.success) {
+    //           toast.success(
+    //             "Payment successful! You now have access to the course."
+    //           );
+    //           setIsPaid(true);
+    //           // Redirect to course CourseIdPage or dashboard
+    //           toast.dismiss();
+    //           router.push(`/courses/${course?._id}`);
+    //           fetchUser();
+    //         } else {
+    //           toast.error(
+    //             "Payment verification failed. Please contact support."
+    //           );
+    //           // add verification failure handling here like order failed
+    //           toast.error(verification.data.message);
+    //         }
+    //       } catch (error: any) {
+    //         alert("Payment verification failed. Please contact support.");
+    //         toast.error(error.message || "Payment verification failed");
+    //         toast.dismiss();
+    //       }
+    //     },
+    //     prefill: {
+    //       name: user.name,
+    //       email: user.email,
+    //       contact: user.phoneNumber || "",
+    //     },
+    //     theme: {
+    //       color: "#3399cc",
+    //     },
+    //     modal: {
+    //       ondismiss: function () {
+    //         setLoading(false);
+    //       },
+    //     },
+    //   };
+
+    //   const razor = new (window as any).Razorpay(options);
+    //   razor.open();
+    //   toast.dismiss();
+
+    //   if (response.data.success) {
+    //     toast.success("Course purchased successfully!");
+
+    //     // Refresh user data to update enrolled courses
+    //     await fetchUser();
+
+    //     // Redirect to course view CourseIdPage
+    //   } else {
+    //     toast.error(response.data.message || "Failed to process payment");
+    //   }
+    // } catch (error: unknown) {
+    //   toast.dismiss();
+    //   // error.response?.data?.message || 
+    //   toast.error("Something went wrong");
+    //   alert("Failed to initiate payment. Please try again.");
+
   };
   const handleLikeClick = (): void => {
     if (!user) {
@@ -561,16 +581,16 @@ export default function CourseIdPageComp({ initialCourse, initialReviews, allCat
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
+  // useEffect(() => {
+  //   const script = document.createElement("script");
+  //   script.src = "https://checkout.razorpay.com/v1/checkout.js";
+  //   script.async = true;
+  //   document.body.appendChild(script);
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  //   return () => {
+  //     document.body.removeChild(script);
+  //   };
+  // }, []);
 
   useEffect((): void => {
     // Make sure cart is fetched when component mounts

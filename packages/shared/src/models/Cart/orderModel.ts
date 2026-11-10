@@ -6,6 +6,7 @@ import { IOrder } from 'src/types';
 const orderItemSchema = new Schema(
     {
         course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+        price: { type: number, required: true },
     },
     { _id: false }
 );

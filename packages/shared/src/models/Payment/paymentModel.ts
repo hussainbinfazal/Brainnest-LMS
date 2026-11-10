@@ -39,6 +39,8 @@ export const paymentsSchema: Schema<IPayments> = new mongoose.Schema({
     },
     razorpayOrderId: {
         type: String,
+        unique: true,
+        index: true,
         required: true
     },
     paymentStatus: {

@@ -430,6 +430,7 @@ export const COURSE_RATING_IP_KEY = {
   usedIn: ['Course Rating API'],
 } as const;
 
+
 export const CRON_RECONCILE_IP_KEY = {
   namespace: 'limit-cron-reconcile:ip',
   id: 'ip',
@@ -439,6 +440,23 @@ export const CRON_RECONCILE_IP_KEY = {
   usedIn: ['Payment Reconciliation Cron API'],
 } as const;
 
+
+export const PAYMENT_STATUS_IP_KEY = {
+  namespace: `limit-order-status:ip`,
+  id:'ip',
+  max:100,
+  windowSec:60,
+  description: 'Rate limits order status requests by client IP',
+  usedIn: ['Order Status API'],
+}
+export const PAYMENT_STATUS_USER_KEY = {
+  namespace: `limit-order-status:user`,
+  id:'user',
+  max:100,
+  windowSec:60,
+  description: 'Rate limits order status requests by client Id',
+  usedIn: ['Order Status API'],
+}
 // Generated key format: namespace:{ip} for IP limits and namespace:{userId} for user limits.
 export const RATE_LIMIT_KEYS_QUICK_REFERENCE = `
 REDIS RATE LIMIT KEYS - QUICK REFERENCE
