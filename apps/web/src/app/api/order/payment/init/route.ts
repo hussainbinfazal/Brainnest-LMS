@@ -32,7 +32,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         INIT_PAYMENT_USER_KEY.windowSec
     );
     if (!isUserAllowed) {
-        logger.warn("Too many requests in order status route", { user: authSession.user.id });
+        logger.warn("Too many requests in init payment route", { user: authSession.user.id });
         return failResponse(
             { message: "Too many requests" },
             429,

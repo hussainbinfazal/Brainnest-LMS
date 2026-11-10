@@ -307,6 +307,22 @@ export const INIT_PAYMENT_USER_KEY = {
   description: 'Rate limits initiate payment attempt by userId',
   usedIn: ['Initiate Payment API'],
 } as const;
+export const VERIFY_PAYMENT_IP_KEY = {
+  namespace: 'limit-verify-payment:ip',
+  id: 'ip',
+  max: 10,
+  windowSec: 60,
+  description: 'Rate limits verify payment attempt by client IP',
+  usedIn: ['Initiate Payment API'],
+} as const;
+export const VERIFY_PAYMENT_USER_KEY = {
+  namespace: 'limit-verify-payment:user',
+  id: 'user',
+  max: 10,
+  windowSec: 60,
+  description: 'Rate limits verify payment attempt by userId',
+  usedIn: ['Initiate Payment API'],
+} as const;
 
 export const ORDER_UPDATE_IP_KEY = {
   namespace: 'limit-order-update:ip',
