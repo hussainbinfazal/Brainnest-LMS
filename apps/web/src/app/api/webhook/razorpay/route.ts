@@ -10,7 +10,7 @@ export async function POST(request: CustomNextRequest) {
   if (!session) {
     logger.error('Webhook request for unauthorized user');
     return
-  }
+  };
   const userId = session.user.id;
   const body = await request.text(); // raw body for signature
   const signature = request.headers.get('x-razorpay-signature');
