@@ -193,12 +193,12 @@ export function useRazorpayCheckout(options: UseRazorpayCheckoutOptions) {
                     }) => {
                         update(CheckoutStatus.verifying);
 
-                        try {//send only three value from the client, and the server will use it to verify according to the session
+                        try {//Send only the three values returned by Checkout; the server fetches payment details.
                             await axios.post(
                                 optionRef.current.verifyUrl, {
                                 orderId: response.razorpay_order_id,
                                 paymentId: response.razorpay_payment_id,
-                                signature: response.razorpay_signature
+                                signature: response.razorpay_signature,
                             })
                             ///Verified and Settled
                             succeed()

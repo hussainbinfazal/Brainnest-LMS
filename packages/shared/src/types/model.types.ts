@@ -217,11 +217,6 @@ export interface IPayments {
   paymentOf: Types.ObjectId;
   paymentMethod: string;
   razorpayOrderId: string;
-  error_code?: string;
-  error_description?: string;
-  error_source?: string;
-  error_step?: string;
-  error_reason?: string;
   paymentOnModel: 'Course' | 'Chat' | 'Order';
   paymentStatus: 'Pending' | 'Completed' | 'Failed';
 

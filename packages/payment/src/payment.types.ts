@@ -22,11 +22,10 @@ export type PaymentHandlers = Record<string, PaymentHandler>
 
 export interface SettleInput {
   razorpayOrderId: string,
-  amount: number,
   paymentBy: string,
   razorpayPaymentId: string,
   paymentMethod: string,
-  error: {
+  error?: {
     code: string,
     description: string,
     source: string,

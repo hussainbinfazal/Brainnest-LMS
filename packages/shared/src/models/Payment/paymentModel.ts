@@ -8,6 +8,7 @@ export const paymentsSchema: Schema<IPayments> = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    ///RAZORPAY PAYMENT ID
     paymentId: {
         type: String
     },
@@ -23,11 +24,6 @@ export const paymentsSchema: Schema<IPayments> = new mongoose.Schema({
         required: true,
         refPath: 'paymentOnModel'
     },
-    error_code: String,
-    error_description: String,
-    error_source: String,
-    error_step: String,
-    error_reason: String,
     paymentMethod: {
         type: String,
         required: true
@@ -37,6 +33,7 @@ export const paymentsSchema: Schema<IPayments> = new mongoose.Schema({
         required: true,
         enum: ['Course', 'Chat']
     },
+    ///RAZORPAY ORDER ID
     razorpayOrderId: {
         type: String,
         unique: true,
