@@ -39,7 +39,7 @@ export class RazorpayService {
     currency,
     notes,
   }: RazorpayOrderParams) {
-    if (Number.isInteger(amountInPaise) || amountInPaise <= 0) {
+    if (!Number.isInteger(amountInPaise) || amountInPaise <= 0) {
       logger.error("Invalid amount requested");
       throw new Error("amountInPaise must be a positive integer");
     }

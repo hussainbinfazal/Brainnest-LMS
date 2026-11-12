@@ -14,8 +14,11 @@ const createOrderBodySchema = z.object({
 });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
+
     const { allowed, retryAfterSec, ip } = await checkIp(request, INIT_PAYMENT_IP_KEY.namespace, INIT_PAYMENT_IP_KEY.max, INIT_PAYMENT_IP_KEY.windowSec);
+
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
+
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
 
@@ -117,8 +120,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
                             course: courseId, price
                         }],
                         totalPrice: price,
-                        paymentMethod: 'Razorpay',
-                        razorpayOrderId: razorpayOrder.id,
                         status: ORDER_STATUS.PENDING,
                     }
                 ], { session });

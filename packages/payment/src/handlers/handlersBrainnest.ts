@@ -10,40 +10,31 @@ export const brainnestHandlers: PaymentHandlers = {
     ///Post Payment Settlement
     Course: {
         fulfill: async ({ payment, session }) => {
-
+            //Update Order status and other details
             const order: OrderDocument | null = await Order.findOneAndUpdate(
                 {
-                    _id: payment.paymentOf,
+                    user: payment.paymentBy,
                     status: {
                         $in: [
                             ORDER_STATUS.PENDING,
                             ORDER_STATUS.FAILED
                         ]
+                    }
+                }, {
+                $set: {
+                    status: ORDER_STATUS.COMPLETED,
+                    isPaid: true,
+                    paymentMethod: payment.paymentMethod,
+                    razorpayOrderId: payment.razorpayOrderId,
+                    paymentResult: {
+                        id: payment.paymentId,
+                        status: PAYMENT_STATUS.COMPLETED,
+                        update_time: new Date().toISOString(),
                     },
-
-                },
-                {
-                    $set: {
-                        status: ORDER_STATUS.COMPLETED, isPaid: true, paymentMethod: payment.paymentMethod, razarpayOrderId: payment.razorpayOrderId,
-                        paymentResult: {
-                            id: payment.paymentId,
-                            status: PAYMENT_STATUS.COMPLETED,
-                            update_time: new Date().toISOString(),
-                            error_code: payment.error_code ?? null,
-                            error_description: payment.error_description,
-                            error_source: payment.error_source,
-                            error_step: payment.error_step,
-                            error_reason: payment.error_reason
-
-                        },
-                        paidAt: new Date(),
-
-                        totalPrice: payment.amount
-                    },
-                },
-                { returnDocument: 'after', session }
-            );
-
+                    paidAt: new Date(),
+                    totalPrice: payment.amount
+                }
+            }, { returnDocument: "after", session });
             if (!order) throw new Error(`Order ${payment.paymentOf} is not payable`);
             const courseIds = order.orderItems.map(
                 (item: OrderDocument["orderItems"][number]) => item.course
@@ -87,7 +78,7 @@ export const brainnestHandlers: PaymentHandlers = {
         expire: async ({ payment, session }) => {
             await Order.updateOne(
                 { _id: payment.paymentBy, status: ORDER_STATUS.PENDING },
-                { $set: { status: ORDER_STATUS.FAILED, paymentResult: { id: payment.paymentId, status: PAYMENT_STATUS.FAILED, update_time: new Date().toISOString(), error_code: payment.error_code ?? null, error_description: payment.error_description, error_source: payment.error_source, error_step: payment.error_step, error_reason: payment.error_reason } } },
+                { $set: { status: ORDER_STATUS.FAILED, paymentResult: { id: payment.paymentId, status: PAYMENT_STATUS.FAILED, update_time: new Date().toISOString() } } },
                 { session }
             );
         }

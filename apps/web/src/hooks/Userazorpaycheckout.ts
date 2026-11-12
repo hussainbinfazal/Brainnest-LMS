@@ -161,7 +161,7 @@ export function useRazorpayCheckout(options: UseRazorpayCheckoutOptions) {
                 if (!scriptLoaded) return fail("Could not load the payment window. Check your connection.");
 
                 ///server creates Order, Payment and Razorpay Order from the item Id
-                const { data: order } = await axios.post<CreateOrderResponse>(
+                const { data: createdPayment } = await axios.post<CreateOrderResponse>(
                     ///Create Order API Url
                     optionRef.current.createOrderUrl,
                     ///Data required by create route in the object form
@@ -175,10 +175,10 @@ export function useRazorpayCheckout(options: UseRazorpayCheckoutOptions) {
                 const razorpay = new window.Razorpay({
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
                     key_secret: process.env.NEXT_PUBLIC_RAZORPAY_KEY_SECRET!,
-                    order_id: order.razorpayOrderId,
+                    order_id: createdPayment.razorpayOrderId,
                     // Amount from our server,
-                    amount: order.amount,
-                    currency: order.currency,
+                    amount: createdPayment.amount,
+                    currency: createdPayment.currency,
                     name: optionRef.current.brandName,
                     description: input.description,
                     prefill: input.prefill,

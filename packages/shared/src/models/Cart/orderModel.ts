@@ -6,7 +6,7 @@ import { IOrder } from 'src/types';
 const orderItemSchema = new Schema(
     {
         course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-        price: { type: number, required: true },
+        price: { type: Number, required: true },
     },
     { _id: false }
 );
@@ -16,11 +16,6 @@ const paymentResultSchema = new Schema(
         id: { type: String },
         status: { type: String },
         update_time: { type: String },
-        error_code: { type: String },
-        error_description: { type: String },
-        error_source: { type: String },
-        error_step: { type: String },
-        error_reason: { type: String },
     },
     { _id: false }
 );
