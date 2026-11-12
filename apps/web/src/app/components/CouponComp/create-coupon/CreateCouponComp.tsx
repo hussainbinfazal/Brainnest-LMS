@@ -20,11 +20,15 @@ import { CCreateCouponResponse } from "@/types/client";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { zodCouponSchema, CreateCoupon } from "@/utils/fieldsValidation/Client/couponSchemaValidation";
+import {
+  zodCouponSchema,
+  CreateCoupon,
+} from "@/utils/fieldsValidation/Client/couponSchemaValidation";
 import { cn } from "@/lib/utils";
 
-const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): React.JSX.Element => {
-
+const CreateCouponComp: React.FC<{ className?: string }> = ({
+  className,
+}): React.JSX.Element => {
   const form = useForm<CreateCoupon>({
     resolver: zodResolver(zodCouponSchema),
     defaultValues: {
@@ -34,8 +38,7 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
       maxUses: 0,
       expiresAt: "",
     },
-
-  })
+  });
   const {
     register,
     handleSubmit,
@@ -43,18 +46,17 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
   } = form;
 
   const router = useRouter();
-  const handleCreateCoupon = async (data:
-    CreateCoupon): Promise<void> => {
-
+  const handleCreateCoupon = async (data: CreateCoupon): Promise<void> => {
     try {
-      const response = await axios.post<CCreateCouponResponse>("/api/admin/coupon", data);
+      const response = await axios.post<CCreateCouponResponse>(
+        "/api/admin/coupon",
+        data
+      );
       toast.success("Coupon created successfully");
       router.push("/course/coupon");
     } catch (error: unknown) {
       const message =
-        error instanceof Error
-          ? error.message
-          : "Something went wrong";
+        error instanceof Error ? error.message : "Something went wrong";
 
       toast.error(message);
 
@@ -62,7 +64,12 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
     }
   };
   return (
-    <div className={cn("min-h-screen w-full flex items-center justify-center", className)}>
+    <div
+      className={cn(
+        "min-h-screen w-full flex items-center justify-center",
+        className
+      )}
+    >
       <div className="w-[70%] h-full flex items-center justify-center">
         <Card className="w-137.5 space-y-4">
           <CardHeader className="">
@@ -72,7 +79,10 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
             </CardDescription>
           </CardHeader>
           <CardContent className="">
-            <form className="space-y-4" onSubmit={handleSubmit(handleCreateCoupon)}>
+            <form
+              className="space-y-4"
+              onSubmit={handleSubmit(handleCreateCoupon)}
+            >
               <div className="space-y-2">
                 <Label className="">Coupon</Label>
                 <Input
@@ -82,21 +92,20 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
                   placeholder="e.g. JAVASCRIPT100"
                 />
                 {errors.code && (
-                  <p className="text-sm text-red-500">
-                    {errors.code.message}
-                  </p>
-                )}              </div>
+                  <p className="text-sm text-red-500">{errors.code.message}</p>
+                )}{" "}
+              </div>
               <div className="space-y-2">
                 <Label className="">Discount Value</Label>
                 <Input
                   className=""
                   {...register("discountValue", {
-                    valueAsNumber: true
+                    valueAsNumber: true,
                   })}
                   type="number"
                   placeholder="e.g. 10"
                 />
-               {errors.discountValue && (
+                {errors.discountValue && (
                   <p className="text-sm text-red-500">
                     {errors.discountValue.message}
                   </p>
@@ -126,7 +135,7 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
                   placeholder="e.g. 75"
                   {...register("maxUses", { valueAsNumber: true })}
                 />
-               {errors.maxUses && (
+                {errors.maxUses && (
                   <p className="text-sm text-red-500">
                     {errors.maxUses.message}
                   </p>
@@ -152,7 +161,6 @@ const CreateCouponComp: React.FC<{ className?: string }> = ({ className }): Reac
               </Button>
             </form>
           </CardContent>
-
         </Card>
       </div>
     </div>

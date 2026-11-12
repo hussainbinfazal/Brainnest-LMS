@@ -60,7 +60,6 @@ import {
 
 ///Slug Helper
 
-
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   const { allowed, retryAfterSec, ip } = await checkIp(
     request,
@@ -77,7 +76,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       true
     );
   let createdCourse: unknown;
-
 
   ///Every asset that must move out of the pending folders
 
@@ -201,10 +199,14 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   try {
     await verifyAssets(pendingAssets);
   } catch (err: unknown) {
-    console.error("This is the error in verifyAsset function ", err, err instanceof Error ? err.message : "Unknown error");
+    console.error(
+      "This is the error in verifyAsset function ",
+      err,
+      err instanceof Error ? err.message : "Unknown error"
+    );
     const status = err instanceof AssetError ? err.status : 500;
     // Safe to show: AssetError messages never contain Cloudinary internals
-    console.log("This is the error in asset verification ", err)
+    console.log("This is the error in asset verification ", err);
     const message =
       err instanceof AssetError ? err.message : "Asset verification failed";
     logger.error("verifyAssets failed in course create route", {
@@ -212,7 +214,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       message: err instanceof Error ? err.message : String(err),
       // The stack shows the exact line that threw
       stack: err instanceof Error ? err.stack : undefined,
-    })
+    });
     return failResponse({ message }, status, undefined, undefined, true);
   }
 
@@ -223,11 +225,18 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
   try {
     moved = await moveAssets(pendingAssets); ///Move all the pending assets
   } catch (err: unknown) {
-    console.error("This is the error in moveAssets", err, err instanceof Error ? err.message : "Unknown error");
+    console.error(
+      "This is the error in moveAssets",
+      err,
+      err instanceof Error ? err.message : "Unknown error"
+    );
 
     // Same mapping as above
     const status = err instanceof AssetError ? err.status : 500;
-    logger.error("This is the error in move Asset process in the course create route,", { error: err })
+    logger.error(
+      "This is the error in move Asset process in the course create route,",
+      { error: err }
+    );
     return failResponse(
       { message: "Failed to process uploaded files" },
       status,
@@ -243,7 +252,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     const asset = moved.get(pendingId);
     // Fail loudly with the id, instead of a vague TypeError
     if (!asset) {
-      logger.error("Asset not present in the moved state,")
+      logger.error("Asset not present in the moved state,");
       throw new Error(`No moved asset for ${pendingId}`);
     }
     // Return the final HTTPS URL
@@ -315,7 +324,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       body.topics.forEach((t) =>
         topicMap.set(t.name.trim().toLowerCase(), {
           name: t.name.trim(),
-          description: t.description ?? '',
+          description: t.description ?? "",
         })
       );
 
@@ -363,13 +372,14 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         .session(session)
         .lean();
       ///Pre Assingn section Ids so lessons can reference them without index guessing
-      const sectionDocs: (ISection & { _id: Types.ObjectId })[] = body.sections.map((s) => ({
-        _id: new Types.ObjectId(),
-        courseId,
-        title: s.title,
-        description: s.description,
-        order: s.order,
-      }));
+      const sectionDocs: (ISection & { _id: Types.ObjectId })[] =
+        body.sections.map((s) => ({
+          _id: new Types.ObjectId(),
+          courseId,
+          title: s.title,
+          description: s.description,
+          order: s.order,
+        }));
       ///Flatten lessons while keeping the each one linked to its section
       const lessonDocs: ILesson[] = body.sections.flatMap((s, sIndex) =>
         s.lessons.map((l, lIndex) => ({
@@ -434,7 +444,11 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       createdCourse = course;
     });
   } catch (error: unknown) {
-    console.error("This is the error in admin course route", error, error instanceof Error ? error.message : "Unknown error");
+    console.error(
+      "This is the error in admin course route",
+      error,
+      error instanceof Error ? error.message : "Unknown error"
+    );
     await rollbackMoves([...moved.values()]);
     logger.error("Error in creating course", {
       error: error instanceof Error ? error.message : "Unknown error",

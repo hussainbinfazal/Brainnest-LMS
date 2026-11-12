@@ -1,12 +1,18 @@
 import { loadEnvConfig } from "@next/env";
 const projectDir = process.cwd();
 loadEnvConfig(projectDir);
-import { computeBloomSizing, setActivateBloomConfig } from "@/lib/bloomFilter/bloomConfig";
-import { connectDB, User } from '@repo/shared/server';
+import {
+  computeBloomSizing,
+  setActivateBloomConfig,
+} from "@/lib/bloomFilter/bloomConfig";
+import { connectDB, User } from "@repo/shared/server";
 import { runPipeline } from "@repo/shared/config/redisConfig/cache-helper";
 import { x86 } from "murmurhash3js";
 ///IT is compulsary to run this at least once before running the bloom filter for the first time.
-console.log("This is the mongoDB URI in the populateBloomFilter", process.env.MONGODB_URI!);
+console.log(
+  "This is the mongoDB URI in the populateBloomFilter",
+  process.env.MONGODB_URI!
+);
 async function main() {
   const targetFpRate = Number(process.argv[2] ?? 0.01);
   await connectDB(process.env.MONGODB_URI!);
@@ -27,17 +33,20 @@ async function main() {
 
   const flush = async () => {
     if (batch.length === 0) return;
-    await runPipeline((p) => {
-      batch.forEach((username) => {
-        const normalized = username.toLowerCase();
-        const h1 = x86.hash32(normalized, 1);
-        const h2 = x86.hash32(normalized, 2);
-        for (let i = 0; i < numHashes; i++) {
-          const pos = ((h1 + i * h2) >>> 0) % size;
-          p.setbit(dataKey, pos, 1);
-        }
-      });
-    }, { count: batch.length });
+    await runPipeline(
+      (p) => {
+        batch.forEach((username) => {
+          const normalized = username.toLowerCase();
+          const h1 = x86.hash32(normalized, 1);
+          const h2 = x86.hash32(normalized, 2);
+          for (let i = 0; i < numHashes; i++) {
+            const pos = ((h1 + i * h2) >>> 0) % size;
+            p.setbit(dataKey, pos, 1);
+          }
+        });
+      },
+      { count: batch.length }
+    );
     total += batch.length;
     batch = [];
   };
@@ -51,7 +60,9 @@ async function main() {
 
   await setActivateBloomConfig({ dataKey, size, numHashes });
 
-  console.log(`Bloom filter populated with ${total} usernames and set as active`);
+  console.log(
+    `Bloom filter populated with ${total} usernames and set as active`
+  );
   process.exit(0);
 }
 

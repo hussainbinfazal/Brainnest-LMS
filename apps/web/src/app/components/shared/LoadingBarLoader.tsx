@@ -4,8 +4,11 @@ import { CLoadingBarLoaderProps } from "@/types/client";
 import { useTheme } from "next-themes";
 import { BarLoader } from "react-spinners";
 
-
-const LoadingBarLoader = ({ isLoading = true, color: color, className = "" }: CLoadingBarLoaderProps) => {
+const LoadingBarLoader = ({
+  isLoading = true,
+  color: color,
+  className = "",
+}: CLoadingBarLoaderProps) => {
   const { theme } = useTheme();
 
   // Determine the color based on props or theme

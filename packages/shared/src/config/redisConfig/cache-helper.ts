@@ -1,47 +1,60 @@
-import { getRedisClient, markRedisDownFailure, redisIsDown } from "./cache";
-import { logger } from "../../logger/logger";
-import { FALLBACK_TTL_SEC, memDecrIfExists, memDelete, memDeleteByPrefix, memGet, memIncr, memSAdd, memSet, memSetNX } from "./inmemory-cache-helper";
+import { logger } from '../../logger/logger';
+import { getRedisClient, markRedisDownFailure, redisIsDown } from './cache';
+import {
+  FALLBACK_TTL_SEC,
+  memDecrIfExists,
+  memDelete,
+  memDeleteByPrefix,
+  memGet,
+  memIncr,
+  memSAdd,
+  memSet,
+  memSetNX,
+} from './inmemory-cache-helper';
 
 export const CACHE_TTL = {
   SHORT: 60, //1 min - volatile data (session type data)
   MEDIUM: 60 * 15, // 15 min -  semi-stable (course listing like this )
   LONG: 60 * 60, // 1 hour
-  VERY_LONG: 24 * 60 * 60 //24 hour - rarely changes(static config)
-} as const
-
+  VERY_LONG: 24 * 60 * 60, //24 hour - rarely changes(static config)
+} as const;
 
 export function buildKey(namespace: string, id: string | number): string {
-  return `${namespace}:{${id}}` //Redis Cluster hashes only what's inside the first {}. Same content inside braces → same slot → same node → safe to use together in MULTI/EXEC or Lua. (Hash tags in Redis Cluster: force related keys onto the same node.)
-};
+  return `${namespace}:{${id}}`; //Redis Cluster hashes only what's inside the first {}. Same content inside braces → same slot → same node → safe to use together in MULTI/EXEC or Lua. (Hash tags in Redis Cluster: force related keys onto the same node.)
+}
 
-export const USE_MEMORY = process.env.NODE_ENV !== "production";
-
-
+export const USE_MEMORY = process.env.NODE_ENV !== 'production';
 
 export async function getCached<T>(
   namespace: string,
-  id: string | number
+  id: string | number,
 ): Promise<T | null> {
-  const key: string = buildKey(namespace, id)
+  const key: string = buildKey(namespace, id);
   if (USE_MEMORY || redisIsDown()) return memGet<T>(key);
   try {
-
-    const redisClient = getRedisClient()
+    const redisClient = getRedisClient();
     // const response = await redisClient.ping();
-    const value = await redisClient.get<T>(key)
+    const value = await redisClient.get<T>(key);
 
-    logger.info(`[cache] getCached for key:`, { key: key, namespace: namespace })
-    return value ?? null
+    logger.info(`[cache] getCached for key:`, {
+      key: key,
+      namespace: namespace,
+    });
+    return value ?? null;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : err
-    logger.error(`[cache] getCached failed for key:`, { key: key, err: message, namespace: namespace })
-    markRedisDownFailure(err)
-    return null // fail open — don't let cache errors break the app
+    const message = err instanceof Error ? err.message : err;
+    logger.error(`[cache] getCached failed for key:`, {
+      key: key,
+      err: message,
+      namespace: namespace,
+    });
+    markRedisDownFailure(err);
+    return null; // fail open — don't let cache errors break the app
   }
 }
 export async function getCachedHash(
   namespace: string,
-  id: string | number
+  id: string | number,
 ): Promise<Record<string, string> | null> {
   const key = buildKey(namespace, id);
   // if (USE_MEMORY || redisIsDown()) return memGet<Record<string, string>>(key);
@@ -50,37 +63,46 @@ export async function getCachedHash(
     const value = await redisClient.hgetall<Record<string, string>>(key);
     return value && Object.keys(value).length > 0 ? value : null;
   } catch (err: unknown) {
-    console.log("This is the error on the cache web")
+    console.log('This is the error on the cache web');
     const message = err instanceof Error ? err.message : err;
-    logger.error("[Cache (web)] getCachedHash failed for key:", { key, err: message, namespace });
+    logger.error('[Cache (web)] getCachedHash failed for key:', {
+      key,
+      err: message,
+      namespace,
+    });
     markRedisDownFailure(err);
     return null;
-  };
-};
+  }
+}
 export async function setCached<T>(
   namespace: string,
   id: string | number,
   value: T,
-  ttlSeconds: number = CACHE_TTL.MEDIUM
+  ttlSeconds: number = CACHE_TTL.MEDIUM,
 ): Promise<void> {
-  const key = buildKey(namespace, id)
-  if (USE_MEMORY || redisIsDown()) return memSet(key, value, memTtl(ttlSeconds));
+  const key = buildKey(namespace, id);
+  if (USE_MEMORY || redisIsDown())
+    return memSet(key, value, memTtl(ttlSeconds));
   try {
-    const redisClient = getRedisClient()
+    const redisClient = getRedisClient();
     const response = await redisClient.ping();
-    logger.info("Redis ping successful", { response });
+    logger.info('Redis ping successful', { response });
     await redisClient.set(key, value, { ex: memTtl(ttlSeconds) });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : err
-    logger.error(`[cache] setCached failed for key :`, { key, err: message, namespace: namespace })
-    markRedisDownFailure(err)
+    const message = err instanceof Error ? err.message : err;
+    logger.error(`[cache] setCached failed for key :`, {
+      key,
+      err: message,
+      namespace: namespace,
+    });
+    markRedisDownFailure(err);
     // fail silently — a cache write failure shouldn't break the request
   }
 }
 
 export async function invalidateCached(
   namespace: string,
-  id?: string | number
+  id?: string | number,
 ): Promise<void> {
   if (id !== undefined) memDelete(buildKey(namespace, id));
   // No id: wipe every key that starts with "namespace:"
@@ -88,48 +110,60 @@ export async function invalidateCached(
   // Development or breaker open: nothing more to do (see the note below about lost deletes)
   if (USE_MEMORY || redisIsDown()) return;
   try {
-    const redisClient = getRedisClient()
+    const redisClient = getRedisClient();
     if (id !== undefined) {
-      await redisClient.del(buildKey(namespace, id))
-      return
+      await redisClient.del(buildKey(namespace, id));
+      return;
     }
 
     // no id → wipe everything under this namespace
-    let cursor = 0
+    let cursor = 0;
     do {
       const result = await redisClient.scan(cursor, {
         match: `${namespace}:*`,
         count: 100,
-      })
-      cursor = Number(result[0])
-      const keys = result[1]
+      });
+      cursor = Number(result[0]);
+      const keys = result[1];
       if (keys.length > 0) {
-        await redisClient.del(...keys)
+        await redisClient.del(...keys);
       }
-    } while (cursor !== 0)
+    } while (cursor !== 0);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : err
-    logger.error(`[cache] invalidateCached failed for namespace:`, { err: message, namespace: namespace })
-    markRedisDownFailure(err)
-
+    const message = err instanceof Error ? err.message : err;
+    logger.error(`[cache] invalidateCached failed for namespace:`, {
+      err: message,
+      namespace: namespace,
+    });
+    markRedisDownFailure(err);
   }
 }
 
-
-
 //
-export async function setOnlyIfNotExist(namespace: string, id: string | number, value: string, ttlSeconds: number = CACHE_TTL.SHORT): Promise<boolean> {
-  const key = buildKey(namespace, id)
-  if (USE_MEMORY || redisIsDown()) return memSetNX(key, value, memTtl(ttlSeconds));
-  try {
-    const result = await getRedisClient().set(key, value, { ex: ttlSeconds, nx: true }) //nx means only set if key doesn't exist
-    return result === "OK" //null when key already exists
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : err
-    logger.error(`[cache] setOnlyIfNotExist failed for key :`, { key, err: message, namespace: namespace })
-    markRedisDownFailure(err)
+export async function setOnlyIfNotExist(
+  namespace: string,
+  id: string | number,
+  value: string,
+  ttlSeconds: number = CACHE_TTL.SHORT,
+): Promise<boolean> {
+  const key = buildKey(namespace, id);
+  if (USE_MEMORY || redisIsDown())
     return memSetNX(key, value, memTtl(ttlSeconds));
-
+  try {
+    const result = await getRedisClient().set(key, value, {
+      ex: ttlSeconds,
+      nx: true,
+    }); //nx means only set if key doesn't exist
+    return result === 'OK'; //null when key already exists
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : err;
+    logger.error(`[cache] setOnlyIfNotExist failed for key :`, {
+      key,
+      err: message,
+      namespace: namespace,
+    });
+    markRedisDownFailure(err);
+    return memSetNX(key, value, memTtl(ttlSeconds));
   }
 }
 
@@ -139,9 +173,10 @@ export async function incrementWithTtl(
   ttlSeconds: number,
   by = 1,
 ): Promise<number> {
-  const key = buildKey(namespace, id)
+  const key = buildKey(namespace, id);
   try {
-    if (USE_MEMORY || redisIsDown()) return memIncr(key, by, memTtl(ttlSeconds));
+    if (USE_MEMORY || redisIsDown())
+      return memIncr(key, by, memTtl(ttlSeconds));
     const tx = getRedisClient().multi();
     tx.incrby(key, by);
     tx.expire(key, ttlSeconds, 'NX'); // TTL only if the key has none
@@ -149,10 +184,13 @@ export async function incrementWithTtl(
     return count;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err;
-    logger.error(`[cache] incrementWithTtl failed for key :`, { key, err: message, namespace: namespace });
+    logger.error(`[cache] incrementWithTtl failed for key :`, {
+      key,
+      err: message,
+      namespace: namespace,
+    });
     markRedisDownFailure(err);
     return memIncr(key, by, ttlSeconds);
-
   }
 }
 
@@ -173,11 +211,18 @@ export async function decrementIfExists(
   const key = buildKey(namespace, id);
   if (USE_MEMORY || redisIsDown()) return memDecrIfExists(key, by);
   try {
-    return (await getRedisClient().eval(DECR_IF_EXISTS, [key], [String(by)])) as number | null;
-  }
-  catch (err: unknown) {
+    return (await getRedisClient().eval(
+      DECR_IF_EXISTS,
+      [key],
+      [String(by)],
+    )) as number | null;
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err;
-    logger.error(`[cache] decrementIfExists failed for key :`, { key, err: message, namespace: namespace });
+    logger.error(`[cache] decrementIfExists failed for key :`, {
+      key,
+      err: message,
+      namespace: namespace,
+    });
     markRedisDownFailure(err);
     return memDecrIfExists(key, by);
   }
@@ -193,24 +238,33 @@ export async function setCachedSet(
   try {
     const redisClient = getRedisClient();
     return await redisClient.sadd(key, data);
-  }
-  catch (err: unknown) {
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : err;
-    logger.error(`[cache] setCachedSet failed for key :`, { key, err: message, namespace: namespace });
+    logger.error(`[cache] setCachedSet failed for key :`, {
+      key,
+      err: message,
+      namespace: namespace,
+    });
     markRedisDownFailure(err);
     return memSAdd(key, data);
   }
 }
 
-//Get Cache in Batch 
+//Get Cache in Batch
 // Fetch multiple keys under one namespace in a single round trip.
-export async function getCachedMany<T>(entries: { namespace: string, id: string | number }[], namespace: string[], ids: (string | number)[]): Promise<Map<string | number, T | null>> {
+export async function getCachedMany<T>(
+  entries: { namespace: string; id: string | number }[],
+  namespace: string[],
+  ids: (string | number)[],
+): Promise<Map<string | number, T | null>> {
   // const keys = entries.map(({ namespace, id }) => buildKey(namespace, id));
   const out = new Map<string | number, T | null>();
   if (entries.length === 0) return out;
   // if (USE_MEMORY || redisIsDown()) { entries.forEach((e, i) => out.set(ids[i], memGet<T>(buildKey(e.namespace, e.id)))); return out; }
 
-  const results = await execOps<T>(entries.map((e) => ({ namespace: e.namespace, id: e.id, type: "get" })));
+  const results = await execOps<T>(
+    entries.map((e) => ({ namespace: e.namespace, id: e.id, type: 'get' })),
+  );
   // const results = await runPipeline<T | null>(
   //   (p) => keys.forEach((key) => p.get(key)),
   //   { count: entries.length, namespaces: [...new Set(entries.map((e) => e.namespace))] }
@@ -220,9 +274,9 @@ export async function getCachedMany<T>(entries: { namespace: string, id: string 
   entries.forEach((_, i) => {
     out.set(ids[i], (results[i] as T | null | undefined) ?? null);
   });
-  logger.info("[cache] getCachedMany", { count: entries.length });
+  logger.info('[cache] getCachedMany', { count: entries.length });
   return out;
-};
+}
 
 //Usage example
 // const results = await getCachedMany([
@@ -236,12 +290,24 @@ export async function getCachedMany<T>(entries: { namespace: string, id: string 
 //Set Cached Many
 //Set multiple keys under one namespace in a single round trip.
 export async function setCachedMany<T>(
-
-  entries: { namespace: string, id: string | number; value: T; ttlSeconds?: number }[]
+  entries: {
+    namespace: string;
+    id: string | number;
+    value: T;
+    ttlSeconds?: number;
+  }[],
 ): Promise<void> {
   if (entries.length === 0) return;
   ///Turn each entry into a set operation with the default ttl
-  await execOps<T>(entries.map((e) => ({ namespace: e.namespace, id: e.id, type: "set" as const, value: e.value, ttlSeconds: e.ttlSeconds ?? CACHE_TTL.MEDIUM })));
+  await execOps<T>(
+    entries.map((e) => ({
+      namespace: e.namespace,
+      id: e.id,
+      type: 'set' as const,
+      value: e.value,
+      ttlSeconds: e.ttlSeconds ?? CACHE_TTL.MEDIUM,
+    })),
+  );
   // await runPipeline(
   //   //Build pipeline of set commands
   //   (p) => entries.forEach(({ namespace, id, value, ttlSeconds = CACHE_TTL.MEDIUM }) => p.set(buildKey(namespace, id), value, { ex: ttlSeconds })),
@@ -250,45 +316,47 @@ export async function setCachedMany<T>(
   //   { count: entries.length, namespaces: [...new Set(entries.map((e) => e.namespace))] }
 
   // );
-  logger.info("[cache] setCachedMany", { count: entries.length });
-};
-
-
-
+  logger.info('[cache] setCachedMany', { count: entries.length });
+}
 
 ///Set cache with redis pipeline
 export async function runPipeline<T = unknown>(
-  build: (pipeline: ReturnType<ReturnType<typeof getRedisClient>["pipeline"]>) => void,
-  context: Record<string, unknown>
+  build: (
+    pipeline: ReturnType<ReturnType<typeof getRedisClient>['pipeline']>,
+  ) => void,
+  context: Record<string, unknown>,
 ): Promise<T[] | null> {
   if (USE_MEMORY || redisIsDown()) return null;
   try {
-
     const redisClient: ReturnType<typeof getRedisClient> = getRedisClient();
-    const pipeLine: ReturnType<ReturnType<typeof getRedisClient>["pipeline"]> = redisClient.pipeline();
+    const pipeLine: ReturnType<ReturnType<typeof getRedisClient>['pipeline']> =
+      redisClient.pipeline();
     build(pipeLine);
     const response = await pipeLine.exec();
     return response as T[];
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : error;
-    logger.error(`[cache] runPipeline failed for context :`, { context, err: message });
+    logger.error(`[cache] runPipeline failed for context :`, {
+      context,
+      err: message,
+    });
     markRedisDownFailure(error);
-    return null
+    return null;
   }
 }
 
 // Development keeps the full TTL; an outage caps it so stale data stays short-lived
-const memTtl = (ttl: number): number => (USE_MEMORY) ? ttl : Math.min(ttl, FALLBACK_TTL_SEC);
+const memTtl = (ttl: number): number =>
+  USE_MEMORY ? ttl : Math.min(ttl, FALLBACK_TTL_SEC);
 
 function memApplyOpsToMemory<T>(ops: CacheOp<T>[]): unknown[] {
   ///Operations are applied in order
   return ops.map((op) => {
-    const key = buildKey(op.namespace, op.id)
+    const key = buildKey(op.namespace, op.id);
     //Set
     if (op.type === 'set') {
-      memSet(key, op.value, memTtl(op.ttlSeconds))
-      return "OK"
+      memSet(key, op.value, memTtl(op.ttlSeconds));
+      return 'OK';
     }
     //Del
     if (op.type === 'del') {
@@ -297,32 +365,38 @@ function memApplyOpsToMemory<T>(ops: CacheOp<T>[]): unknown[] {
     }
     // Get: return the stored value, or null on a miss
     return memGet(key);
-  })
-};
+  });
+}
 
 export async function execOps<T>(ops: CacheOp<T>[]): Promise<unknown[]> {
   //Developer or breaker open never touch redis
   if (USE_MEMORY || redisIsDown()) return memApplyOpsToMemory(ops);
 
   ///Production
-  const results = await runPipeline<unknown>((p) => {
-    ///Translate each op into per op
-    for (const op of ops) {
-      const key = buildKey(op.namespace, op.id);
-      if (op.type === "set") {
-        p.set(key, op.value, { ex: memTtl(op.ttlSeconds) });
-      } else if (op.type === "get") {
-        p.get(key);
-      } else {
-        p.del(key);
+  const results = await runPipeline<unknown>(
+    (p) => {
+      ///Translate each op into per op
+      for (const op of ops) {
+        const key = buildKey(op.namespace, op.id);
+        if (op.type === 'set') {
+          p.set(key, op.value, { ex: memTtl(op.ttlSeconds) });
+        } else if (op.type === 'get') {
+          p.get(key);
+        } else {
+          p.del(key);
+        }
       }
-    }
-  }, { count: ops.length, sets: ops.filter((op) => op.type === "set").length, gets: ops.filter((op) => op.type === "get").length, deletes: ops.filter((op) => op.type === "del").length })
+    },
+    {
+      count: ops.length,
+      sets: ops.filter((op) => op.type === 'set').length,
+      gets: ops.filter((op) => op.type === 'get').length,
+      deletes: ops.filter((op) => op.type === 'del').length,
+    },
+  );
   if (results === null) return memApplyOpsToMemory(ops);
   return results;
 }
-
-
 
 ///CacheOps with redis Pipeline
 
@@ -331,29 +405,35 @@ export async function execOps<T>(ops: CacheOp<T>[]): Promise<unknown[]> {
 //  whichever you list LAST wins.List del before set to invalidate - then -
 //  write; list set before del if you actually want the delete to be final.
 
-export type CacheOp<T> = {
-  type: "set", namespace: string, id: string | number, value: T, ttlSeconds: number
-} | {
-  type: "get", namespace: string, id: string | number
-} | {
-  type: 'del', namespace: string, id: string | number
-}
-
+export type CacheOp<T> =
+  | {
+      type: 'set';
+      namespace: string;
+      id: string | number;
+      value: T;
+      ttlSeconds: number;
+    }
+  | {
+      type: 'get';
+      namespace: string;
+      id: string | number;
+    }
+  | {
+      type: 'del';
+      namespace: string;
+      id: string | number;
+    };
 
 export async function runCacheOps<T>(ops: CacheOp<T>[]): Promise<void> {
-  if (ops.length === 0) return //if no ops, do nothing
+  if (ops.length === 0) return; //if no ops, do nothing
   //Run Pipeline never throws an error, so there is no need to try/catch
   await execOps(ops);
 }
-
 
 // await runCacheOps([
 //   { type: "del", namespace: "courses", id: 42 },
 //   { type: "set", namespace: "courses", id: 42, value: freshCourseData, ttlSeconds: CACHE_TTL.LONG },
 //   { type: "del", namespace: "userCourses", id: userId }, // different namespace, same batch
 // ]);
-
-
-
 
 ///Read through Redis, or through memory while Redis is marked down

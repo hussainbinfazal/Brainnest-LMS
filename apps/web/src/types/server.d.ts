@@ -4,18 +4,17 @@ import { IOrder } from "./model";
 export interface ISessionUser {
   id: string;
   phoneNumber?: string;
-  role: 'instructor' | 'student' | 'admin';
+  role: "instructor" | "student" | "admin";
   name: string;
   email: string;
   profileImage?: string;
-
 }
 export interface RazorpayCreateOrderRequest {
-  amount: number;        // amount in paisa
-  currency: string;      // usually 'INR'
-  receipt: string;       // unique identifier
+  amount: number; // amount in paisa
+  currency: string; // usually 'INR'
+  receipt: string; // unique identifier
   notes?: Record<string, any>; // optional notes
-};
+}
 
 export interface MyRazorpayOrder {
   id: string;
@@ -33,19 +32,19 @@ export interface MyRazorpayOrder {
 export interface IGetCourseByParamsResponse {
   paginatedCourses: CCourse[];
   currentPage: number;
-  hasNextPage: boolean,
-  hasPrevPage: boolean,
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
   totalPages: number;
   totalCourses: number;
-};
+}
 export interface IGetLikedCourseByParamsResponse {
   likedCourses: CCourse[];
   currentPage: number;
-  hasNextPage: boolean,
-  hasPrevPage: boolean,
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
   totalPages: number;
   totalCourses: number;
-};
+}
 
 export type IFacets = {
   categories: {
@@ -60,7 +59,6 @@ export type IFacets = {
     _id: string;
   }[];
 };
-
 
 export interface OtpEntry {
   otp: string;

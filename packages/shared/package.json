@@ -1,24 +1,24 @@
 {
   "name": "@repo/shared",
+  "version": "1.0.0",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./server": "./src/server.ts",
     "./client": "./src/client.ts"
   },
-  "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn src/index.ts",
-    "seed": "npx tsx scripts/seed.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts",
     "mainx ": "./dist/index.js",
+    "seed": "npx tsx scripts/seed.ts",
+    "start": "node dist/index.js",
     "types": "./dist/index.d.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@upstash/redis": "^1.38.0",
     "axios": "^1.20.0",

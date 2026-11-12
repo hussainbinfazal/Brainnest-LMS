@@ -1,22 +1,34 @@
+import mongoose, { Model } from 'mongoose';
+import { ILesson } from 'src/types';
 
-import mongoose, { Model } from "mongoose";
-import { ILesson } from "src/types";
+const lessonSchema = new mongoose.Schema<ILesson>(
+  {
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course',
+      required: true,
+      index: true,
+    },
+    name: { type: String, required: true },
+    videoUrl: { type: String, required: true },
+    mp3Url: { type: String, required: true },
+    sectionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Section',
+      required: true,
+      index: true,
+    },
+    description: { type: String },
+    durationInSeconds: { type: Number, required: true },
+    isPreview: { type: Boolean, default: false },
+    previewUrl: { type: String },
+    order: { type: Number, required: true },
+    isDeleted: { type: Boolean, default: false }, ///flag for soft delete
+  },
+  { timestamps: true },
+);
 
-const lessonSchema = new mongoose.Schema<ILesson>({
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
-  name: { type: String, required: true },
-  videoUrl: { type: String, required: true },
-  mp3Url: { type: String, required: true },
-  sectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: true, index: true },
-  description: { type: String },
-  durationInSeconds: { type: Number, required: true },
-  isPreview: { type: Boolean, default: false },
-  previewUrl: { type: String },
-  order: { type: Number, required: true },
-  isDeleted: { type: Boolean, default: false } ///flag for soft delete
-
-}, { timestamps: true });
-
-const Lesson: Model<ILesson> = mongoose.models.Lesson || mongoose.model<ILesson>('Lesson', lessonSchema);
+const Lesson: Model<ILesson> =
+  mongoose.models.Lesson || mongoose.model<ILesson>('Lesson', lessonSchema);
 lessonSchema.index({ courseId: 1, order: 1 }, { unique: true });
 export default Lesson;

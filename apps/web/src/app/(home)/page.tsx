@@ -3,13 +3,12 @@ import { JSX } from "react/jsx-runtime";
 import { getCoursesWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { getReviewsWithCache } from "@/lib/non-Admin-Cached/getCachedReviews";
 import { getCategoriesWithCache } from "@/lib/non-Admin-Cached/getCachedCategory";
-import { logger } from '@repo/shared/server';
+import { logger } from "@repo/shared/server";
 import { getAllUserCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserCourse";
 import { auth } from "@/auth";
 
-
 export default async function Home(): Promise<JSX.Element> {
-  const userSession = await auth()
+  const userSession = await auth();
   console.log("This is user session on server", userSession);
   if (!userSession?.user?.id) {
     logger.warn("User not authenticated");
@@ -22,7 +21,7 @@ export default async function Home(): Promise<JSX.Element> {
       ? getAllUserCourseByIdWithCache(userSession.user.id)
       : Promise.resolve([]),
   ]);
-  console.log("These are the courses in the Homepage",courses.length)
+  console.log("These are the courses in the Homepage", courses.length);
   return (
     <HomePage
       initialCourses={courses}

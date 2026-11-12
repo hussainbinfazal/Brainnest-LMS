@@ -1,1 +1,1 @@
-export * from "./idValidator/idValidator";
+export * from './idValidator/idValidator';

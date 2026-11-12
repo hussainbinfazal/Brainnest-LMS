@@ -1,7 +1,13 @@
-import type Redis from 'ioredis';   // BullMQ already needs ioredis, so I assume you have it
+import type Redis from 'ioredis';
+
+// BullMQ already needs ioredis, so I assume you have it
 
 export interface ScriptRunner {
-    eval(script: string, keys: string[], args: (string | number)[]): Promise<unknown>;
+  eval(
+    script: string,
+    keys: string[],
+    args: (string | number)[],
+  ): Promise<unknown>;
 }
 // Lua script implements an atomic Redis counter with automatic expiration, designed to prevent "orphaned keys" that persist indefinitely if the expiration command fails.
 // Increments the counter
@@ -15,18 +21,18 @@ if count == 1 or ttl == -1 then
     redis.call('PEXPIRE', KEYS[1], ARGV[1])
 end
 return {count, ttl}
-`
+`;
 
 export interface RateLimitOptions {
-    key: string, // e.g. "otp-send:ip:1.2.3.4"
-    max: number,
-    windowSec: number
-};
+  key: string; // e.g. "otp-send:ip:1.2.3.4"
+  max: number;
+  windowSec: number;
+}
 export interface RateLimitResult {
-    allowed: boolean,
-    remaining: number,
-    retryAfterSec: number
-};
+  allowed: boolean;
+  remaining: number;
+  retryAfterSec: number;
+}
 
 // / Fixed-window rate limiter: `max` requests allowed per `windowSec`, backed
 // by the atomic INCR+PEXPIRE script above so the count and its expiry can
@@ -36,23 +42,23 @@ export interface RateLimitResult {
 // protection; switch to a sliding-window/token-bucket script later if you
 // ever need to close that gap.
 export async function RateLimit(
-    runner: ScriptRunner,
-    { key, max, windowSec }: RateLimitOptions,
-    request?: Request,
+  runner: ScriptRunner,
+  { key, max, windowSec }: RateLimitOptions,
+  request?: Request,
 ): Promise<RateLimitResult> {
-    const [count, ttl] = (await runner.eval(
-        SCRIPT, [`rl:${key}`], [windowSec * 1000]
-    )) as [number, number];
+  const [count, ttl] = (await runner.eval(
+    SCRIPT,
+    [`rl:${key}`],
+    [windowSec * 1000],
+  )) as [number, number];
 
-
-    return {
-        allowed: count <= max,
-        remaining: Math.max(0, max - count),
-        retryAfterSec: Math.max(0, Math.ceil(ttl / 1000))
-    }
+  return {
+    allowed: count <= max,
+    remaining: Math.max(0, max - count),
+    retryAfterSec: Math.max(0, Math.ceil(ttl / 1000)),
+  };
 }
 
-
 export const fromIoredis = (r: Redis): ScriptRunner => ({
-    eval: (script, keys, args) => r.eval(script, keys.length, ...keys, ...args),
+  eval: (script, keys, args) => r.eval(script, keys.length, ...keys, ...args),
 });

@@ -1,13 +1,15 @@
-"use client"
+"use client";
 
-import { CCourseRatingProps } from '@/types/client';
-import { useState } from 'react';
-import { FaStar } from 'react-icons/fa';
-import { toast } from 'sonner'; // or use `alert` if you prefer
+import { CCourseRatingProps } from "@/types/client";
+import { useState } from "react";
+import { FaStar } from "react-icons/fa";
+import { toast } from "sonner"; // or use `alert` if you prefer
 
-
-
-const CourseRating = ({ courseId, userRating = 0, className }: CCourseRatingProps) => {
+const CourseRating = ({
+  courseId,
+  userRating = 0,
+  className,
+}: CCourseRatingProps) => {
   const [rating, setRating] = useState<number>(userRating);
   const [hover, setHover] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -17,17 +19,17 @@ const CourseRating = ({ courseId, userRating = 0, className }: CCourseRatingProp
     setLoading(true);
     try {
       const res = await fetch(`/api/courses/${courseId}/rate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || 'Rating failed');
+      if (!res.ok) throw new Error(data.message || "Rating failed");
 
       toast.success("Thanks for your review!");
-    } catch (error : any) {
+    } catch (error: any) {
       console.error("Rating error:", error.message);
       toast.error(error.message);
     } finally {
@@ -53,8 +55,8 @@ const CourseRating = ({ courseId, userRating = 0, className }: CCourseRatingProp
                 size={22}
                 className={`cursor-pointer transition-colors ${
                   currentRating <= (hover || rating)
-                    ? 'text-yellow-400'
-                    : 'text-gray-300'
+                    ? "text-yellow-400"
+                    : "text-gray-300"
                 }`}
                 onMouseEnter={() => setHover(currentRating)}
                 onMouseLeave={() => setHover(null)}
@@ -68,7 +70,7 @@ const CourseRating = ({ courseId, userRating = 0, className }: CCourseRatingProp
         onClick={handleSubmit}
         disabled={loading}
       >
-        {loading ? 'Submitting...' : 'Submit Review'}
+        {loading ? "Submitting..." : "Submit Review"}
       </button>
     </div>
   );

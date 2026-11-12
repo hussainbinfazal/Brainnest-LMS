@@ -1,6 +1,6 @@
 // packages/ai-service/src/chunker.ts
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { logger } from "@repo/shared/server";
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { logger } from '@repo/shared/server';
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 800,

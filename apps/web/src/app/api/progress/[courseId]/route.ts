@@ -1,86 +1,161 @@
-import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-// import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance 
+import {
+  failResponse,
+  successResponse,
+} from "@/lib/helpers/failResponseHelper";
+// import "@/config/redis/redis"; // Make sure to import this file to use redis serverless instance
 import { CProgress } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { connectDB, ILessonProgress, ISessionUser, logger, Progress, PROGRESS_BY_USER_COURSE, validateMongooseId } from '@repo/shared/server';
-import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
-import { LessonProgress } from '@repo/shared/server';
+import {
+  connectDB,
+  ILessonProgress,
+  ISessionUser,
+  logger,
+  Progress,
+  PROGRESS_BY_USER_COURSE,
+  validateMongooseId,
+} from "@repo/shared/server";
+import {
+  CACHE_TTL,
+  getCached,
+  setCached,
+} from "@repo/shared/config/redisConfig/cache-helper";
+import { LessonProgress } from "@repo/shared/server";
 import { NextResponse } from "next/server";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
-import { checkIp, PROGRESS_COURSE_IP_KEY } from '@repo/shared/server';
+import { checkIp, PROGRESS_COURSE_IP_KEY } from "@repo/shared/server";
 
+export async function GET(
+  request: CustomNextRequest,
+  context: { params: Promise<{ courseId: string | string[] }> }
+): Promise<NextResponse> {
+  const { allowed, retryAfterSec, ip } = await checkIp(
+    request,
+    PROGRESS_COURSE_IP_KEY.namespace,
+    PROGRESS_COURSE_IP_KEY.max,
+    PROGRESS_COURSE_IP_KEY.windowSec
+  );
+  if (!allowed)
+    return failResponse(
+      { message: "Too many requests" },
+      429,
+      undefined,
+      { "Retry-After": String(retryAfterSec) },
+      true
+    );
+  const params = await context.params;
+  const courseId = Array.isArray(params.courseId)
+    ? params.courseId[0]
+    : params.courseId; //Store States
+  if (!courseId) {
+    logger.error("Invalid course ID in progress route");
+    return failResponse(
+      { message: "Invalid course ID" },
+      400,
+      undefined,
+      undefined,
+      true
+    );
+  }
+  const authSession: Session | null = await auth();
+  if (!authSession)
+    return failResponse(
+      { message: "Unauthorized", ip: ip },
+      401,
+      undefined,
+      undefined,
+      true
+    );
+  const user: ISessionUser | null = authSession?.user;
 
+  if (!user || !user.id) {
+    logger.info("Unauthorized access", { ip: ip });
+    return failResponse(
+      { message: "Unauthorized" },
+      401,
+      undefined,
+      undefined,
+      true
+    );
+  }
+  const userId: string = user.id;
+  let cached = await getCached<CProgress>(
+    PROGRESS_BY_USER_COURSE.namespace,
+    `${userId}:${courseId}`
+  );
+  if (cached)
+    return successResponse(
+      { message: "This is the progress of the course", response: cached },
+      200,
+      undefined,
+      undefined,
+      true
+    );
 
-export async function GET(request: CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, PROGRESS_COURSE_IP_KEY.namespace, PROGRESS_COURSE_IP_KEY.max, PROGRESS_COURSE_IP_KEY.windowSec);
-    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
-    const params = await context.params;
-    const courseId = Array.isArray(params.courseId)
-        ? params.courseId[0]
-        : params.courseId;  //Store States
-    if (!courseId) {
-        logger.error("Invalid course ID in progress route");
-        return failResponse({ message: "Invalid course ID" }, 400, undefined, undefined, true);
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const [progress, completedLessons, allLessonsProgress] = await Promise.all([
+      Progress.findOne({
+        userId,
+        courseId,
+      })
+        .lean()
+        .exec(),
+
+      LessonProgress.find(
+        {
+          userId,
+          courseId,
+        },
+        {
+          _id: 0,
+          lessonId: 1,
+          sectionId: 1,
+          completedAt: 1,
+        }
+      )
+        .lean()
+        .exec(),
+      LessonProgress.find({
+        userId,
+        courseId,
+      })
+        .lean()
+        .exec(),
+    ]);
+    const completedLessonIds: string[] = completedLessons
+      .filter((l: ILessonProgress) => l.completedAt)
+      .map((l: ILessonProgress) => l.lessonId.toString());
+    const response = {
+      progress,
+      lessonsProgress: allLessonsProgress,
+      completedLessonIds,
     };
-    const authSession: Session | null = await auth()
-    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
-    const user: ISessionUser | null = authSession?.user;
-
-    if (!user || !user.id) {
-        logger.info("Unauthorized access", { ip: ip });
-        return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
-    }
-    const userId: string = user.id;
-    let cached = await getCached<CProgress>(PROGRESS_BY_USER_COURSE.namespace, `${userId}:${courseId}`)
-    if (cached) return successResponse({ message: "This is the progress of the course", response: cached }, 200, undefined, undefined, true);
-
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const [progress, completedLessons, allLessonsProgress] = await Promise.all([
-            Progress.findOne(
-                {
-                    userId,
-                    courseId,
-                }
-            ).lean().exec(),
-
-            LessonProgress.find(
-                {
-                    userId,
-                    courseId,
-                },
-                {
-                    _id: 0,
-                    lessonId: 1,
-                    sectionId: 1,
-                    completedAt: 1,
-                }
-            ).lean().exec(),
-            LessonProgress.find(
-                {
-                    userId,
-                    courseId,
-                }
-            ).lean().exec()
-        ]);
-        const completedLessonIds: string[] = completedLessons
-            .filter((l: ILessonProgress) => l.completedAt)
-            .map((l: ILessonProgress) => l.lessonId.toString());
-        const response = {
-            progress,
-            lessonsProgress: allLessonsProgress,
-            completedLessonIds,
-        };
-        logger.info("This is the progress of the course", { progress, courseId });
-        const serializedProgress = await serializeDocument(response);
-        await setCached(PROGRESS_BY_USER_COURSE.namespace,
-            `${userId}:${courseId}`, serializedProgress, CACHE_TTL.MEDIUM)
-        return successResponse({ message: "This is the progress of the lesson", response }, 200, undefined, undefined, true);
-    } catch (error: unknown) {
-        logger.error("Error marking lesson complete:", { error });
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return failResponse({ message: `Failed to fetch progress :${message}` }, 500, undefined, undefined, true);
-    }
+    logger.info("This is the progress of the course", { progress, courseId });
+    const serializedProgress = await serializeDocument(response);
+    await setCached(
+      PROGRESS_BY_USER_COURSE.namespace,
+      `${userId}:${courseId}`,
+      serializedProgress,
+      CACHE_TTL.MEDIUM
+    );
+    return successResponse(
+      { message: "This is the progress of the lesson", response },
+      200,
+      undefined,
+      undefined,
+      true
+    );
+  } catch (error: unknown) {
+    logger.error("Error marking lesson complete:", { error });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return failResponse(
+      { message: `Failed to fetch progress :${message}` },
+      500,
+      undefined,
+      undefined,
+      true
+    );
+  }
 }

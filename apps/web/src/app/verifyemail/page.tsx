@@ -22,7 +22,10 @@ const page = (): JSX.Element => {
   const verifyEmail = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/api/users/verifyemail", { token, userId });
+      const response = await axios.post("/api/users/verifyemail", {
+        token,
+        userId,
+      });
       // logger.info({ data: response.data }, "verifyEmail response");
       setEmailVerified(true);
     } catch (error) {

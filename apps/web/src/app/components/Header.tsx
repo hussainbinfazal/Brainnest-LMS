@@ -28,20 +28,28 @@ import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { useClickOutSide } from "@/hooks/useClickOutside";
 import { USER_ROLE } from "@repo/shared";
 ///Add Skeletons while loading
-export default function Header({ className }: { className?: string }): React.JSX.Element {
+export default function Header({
+  className,
+}: {
+  className?: string;
+}): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
-  const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser)
-  const clearAuthUser = useAuthStore((state) => state.clearAuthUser)
-  const updateUserRoleToInstructor = useAuthStore((state) => state.updateUserToInstructor);
-  const isUpdating = useAuthStore((state) => state.isUpdatingRole)
-  const sessionUser = session?.user
+  const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser);
+  const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
+  const updateUserRoleToInstructor = useAuthStore(
+    (state) => state.updateUserToInstructor
+  );
+  const isUpdating = useAuthStore((state) => state.isUpdatingRole);
+  const sessionUser = session?.user;
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
-  const enrolledCourses = useUserCourseStore((state) => state.enrolledCourseIds);
+  const enrolledCourses = useUserCourseStore(
+    (state) => state.enrolledCourseIds
+  );
   const chat: CChatMessage[] | null = useChatStore((state) => state.chat);
   const setChat = useChatStore((state) => state.setChat);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -52,7 +60,7 @@ export default function Header({ className }: { className?: string }): React.JSX
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
 
   const handleLogout = async (): Promise<void> => {
-    setIsLoggingOut(true)
+    setIsLoggingOut(true);
     await signOut();
     setIsMenuOpen(false);
     toast.success("Logout successful");
@@ -62,11 +70,7 @@ export default function Header({ className }: { className?: string }): React.JSX
     setIsMenuOpen(false);
   }, []);
 
-  useClickOutSide(
-    [menuRef, avatarRef],
-    handleCloseMenu,
-    isMenuOpen
-  );
+  useClickOutSide([menuRef, avatarRef], handleCloseMenu, isMenuOpen);
 
   const fetchExistingChat = useCallback(async () => {
     try {
@@ -89,18 +93,18 @@ export default function Header({ className }: { className?: string }): React.JSX
     }
   }, []);
 
-  ///This is the function to fetch the authUser 
+  ///This is the function to fetch the authUser
   const fetchAuthUserCallback = useCallback(async (): Promise<void> => {
     setIsLoading(true);
     fetchAuthUser().finally(() => setIsLoading(false));
-  }, [fetchAuthUser])
+  }, [fetchAuthUser]);
 
   useEffect(() => {
     if (status === "authenticated") {
       fetchAuthUserCallback();
-    };  //Explicit refresh of authUser
+    } //Explicit refresh of authUser
     if (status === "unauthenticated") clearAuthUser();
-  }, [status, fetchAuthUser, clearAuthUser])
+  }, [status, fetchAuthUser, clearAuthUser]);
 
   // useEffect(() => {
   //   if (authUser) {
@@ -120,7 +124,12 @@ export default function Header({ className }: { className?: string }): React.JSX
   //   }
   // }, [status, session]);
   return (
-    <header className={cn("sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4", className)}>
+    <header
+      className={cn(
+        "sticky top-0 z-50 flex justify-center items-center w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4",
+        className
+      )}
+    >
       <Scroller />
       {isLoading && (
         <div className="absolute bottom-0 left-0 w-full">
@@ -128,7 +137,7 @@ export default function Header({ className }: { className?: string }): React.JSX
             color={theme === "dark" ? "#ffff3f" : "#2196f3"}
             width="100%"
             height="3px"
-          // className="dark:bg-[#ffff3f]"
+            // className="dark:bg-[#ffff3f]"
           />
         </div>
       )}
@@ -190,14 +199,16 @@ export default function Header({ className }: { className?: string }): React.JSX
                   Profile
                 </Link>
               )}
-              {sessionUser ? sessionUser?.role === USER_ROLE.INSTRUCTOR : authUser?.role === USER_ROLE.INSTRUCTOR && (
-                <Link
-                  href={`/myprofile`}
-                  className="px-4 hover:underline underline-offset-4"
-                >
-                  Instructor
-                </Link>
-              )}
+              {sessionUser
+                ? sessionUser?.role === USER_ROLE.INSTRUCTOR
+                : authUser?.role === USER_ROLE.INSTRUCTOR && (
+                    <Link
+                      href={`/myprofile`}
+                      className="px-4 hover:underline underline-offset-4"
+                    >
+                      Instructor
+                    </Link>
+                  )}
             </nav>
 
             <div className="flex items-center gap-4">
@@ -205,22 +216,29 @@ export default function Header({ className }: { className?: string }): React.JSX
 
               {sessionUser?.role === USER_ROLE.INSTRUCTOR ? (
                 <Link href="instructor/course/manage">
-                  <Button className="ml-4 rounded-sm cursor-pointer">Manage courses</Button>
+                  <Button className="ml-4 rounded-sm cursor-pointer">
+                    Manage courses
+                  </Button>
                 </Link>
               ) : (
-                <Button className="ml-6 rounded-sm cursor-pointer" onClick={() => {
-                  if (session?.user) updateUserRoleToInstructor(session?.user?.id)
-                  else {
-                    toast.error("You are not logged in")
-                  }
-                }}>
+                <Button
+                  className="ml-6 rounded-sm cursor-pointer"
+                  onClick={() => {
+                    if (session?.user)
+                      updateUserRoleToInstructor(session?.user?.id);
+                    else {
+                      toast.error("You are not logged in");
+                    }
+                  }}
+                >
                   {isUpdating ? "Updating" : "Teach on Brainnest"}
                 </Button>
-
               )}
               {!sessionUser && (
                 <Link href={"/login"}>
-                  <Button className="ml-6 rounded-sm cursor-pointer">Login</Button>
+                  <Button className="ml-6 rounded-sm cursor-pointer">
+                    Login
+                  </Button>
                 </Link>
               )}
               {/* {sessionUser && (
@@ -229,20 +247,18 @@ export default function Header({ className }: { className?: string }): React.JSX
                 </Button>
               )} */}
 
-              <div className="relative ml-4"
-                ref={avatarRef}
-              >
+              <div className="relative ml-4" ref={avatarRef}>
                 {sessionUser && (
                   <Avatar
-
                     className="ml-4 relative cursor-pointer"
                     onClick={() => {
                       setIsMenuOpen((prev) => !prev);
                     }}
-
                   >
                     <AvatarImage
-                      src={sessionUser.profileImage || "/assets/default-avatar.svg"}
+                      src={
+                        sessionUser.profileImage || "/assets/default-avatar.svg"
+                      }
                       alt="User Avatar"
                       className="cursor-pointer"
                     />
@@ -254,13 +270,13 @@ export default function Header({ className }: { className?: string }): React.JSX
                 {isMenuOpen && (
                   <div ref={menuRef}>
                     <Card
-                      className={`menu absolute top-2 right-5 ${chatAlreadyExists
-                        ? "min-h-45"
-                        : sessionUser
-                          ? "min-h-38"
-                          : " min-h-10"
-                        }  w-40 z-70`}
-
+                      className={`menu absolute top-2 right-5 ${
+                        chatAlreadyExists
+                          ? "min-h-45"
+                          : sessionUser
+                            ? "min-h-38"
+                            : " min-h-10"
+                      }  w-40 z-70`}
                     >
                       <CardContent className="flex flex-col gap-3 items-center justify-center">
                         {session?.user && (
@@ -304,7 +320,7 @@ export default function Header({ className }: { className?: string }): React.JSX
                           className="cursor-pointer"
                           onClick={() => handleLogout()}
                         >
-                          {isLoggingOut ? 'Logging Out' : 'Logout'}
+                          {isLoggingOut ? "Logging Out" : "Logout"}
                         </p>
                       </CardContent>
                     </Card>
@@ -315,6 +331,6 @@ export default function Header({ className }: { className?: string }): React.JSX
           </div>
         </div>
       </div>
-    </header >
+    </header>
   );
 }

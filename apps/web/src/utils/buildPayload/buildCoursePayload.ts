@@ -1,4 +1,4 @@
-import { CCreateLesson, CLesson } from "@/types/client"
+import { CCreateLesson, CLesson } from "@/types/client";
 
 // export const buildCoursePayload = (form: ) => {
 //     return {
@@ -60,7 +60,3 @@ import { CCreateLesson, CLesson } from "@/types/client"
 //         previewVideoPublicId: form.previewVideoPublicId
 //     }
 // }
-
-
-
-

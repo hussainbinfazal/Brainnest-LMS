@@ -1,29 +1,27 @@
 import bcrypt from "bcryptjs";
 import { AuthenticatedUser, Credentials } from "@/types/auth";
 import { logger } from "@repo/shared/server";
-import { connectDB, IUser, User } from '@repo/shared/server';
+import { connectDB, IUser, User } from "@repo/shared/server";
 
-
-
-
-export async function authenticateUser(credentials: Credentials): Promise<AuthenticatedUser | null> {
+export async function authenticateUser(
+  credentials: Credentials
+): Promise<AuthenticatedUser | null> {
   try {
     await connectDB(process.env.MONGODB_URI!);
 
-    const user: IUser | null = await User.findOne({ email: credentials.email }).select(
-      "+password"
-    );
+    const user: IUser | null = await User.findOne({
+      email: credentials.email,
+    }).select("+password");
     if (!user) {
       logger.warn("No user found with this email");
       return null;
     }
     logger.info("User found", {
-      user: user._id
+      user: user._id,
     });
 
-
     const isValid = await bcrypt.compare(credentials.password, user.password);
-    logger.info("Password valid", { valid: isValid },);
+    logger.info("Password valid", { valid: isValid });
 
     if (!isValid) return null;
 
@@ -34,10 +32,9 @@ export async function authenticateUser(credentials: Credentials): Promise<Authen
       phoneNumber: user.phoneNumber,
       role: user.role,
       profileImage: user.profileImage,
-
     };
   } catch (error: unknown) {
-    logger.error("Auth error:", {error});
+    logger.error("Auth error:", { error });
     return null;
   }
 }

@@ -1,4 +1,4 @@
-import { Document, Types } from "mongoose";
+import { Document, Types } from 'mongoose';
 
 export interface ICertificate extends Document {
   userId: Types.ObjectId;
@@ -11,6 +11,4 @@ export interface ICertificate extends Document {
   generatedAt: Date;
   verificationCode: string;
   isRevoked: boolean;
-
-
 }

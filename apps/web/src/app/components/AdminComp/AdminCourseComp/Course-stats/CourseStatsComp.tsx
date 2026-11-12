@@ -46,12 +46,11 @@ import { CChat, CCourse, CEnrolledStudent, CPayment } from "@/types/client";
 import Error from "next/error";
 import { cn } from "@/lib/utils";
 
-
-interface PaymentsResponse {
-
-}
+interface PaymentsResponse {}
 //Do all the complex calculation on servver then pass those data to the component as props
-export const CourseStatsComp: React.FC<{ className?: string }> = ({ className }): React.JSX.Element => {
+export const CourseStatsComp: React.FC<{ className?: string }> = ({
+  className,
+}): React.JSX.Element => {
   const router = useRouter();
   const [courses, setCourses] = useState<CCourse[]>([]);
   const [coursesByInstructor, setCoursesByInstructor] = useState<CCourse[]>([]);
@@ -65,15 +64,19 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
   const [totalStudentsEnrolledThisMonth, setTotalStudentsEnrolledThisMonth] =
     useState<number>(0);
   const [totalRevenueThisMonth, setTotalRevenueThisMonth] = useState<number>(0);
-  const [studentsEnrolled, setStudentsEnrolled] = useState<CEnrolledStudent[]>([]);
-  const [totalChatRevenueThisMonth, setTotalChatRevenueThisMonth] = useState<number>(0);
-  const [totalChatRevenueThisWeek, setTotalChatRevenueThisWeek] = useState<number>(0);
+  const [studentsEnrolled, setStudentsEnrolled] = useState<CEnrolledStudent[]>(
+    []
+  );
+  const [totalChatRevenueThisMonth, setTotalChatRevenueThisMonth] =
+    useState<number>(0);
+  const [totalChatRevenueThisWeek, setTotalChatRevenueThisWeek] =
+    useState<number>(0);
   const [totalChatRevenue, setTotalChatRevenue] = useState<number>(0);
-  const [totalChatRevenueLastMonth, setTotalChatRevenueLastMonth] = useState<number>(0);
+  const [totalChatRevenueLastMonth, setTotalChatRevenueLastMonth] =
+    useState<number>(0);
   const [totalChatRevenueToday, setTotalChatRevenueToday] = useState<number>(0);
   const [payments, setPayments] = useState<CPayment[]>([]);
   const [countRecords, setCountRecords] = useState<number>(10);
-
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,58 +85,63 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
     searchTerm!.trim() === ""
       ? studentsEnrolled
       : studentsEnrolled.filter((user: CEnrolledStudent) => {
-        const id: string = user?._id || "";
-        const username: string = user?.name?.toLowerCase() || "";
-        const email: string = user.email?.toLowerCase() || "";
-        const number: string = user.phoneNumber || "";
-        const instructorName: string = user.instructor?.name?.toLowerCase() || "";
+          const id: string = user?._id || "";
+          const username: string = user?.name?.toLowerCase() || "";
+          const email: string = user.email?.toLowerCase() || "";
+          const number: string = user.phoneNumber || "";
+          const instructorName: string =
+            user.instructor?.name?.toLowerCase() || "";
 
-        const term: string | null | undefined = searchTerm?.toLowerCase();
+          const term: string | null | undefined = searchTerm?.toLowerCase();
 
-        return (
-          id.includes(term ?? "") ||
-          username.includes(term ?? "") ||
-          email.includes(term ?? "") ||
-          number.includes(term ?? "") ||
-          instructorName.includes(term ?? "")
-        );
-      });
+          return (
+            id.includes(term ?? "") ||
+            username.includes(term ?? "") ||
+            email.includes(term ?? "") ||
+            number.includes(term ?? "") ||
+            instructorName.includes(term ?? "")
+          );
+        });
   const filteredPayments: CPayment[] =
     searchTerm?.trim() === ""
       ? payments
       : payments?.filter((payment) => {
-        const id: string = payment?.paymentId || "";
-        const amount: string = String(payment?.amount || null);
-        const paymentDate: Date | null = payment?.paymentAt || null;
-        const paymentBy: string = typeof payment?.paymentBy === 'object' && payment.paymentBy?.name ? payment.paymentBy.name.toLowerCase() : "";
-        const paymentReleatedTo = payment?.paymentOf || "";
-        const term = searchTerm?.toLowerCase();
+          const id: string = payment?.paymentId || "";
+          const amount: string = String(payment?.amount || null);
+          const paymentDate: Date | null = payment?.paymentAt || null;
+          const paymentBy: string =
+            typeof payment?.paymentBy === "object" && payment.paymentBy?.name
+              ? payment.paymentBy.name.toLowerCase()
+              : "";
+          const paymentReleatedTo = payment?.paymentOf || "";
+          const term = searchTerm?.toLowerCase();
 
-        return (
-          id.includes(term ?? "") ||
-          amount.includes(term ?? "") ||
-          paymentDate?.toLocaleString().includes(term ?? "") ||
-          paymentBy.includes(term ?? "") ||
-          paymentReleatedTo.includes(term ?? "")
-        );
-      });
+          return (
+            id.includes(term ?? "") ||
+            amount.includes(term ?? "") ||
+            paymentDate?.toLocaleString().includes(term ?? "") ||
+            paymentBy.includes(term ?? "") ||
+            paymentReleatedTo.includes(term ?? "")
+          );
+        });
   const filteredCourses: CCourse[] =
     searchTerm?.trim() === ""
       ? courses
       : courses.filter((course: CCourse) => {
-        const id: string = course._id || "";
-        const courseName: string = course.title?.toLowerCase() || "";
-        const instructorName: string = course?.instructor?.name?.toLowerCase() || "";
-        const price: string = String(course?.price || "");
-        const term: string | null | undefined = searchTerm?.toLowerCase();
+          const id: string = course._id || "";
+          const courseName: string = course.title?.toLowerCase() || "";
+          const instructorName: string =
+            course?.instructor?.name?.toLowerCase() || "";
+          const price: string = String(course?.price || "");
+          const term: string | null | undefined = searchTerm?.toLowerCase();
 
-        return (
-          id.includes(term ?? "") ||
-          courseName.includes(term ?? "") ||
-          price.includes(term ?? " ") ||
-          instructorName.includes(term ?? "")
-        );
-      });
+          return (
+            id.includes(term ?? "") ||
+            courseName.includes(term ?? "") ||
+            price.includes(term ?? " ") ||
+            instructorName.includes(term ?? "")
+          );
+        });
   const getDetailsOfInstructor = (): void => {
     try {
       if (!authUser) return;
@@ -144,38 +152,50 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
 
       setCoursesByInstructor(instructorCourses);
 
-      const revenue: number = instructorCourses.reduce((sum: number, course: CCourse) => {
-        const enrolledStudents: number = course.enrolledStudents?.length || 0;
-        const price: number = course.price || 0;
-        return sum + enrolledStudents * price;
-      }, 0);
+      const revenue: number = instructorCourses.reduce(
+        (sum: number, course: CCourse) => {
+          const enrolledStudents: number = course.enrolledStudents?.length || 0;
+          const price: number = course.price || 0;
+          return sum + enrolledStudents * price;
+        },
+        0
+      );
 
       setTotalRevenue(revenue);
-      const enrolledStudents: number = instructorCourses.reduce((sum: number, course: CCourse) => {
-        const enrolledCount: number = course.enrolledStudents?.length || 0;
-        const price: number = course.price || 0;
-        return sum + enrolledCount * price;
-      }, 0);
+      const enrolledStudents: number = instructorCourses.reduce(
+        (sum: number, course: CCourse) => {
+          const enrolledCount: number = course.enrolledStudents?.length || 0;
+          const price: number = course.price || 0;
+          return sum + enrolledCount * price;
+        },
+        0
+      );
 
       setTotalStudentsEnrolled(enrolledStudents);
 
-      const revenueThisMonth: number = instructorCourses.reduce((sum: number, course: CCourse) => {
-        const createdAt: Date = course?.createdAt ? new Date(course.createdAt) : new Date();
-        const now: Date = new Date();
+      const revenueThisMonth: number = instructorCourses.reduce(
+        (sum: number, course: CCourse) => {
+          const createdAt: Date = course?.createdAt
+            ? new Date(course.createdAt)
+            : new Date();
+          const now: Date = new Date();
 
-        // Compare months and years
-        const isThisMonth: boolean =
-          createdAt.getMonth() === now.getMonth() &&
-          createdAt.getFullYear() === now.getFullYear();
+          // Compare months and years
+          const isThisMonth: boolean =
+            createdAt.getMonth() === now.getMonth() &&
+            createdAt.getFullYear() === now.getFullYear();
 
-        if (isThisMonth) {
-          const enrolledStudentsCount: number = course.enrolledStudents?.length || 0;
-          const price: number = course.price || 0;
-          return sum + enrolledStudentsCount * price;
-        }
+          if (isThisMonth) {
+            const enrolledStudentsCount: number =
+              course.enrolledStudents?.length || 0;
+            const price: number = course.price || 0;
+            return sum + enrolledStudentsCount * price;
+          }
 
-        return sum;
-      }, 0); // ← this initial value is required
+          return sum;
+        },
+        0
+      ); // ← this initial value is required
 
       setTotalRevenueThisMonth(revenueThisMonth);
       const allEnrolledStudents: CEnrolledStudent[] = instructorCourses.flatMap(
@@ -184,14 +204,15 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
 
       setStudentsEnrolled(allEnrolledStudents);
       const now: Date = new Date();
-      const studentsThisMonth: CEnrolledStudent[] = instructorCourses.flatMap((course: CCourse) =>
-        (course.enrolledStudents || []).filter((entry: CEnrolledStudent) => {
-          const date: Date = new Date(entry.enrolledAt);
-          return (
-            date.getMonth() === now.getMonth() &&
-            date.getFullYear() === now.getFullYear()
-          );
-        })
+      const studentsThisMonth: CEnrolledStudent[] = instructorCourses.flatMap(
+        (course: CCourse) =>
+          (course.enrolledStudents || []).filter((entry: CEnrolledStudent) => {
+            const date: Date = new Date(entry.enrolledAt);
+            return (
+              date.getMonth() === now.getMonth() &&
+              date.getFullYear() === now.getFullYear()
+            );
+          })
       );
 
       setTotalStudentsEnrolledThisMonth(studentsThisMonth.length);
@@ -248,77 +269,97 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
       let totalChatRevenue: number = data.reduce((acc: number, chat: CChat) => {
         const payments: CPayment[] = chat.paymentsByUser || [];
         const chatRevenue: number = payments.reduce(
-          (sum: number, payment: CPayment) => sum + (Number(payment.amount) || 0),
+          (sum: number, payment: CPayment) =>
+            sum + (Number(payment.amount) || 0),
           0
         );
         return acc + chatRevenue;
       }, 0);
-      let totalChatRevenueThisMonth: number = data.reduce((acc: number, chat: CChat) => {
-        const now: Date = new Date();
-        const createdAt: Date = new Date(chat?.createdAt);
-        const payments: CPayment[] = chat?.paymentsByUser || [];
+      let totalChatRevenueThisMonth: number = data.reduce(
+        (acc: number, chat: CChat) => {
+          const now: Date = new Date();
+          const createdAt: Date = new Date(chat?.createdAt);
+          const payments: CPayment[] = chat?.paymentsByUser || [];
 
-        const monthlyRevenue: number = payments.reduce((sum: number, payment: CPayment) => {
-          // Check if payment has a date field
-          const paymentDate: Date | undefined =
-            payment.paymentAt || payment.createdAt;
-          if (paymentDate) {
-            const paidAt: Date = new Date(paymentDate);
-            const isThisMonth: boolean =
-              paidAt.getMonth() === now.getMonth() &&
-              paidAt.getFullYear() === now.getFullYear();
+          const monthlyRevenue: number = payments.reduce(
+            (sum: number, payment: CPayment) => {
+              // Check if payment has a date field
+              const paymentDate: Date | undefined =
+                payment.paymentAt || payment.createdAt;
+              if (paymentDate) {
+                const paidAt: Date = new Date(paymentDate);
+                const isThisMonth: boolean =
+                  paidAt.getMonth() === now.getMonth() &&
+                  paidAt.getFullYear() === now.getFullYear();
 
-            if (isThisMonth) {
-              return sum + (Number(payment.amount) || 0);
-            }
-          }
-          return sum;
-        }, 0);
-        return acc + monthlyRevenue;
-      }, 0);
-      let totalChatRevenueThisWeek: number = data.reduce((acc: number, chat: CChat) => {
-        const payments: CPayment[] = chat.paymentsByUser || [];
-        let weeklyRevenue = payments.reduce((sum: number, payment: CPayment) => {
-          const paymentDate: Date | undefined =
-            payment.paymentAt || payment.createdAt;
-          if (paymentDate) {
-            const now: Date = new Date();
-            const createdAt: Date = new Date(paymentDate);
-            const oneWeekAgo: Date = new Date(
-              now.getTime() - 7 * 24 * 60 * 60 * 1000
-            );
-            const thisWeek: boolean = createdAt >= oneWeekAgo && createdAt <= now;
-            if (thisWeek) {
-              return sum + (Number(payment.amount) || 0);
-            }
-          }
-          return sum;
-        }, 0);
+                if (isThisMonth) {
+                  return sum + (Number(payment.amount) || 0);
+                }
+              }
+              return sum;
+            },
+            0
+          );
+          return acc + monthlyRevenue;
+        },
+        0
+      );
+      let totalChatRevenueThisWeek: number = data.reduce(
+        (acc: number, chat: CChat) => {
+          const payments: CPayment[] = chat.paymentsByUser || [];
+          let weeklyRevenue = payments.reduce(
+            (sum: number, payment: CPayment) => {
+              const paymentDate: Date | undefined =
+                payment.paymentAt || payment.createdAt;
+              if (paymentDate) {
+                const now: Date = new Date();
+                const createdAt: Date = new Date(paymentDate);
+                const oneWeekAgo: Date = new Date(
+                  now.getTime() - 7 * 24 * 60 * 60 * 1000
+                );
+                const thisWeek: boolean =
+                  createdAt >= oneWeekAgo && createdAt <= now;
+                if (thisWeek) {
+                  return sum + (Number(payment.amount) || 0);
+                }
+              }
+              return sum;
+            },
+            0
+          );
 
-        return acc + weeklyRevenue;
-      }, 0);
+          return acc + weeklyRevenue;
+        },
+        0
+      );
 
-      let totalChatRevenueToday: number = data.reduce((acc: number, chat: CChat) => {
-        const payments: CPayment[] = chat.paymentsByUser || [];
-        const todaysRevenue: number = payments.reduce((sum: number, payment: CPayment) => {
-          const paymentDate: Date | undefined =
-            payment.paymentAt || payment.createdAt;
-          if (paymentDate) {
-            const now: Date = new Date();
-            const createdAt: Date = new Date(paymentDate);
-            const isToday: boolean =
-              createdAt.getDate() === now.getDate() &&
-              createdAt.getMonth() === now.getMonth() &&
-              createdAt.getFullYear() === now.getFullYear();
-            if (isToday) {
-              return sum + (Number(payment.amount) || 0);
-            }
-          }
-          return sum;
-        }, 0);
+      let totalChatRevenueToday: number = data.reduce(
+        (acc: number, chat: CChat) => {
+          const payments: CPayment[] = chat.paymentsByUser || [];
+          const todaysRevenue: number = payments.reduce(
+            (sum: number, payment: CPayment) => {
+              const paymentDate: Date | undefined =
+                payment.paymentAt || payment.createdAt;
+              if (paymentDate) {
+                const now: Date = new Date();
+                const createdAt: Date = new Date(paymentDate);
+                const isToday: boolean =
+                  createdAt.getDate() === now.getDate() &&
+                  createdAt.getMonth() === now.getMonth() &&
+                  createdAt.getFullYear() === now.getFullYear();
+                if (isToday) {
+                  return sum + (Number(payment.amount) || 0);
+                }
+              }
+              return sum;
+            },
+            0
+          );
 
-        return acc + todaysRevenue;
-      }, 0);
+          return acc + todaysRevenue;
+        },
+        0
+      );
 
       let totalChatRevenueLastMonth: number = data.reduce((acc, chat) => {
         const now = new Date();
@@ -339,7 +380,8 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
         if (isLastMonth) {
           const payments = chat.paymentsByUser || [];
           const lastMonthRevenue = payments.reduce(
-            (sum: number, payment: CPayment) => sum + (Number(payment.amount) || 0),
+            (sum: number, payment: CPayment) =>
+              sum + (Number(payment.amount) || 0),
             0
           );
           return acc + lastMonthRevenue;
@@ -416,10 +458,13 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
     return (): void => clearTimeout(timer);
   }, [handleFetchChatStats, handleFetchAllPayments]);
 
-
-
   return (
-    <div className={cn("w-full min-h-screen flex flex-col justify-start items-center py-6 relative", className)}>
+    <div
+      className={cn(
+        "w-full min-h-screen flex flex-col justify-start items-center py-6 relative",
+        className
+      )}
+    >
       {loading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={loading} />
@@ -597,7 +642,9 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
                 placeholder="Search"
                 className="w-full text-lg placeholder:text-lg placeholder:text-start placeholder:my-auto"
                 value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSearchTerm(e.target.value)
+                }
               />
               <IoSearch className="absolute top-2 right-2 text-lg" />
             </span>
@@ -611,16 +658,24 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
               <SelectContent className="">
                 <SelectGroup>
                   <SelectLabel className="">Admin Views</SelectLabel>
-                  <SelectItem className="" value="students">students</SelectItem>
-                  <SelectItem className="" value="courses">courses</SelectItem>
-                  <SelectItem className="" value="payments">payments</SelectItem>
+                  <SelectItem className="" value="students">
+                    students
+                  </SelectItem>
+                  <SelectItem className="" value="courses">
+                    courses
+                  </SelectItem>
+                  <SelectItem className="" value="payments">
+                    payments
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
           </div>
           <div className="w-full flex justify-end items-center">
             <Select
-              onValueChange={(value: string) => setCountRecords(value ? parseInt(value) : 10)}
+              onValueChange={(value: string) =>
+                setCountRecords(value ? parseInt(value) : 10)
+              }
               defaultValue={"10"}
             >
               <SelectTrigger className="w-[180px]">
@@ -628,11 +683,19 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
               </SelectTrigger>
               <SelectContent className="">
                 <SelectGroup>
-                  <SelectLabel className="" >Count Records</SelectLabel>
-                  <SelectItem className="" value="10">10</SelectItem>
-                  <SelectItem className="" value="30">30</SelectItem>
-                  <SelectItem className="" value="50">50</SelectItem>
-                  <SelectItem className="" value="100">100</SelectItem>
+                  <SelectLabel className="">Count Records</SelectLabel>
+                  <SelectItem className="" value="10">
+                    10
+                  </SelectItem>
+                  <SelectItem className="" value="30">
+                    30
+                  </SelectItem>
+                  <SelectItem className="" value="50">
+                    50
+                  </SelectItem>
+                  <SelectItem className="" value="100">
+                    100
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -655,72 +718,76 @@ export const CourseStatsComp: React.FC<{ className?: string }> = ({ className })
                     : `No students found for "${searchTerm}"`}
                 </p>
               ) : (
-                filteredEnrolledStudent?.slice(0, countRecords).map((user: CEnrolledStudent) => (
-                  <Card key={user._id} className="w-full h-[80px]">
-                    <CardContent className="">
-                      <div className="w-full grid grid-cols-5 px-2 text-center font-semibold">
-                        <Avatar className="">
-                          <AvatarImage
-                            className=""
-                            src={
-                              user?.profileImage ||
-                              "https://github.com/shadcn.png"
-                            }
-                          />
-                          <AvatarFallback className="">CN</AvatarFallback>
-                        </Avatar>
-                        <div className="flex justify-start items-start">
-                          {user?.name}
+                filteredEnrolledStudent
+                  ?.slice(0, countRecords)
+                  .map((user: CEnrolledStudent) => (
+                    <Card key={user._id} className="w-full h-[80px]">
+                      <CardContent className="">
+                        <div className="w-full grid grid-cols-5 px-2 text-center font-semibold">
+                          <Avatar className="">
+                            <AvatarImage
+                              className=""
+                              src={
+                                user?.profileImage ||
+                                "https://github.com/shadcn.png"
+                              }
+                            />
+                            <AvatarFallback className="">CN</AvatarFallback>
+                          </Avatar>
+                          <div className="flex justify-start items-start">
+                            {user?.name}
+                          </div>
+                          <div className="capitalize flex justify-start items-start">
+                            {user?.role}
+                          </div>
+                          <div className="flex justify-start items-start">
+                            {user?.email}
+                          </div>
+                          <div className="flex justify-start items-start">
+                            {user?.phoneNumber || user._id}
+                          </div>
                         </div>
-                        <div className="capitalize flex justify-start items-start">
-                          {user?.role}
-                        </div>
-                        <div className="flex justify-start items-start">
-                          {user?.email}
-                        </div>
-                        <div className="flex justify-start items-start">
-                          {user?.phoneNumber || user._id}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                      </CardContent>
+                    </Card>
+                  ))
               )}
             </div>
           )}
 
           {selectedView === "courses" && (
             <div className="w-full h-[500px] overflow-auto flex flex-col items-center justify-start gap-2 p-6 pt-0">
-              {(filteredCourses.slice(0, countRecords) || []).map((course: CCourse) => (
-                <Card key={course._id} className="w-full h-auto">
-                  <CardContent className="" >
-                    <div className="flex justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xl font-semibold">
-                          {course.title}
-                        </span>
-                        <span>Instructor: {course.instructor?.name}</span>
-                        <span>Price: ₹{course.price}</span>
-                        <span>
-                          Enrolled Students:{" "}
-                          {course.enrolledStudents?.length || 0}
-                        </span>
-                      </div>
-                      {course && (
-                        <div className="flex h-full items-center justify-center">
-                          <div className="w-[100px] h-[90%] relative">
-                            <Image
-                              src={course?.coverImage || ""}
-                              fill
-                              alt={course?.title}
-                            />
-                          </div>
+              {(filteredCourses.slice(0, countRecords) || []).map(
+                (course: CCourse) => (
+                  <Card key={course._id} className="w-full h-auto">
+                    <CardContent className="">
+                      <div className="flex justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-xl font-semibold">
+                            {course.title}
+                          </span>
+                          <span>Instructor: {course.instructor?.name}</span>
+                          <span>Price: ₹{course.price}</span>
+                          <span>
+                            Enrolled Students:{" "}
+                            {course.enrolledStudents?.length || 0}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        {course && (
+                          <div className="flex h-full items-center justify-center">
+                            <div className="w-[100px] h-[90%] relative">
+                              <Image
+                                src={course?.coverImage || ""}
+                                fill
+                                alt={course?.title}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              )}
             </div>
           )}
 

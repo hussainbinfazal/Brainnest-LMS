@@ -16,18 +16,37 @@ import { CCourse, CCart } from "@/types/client";
 import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import LikeCoursesPageSkeleton from "./LikedCoursesPage-skeleton";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";
 
-
-type CLikedCoursesPageCompProps = { userLikedCourses: CCourse[], className?: string };
-const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPageCompProps): JSX.Element => {
-  const [likedCourses, setLikedCourses] = useState<CCourse[] | []>(userLikedCourses || []);
+type CLikedCoursesPageCompProps = {
+  userLikedCourses: CCourse[];
+  className?: string;
+};
+const LikedCoursesPageComp = ({
+  userLikedCourses,
+  className,
+}: CLikedCoursesPageCompProps): JSX.Element => {
+  const [likedCourses, setLikedCourses] = useState<CCourse[] | []>(
+    userLikedCourses || []
+  );
   const setLiked = useUserCourseStore((state) => state.updateUserCourse);
   const likedCourseIds = useUserCourseStore((state) => state.likedCourseIds);
   const setUpdatingLike = useUserCourseStore((state) => state.setUpdatingLike);
-  const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
-  const fetchUserLikedCourses = useUserCourseStore((state) => state.fetchUserLikedCourses);
+  const setUserCourseById = useUserCourseStore(
+    (state) => state.setUserCourseById
+  );
+  const fetchUserLikedCourses = useUserCourseStore(
+    (state) => state.fetchUserLikedCourses
+  );
   const user = useAuthStore((state) => state.authUser);
   const [loading, setLoading] = useState<boolean>(true);
   const [cart, setCart] = useState({
@@ -142,13 +161,13 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
     // console.log("1. LIKE COURSE FUNCTION CALLED")
     const store = useUserCourseStore.getState();
     const currentUserCourse = store.userCourseByCourseId[courseId];
-    const isUpdating = store.isUpdatingLikeByCourseId[courseId]
+    const isUpdating = store.isUpdatingLikeByCourseId[courseId];
     // console.log("2. LIKE COURSE FUNCTION CALLED")
 
     //Avoid duplicate request
     if (isUpdating) {
       toast.error("You have already liked this course");
-      return
+      return;
     }
     // console.log("3. LIKE COURSE FUNCTION CALLED")
     // Store previous state for rollback
@@ -160,30 +179,30 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
       likedAt: null,
     });
 
-    // We have to pass pass courseId from params in the url 
+    // We have to pass pass courseId from params in the url
     try {
       // console.log("This is the should Like state",shouldLike)
       const params = new URLSearchParams({
         page: page.toString(),
         limit: itemsPerPage.toString(),
       });
-      const response =
-        await axios.delete(`/api/dislikeCourse/${courseId}?${params.toString()}`);
-      const updatedUserCourse = response.data.userCourse
-      setUserCourseById(courseId as string, updatedUserCourse)
+      const response = await axios.delete(
+        `/api/dislikeCourse/${courseId}?${params.toString()}`
+      );
+      const updatedUserCourse = response.data.userCourse;
+      setUserCourseById(courseId as string, updatedUserCourse);
 
       if (!shouldDislike) {
         setLikedCourses((courses) =>
           courses.filter((course) => course._id !== courseId)
         );
       }
-      await fetchAllLikedCourses()
+      await fetchAllLikedCourses();
       toast.success(`${"Course disliked!"}`);
       // console.log("LIKE DEBUG FRONTEND:", {
       //   currentUserCourse,
       //   isLiked,
       // });
-
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         // console.log("LIKE COURSE API ERROR:", {
@@ -192,39 +211,51 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
         //   message: error.message,
         // });
 
-        clientLogger.error(`Error ${shouldDislike ? "disliking" : "liking"} course`, {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
+        clientLogger.error(
+          `Error ${shouldDislike ? "disliking" : "liking"} course`,
+          {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+          }
+        );
       }
-      const message = error instanceof Error ? error.message : "Something went wrong while   liking the course.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while   liking the course.";
       setUserCourseById(courseId as string, previousUserCourse);
-      clientLogger.error(`Error ${shouldDislike ? "disliking" : "liking"} course`, message);
+      clientLogger.error(
+        `Error ${shouldDislike ? "disliking" : "liking"} course`,
+        message
+      );
       toast.error(`Failed to ${shouldDislike ? "dislike" : "like"} course`);
     } finally {
       setUpdatingLike(courseId, false);
     }
-  }
+  };
   const fetchAllLikedCourses = useCallback(async (): Promise<void> => {
-
     try {
-      await fetchUserLikedCourses({ page, itemsPerPage, });
+      await fetchUserLikedCourses({ page, itemsPerPage });
       setLikedCourses(useUserCourseStore.getState().cachedLikedCourses);
-      setCurrentPage(useUserCourseStore.getState().cachedLikedCurrentPageNumber);
+      setCurrentPage(
+        useUserCourseStore.getState().cachedLikedCurrentPageNumber
+      );
       setTotalPages(useUserCourseStore.getState().cachedLikedTotalPages);
       setTotalCourses(useUserCourseStore.getState().cachedLikedTotalCourses);
       setHasNextPage(useUserCourseStore.getState().cachedLikedHasNextPage);
       setHasPrevPage(useUserCourseStore.getState().cachedLikedHasPrevPage);
       setIsLoading(false);
     } catch (error: unknown) {
-      const message: string = error instanceof Error ? error.message : "Unknown error occurred while fetching courses.";
+      const message: string =
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred while fetching courses.";
       clientLogger.error("Failed to fetch courses", { message, error });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }, [page, itemsPerPage, toggleLikeCourse, user]);
-
 
   const addToCart = (courseId: string) => {
     try {
@@ -247,19 +278,16 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
   // }, [fetchAllLikedCourses]);
 
   if (isLoading) {
-    return <LikeCoursesPageSkeleton />
+    return <LikeCoursesPageSkeleton />;
   }
-
 
   return (
     <div className="min-h-screen w-screen flex flex-col overflow-auto px-8 sm:px-8 ">
       <div className="w-full h-screen py-8 flex flex-col ">
         {likedCourses.length === 0 ? (
-
           <div className="w-full h-screen  flex justify-center items-center">
             No Liked Courses Found
           </div>
-
         ) : (
           <div className="w-full h-full  flex flex-col  gap-4">
             <div className="text-3xl font-semibold flex gap-4 w-full justify-start items-center">
@@ -286,7 +314,10 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
                               <div className="grid w-full items-center gap-2">
                                 <div className="flex flex-col space-y-1.5 w-62.5 h-30 relative">
                                   <Image
-                                    src={course?.coverImage || "/placeholder-course.jpg"} // image path or URL
+                                    src={
+                                      course?.coverImage ||
+                                      "/placeholder-course.jpg"
+                                    } // image path or URL
                                     alt="Description of the image"
                                     fill
                                     className="object-cover"
@@ -297,7 +328,13 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
                                     {course?.title}
                                   </h2>
                                   <p className="text-sm text-muted-foreground">
-                                    ({course?.averageRating ? parseInt(course.averageRating.toString()) : 0})
+                                    (
+                                    {course?.averageRating
+                                      ? parseInt(
+                                          course.averageRating.toString()
+                                        )
+                                      : 0}
+                                    )
                                   </p>
                                 </div>
                                 <div className="flex flex-col space-y-1.5 justify-start items-start gap-1">
@@ -312,11 +349,8 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
                             </CardContent>
                             <CardFooter className="flex-1 justify-between absolute bottom-4 w-full">
                               <Button
-
                                 variant="outline"
-                                onClick={() =>
-                                  toggleLikeCourse(course._id)
-                                }
+                                onClick={() => toggleLikeCourse(course._id)}
                                 className="px-10 group"
                               >
                                 <span className="w-full flex justify-center group">
@@ -324,7 +358,6 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
                                 </span>
                               </Button>
                               <Button
-
                                 className=""
                                 onClick={() => {
                                   router.push(`/courses/${course._id}`);
@@ -358,8 +391,8 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
       </div>
       <div className="py-4">
         {totalPages > 1 && (
-          <Pagination className=''>
-            <PaginationContent className=''>
+          <Pagination className="">
+            <PaginationContent className="">
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => handlePageChange(currentPage - 1)}
@@ -370,9 +403,14 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
                 />
               </PaginationItem>
 
-              {getVisiblePages({ currentPage, totalPages, maxVisiblePages }).map((page) => (
+              {getVisiblePages({
+                currentPage,
+                totalPages,
+                maxVisiblePages,
+              }).map((page) => (
                 <PaginationItem key={page}>
-                  <PaginationLink className=''
+                  <PaginationLink
+                    className=""
                     onClick={() => handlePageChange(page)}
                     isActive={page === currentPage}
                   >
@@ -382,7 +420,7 @@ const LikedCoursesPageComp = ({ userLikedCourses, className }: CLikedCoursesPage
               ))}
 
               <PaginationItem>
-                <PaginationEllipsis className='' />
+                <PaginationEllipsis className="" />
               </PaginationItem>
 
               <PaginationItem>

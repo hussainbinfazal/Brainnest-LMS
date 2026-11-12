@@ -1,16 +1,13 @@
-
-
-
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider"
-import Header from './components/Header'
-import Footer from "./components/Footer"
-import { Toaster } from "@/components/ui/sonner"
+import { ThemeProvider } from "@/components/theme-provider";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import { Toaster } from "@/components/ui/sonner";
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
 
 import { AppSidebar } from "@/components/AppSidebar";
 import { HiOutlineChevronLeft } from "react-icons/hi";
@@ -28,26 +25,30 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Brainnest",
-  description: "Brainnest is a comprehensive learning management system (LMS) designed to provide an engaging and interactive learning experience. It offers a wide range of courses, quizzes, and resources to help learners achieve their educational goals.",
+  description:
+    "Brainnest is a comprehensive learning management system (LMS) designed to provide an engaging and interactive learning experience. It offers a wide range of courses, quizzes, and resources to help learners achieve their educational goals.",
 };
 
-
-export default function RootLayout({ children } : { children: React.ReactNode }) {
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en"  suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        
         <NextAuthSessionProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-          > <SidebarProvider  className="" style={{}}>
+          >
+            {" "}
+            <SidebarProvider className="" style={{}}>
               <div className="w-full">
                 <div className="block md:hidden">
                   <AppSidebar />
@@ -59,15 +60,12 @@ export default function RootLayout({ children } : { children: React.ReactNode })
                   <main className="flex-1">
                     <div className="block md:hidden text-2xl">
                       <SidebarTrigger className="" />
-
                     </div>
                     {children}
                   </main>
                   <Footer />
                   <Toaster />
                 </div>
-
-
               </div>
             </SidebarProvider>
           </ThemeProvider>

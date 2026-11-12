@@ -19,28 +19,41 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
   userLocation: null,
   setUserLocation: (location: CUserLocation) => set({ userLocation: location }),
   updateUserToInstructor: async (userId: string): Promise<void> => {
-    set({ isUpdatingRole: true })
-    if (!userId) return
+    set({ isUpdatingRole: true });
+    if (!userId) return;
     try {
-      const response = await axios.put(`/api/users/update/updateToInstructor/${userId}`);
+      const response = await axios.put(
+        `/api/users/update/updateToInstructor/${userId}`
+      );
       if (response.status === 200) {
         clientLogger.info("User's Role updated successfully", { userId });
         get().fetchAuthUser(); //Fetch the updated user
-        clientLogger.info("Response from updating user to instructor", response);
+        clientLogger.info(
+          "Response from updating user to instructor",
+          response
+        );
         toast.success("Congratulations, You are now an Instructor");
-        setTimeout(() => toast.success("Thank for being a part of our community"), 500);
+        setTimeout(
+          () => toast.success("Thank for being a part of our community"),
+          500
+        );
         setTimeout(() => {
-          signOut({ callbackUrl: '/login' })
-        }, 1500)
+          signOut({ callbackUrl: "/login" });
+        }, 1500);
       }
       // Sign out to force fresh session with new role
-
     } catch (error: unknown) {
-      const message = getErrorMessage(error, "Something went wrong, while updating the role of the user to instructor");
-      clientLogger.error("Something went wrong, while updating the role of the user to instructor", { error: message, userId });
+      const message = getErrorMessage(
+        error,
+        "Something went wrong, while updating the role of the user to instructor"
+      );
+      clientLogger.error(
+        "Something went wrong, while updating the role of the user to instructor",
+        { error: message, userId }
+      );
       toast.error(message);
     } finally {
-      set({ isUpdatingRole: false })
+      set({ isUpdatingRole: false });
     }
   },
   fetchAuthUser: async () => {
@@ -59,7 +72,6 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
       let message = "Something went wrong";
       if (axios.isAxiosError(error)) {
         message = error.response?.data?.message || error.message || message;
-
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -67,13 +79,12 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
       set({
         authUser: null,
         isAuthLoading: false,
-      })
+      });
     } finally {
       setAuthLoading(false);
       set({
-        isAuthLoading: false
-      })
-
+        isAuthLoading: false,
+      });
     }
   },
   saveUserGeography: async (): Promise<void> => {
@@ -83,9 +94,12 @@ export const useAuthStore = create<CAuthStore>((set, get) => ({
         set({ userLocation: location });
       }
     } catch (error: unknown) {
-      const message: string = error instanceof Error ? error.message : "Something went wrong";
-      clientLogger.error("Something went wrong, while fetching the user location", { message, error })
-
+      const message: string =
+        error instanceof Error ? error.message : "Something went wrong";
+      clientLogger.error(
+        "Something went wrong, while fetching the user location",
+        { message, error }
+      );
     }
   },
 }));

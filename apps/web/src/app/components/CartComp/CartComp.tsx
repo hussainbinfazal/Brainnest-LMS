@@ -17,7 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CCart, CCourse } from "@/types/client";
 
-const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JSX.Element => {
+const CartPageComp: React.FC<{ className?: string }> = ({
+  className,
+}): React.JSX.Element => {
   const [cartCartCourses, setCartCourses] = useState<CCart[]>([]);
   const [cart, setCart] = useState<CCart | null>(null);
   const [cartItems, setCartItems] = useState<CCourse[]>([]);
@@ -33,7 +35,7 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
   const [isFixed, setIsFixed] = useState<boolean>(false);
   const user = useAuthStore((state) => state.authUser);
   const router = useRouter();
-  
+
   useEffect(() => {
     const handleScroll = (): void => {
       setIsFixed(window.scrollY > 0); // threshold: 50px scroll
@@ -58,8 +60,8 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
       // console.log("Cart :", data);
       setCartItems(data?.courses);
       setLoading(false);
-    } catch (error : any) {
-      const message : string =
+    } catch (error: any) {
+      const message: string =
         error.response?.data?.message ||
         error.message ||
         "Something went wrong while liking the course.";
@@ -67,10 +69,10 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
       toast.error(message);
     }
   }, [cartItems?.length]);
-  const verifyPayment = async (paymentData: any) : Promise<any> => {
+  const verifyPayment = async (paymentData: any): Promise<any> => {
     try {
-        // user?.id
-      const userId : string = user?._id  ? user?._id : "";
+      // user?.id
+      const userId: string = user?._id ? user?._id : "";
       if (!user || !userId) {
         throw new Error("User not authenticated");
       }
@@ -136,7 +138,7 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
         name: "Brainnest LMS",
         description: `Purchase: ${data?.courses?.[0]?.title}`,
         order_id: data.razorpayOrderId,
-        handler: async function (response:any) {
+        handler: async function (response: any) {
           const toastId = toast.loading("Verifying payment...");
           try {
             // Verify payment on backend
@@ -199,7 +201,7 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
         toast.error(response.data.message || "Failed to process payment");
         toast.dismiss();
       }
-    } catch (error : any) {
+    } catch (error: any) {
       toast.dismiss();
       toast.error(error.response?.data?.message || "Something went wrong");
       // console.error("Buy now error:", error);
@@ -266,7 +268,12 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
     }
   }, [fetchCart, user]);
   return (
-    <div className={cn("min-h-screen w-screen flex flex-col overflow-auto px-4", className)}>
+    <div
+      className={cn(
+        "min-h-screen w-screen flex flex-col overflow-auto px-4",
+        className
+      )}
+    >
       <div
         ref={containerRef}
         className="w-full min-h-screen py-8 flex flex-col gap-6 "
@@ -414,7 +421,9 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
                           id="coupon"
                           placeholder="Apply Coupon"
                           value={coupon}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          onChange={(
+                            e: React.ChangeEvent<HTMLInputElement>
+                          ) => {
                             const value = e.target.value;
                             setCoupon(value);
                           }}
@@ -431,7 +440,9 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
                         </div>
                       )}
                       <div className="flex justify-end items-center">
-                        <Button className="" size="default" variant="default">Apply</Button>
+                        <Button className="" size="default" variant="default">
+                          Apply
+                        </Button>
                       </div>
                     </div>
                   </form>
@@ -441,7 +452,7 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
             <div className="w-full flex flex-col items-end justify-end">
               <div className="inline-block">
                 <Card className="w-[350px]">
-                  <CardContent className=''>
+                  <CardContent className="">
                     <div className="grid w-full items-center gap-4">
                       <div className="flex flex-col space-y-1.5">
                         <Label htmlFor="name" className="text-xl my-4">
@@ -486,8 +497,8 @@ const CartPageComp: React.FC<{ className?: string }> = ({ className }): React.JS
         {cartItems?.length > 0 && (
           <div className="flex justify-end mt-8 ">
             <Button
-              size='default'
-              variant='default'
+              size="default"
+              variant="default"
               onClick={() => {
                 handleBuyNow();
               }}

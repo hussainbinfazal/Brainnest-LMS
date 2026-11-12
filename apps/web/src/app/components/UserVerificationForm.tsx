@@ -110,7 +110,7 @@ export const EmailOtpVerifier = ({
     cooldownSeconds: verifyCooldown,
     verifyOtp,
     isLocked,
-    unlock
+    unlock,
   } = useVerifyEmailOtp(email, verifyEmailForm.watch("otp"));
   const {
     status: resendStatus,
@@ -126,12 +126,11 @@ export const EmailOtpVerifier = ({
   }, [email]);
 
   const handleVerifyOtp = async (): Promise<void> => {
-
     console.log("Handle Verify OTP Called in verification Component", watchOtp);
     const result = await verifyOtp();
     if (result.ok) {
       toast.success("Email OTP Verified");
-      onVerified()
+      onVerified();
     } else {
       toast.error(result.message);
     }
@@ -144,14 +143,14 @@ export const EmailOtpVerifier = ({
     }
     const result = await resendOtp();
     if (result.ok) {
-      setResendCount((c) => c + 1) //Prev count  + 1
-      verifyEmailForm.resetField("otp")
-      unlock() ///Allow user to add otp in the otp Input
-      toast.success("Email OTP resent successfully")
+      setResendCount((c) => c + 1); //Prev count  + 1
+      verifyEmailForm.resetField("otp");
+      unlock(); ///Allow user to add otp in the otp Input
+      toast.success("Email OTP resent successfully");
     } else {
-      clientLogger.error(result.message)
-      toast.error(result.message)
-    };
+      clientLogger.error(result.message);
+      toast.error(result.message);
+    }
   };
 
   return (
@@ -202,7 +201,12 @@ export const EmailOtpVerifier = ({
             variant="default"
             type="button"
             onClick={verifyEmailForm.handleSubmit(handleVerifyOtp)} // manually trigger validation + submit handler
-            disabled={watchOtp.length !== 6 || isLocked || verifyStatus === "verifying" || !watchOtp}
+            disabled={
+              watchOtp.length !== 6 ||
+              isLocked ||
+              verifyStatus === "verifying" ||
+              !watchOtp
+            }
             className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mb-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             {verifyStatus === "verifying" ? "Verifying..." : "Verify OTP"}
@@ -231,7 +235,9 @@ export const EmailOtpVerifier = ({
               : "Resend Email OTP"}
           </button>
           {resendError && (
-            <p role="alert" className="text-sm text-red-500">{resendError}</p>
+            <p role="alert" className="text-sm text-red-500">
+              {resendError}
+            </p>
           )}
         </div>
       </Form>

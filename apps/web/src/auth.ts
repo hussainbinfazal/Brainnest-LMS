@@ -11,8 +11,8 @@ import {
   logger,
   User,
   UserDocument,
-} from '@repo/shared/server';
-import { IUser } from '@repo/shared/server';
+} from "@repo/shared/server";
+import { IUser } from "@repo/shared/server";
 import { generateUniqueUsername } from "./utils/generateRandomUsername";
 
 type AuthUser = NextAuthUser;
@@ -83,7 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const newUser: UserDocument = new User({
               email: user.email,
               name: user.name,
-              username:generateUniqueUsername(user.name,user.email),
+              username: generateUniqueUsername(user.name, user.email),
               role: "student",
               profile: user.profileImage || "",
               phoneNumber: user.phoneNumber || "",

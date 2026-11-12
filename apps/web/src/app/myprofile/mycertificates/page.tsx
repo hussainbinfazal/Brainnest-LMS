@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+import "react-pdf/dist/esm/Page/AnnotationLayer.css";
+import "react-pdf/dist/esm/Page/TextLayer.css";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -11,8 +11,8 @@ import { CAuthUser, CCertificate } from "@/types/client";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
 
-const MyCertificatesPage = () : React.JSX.Element => {
-  const authUser : CAuthUser  | null = useAuthStore((state) => state.authUser);
+const MyCertificatesPage = (): React.JSX.Element => {
+  const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
   // const setAuthUser : React.Dispatch<React.SetStateAction<AuthUser | null>> = useAuthStore((state) => state.setAuthUser);
   // const fetchCourses : () => Promise<void> = useCourseStore((state) => state.fetchCourses);
   const { fetchUser } = useAuthStore();
@@ -64,7 +64,12 @@ const MyCertificatesPage = () : React.JSX.Element => {
                               {cert?.courseName}
                             </h2>
                             <p className="text-sm text-muted-foreground">
-                              Issued on: {cert?.generatedAt ? new Date(cert.generatedAt).toLocaleDateString() : 'N/A'}
+                              Issued on:{" "}
+                              {cert?.generatedAt
+                                ? new Date(
+                                    cert.generatedAt
+                                  ).toLocaleDateString()
+                                : "N/A"}
                             </p>
                           </div>
                           <div className="flex flex-col space-y-1.5 justify-start items-start gap-1">
@@ -76,7 +81,6 @@ const MyCertificatesPage = () : React.JSX.Element => {
                       </CardContent>
                       <CardFooter className="flex flex-col gap-4  w-full">
                         <Button
-                          
                           variant="outline"
                           className="!w-full px-2 py-4"
                           onClick={() => {

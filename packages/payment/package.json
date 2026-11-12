@@ -2,6 +2,13 @@
   "name": "@repo/payment",
   "version": "1.0.0",
   "description": "Payment utilities and Razorpay integration",
+  "keywords": [
+    "payment",
+    "razorpay"
+  ],
+  "license": "ISC",
+  "author": "",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -9,13 +16,6 @@
     "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "payment",
-    "razorpay"
-  ],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@repo/shared": "workspace:*",
     "axios": "^1.21.0",

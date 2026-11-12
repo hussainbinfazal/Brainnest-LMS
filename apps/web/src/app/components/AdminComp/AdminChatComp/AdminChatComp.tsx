@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
@@ -8,11 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AiOutlineSend } from "react-icons/ai";
 import { connectSocket } from "@/lib/socket";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import axios from "axios";
 import { Minus } from "lucide-react";
 import { MessageCirclePlus } from "lucide-react";
@@ -24,7 +26,14 @@ import { TfiLayoutMenuSeparated } from "react-icons/tfi";
 
 import { RxDropdownMenu } from "react-icons/rx";
 import { MdCircle } from "react-icons/md";
-import { CAuthUser, CChat, CChatMessage, CClientToServerEvents, CMessage, CServerToClientEvents } from "@/types/client";
+import {
+  CAuthUser,
+  CChat,
+  CChatMessage,
+  CClientToServerEvents,
+  CMessage,
+  CServerToClientEvents,
+} from "@/types/client";
 import { Socket } from "socket.io-client";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +43,11 @@ type MinimalUser = {
   profileImage: string;
 };
 
-export default function AdminChat({className}: {className?: string}): React.JSX.Element {
+export default function AdminChat({
+  className,
+}: {
+  className?: string;
+}): React.JSX.Element {
   const router = useRouter();
   const user = useAuthStore((state) => state.authUser);
   const userId = useMemo(() => user?._id, [user]);
@@ -44,18 +57,26 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [messageText, setMessageText] = useState<string>("");
   const [message, setMessage] = useState<CMessage>({
-    _id: "", message: "", sender: {
+    _id: "",
+    message: "",
+    sender: {
       _id: "",
       name: "",
-      profileImage: ""
-    }, receiver: {
+      profileImage: "",
+    },
+    receiver: {
       _id: "",
       name: "",
-      profileImage: ""
-    }, createdAt: new Date(), updatedAt: new Date()
+      profileImage: "",
+    },
+    createdAt: new Date(),
+    updatedAt: new Date(),
   });
   const [chats, setChats] = useState<CChat[]>([]);
-  const [socket, setSocket] = useState<Socket<CClientToServerEvents, CServerToClientEvents> | null>(null);
+  const [socket, setSocket] = useState<Socket<
+    CClientToServerEvents,
+    CServerToClientEvents
+  > | null>(null);
   const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>();
   const [isActive, setIsActive] = useState<boolean>(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
@@ -68,8 +89,12 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
   const [isPaid, setIsPaid] = useState<boolean>(false);
   const [activeChatId, setActiveChatId] = useState<string>();
   const [messageCount, setMessageCount] = useState<number>(0);
-  const [viewLimitInfo, setViewLimitInfo] = useState<string | null | boolean>("");
-  const [viewRemainingInfo, setViewRemainingInfo] = useState<string | number | boolean>("");
+  const [viewLimitInfo, setViewLimitInfo] = useState<string | null | boolean>(
+    ""
+  );
+  const [viewRemainingInfo, setViewRemainingInfo] = useState<
+    string | number | boolean
+  >("");
   const [viewCountInfo, setViewCountInfo] = useState<string | boolean>("");
   const [showInfo, setShowInfo] = useState<boolean>(false);
   const [userStatus, setUserStatus] = useState<{ [key: string]: string }>({});
@@ -78,7 +103,10 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
       .filter(([_, status]) => status === "online")
       .map(([userId]) => userId);
   }, [userStatus]);
-  const socketRef = useRef<Socket<CClientToServerEvents, CServerToClientEvents> | null>(null);
+  const socketRef = useRef<Socket<
+    CClientToServerEvents,
+    CServerToClientEvents
+  > | null>(null);
   const fetchChat = useCallback(async (): Promise<void> => {
     setIsComponentLoading(true);
     try {
@@ -139,15 +167,20 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
     const response = console.log("This is the message :", messageText);
 
     setMessage({
-      _id: "", message: "", sender: {
+      _id: "",
+      message: "",
+      sender: {
         _id: "",
         name: "",
-        profileImage: ""
-      }, receiver: {
+        profileImage: "",
+      },
+      receiver: {
         _id: "",
         name: "",
-        profileImage: ""
-      }, createdAt: new Date(), updatedAt: new Date()
+        profileImage: "",
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
   };
 
@@ -189,8 +222,7 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
       if (message) {
         saveMessage();
       }
-    } else if (e.key === 'Enter' && e.shiftKey) {
-
+    } else if (e.key === "Enter" && e.shiftKey) {
     }
   };
 
@@ -204,7 +236,6 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
       document.body.removeChild(script);
     };
   }, []);
-
 
   useEffect(() => {
     let isMounted = true;
@@ -238,13 +269,22 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
               };
             });
           });
-          newSocket?.on("userStatus", ({ userId, status }: { userId: string, status: 'online' | 'offline' }) => {
-            console.log(`${userId} is now ${status}`);
-            setUserStatus((prev) => ({
-              ...prev,
-              [userId]: status,
-            }));
-          });
+          newSocket?.on(
+            "userStatus",
+            ({
+              userId,
+              status,
+            }: {
+              userId: string;
+              status: "online" | "offline";
+            }) => {
+              console.log(`${userId} is now ${status}`);
+              setUserStatus((prev) => ({
+                ...prev,
+                [userId]: status,
+              }));
+            }
+          );
           console.log(
             "This is the user Id received from in the user Status :",
             userId
@@ -272,18 +312,15 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
     }, 300); // Small delay to prevent immediate load
     return () => clearTimeout(timer);
   }, [fetchChat, user]);
-  useEffect(() => {
-  }, [selectedPlan]);
+  useEffect(() => {}, [selectedPlan]);
   useEffect(() => {
     if (activeChat) {
       setIsActive(activeChat.messageRemaining <= 0 || !activeChat.isActive);
     }
   }, [activeChat]);
 
-  useEffect(() => {
-  }, [isActive]);
-  useEffect(() => {
-  }, [activeChat]);
+  useEffect(() => {}, [isActive]);
+  useEffect(() => {}, [activeChat]);
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
@@ -296,8 +333,7 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
     scrollToBottom();
   }, [messages]);
 
-
-  useEffect(() => { }, [userId]);
+  useEffect(() => {}, [userId]);
   useEffect(() => {
     const updateChat = async (): Promise<void> => {
       const updatedChats = await axios.get("/api/chat");
@@ -310,22 +346,26 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
     };
     updateChat();
   }, [messages?.length]);
-  useEffect(() => { }, [userStatus]);
-
+  useEffect(() => {}, [userStatus]);
 
   return (
-    <div className={cn("w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ", className)}>
+    <div
+      className={cn(
+        "w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ",
+        className
+      )}
+    >
       <div className="w-full h-[95%] flex justify-between items-start overflow-none bg-black">
         <div
-          className={`flex flex-col  justify-start  h-full overflow-hidden ${isCollapsed ? "w-20 " : "w-80"
-            } bg-black dark:bg-black gap-2`}
+          className={`flex flex-col  justify-start  h-full overflow-hidden ${
+            isCollapsed ? "w-20 " : "w-80"
+          } bg-black dark:bg-black gap-2`}
         >
           {isLoading ? (
             <Skeleton className="w-full h-full! py-3" />
           ) : (
             <div className="w-full h-full  overflow-y-auto border-r bg-black  ">
               <div
-
                 // defaultOpen={isSidebarOpen}
                 className=" h-full w-full bg-black!"
               >
@@ -335,13 +375,15 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
                   </SidebarTrigger>
                 </div> */}
                 <div
-                  className={`transition-all duration-300 h-full flex! flex-col! relative bg-black gap-2${isCollapsed ? "w-20 pr-3" : "w-80"
-                    } `}
+                  className={`transition-all duration-300 h-full flex! flex-col! relative bg-black gap-2${
+                    isCollapsed ? "w-20 pr-3" : "w-80"
+                  } `}
                 >
                   <div className="pl-4 w-full flex! border-none! outline-none! items-center bg-black">
                     <div
-                      className={`w-full flex! items-center ${isCollapsed ? "justify-center" : "justify-between"
-                        } px-2 py-4 pb-2`}
+                      className={`w-full flex! items-center ${
+                        isCollapsed ? "justify-center" : "justify-between"
+                      } px-2 py-4 pb-2`}
                     >
                       {!isCollapsed && (
                         <p className="text-2xl text-white">Chats</p>
@@ -367,10 +409,11 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
                       chats.map((chat) => (
                         <div key={chat._id}>
                           <div
-                            className={`flex items-center gap-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-md ${activeChatId === chat._id
-                              ? "bg-gray-200 dark:bg-gray-700"
-                              : ""
-                              }`}
+                            className={`flex items-center gap-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-md ${
+                              activeChatId === chat._id
+                                ? "bg-gray-200 dark:bg-gray-700"
+                                : ""
+                            }`}
                             onClick={() => {
                               setActiveChatId(chat._id);
                               setActiveChat(chat);
@@ -438,7 +481,8 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
                 <div className=" flex-1 overflow-y-auto px-4 h-[calc(100%-110px)]">
                   {messages?.map((message: CMessage) => {
                     const isCurrentUserSender =
-                      message?.sender._id === activeChat?.receiver?._id || message?.sender?._id === activeChat?.receiver?._id;
+                      message?.sender._id === activeChat?.receiver?._id ||
+                      message?.sender?._id === activeChat?.receiver?._id;
 
                     console.log(
                       "This is the sender and userId of the message",
@@ -453,21 +497,22 @@ export default function AdminChat({className}: {className?: string}): React.JSX.
                       <div
                         key={message._id}
                         ref={messagesContainerRef}
-                        className={`${isCurrentUserSender ? "justify-end" : "justify-start"
-                          } flex items-center gap-2 w-full  p-2`}
+                        className={`${
+                          isCurrentUserSender ? "justify-end" : "justify-start"
+                        } flex items-center gap-2 w-full  p-2`}
                       >
                         <div
-                          className={`min-w-1/3 px-2 py-4 relative bg-red-500 max-w-1/2 overflow-hidden wrap-break-word  ${isCurrentUserSender
-                            ? "rounded-bl-lg rounded-tr-lg rounded-tl-lg"
-                            : "rounded-br-lg rounded-tr-lg rounded-tl-lg"
-                            }`}
+                          className={`min-w-1/3 px-2 py-4 relative bg-red-500 max-w-1/2 overflow-hidden wrap-break-word  ${
+                            isCurrentUserSender
+                              ? "rounded-bl-lg rounded-tr-lg rounded-tl-lg"
+                              : "rounded-br-lg rounded-tr-lg rounded-tl-lg"
+                          }`}
                         >
                           <div className="absolute bottom-0 right-1 text-sm">
-                            {message.createdAt &&
-                              ((message?.createdAt))
+                            {message.createdAt && message?.createdAt
                               ? new Date(message.createdAt).toLocaleTimeString(
-                                "en-US"
-                              )
+                                  "en-US"
+                                )
                               : "Invalid Time"}
                           </div>
                           <p>{message?.message}</p>

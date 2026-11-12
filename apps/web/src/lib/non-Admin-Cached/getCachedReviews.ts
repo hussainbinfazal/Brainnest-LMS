@@ -1,5 +1,16 @@
-import { IReview, REVIEWS_ALL_COURSES, REVIEWS_BY_COURSE, Review, connectDB, logger } from '@repo/shared/server';
-import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
+import {
+  IReview,
+  REVIEWS_ALL_COURSES,
+  REVIEWS_BY_COURSE,
+  Review,
+  connectDB,
+  logger,
+} from "@repo/shared/server";
+import {
+  getCached,
+  setCached,
+  CACHE_TTL,
+} from "@repo/shared/config/redisConfig/cache-helper";
 import { CReview } from "@/types/client";
 import { serializeReviews } from "@/utils/serializer/review.Serializer";
 
@@ -9,8 +20,11 @@ import { serializeReviews } from "@/utils/serializer/review.Serializer";
  * logic never drift apart across call sites.
  */
 export async function getReviewsWithCache(): Promise<CReview[]> {
-  logger.info("")
-  const cached = await getCached<CReview[]>(REVIEWS_ALL_COURSES.namespace, "all");
+  logger.info("");
+  const cached = await getCached<CReview[]>(
+    REVIEWS_ALL_COURSES.namespace,
+    "all"
+  );
   if (cached) {
     logger.info("Reviews fetched from cache", { reviewCount: cached.length });
     return cached;
@@ -26,37 +40,59 @@ export async function getReviewsWithCache(): Promise<CReview[]> {
       .exec();
 
     const serialized = serializeReviews(rawReviews);
-    await setCached(REVIEWS_ALL_COURSES.namespace, "all", serialized, CACHE_TTL.MEDIUM);
+    await setCached(
+      REVIEWS_ALL_COURSES.namespace,
+      "all",
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
 
-    logger.info("Reviews fetched successfully", { reviewCount: serialized.length });
+    logger.info("Reviews fetched successfully", {
+      reviewCount: serialized.length,
+    });
     return serialized;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Something went wrong"
+    const message = err instanceof Error ? err.message : "Something went wrong";
     logger.error("Error fetching reviews", { err, cached, message });
     return [];
   }
-};
+}
 
-export async function getCourseReviewsWithCache(courseId: string): Promise<CReview[] | []> {
-  const cached = await getCached<CReview[]>(REVIEWS_BY_COURSE.namespace, courseId);
+export async function getCourseReviewsWithCache(
+  courseId: string
+): Promise<CReview[] | []> {
+  const cached = await getCached<CReview[]>(
+    REVIEWS_BY_COURSE.namespace,
+    courseId
+  );
   if (cached) {
     logger.info("Reviews fetched from cache", { reviewCount: cached.length });
     return cached;
   }
   await connectDB(process.env.MONGODB_URI!);
   try {
-    const rawReview: IReview[] = await Review.find({ course: courseId, status: "clean" })
+    const rawReview: IReview[] = await Review.find({
+      course: courseId,
+      status: "clean",
+    })
       .populate("user", "name profileImage")
       .limit(50)
       .lean()
       .exec();
     const serialized: CReview[] = serializeReviews(rawReview);
-    await setCached(REVIEWS_BY_COURSE.namespace, courseId, serialized, CACHE_TTL.MEDIUM)
-      ;
-    logger.info("Reviews fetched successfully", { reviewCount: serialized.length });
+    await setCached(
+      REVIEWS_BY_COURSE.namespace,
+      courseId,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Reviews fetched successfully", {
+      reviewCount: serialized.length,
+    });
     return serialized;
   } catch (error: unknown) {
-    const message: string = error instanceof Error ? error.message : " Something went wrong"
+    const message: string =
+      error instanceof Error ? error.message : " Something went wrong";
     logger.error("Error fetching reviews", { err: error, cached, message });
     return [];
   }

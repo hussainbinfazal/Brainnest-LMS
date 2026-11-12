@@ -2,12 +2,25 @@ import { Worker } from "bullmq";
 import { generateCertificate } from "@/services/certficateService";
 import { logger } from "@repo/shared/server";
 
-new Worker("certificateQueue", async (job) => {
-    const { userId, courseId, instructorName, courseTitle, userName } = job.data;
-    await generateCertificate(userName, (courseId).toString(), userId, instructorName, courseTitle);
-    logger.info(`Certificate generated for user ${userId} and course ${courseId}`);
-}, {
+new Worker(
+  "certificateQueue",
+  async (job) => {
+    const { userId, courseId, instructorName, courseTitle, userName } =
+      job.data;
+    await generateCertificate(
+      userName,
+      courseId.toString(),
+      userId,
+      instructorName,
+      courseTitle
+    );
+    logger.info(
+      `Certificate generated for user ${userId} and course ${courseId}`
+    );
+  },
+  {
     connection: {
-        url: process.env.UPSTASH_REDIS_URL
-    }
-})
+      url: process.env.UPSTASH_REDIS_URL,
+    },
+  }
+);

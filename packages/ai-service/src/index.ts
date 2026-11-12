@@ -4,6 +4,6 @@ import { configDotenv } from 'dotenv';
 // console.log("cwd:", process.cwd());
 // console.log("__dirname:", __dirname);
 
-const result = configDotenv({ path: "./.env" });
+const result = configDotenv({ path: './.env' });
 
 // console.log("dotenv result:", result);

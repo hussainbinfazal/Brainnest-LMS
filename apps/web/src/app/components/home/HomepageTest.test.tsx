@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import HomePage, { HomeProps } from "./Homepage"; 
+import HomePage, { HomeProps } from "./Homepage";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
@@ -56,52 +56,57 @@ jest.mock("embla-carousel-autoplay", () => {
 
 // ---------- Shared fixtures ----------
 
-const mockCategory = (overrides: Partial<CCategoryWithChildren> = {}): CCategoryWithChildren => ({
-  _id: "cat-1",
-  name: "Development",
-  slug: "development",
-  children: [],
-  ...overrides,
-} as unknown as CCategoryWithChildren);
+const mockCategory = (
+  overrides: Partial<CCategoryWithChildren> = {}
+): CCategoryWithChildren =>
+  ({
+    _id: "cat-1",
+    name: "Development",
+    slug: "development",
+    children: [],
+    ...overrides,
+  }) as unknown as CCategoryWithChildren;
 
-const mockReview = (overrides: Partial<CReview> = {}): CReview => ({
-  _id: "rev-1",
-  rating: 5,
-  comment: "Great course, learned a lot!",
-  spamScore: 0,
-  status: "clean",
-  user: { name: "Alex" },
-  ipAdress: "127.0.0.1",
-  score: 0,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  ...overrides,
-} as unknown as CReview);
+const mockReview = (overrides: Partial<CReview> = {}): CReview =>
+  ({
+    _id: "rev-1",
+    rating: 5,
+    comment: "Great course, learned a lot!",
+    spamScore: 0,
+    status: "clean",
+    user: { name: "Alex" },
+    ipAdress: "127.0.0.1",
+    score: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  }) as unknown as CReview;
 
-const mockCourse = (overrides: Partial<CCourse> = {}): CCourse => ({
-  _id: "course-1",
-  title: "Intro to Testing",
-  topic: "testing",
-  description: "A short course about testing",
-  coverImage: "/cover.png",
-  instructorId: { _id: "inst-1", name: "Jane Doe" },
-  averageRating: 4.5,
-  totalDurationInSeconds: 3600,
-  price: 999,
-  discount: 0,
-  level: "beginner",
-  language: "English",
-  status: "published",
-  topics: [],
-  lessons: [],
-  reviews: [mockReview()],
-  category: mockCategory(),
-  published: true,
-  purchased: false,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  ...overrides,
-} as unknown as CCourse);
+const mockCourse = (overrides: Partial<CCourse> = {}): CCourse =>
+  ({
+    _id: "course-1",
+    title: "Intro to Testing",
+    topic: "testing",
+    description: "A short course about testing",
+    coverImage: "/cover.png",
+    instructorId: { _id: "inst-1", name: "Jane Doe" },
+    averageRating: 4.5,
+    totalDurationInSeconds: 3600,
+    price: 999,
+    discount: 0,
+    level: "beginner",
+    language: "English",
+    status: "published",
+    topics: [],
+    lessons: [],
+    reviews: [mockReview()],
+    category: mockCategory(),
+    published: true,
+    purchased: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  }) as unknown as CCourse;
 
 const defaultProps: HomeProps = {
   initialCourses: [mockCourse()],
@@ -141,7 +146,10 @@ beforeAll(() => {
 beforeEach(() => {
   jest.clearAllMocks();
   (useRouter as jest.Mock).mockReturnValue({ push: jest.fn() });
-  (useSession as jest.Mock).mockReturnValue({ data: null, status: "unauthenticated" });
+  (useSession as jest.Mock).mockReturnValue({
+    data: null,
+    status: "unauthenticated",
+  });
   setupStoreMocks();
   window.sessionStorage.clear();
 });

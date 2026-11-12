@@ -1,23 +1,23 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "target": "ES2022",
-        "lib":["ES2022"],
-        "module":"ESNext",
-        "moduleResolution":"Node",
-        "strict" : true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "ignoreDeprecations": "6.0",
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
-        // "rootDir": "./src",
-            "rootDir": "../..",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    // "rootDir": "./src",
+    "rootDir": "../..",
 
-        "outDir": "./dist",
-        "declaration": true,
-        "declarationMap": true
-    },
-    "include": ["src/**/*.ts", "scripts/seed.ts"],
-    "exclude": ["node_modules", "dist"]
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*.ts", "scripts/seed.ts"],
+  "exclude": ["node_modules", "dist"]
 }

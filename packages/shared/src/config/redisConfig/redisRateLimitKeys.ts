@@ -2,14 +2,13 @@
 //   max: 5,
 //   windowSec: 60,
 // } as const;
-
-import { id } from "zod/v4/locales";
+import { id } from 'zod/v4/locales';
 
 export const OTP_SEND_EMAIL_IP_KEY = {
   namespace: 'limit-otp-send:ip',
   id: 'ip',
   max: 5,
-  windowSec: 15 * 60,   // 900 — matches the cost of a real email send
+  windowSec: 15 * 60, // 900 — matches the cost of a real email send
   description: 'Rate limit IPs on the send-email-OTP route',
   usedIn: ['User Verification'],
 } as const;
@@ -18,7 +17,7 @@ export const OTP_VERIFY_EMAIL_IP_KEY = {
   namespace: 'limit-otp-verify-email:ip',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  windowSec: 15 * 60, // consistent window with send, easier to reason about
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
 } as const;
@@ -26,38 +25,39 @@ export const WORKER_ENQUEUE_TRANSCRIBE = {
   namespace: 'limit-worker-enqueue-transcribe',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  windowSec: 15 * 60, // consistent window with send, easier to reason about
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
-}
+};
 export const WORKER_SETTLE_PAYMENT = {
   namespace: 'limit-worker-settle-payment',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  windowSec: 15 * 60, // consistent window with send, easier to reason about
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
-}
+};
 export const WORKE_SYNC_USERCOURE_LIKE = {
   namespace: 'limit-worker-sync-likes',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60,   // consistent window with send, easier to reason about
+  windowSec: 15 * 60, // consistent window with send, easier to reason about
   description: 'Rate limit IPs on the verify-email-OTP route',
   usedIn: ['User Verification'],
-}
+};
 export const INTERNAL_AUTH_IP_KEY = {
   namespace: 'limit-internal-auth:ip',
   id: 'ip',
-  max: 300,          // generous ceiling for legitimate service-to-service traffic
+  max: 300, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Guards worker routes against secret brute-forcing from a given IP',
+  description:
+    'Guards worker routes against secret brute-forcing from a given IP',
   usedIn: ['Authentication'],
 } as const;
 export const GLOBAL_IP_KEY = {
   namespace: 'limit-global:ip',
   id: 'ip',
-  max: 100,          // generous ceiling for legitimate service-to-service traffic
+  max: 100, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
   description: 'Guard api routes against brute-forcing from a given IP',
   usedIn: ['Global Rate Limiting'],
@@ -68,25 +68,28 @@ export const UPDATE_TO_INSTRUCTOR_IP_KEY = {
   id: 'ip',
   max: 30,
   windowSec: 60,
-  description: 'Backstop against anonymous spam of update to instructor from one IP',
+  description:
+    'Backstop against anonymous spam of update to instructor from one IP',
   usedIn: ['Update to Instructor Rate Limiting'],
-}
+};
 export const UPDATE_TO_INSTRUCTOR_USER_KEY = {
   namespace: 'limit-update-to-instructor:user',
   id: 'userId',
   max: 30,
   windowSec: 60,
-  description: 'Backstop against anonymous spam of update to instructor from same user',
+  description:
+    'Backstop against anonymous spam of update to instructor from same user',
   usedIn: ['Update to Instructor Rate Limiting'],
-}
+};
 
 //Init Route rate limit config
 export const UPLOAD_INIT_IP_KEY = {
   namespace: 'limit-upload-init:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Backstop against anonymous spam of upload session creation from one IP',
+  description:
+    'Backstop against anonymous spam of upload session creation from one IP',
   usedIn: ['Upload Init Rate Limiting'],
 } as const;
 
@@ -94,12 +97,12 @@ export const UPLOAD_INIT_IP_KEY = {
 export const UPLOAD_SIGN_IP_KEY = {
   namespace: 'limit-upload-sign:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Backstop against anonymous spam of upload session creation from one IP',
+  description:
+    'Backstop against anonymous spam of upload session creation from one IP',
   usedIn: ['Upload Init Rate Limiting'],
 } as const;
-
 
 //Generate Signature route rate limit config
 export const UPLOAD_SIGN_USER_KEY = {
@@ -123,9 +126,10 @@ export const UPLOAD_INIT_USER_KEY = {
 export const UPLOAD_COMPLETE_IP_KEY = {
   namespace: 'limit-upload-complete:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Backstop against anonymous spam of upload session complete from one IP',
+  description:
+    'Backstop against anonymous spam of upload session complete from one IP',
   usedIn: ['Upload Complete Rate Limiting'],
 } as const;
 
@@ -138,11 +142,11 @@ export const UPLOAD_COMPLETE_USER_KEY = {
   usedIn: ['Upload Complete User Rate Limiting'],
 } as const;
 //Upload ip for avatar, video, thumbnails
-//This is anonymos upload, so chooose strict time 
+//This is anonymos upload, so chooose strict time
 export const AVATAR_SIGN_IP_KEY = {
   namespace: 'limit-upload-avatar:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
   description: 'Backstop against anonymous spam of upload avatar from one IP',
   usedIn: ['Upload avatar Rate Limiting'],
@@ -150,15 +154,16 @@ export const AVATAR_SIGN_IP_KEY = {
 export const THUMBNAILS_SIGN_IP_KEY = {
   namespace: 'limit-upload-thumbnails:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Backstop against anonymous spam of upload thumbnails from one IP',
+  description:
+    'Backstop against anonymous spam of upload thumbnails from one IP',
   usedIn: ['Upload thumbnail Rate Limiting'],
 } as const;
 export const VIDEO_SIGN_IP_KEY = {
   namespace: 'limit-upload-video:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
   description: 'Backstop against anonymous spam of upload video from one IP',
   usedIn: ['Upload Video Rate Limiting'],
@@ -168,9 +173,10 @@ export const VIDEO_SIGN_IP_KEY = {
 export const REGISTER_IP_KEY = {
   namespace: 'limit-register:ip',
   id: 'ip',
-  max: 30,          // generous ceiling for legitimate service-to-service traffic
+  max: 30, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
-  description: 'Backstop against anonymous spam of new register request from one IP',
+  description:
+    'Backstop against anonymous spam of new register request from one IP',
   usedIn: ['Register Rate Limiting'],
 } as const;
 
@@ -224,7 +230,8 @@ export const PROGRESS_LESSON_IP_KEY = {
   id: 'ip',
   max: 30,
   windowSec: 60,
-  description: 'Rate limits lesson progress generation and updates by client IP',
+  description:
+    'Rate limits lesson progress generation and updates by client IP',
   usedIn: ['Lesson Progress API'],
 } as const;
 
@@ -242,7 +249,8 @@ export const PROGRESS_COMPLETE_IP_KEY = {
   id: 'ip',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits lesson completion and certificate job requests by client IP',
+  description:
+    'Rate limits lesson completion and certificate job requests by client IP',
   usedIn: ['Lesson Completion API'],
 } as const;
 
@@ -347,7 +355,8 @@ export const CART_COURSE_IP_KEY = {
   id: 'ip',
   max: 30,
   windowSec: 60,
-  description: 'Rate limits adding and removing courses from carts by client IP',
+  description:
+    'Rate limits adding and removing courses from carts by client IP',
   usedIn: ['Cart Course API'],
 } as const;
 
@@ -356,7 +365,8 @@ export const ADMIN_COUPON_IP_KEY = {
   id: 'ip',
   max: 5,
   windowSec: 60,
-  description: 'Rate limits administrative coupon reads and mutations by client IP',
+  description:
+    'Rate limits administrative coupon reads and mutations by client IP',
   usedIn: ['Admin Coupon API'],
 } as const;
 
@@ -382,7 +392,8 @@ export const ADMIN_COURSE_DETAIL_IP_KEY = {
   id: 'ip',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client IP',
+  description:
+    'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin Course Detail API'],
 } as const;
 export const ADMIN_COURSE_UPDATE_IP_KEY = {
@@ -390,7 +401,8 @@ export const ADMIN_COURSE_UPDATE_IP_KEY = {
   id: 'ip',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client IP',
+  description:
+    'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin Course Detail API'],
 } as const;
 export const ADMIN_AI_LESSON_DRAFT_IP_KEY = {
@@ -398,23 +410,26 @@ export const ADMIN_AI_LESSON_DRAFT_IP_KEY = {
   id: 'ip',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client IP',
+  description:
+    'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin AI Lesson Draft API'],
-}
+};
 export const ADMIN_AI_LESSON_DRAFT_USER_KEY = {
   namespace: 'limit-admin-ai-lesson-draft:user',
   id: 'userId',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client userId',
+  description:
+    'Rate limits instructor course detail reads and mutations by client userId',
   usedIn: ['Admin AI Lesson Draft API'],
-}
+};
 export const ADMIN_COURSE_UPDATE_USER_KEY = {
   namespace: 'limit-user-admin-course-update:user',
   id: 'userId',
   max: 20,
   windowSec: 60,
-  description: 'Rate limits instructor course detail reads and mutations by client IP',
+  description:
+    'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin Course Detail API'],
 } as const;
 
@@ -423,7 +438,8 @@ export const ADMIN_INSTRUCTOR_COURSES_IP_KEY = {
   id: 'ip',
   max: 60,
   windowSec: 60,
-  description: 'Rate limits instructor course list and delete operations by client IP',
+  description:
+    'Rate limits instructor course list and delete operations by client IP',
   usedIn: ['Admin Instructor Courses API'],
 } as const;
 
@@ -454,7 +470,6 @@ export const COURSE_RATING_IP_KEY = {
   usedIn: ['Course Rating API'],
 } as const;
 
-
 export const CRON_RECONCILE_IP_KEY = {
   namespace: 'limit-cron-reconcile:ip',
   id: 'ip',
@@ -464,7 +479,6 @@ export const CRON_RECONCILE_IP_KEY = {
   usedIn: ['Payment Reconciliation Cron API'],
 } as const;
 
-
 export const PAYMENT_STATUS_IP_KEY = {
   namespace: `limit-order-status:ip`,
   id: 'ip',
@@ -472,7 +486,7 @@ export const PAYMENT_STATUS_IP_KEY = {
   windowSec: 60,
   description: 'Rate limits order status requests by client IP',
   usedIn: ['Order Status API'],
-}
+};
 export const PAYMENT_STATUS_USER_KEY = {
   namespace: `limit-order-status:user`,
   id: 'user',
@@ -480,7 +494,7 @@ export const PAYMENT_STATUS_USER_KEY = {
   windowSec: 60,
   description: 'Rate limits order status requests by client Id',
   usedIn: ['Order Status API'],
-}
+};
 // Generated key format: namespace:{ip} for IP limits and namespace:{userId} for user limits.
 export const RATE_LIMIT_KEYS_QUICK_REFERENCE = `
 REDIS RATE LIMIT KEYS - QUICK REFERENCE

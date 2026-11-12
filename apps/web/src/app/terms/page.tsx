@@ -15,7 +15,7 @@ import {
 const TermsPage = (): JSX.Element => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
-  const toggleSection = (sectionId : string): void => {
+  const toggleSection = (sectionId: string): void => {
     setExpandedSection(expandedSection === sectionId ? null : sectionId);
   };
 

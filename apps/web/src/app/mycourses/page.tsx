@@ -6,17 +6,13 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import axios from "axios";
 import { CCourse } from "@/types/client";
 const MyCoursesPage = () => {
   const [courses, setCourses] = useState<CCourse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);  
-  const fetchMyCourses = async () : Promise<void> => {
+  const [loading, setLoading] = useState<boolean>(true);
+  const fetchMyCourses = async (): Promise<void> => {
     try {
       // console.log("fetch my courses called with axios");
 
@@ -24,14 +20,14 @@ const MyCoursesPage = () => {
       const data = response.data;
       setCourses(data);
       // console.log("This is the response from the api", response);
-    } catch (error : any) {
+    } catch (error: any) {
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  function convertToTotalHours(timeStr : string | number): number {
+  function convertToTotalHours(timeStr: string | number): number {
     const parts = timeStr.toString().split(":").map(Number);
 
     let hours = 0;
@@ -45,7 +41,7 @@ const MyCoursesPage = () => {
 
     return parseFloat(hours.toFixed(2)); // rounded to 2 decimals
   }
-  function formatRatingNumber(num : number): string {
+  function formatRatingNumber(num: number): string {
     if (num >= 1_000_000) {
       return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
     } else if (num >= 1_000) {
@@ -55,19 +51,19 @@ const MyCoursesPage = () => {
     }
   }
 
-  const lessonProgress = (course : CCourse) => {
+  const lessonProgress = (course: CCourse) => {
     const totalLessons = course.lessons?.length;
     const completedLessons = course.lessons?.filter(
       (lesson) => lesson.status === "completed"
     ).length;
     const completedLessonsCount = completedLessons || 0;
     const totalLessonsCount = totalLessons || 0;
-    const progressPercentage = (completedLessonsCount / totalLessonsCount) * 100;
+    const progressPercentage =
+      (completedLessonsCount / totalLessonsCount) * 100;
     return progressPercentage.toFixed(2);
   };
   useEffect(() => {
     fetchMyCourses();
-    
   }, []);
   return (
     <div className="min-h-screen w-full flex flex-col justify-start items-center gap-7 py-5">
@@ -91,8 +87,15 @@ const MyCoursesPage = () => {
             </div>
           ) : (
             (courses || []).map((course) => (
-              <Link key={course._id} href={`/courses/${course._id}`} className="inline-block">
-                <Card key={course._id} className="w-[250px] h-[350px] my-2 relative pt-0 pb-3">
+              <Link
+                key={course._id}
+                href={`/courses/${course._id}`}
+                className="inline-block"
+              >
+                <Card
+                  key={course._id}
+                  className="w-[250px] h-[350px] my-2 relative pt-0 pb-3"
+                >
                   <CardContent className="h-3/5 w-full flex justify-center relative p-0">
                     {course?.coverImage ? (
                       <>
@@ -105,7 +108,10 @@ const MyCoursesPage = () => {
                           />
                         </div>
                         <div className="absolute -bottom-1 left-0 w-full z-0">
-                          <Progress value={Number(lessonProgress(course))} className="rounded-none" />
+                          <Progress
+                            value={Number(lessonProgress(course))}
+                            className="rounded-none"
+                          />
                         </div>
                       </>
                     ) : (
@@ -124,10 +130,10 @@ const MyCoursesPage = () => {
                         ₹{course?.price ? parseInt(course.price.toString()) : 0}
                       </p>
                       <div className="flex gap-2">
-                        <Badge className='' variant="outline">
+                        <Badge className="" variant="outline">
                           {course?.rating && formatRatingNumber(course.rating)}
                         </Badge>
-                        <Badge className='flex gap-2' variant="outline">
+                        <Badge className="flex gap-2" variant="outline">
                           {course?.duration &&
                             convertToTotalHours(course.duration)}{" "}
                           hours

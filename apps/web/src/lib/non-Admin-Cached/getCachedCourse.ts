@@ -1,10 +1,37 @@
-import { COURSES_ALL, COURSES_FILTERED_BY_PARAMS, COURSE_BY_ID, Course, ICourse, INSTRUCTOR_OTHER_COURSES, INSTRUCTOR_STATS, IUserCourse, LIKED_COURSES_BY_USER, RELATED_COURSES, USER_COURSE_LIST, connectDB, logger, userCourse, validateMongooseId } from '@repo/shared/server'
-import { getCached, setCached, CACHE_TTL, invalidateCached } from "@repo/shared/config/redisConfig/cache-helper"
+import {
+  COURSES_ALL,
+  COURSES_FILTERED_BY_PARAMS,
+  COURSE_BY_ID,
+  Course,
+  ICourse,
+  INSTRUCTOR_OTHER_COURSES,
+  INSTRUCTOR_STATS,
+  IUserCourse,
+  LIKED_COURSES_BY_USER,
+  RELATED_COURSES,
+  USER_COURSE_LIST,
+  connectDB,
+  logger,
+  userCourse,
+  validateMongooseId,
+} from "@repo/shared/server";
+import {
+  getCached,
+  setCached,
+  CACHE_TTL,
+  invalidateCached,
+} from "@repo/shared/config/redisConfig/cache-helper";
 import { CCourse, CUserCourse } from "@/types/client";
-import { serializeCourse, serializeCourses } from "@/utils/serializer/course.Serializer";
+import {
+  serializeCourse,
+  serializeCourses,
+} from "@/utils/serializer/course.Serializer";
 import mongoose from "mongoose";
 import { serializeDocument } from "@/utils/serializer/serializeDocument";
-import { IGetCourseByParamsResponse, IGetLikedCourseByParamsResponse } from "@/types/server";
+import {
+  IGetCourseByParamsResponse,
+  IGetLikedCourseByParamsResponse,
+} from "@/types/server";
 import UserCourse from "@repo/shared/models/User/userCourse";
 import { auth } from "@/auth";
 
@@ -14,346 +41,563 @@ import { auth } from "@/auth";
  * Component (SSR), so cache shape and query logic never drift apart.
  */
 
-
 export async function getCoursesWithCache(): Promise<CCourse[]> {
-    const cached = await getCached<CCourse[]>(COURSES_ALL.namespace, COURSES_ALL.id);
-    if (cached) {
-        logger.info("Courses fetched Succesfully from Cache", {
-            courseCount: cached.length
-        })
-        return cached;
-    }
-    // await invaidateCached("Courses", "all")
-    // console.log("This is the url of mongodb", process.env.MONGODB_URI)
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const courses: ICourse[] = await Course.find({ isDeleted: false }).sort({ createdAt: -1 })
-            .populate("instructorId", "_id name email")
-            .populate({
-                path: "category",
-                select: "name slug parent",
-                populate: {
-                    path: "parent",
-                    select: "name slug"
+  const cached = await getCached<CCourse[]>(
+    COURSES_ALL.namespace,
+    COURSES_ALL.id
+  );
+  if (cached) {
+    logger.info("Courses fetched Succesfully from Cache", {
+      courseCount: cached.length,
+    });
+    return cached;
+  }
+  // await invaidateCached("Courses", "all")
+  // console.log("This is the url of mongodb", process.env.MONGODB_URI)
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const courses: ICourse[] = await Course.find({ isDeleted: false })
+      .sort({ createdAt: -1 })
+      .populate("instructorId", "_id name email")
+      .populate({
+        path: "category",
+        select: "name slug parent",
+        populate: {
+          path: "parent",
+          select: "name slug",
+        },
+      })
+      .limit(50)
+      .lean({ virtuals: true })
+      .exec();
 
-                },
-            })
-            .limit(50)
-            .lean({ virtuals: true })
-            .exec();
-
-        const serialized = serializeCourses(courses);
-        await setCached(COURSES_ALL.namespace, COURSES_ALL.id, serialized, CACHE_TTL.MEDIUM);
-        logger.info("Courses fetched Succesfully from DB", {
-            courseCount: courses.length
-        })
-        return serialized
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching courses", { message, cachedCourses: cached, error });
-        return [];
-    }
-};
-
-export async function getCourseByIdWithCache(courseId: string): Promise<CCourse | null> {
-    if (!validateMongooseId({ courseId: courseId })) {
-        logger.warn("Invalid course Id", { courseId });
-        throw new Error(`Invalid Course Id ${courseId}`)
-    }
-    await invalidateCached(COURSE_BY_ID.namespace, courseId);
-    const cached = await getCached<CCourse>(COURSE_BY_ID.namespace, courseId);
-    if (cached) {
-        logger.info("1. Course fetched from cache", { cached });
-        return cached;
-    }
-
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const course: ICourse | null = await Course.findOne({ _id: courseId, isDeleted: false })
-            .populate("instructorId", "_id name email")
-            .populate({
-                path: "category",
-                select: "name slug parent",
-                populate: {
-                    path: "parent",
-                    select: "name slug"
-
-                },
-            })
-            .lean({ virtuals: true })
-            .exec();
-        if (!course) {
-            logger.warn("Course not found", { courseId });
-            return null;
-        }
-        // console.log("1. MONGODB RESULT:", course.instructorId);
-        const serialized = serializeCourse(course);
-        // console.log("2. SERIALIZED:", serialized.instructorId);
-        // console.log(
-        //     "3. BEFORE REDIS:",
-        //     JSON.stringify(serialized.instructorId, null, 2)
-        // );
-        await setCached(COURSE_BY_ID.namespace, courseId, serialized, CACHE_TTL.MEDIUM);
-        logger.info("Course fetched successfully", { courseCount: serialized });
-        return serialized;
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching course", { message, cachedCourse: cached, error });
-        return null;
-    }
+    const serialized = serializeCourses(courses);
+    await setCached(
+      COURSES_ALL.namespace,
+      COURSES_ALL.id,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Courses fetched Succesfully from DB", {
+      courseCount: courses.length,
+    });
+    return serialized;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching courses", {
+      message,
+      cachedCourses: cached,
+      error,
+    });
+    return [];
+  }
 }
 
-export async function getReleatedCoursesWithCache(courseId: string): Promise<CCourse[]> {
-    if (!validateMongooseId({ courseId: courseId })) {
-        logger.warn("Invalid course id", { courseId });
-    }
-    const cached = await getCached<CCourse[]>(RELATED_COURSES.namespace, courseId);
-    if (cached) {
-        logger.info("Related Courses fetched from cache");
-        return cached;
-    }
-    // await invalidateCached(RELATED_COURSES.namespace, courseId)
+export async function getCourseByIdWithCache(
+  courseId: string
+): Promise<CCourse | null> {
+  if (!validateMongooseId({ courseId: courseId })) {
+    logger.warn("Invalid course Id", { courseId });
+    throw new Error(`Invalid Course Id ${courseId}`);
+  }
+  await invalidateCached(COURSE_BY_ID.namespace, courseId);
+  const cached = await getCached<CCourse>(COURSE_BY_ID.namespace, courseId);
+  if (cached) {
+    logger.info("1. Course fetched from cache", { cached });
+    return cached;
+  }
 
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const relatedCourses: ICourse[] = await Course.find({ category: courseId, isDeleted: false }).sort({ createdAt: -1 }).limit(5).lean().exec();
-        const serialized = serializeCourses(relatedCourses);
-        await setCached(RELATED_COURSES.namespace, courseId, serialized, CACHE_TTL.MEDIUM);
-        logger.info("Related Courses fetched successfully", { courseCount: serialized.length });
-        return serialized;
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching related Courses", { message, cachedRelatedCourses: cached, error });
-        return [];
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const course: ICourse | null = await Course.findOne({
+      _id: courseId,
+      isDeleted: false,
+    })
+      .populate("instructorId", "_id name email")
+      .populate({
+        path: "category",
+        select: "name slug parent",
+        populate: {
+          path: "parent",
+          select: "name slug",
+        },
+      })
+      .lean({ virtuals: true })
+      .exec();
+    if (!course) {
+      logger.warn("Course not found", { courseId });
+      return null;
     }
+    // console.log("1. MONGODB RESULT:", course.instructorId);
+    const serialized = serializeCourse(course);
+    // console.log("2. SERIALIZED:", serialized.instructorId);
+    // console.log(
+    //     "3. BEFORE REDIS:",
+    //     JSON.stringify(serialized.instructorId, null, 2)
+    // );
+    await setCached(
+      COURSE_BY_ID.namespace,
+      courseId,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Course fetched successfully", { courseCount: serialized });
+    return serialized;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching course", {
+      message,
+      cachedCourse: cached,
+      error,
+    });
+    return null;
+  }
 }
 
-export async function getCourseByParamsWithCache(page: number, limit: number, skip: number): Promise<IGetCourseByParamsResponse> {
-    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
-        logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
-        throw new Error("Invalid parameters for fetching courses");
+export async function getReleatedCoursesWithCache(
+  courseId: string
+): Promise<CCourse[]> {
+  if (!validateMongooseId({ courseId: courseId })) {
+    logger.warn("Invalid course id", { courseId });
+  }
+  const cached = await getCached<CCourse[]>(
+    RELATED_COURSES.namespace,
+    courseId
+  );
+  if (cached) {
+    logger.info("Related Courses fetched from cache");
+    return cached;
+  }
+  // await invalidateCached(RELATED_COURSES.namespace, courseId)
+
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const relatedCourses: ICourse[] = await Course.find({
+      category: courseId,
+      isDeleted: false,
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean()
+      .exec();
+    const serialized = serializeCourses(relatedCourses);
+    await setCached(
+      RELATED_COURSES.namespace,
+      courseId,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Related Courses fetched successfully", {
+      courseCount: serialized.length,
+    });
+    return serialized;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching related Courses", {
+      message,
+      cachedRelatedCourses: cached,
+      error,
+    });
+    return [];
+  }
+}
+
+export async function getCourseByParamsWithCache(
+  page: number,
+  limit: number,
+  skip: number
+): Promise<IGetCourseByParamsResponse> {
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    !Number.isInteger(skip) ||
+    skip < 0
+  ) {
+    logger.warn("Invalid parameters for fetching courses", {
+      page,
+      limit,
+      skip,
+    });
+    throw new Error("Invalid parameters for fetching courses");
+  }
+  const cached = await getCached<IGetCourseByParamsResponse>(
+    COURSES_FILTERED_BY_PARAMS.namespace,
+    `${page}-${limit}-${skip}`
+  );
+  if (cached) {
+    logger.info("Courses fetched from cache", {
+      page,
+      limit,
+      skip,
+      courseCount: cached.paginatedCourses.length,
+    });
+    return cached;
+  }
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const [totalCourseDoc, coursesInDB] = await Promise.all([
+      Course.countDocuments().lean().exec(),
+      Course.find({ isDeleted: false })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
+    ]);
+    const totalCourses: number = totalCourseDoc;
+    const courses: ICourse[] = coursesInDB;
+    logger.info("Courses fetched successfully", { totalCourses, page, limit });
+    const totalPages = Math.ceil(totalCourses / limit);
+    const hasNextPage: boolean = page < totalPages;
+    const hasPrevPage: boolean = page > 1;
+    let response = {
+      paginatedCourses: serializeCourses(courses),
+      hasNextPage,
+      hasPrevPage,
+      currentPage: page,
+      totalPages: Math.ceil(totalCourses / limit),
+      totalCourses: totalCourses,
     };
-    const cached = await getCached<IGetCourseByParamsResponse>(COURSES_FILTERED_BY_PARAMS.namespace, `${page}-${limit}-${skip}`);
-    if (cached) {
-        logger.info("Courses fetched from cache", { page, limit, skip, courseCount: cached.paginatedCourses.length });
-        return cached;
+    await setCached(
+      COURSES_FILTERED_BY_PARAMS.namespace,
+      `${page}-${limit}-${skip}`,
+      response,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Courses cached successfully", {
+      page,
+      limit,
+      skip,
+      courseCount: response.paginatedCourses.length,
+    });
+    return response;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    logger.error("Error fetching courses:", { error: message });
+    return {
+      paginatedCourses: [],
+      currentPage: page,
+      hasNextPage: false,
+      hasPrevPage: false,
+      totalPages: 0,
+      totalCourses: 0,
     };
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const [totalCourseDoc, coursesInDB] = await Promise.all([
-            Course.countDocuments().lean().exec(),
-            Course.find({ isDeleted: false }).sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec()
-        ]);
-        const totalCourses: number = totalCourseDoc;
-        const courses: ICourse[] = coursesInDB;
-        logger.info("Courses fetched successfully", { totalCourses, page, limit });
-        const totalPages = Math.ceil(totalCourses / limit);
-        const hasNextPage: boolean = page < totalPages;
-        const hasPrevPage: boolean = page > 1;
-        let response = {
-            paginatedCourses: serializeCourses(courses),
-            hasNextPage,
-            hasPrevPage,
-            currentPage: page,
-            totalPages: Math.ceil(totalCourses / limit),
-            totalCourses: totalCourses
-        }
-        await setCached(COURSES_FILTERED_BY_PARAMS.namespace, `${page}-${limit}-${skip}`, response, CACHE_TTL.MEDIUM);
-        logger.info("Courses cached successfully", { page, limit, skip, courseCount: response.paginatedCourses.length });
-        return response;
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        logger.error("Error fetching courses:", { error: message });
-        return {
-            paginatedCourses: [],
-            currentPage: page,
-            hasNextPage: false,
-            hasPrevPage: false,
-            totalPages: 0,
-            totalCourses: 0
-        };
-        // return NextResponse.json({ message: ` Error fetching courses: ${message}` }, { status: 500 });
-    }
+    // return NextResponse.json({ message: ` Error fetching courses: ${message}` }, { status: 500 });
+  }
 }
 
 export interface IInstructorStats {
-    totalCourses: number;
-    totalEnrolled: number;
-    totalReviews: number;
-    totalRatings: number;
-
+  totalCourses: number;
+  totalEnrolled: number;
+  totalReviews: number;
+  totalRatings: number;
 }
-export async function getInstructorStatsWithCache(instructorId: string): Promise<IInstructorStats | null> {
-    if (!validateMongooseId({ userId: instructorId })) {
-        logger.warn("Invalid user id", { userId: instructorId });
-        throw new Error("Invalid Instructor Id");
+export async function getInstructorStatsWithCache(
+  instructorId: string
+): Promise<IInstructorStats | null> {
+  if (!validateMongooseId({ userId: instructorId })) {
+    logger.warn("Invalid user id", { userId: instructorId });
+    throw new Error("Invalid Instructor Id");
+  }
+  const cached = await getCached<IInstructorStats>(
+    INSTRUCTOR_STATS.namespace,
+    instructorId
+  );
+  if (cached) {
+    logger.info("Instructor Stats fetched from cache");
+    return cached;
+  }
+  // await invalidateCached(`instructorStats`, instructorId);
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const stats = await Course.aggregate<IInstructorStats>([
+      {
+        $match: {
+          instructorId: new mongoose.Types.ObjectId(instructorId),
+          isDeleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$instructorId",
+          totalCourses: { $sum: 1 },
+          totalEnrolled: { $sum: "$enrolled" },
+          totalReviews: { $sum: "$reviews" },
+          totalRatings: { $sum: "$ratingSum" },
+        },
+      },
+    ]);
+    const serialized = serializeDocument(stats[0]);
+    await setCached(
+      INSTRUCTOR_STATS.namespace,
+      instructorId,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Instructor Stats fetched successfully");
+    if (!stats[0]) {
+      logger.info("No stats found for instructor", { instructorId });
+      return null;
     }
-    const cached = await getCached<IInstructorStats>(INSTRUCTOR_STATS.namespace, instructorId);
-    if (cached) {
-        logger.info("Instructor Stats fetched from cache");
-        return cached;
-    }
-    // await invalidateCached(`instructorStats`, instructorId);
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const stats = await Course.aggregate<IInstructorStats>([
-            { $match: { instructorId: new mongoose.Types.ObjectId(instructorId), isDeleted: false } },
-            {
-                $group: {
-                    _id: "$instructorId",
-                    totalCourses: { $sum: 1 },
-                    totalEnrolled: { $sum: "$enrolled" },
-                    totalReviews: { $sum: "$reviews" },
-                    totalRatings: { $sum: "$ratingSum" }
-                }
-            },
-        ]);
-        const serialized = serializeDocument(stats[0]);
-        await setCached(INSTRUCTOR_STATS.namespace, instructorId, serialized, CACHE_TTL.MEDIUM);
-        logger.info("Instructor Stats fetched successfully");
-        if (!stats[0]) {
-            logger.info("No stats found for instructor", { instructorId });
-            return null;
-        }
-        return stats[0];
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching Instructor Stats", { message, cachedInstructorStats: cached, error });
-        return null
-    }
-
+    return stats[0];
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching Instructor Stats", {
+      message,
+      cachedInstructorStats: cached,
+      error,
+    });
+    return null;
+  }
 }
-export async function getUserCourseWithCache(userId: string): Promise<CCourse[] | null> {
-    if (!validateMongooseId({ userId: userId })) {
-        logger.warn("Invalid user id", { userId });
-        throw new Error("Invalid user Id");
-    }
-    const cached = await getCached<CCourse[]>(USER_COURSE_LIST.namespace, userId);
-    if (cached) {
-        logger.info("User Courses fetched from cache");
-        return cached;
-    }
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const userCourses = await UserCourse.find({ userId: new mongoose.Types.ObjectId(userId) }).lean().exec();
-        const courseIds = userCourses.map((userCourse) => userCourse.courseId);
-        const courses = await Course.find({ _id: { $in: courseIds }, isDeleted: false }).lean().exec();
-        const serialized = serializeCourses(courses);
-        await setCached(USER_COURSE_LIST.namespace, userId, serialized, CACHE_TTL.MEDIUM);
-        logger.info("User Courses fetched successfully", { courseCount: serialized.length });
-        return serialized;
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching User Courses", { message, cachedUserCourses: cached, error });
-        return null;
-    }
+export async function getUserCourseWithCache(
+  userId: string
+): Promise<CCourse[] | null> {
+  if (!validateMongooseId({ userId: userId })) {
+    logger.warn("Invalid user id", { userId });
+    throw new Error("Invalid user Id");
+  }
+  const cached = await getCached<CCourse[]>(USER_COURSE_LIST.namespace, userId);
+  if (cached) {
+    logger.info("User Courses fetched from cache");
+    return cached;
+  }
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const userCourses = await UserCourse.find({
+      userId: new mongoose.Types.ObjectId(userId),
+    })
+      .lean()
+      .exec();
+    const courseIds = userCourses.map((userCourse) => userCourse.courseId);
+    const courses = await Course.find({
+      _id: { $in: courseIds },
+      isDeleted: false,
+    })
+      .lean()
+      .exec();
+    const serialized = serializeCourses(courses);
+    await setCached(
+      USER_COURSE_LIST.namespace,
+      userId,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("User Courses fetched successfully", {
+      courseCount: serialized.length,
+    });
+    return serialized;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching User Courses", {
+      message,
+      cachedUserCourses: cached,
+      error,
+    });
+    return null;
+  }
 }
 
-export async function getInstructorOtherCoursesWithCache(instructorId: string, courseId: string): Promise<CCourse[]> {
-    if (!validateMongooseId({ userId: instructorId })) {
-        logger.warn("Invalid user id", { userId: instructorId });
-        throw new Error("Invalid Instructor Id");
-    }
-    const cached = await getCached<CCourse[]>(INSTRUCTOR_OTHER_COURSES.namespace, instructorId);
-    if (cached) {
-        logger.info("Instructor Other Courses fetched from cache");
-        return cached;
-    }
-    await connectDB(process.env.MONGODB_URI!);
-    try {
-        const instructoreOtherCourses: ICourse[] = await Course.find({ _id: { $ne: courseId }, instructorId: instructorId, isDeleted: false }).sort({ createdAt: -1 }).limit(5).lean().exec();
-        const serialized = serializeCourses(instructoreOtherCourses);
-        await setCached(INSTRUCTOR_OTHER_COURSES.namespace, instructorId, serialized, CACHE_TTL.MEDIUM);
-        logger.info("Instructor Other Courses fetched successfully", { courseCount: serialized.length });
-        return serialized;
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching Instructor Other Courses", { message, cachedInstructorOtherCourses: cached, error });
-        return [];
-    }
-
+export async function getInstructorOtherCoursesWithCache(
+  instructorId: string,
+  courseId: string
+): Promise<CCourse[]> {
+  if (!validateMongooseId({ userId: instructorId })) {
+    logger.warn("Invalid user id", { userId: instructorId });
+    throw new Error("Invalid Instructor Id");
+  }
+  const cached = await getCached<CCourse[]>(
+    INSTRUCTOR_OTHER_COURSES.namespace,
+    instructorId
+  );
+  if (cached) {
+    logger.info("Instructor Other Courses fetched from cache");
+    return cached;
+  }
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const instructoreOtherCourses: ICourse[] = await Course.find({
+      _id: { $ne: courseId },
+      instructorId: instructorId,
+      isDeleted: false,
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean()
+      .exec();
+    const serialized = serializeCourses(instructoreOtherCourses);
+    await setCached(
+      INSTRUCTOR_OTHER_COURSES.namespace,
+      instructorId,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Instructor Other Courses fetched successfully", {
+      courseCount: serialized.length,
+    });
+    return serialized;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching Instructor Other Courses", {
+      message,
+      cachedInstructorOtherCourses: cached,
+      error,
+    });
+    return [];
+  }
 }
 
-
-export async function getUserLikedCoursesWithCache(userId: string, page: number, limit: number, skip: number): Promise<IGetLikedCourseByParamsResponse> {
-    if (!Number.isInteger(page) || page < 1 || !Number.isInteger(limit) || limit < 1 || !Number.isInteger(skip) || skip < 0) {
-        logger.warn("Invalid parameters for fetching courses", { page, limit, skip });
-        throw new Error("Invalid parameters for fetching courses");
+export async function getUserLikedCoursesWithCache(
+  userId: string,
+  page: number,
+  limit: number,
+  skip: number
+): Promise<IGetLikedCourseByParamsResponse> {
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    !Number.isInteger(skip) ||
+    skip < 0
+  ) {
+    logger.warn("Invalid parameters for fetching courses", {
+      page,
+      limit,
+      skip,
+    });
+    throw new Error("Invalid parameters for fetching courses");
+  }
+  const session = await auth();
+  if (!session?.user) {
+    logger.error("User is not logged in");
+    return {
+      likedCourses: [],
+      currentPage: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+      totalPages: 0,
+      totalCourses: 0,
     };
-    const session = await auth();
-    if (!session?.user) {
-        logger.error("User is not logged in");
-        return {
-            likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
-        }
-    }
-    if (session.user.id !== userId || !validateMongooseId({ userId: userId })) {
-        logger.warn("Invalid user id", { userId });
-        return {
-            likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
-        }
-    }
-    const cached = await getCached<IGetLikedCourseByParamsResponse>(LIKED_COURSES_BY_USER.namespace, `${page}:${limit}:${skip}:${userId}`);
-    if (cached) {
-        logger.info("User Liked Courses fetched Succesfully from Cache", {
-            courseCount: cached.likedCourses.length
-        })
-        return cached;
-    }
-    // await invaidateCached("Courses", "all")
-    // console.log("This is the url of mongodb", process.env.MONGODB_URI)
-    await connectDB(process.env.MONGODB_URI!);
-    try {
+  }
+  if (session.user.id !== userId || !validateMongooseId({ userId: userId })) {
+    logger.warn("Invalid user id", { userId });
+    return {
+      likedCourses: [],
+      currentPage: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+      totalPages: 0,
+      totalCourses: 0,
+    };
+  }
+  const cached = await getCached<IGetLikedCourseByParamsResponse>(
+    LIKED_COURSES_BY_USER.namespace,
+    `${page}:${limit}:${skip}:${userId}`
+  );
+  if (cached) {
+    logger.info("User Liked Courses fetched Succesfully from Cache", {
+      courseCount: cached.likedCourses.length,
+    });
+    return cached;
+  }
+  // await invaidateCached("Courses", "all")
+  // console.log("This is the url of mongodb", process.env.MONGODB_URI)
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    const userCourses: IUserCourse[] = await UserCourse.find({
+      userId: userId,
+      isLiked: true,
+    })
+      .select("courseId")
+      .lean()
+      .exec();
 
-        const userCourses: IUserCourse[] = await UserCourse.find({ userId: userId, isLiked: true }).select("courseId").lean().exec()
-
-        //Negative caching
-        if (userCourses.length === 0) {
-            await setCached(LIKED_COURSES_BY_USER.namespace, `${page}:${limit}:${skip}:${userId}`, { likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0 }, CACHE_TTL.MEDIUM)
-        };
-        const courseIds = userCourses.map((uc) => uc.courseId);
-        const courses: ICourse[] = await Course.find({
-            _id: { $in: courseIds },
-            isDeleted: false
-        })
-            .populate("instructorId", "_id name email")
-            .populate({
-                path: "category",
-                select: "name slug parent",
-                populate: {
-                    path: "parent",
-                    select: "name slug"
-
-                },
-            })
-            .skip(skip)
-            .limit(limit)
-            .lean({ virtuals: true })
-            .exec();
-        const totalCourseCount = await Course.countDocuments({ _id: { $in: courseIds }, isDeleted: false }).lean().exec();
-        const totalPages = Math.ceil(totalCourseCount / limit);
-        const hasNextPage: boolean = page < totalPages;
-        const hasPrevPage: boolean = page > 1;
-        let response = {
-            likedCourses: serializeCourses(courses),
-            hasNextPage,
-            hasPrevPage,
-            currentPage: page,
-            totalPages: Math.ceil(totalCourseCount / limit),
-            totalCourses: totalCourseCount
-        }
-        const serialized = serializeCourses(courses);
-        await setCached(LIKED_COURSES_BY_USER.namespace, `${page}: ${limit}: ${skip}: ${userId}`, response, CACHE_TTL.MEDIUM);
-        logger.info("Liked User Courses fetched Succesfully from DB", {
-            courseCount: serialized.length
-        })
-        return response
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching Liked User courses", { message, cachedCourses: cached, error });
-        return {
-            likedCourses: [], currentPage: 0, hasNextPage: false, hasPrevPage: false, totalPages: 0, totalCourses: 0,
-        };
+    //Negative caching
+    if (userCourses.length === 0) {
+      await setCached(
+        LIKED_COURSES_BY_USER.namespace,
+        `${page}:${limit}:${skip}:${userId}`,
+        {
+          likedCourses: [],
+          currentPage: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+          totalPages: 0,
+          totalCourses: 0,
+        },
+        CACHE_TTL.MEDIUM
+      );
     }
-};
-
+    const courseIds = userCourses.map((uc) => uc.courseId);
+    const courses: ICourse[] = await Course.find({
+      _id: { $in: courseIds },
+      isDeleted: false,
+    })
+      .populate("instructorId", "_id name email")
+      .populate({
+        path: "category",
+        select: "name slug parent",
+        populate: {
+          path: "parent",
+          select: "name slug",
+        },
+      })
+      .skip(skip)
+      .limit(limit)
+      .lean({ virtuals: true })
+      .exec();
+    const totalCourseCount = await Course.countDocuments({
+      _id: { $in: courseIds },
+      isDeleted: false,
+    })
+      .lean()
+      .exec();
+    const totalPages = Math.ceil(totalCourseCount / limit);
+    const hasNextPage: boolean = page < totalPages;
+    const hasPrevPage: boolean = page > 1;
+    let response = {
+      likedCourses: serializeCourses(courses),
+      hasNextPage,
+      hasPrevPage,
+      currentPage: page,
+      totalPages: Math.ceil(totalCourseCount / limit),
+      totalCourses: totalCourseCount,
+    };
+    const serialized = serializeCourses(courses);
+    await setCached(
+      LIKED_COURSES_BY_USER.namespace,
+      `${page}: ${limit}: ${skip}: ${userId}`,
+      response,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("Liked User Courses fetched Succesfully from DB", {
+      courseCount: serialized.length,
+    });
+    return response;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching Liked User courses", {
+      message,
+      cachedCourses: cached,
+      error,
+    });
+    return {
+      likedCourses: [],
+      currentPage: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+      totalPages: 0,
+      totalCourses: 0,
+    };
+  }
+}

@@ -1,6 +1,5 @@
 // import { Queue } from "bullmq";
 
-
 // export const certificateQueue = new Queue("certificateQueue", {
 //     connection: {
 //         url: process.env.UPSTASH_REDIS_URL,
@@ -14,5 +13,3 @@
 //         },
 //     },
 // });
-
-

@@ -1,53 +1,55 @@
+import mongoose, { Model, Schema } from 'mongoose';
+import { IUser } from 'src/types';
 
-import mongoose, { Schema, Model } from "mongoose";
-import { IUser } from "src/types";
-
-export const userSchema: Schema<IUser> = new mongoose.Schema({
+export const userSchema: Schema<IUser> = new mongoose.Schema(
+  {
     name: {
-        type: 'String',
-        required: true,
-        trim: true
-
+      type: 'String',
+      required: true,
+      trim: true,
     },
     username: {
-        type: "String",
-        index: true,
-        required: true,
-        trim: true,
-        lowercase: true
+      type: 'String',
+      index: true,
+      required: true,
+      trim: true,
+      lowercase: true,
     },
     email: {
-        type: 'String'
-        , required: true
-        , unique: true
-        , lowercase: true
-        , trim: true
-        , index: true
+      type: 'String',
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
     },
     password: {
-        type: 'String', required: true, select: false
+      type: 'String',
+      required: true,
+      select: false,
     },
     phoneNumber: {
-        type: 'String'
-
+      type: 'String',
     },
     profileImage: {
-        type: 'String'
+      type: 'String',
     },
     isVerified: {
-        type: Boolean,
-        default: false,
-        index: true
+      type: Boolean,
+      default: false,
+      index: true,
     },
     role: {
-        type: String,
-        enum: ['student', 'admin', 'instructor'],
-        default: 'student',
-        index: true
+      type: String,
+      enum: ['student', 'admin', 'instructor'],
+      default: 'student',
+      index: true,
     },
-
-}, { timestamps: true });
+  },
+  { timestamps: true },
+);
 
 userSchema.index({ role: 1, createdAt: -1 });
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+const User: Model<IUser> =
+  mongoose.models.User || mongoose.model<IUser>('User', userSchema);
 export default User;

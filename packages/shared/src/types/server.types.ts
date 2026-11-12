@@ -1,20 +1,19 @@
-import { ICourse, IUser } from "./model.types";
+import { ICourse, IUser } from './model.types';
 
-export type ISessionUser = Partial<IUser> &  {
+export type ISessionUser = Partial<IUser> & {
   id: string;
   phoneNumber?: string | undefined;
   role: 'instructor' | 'student' | 'admin';
   name: string;
   email: string;
   profileImage?: string;
-
 };
 export interface RazorpayCreateOrderRequest {
-  amount: number;        // amount in paisa
-  currency: string;      // usually 'INR'
-  receipt: string;       // unique identifier
+  amount: number; // amount in paisa
+  currency: string; // usually 'INR'
+  receipt: string; // unique identifier
   notes?: Record<string, any>; // optional notes
-};
+}
 
 export interface MyRazorpayOrder {
   id: string;
@@ -25,7 +24,7 @@ export interface MyRazorpayOrder {
   currency: string;
   receipt: string;
   offer_id: string | null;
-  status: "created" | "paid" | "attempted";
+  status: 'created' | 'paid' | 'attempted';
   attempts: number;
   created_at: number;
 }
@@ -45,5 +44,4 @@ export type InstructorCoursesResponse = {
   currentPage: number;
   totalPages: number;
   totalInstructorCourses: number;
-}
-
+};

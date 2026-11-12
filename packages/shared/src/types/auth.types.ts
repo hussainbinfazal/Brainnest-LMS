@@ -1,4 +1,4 @@
-import type { UserRole } from "./model.types";
+import type { UserRole } from './model.types';
 
 interface Credentials {
   email: string;

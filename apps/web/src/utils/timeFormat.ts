@@ -1,4 +1,3 @@
-
 export function formatDuration(seconds: number): string {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
@@ -40,6 +39,3 @@ export function formatRatingNumber(num: number): string {
     return num.toString();
   }
 }
-
-
-

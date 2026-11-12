@@ -1,61 +1,62 @@
-import mongoose, { Schema, Model, Types } from 'mongoose';
+import mongoose, { Model, Schema, Types } from 'mongoose';
 import { IOrder } from 'src/types';
 
-
-
 const orderItemSchema = new Schema(
-    {
-        course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-        price: { type: Number, required: true },
-    },
-    { _id: false }
+  {
+    course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    price: { type: Number, required: true },
+  },
+  { _id: false },
 );
 
 const paymentResultSchema = new Schema(
-    {
-        id: { type: String },
-        status: { type: String },
-        update_time: { type: String },
-    },
-    { _id: false }
+  {
+    id: { type: String },
+    status: { type: String },
+    update_time: { type: String },
+  },
+  { _id: false },
 );
 
-export const orderSchema = new mongoose.Schema<IOrder>({
+export const orderSchema = new mongoose.Schema<IOrder>(
+  {
     user: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     orderItems: [orderItemSchema],
     paymentMethod: {
-        type: String,
-        required: true,
-        default: 'Razorpay'
+      type: String,
+      required: true,
+      default: 'Razorpay',
     },
     razorpayOrderId: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     paymentResult: paymentResultSchema,
     totalPrice: {
-        type: Number,
-        required: true,
-        default: 0.0
+      type: Number,
+      required: true,
+      default: 0.0,
     },
     isPaid: {
-        type: Boolean,
-        required: true,
-        default: false
+      type: Boolean,
+      required: true,
+      default: false,
     },
     status: {
-        type: String,
-        enum: ['pending', 'completed', 'failed', 'cancelled'],
-        default: 'pending'
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'cancelled'],
+      default: 'pending',
     },
     paidAt: {
-        type: Date
+      type: Date,
     },
-}, { timestamps: true }
+  },
+  { timestamps: true },
 );
-const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+const Order: Model<IOrder> =
+  mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
 export default Order;

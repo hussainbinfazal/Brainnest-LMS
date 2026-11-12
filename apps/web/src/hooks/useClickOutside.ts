@@ -1,30 +1,27 @@
 import { useEffect } from "react";
 type ClickOutSideRef = React.RefObject<HTMLElement | null>;
 
-
 export const useClickOutSide = (
-    refs: ClickOutSideRef[],
-    onOutSideClick: () => void,
-    enabled = true
+  refs: ClickOutSideRef[],
+  onOutSideClick: () => void,
+  enabled = true
 ): void => {
-    useEffect(() => {
-        if (!enabled) return
+  useEffect(() => {
+    if (!enabled) return;
 
-        const handleClickOutSide = (event: MouseEvent): void => {
-            const target = event.target as Node;
+    const handleClickOutSide = (event: MouseEvent): void => {
+      const target = event.target as Node;
 
-            if (!(target instanceof Node)) return
+      if (!(target instanceof Node)) return;
 
-            const clickedInside = refs.some((ref) =>
-                ref?.current?.contains(target));
+      const clickedInside = refs.some((ref) => ref?.current?.contains(target));
 
-            if (!clickedInside) onOutSideClick();
+      if (!clickedInside) onOutSideClick();
+    };
+    document.addEventListener("mousedown", handleClickOutSide);
 
-        }
-        document.addEventListener('mousedown', handleClickOutSide);
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutSide);
-        }
-    }, [refs, onOutSideClick, enabled])
-}
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutSide);
+    };
+  }, [refs, onOutSideClick, enabled]);
+};

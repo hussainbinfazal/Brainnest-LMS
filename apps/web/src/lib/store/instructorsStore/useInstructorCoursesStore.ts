@@ -1,35 +1,59 @@
 "use client";
 
-
 import { create } from "zustand";
 import axios from "axios";
 import { CCourse } from "@/types/client";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { getErrorMessage } from "@repo/shared";
 import { toast } from "sonner";
-import { CreateCourseBody, UpdateCourseBody } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
+import {
+  CreateCourseBody,
+  UpdateCourseBody,
+} from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 export interface CInstructorCourseStore {
-    cachedPaginatedInstructorCourses: CCourse[];
-    cachedCurrentPageNumber: number;
-    cachedTotalPages: number;
-    cachedHasNextPage: boolean;
-    cachedHasPrevPage: boolean;
-    cachedTotalCourses: number
-    isLoading: boolean;
-    hasFetched: boolean;
+  cachedPaginatedInstructorCourses: CCourse[];
+  cachedCurrentPageNumber: number;
+  cachedTotalPages: number;
+  cachedHasNextPage: boolean;
+  cachedHasPrevPage: boolean;
+  cachedTotalCourses: number;
+  isLoading: boolean;
+  hasFetched: boolean;
 
-    fetchPaginatedInstructorCourses: (options: {
-        page: number; itemsPerPage: number, instructorId: string
-    }) => Promise<{ paginatedInstructorCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
-    setPaginatedInstructorCourses: (newPaginatedInstructorCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number) => void;
-    createCourse: (data: CreateCourseBody) => Promise<void>;
-    updateCourse: (data: UpdateCourseBody, courseId: string) => Promise<void>;
-    deleteInstructorCourse: (options: { page: number, itemsPerPage: number, courseId: string, instructorId: string }) => void;
-    clearPaginatedInstructorCourses: () => void;
-    setInstructorCourses: (courses: CCourse[]) => void;
+  fetchPaginatedInstructorCourses: (options: {
+    page: number;
+    itemsPerPage: number;
+    instructorId: string;
+  }) => Promise<{
+    paginatedInstructorCourses: CCourse[];
+    currentPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+    totalPages: number;
+    totalCourses: number;
+  }>;
+  setPaginatedInstructorCourses: (
+    newPaginatedInstructorCourses: CCourse[],
+    newHasNextPage: boolean,
+    newHasPrevPage: boolean,
+    newCurrentPageNumber: number,
+    newTotalPages: number,
+    newTotalCourses: number
+  ) => void;
+  createCourse: (data: CreateCourseBody) => Promise<void>;
+  updateCourse: (data: UpdateCourseBody, courseId: string) => Promise<void>;
+  deleteInstructorCourse: (options: {
+    page: number;
+    itemsPerPage: number;
+    courseId: string;
+    instructorId: string;
+  }) => void;
+  clearPaginatedInstructorCourses: () => void;
+  setInstructorCourses: (courses: CCourse[]) => void;
 }
 
-export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, get) => ({
+export const useInstructorCoursesStore = create<CInstructorCourseStore>(
+  (set, get) => ({
     cachedPaginatedInstructorCourses: [] as CCourse[],
     cachedCurrentPageNumber: 1,
     cachedTotalPages: 1,
@@ -38,148 +62,225 @@ export const useInstructorCoursesStore = create<CInstructorCourseStore>((set, ge
     cachedTotalCourses: 0,
     isLoading: false,
     hasFetched: false,
-    fetchPaginatedInstructorCourses: async ({ page, itemsPerPage, instructorId }: { page: number, itemsPerPage: number, instructorId: string }) => {
-        set({ isLoading: true })
-        try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: itemsPerPage.toString(),
-            });
-            console.log("These are the params instructor courses", params);
-            const response = await axios.get(
-                `/api/admin/course/instructor/${instructorId.toString()}?${params.toString()}`
-            );
-            const {
-                paginatedInstructorCourses,
-                currentPage,
-                totalPages,
-                hasNextPage,
-                hasPrevPage,
-                totalInstructorCourses,
-            } = response.data.data;
-            console.log("These are the courses by the instructor ", paginatedInstructorCourses);
-            const totalCourses = totalInstructorCourses;
-            const newPaginatedInstructorCourses = paginatedInstructorCourses;
-            get().setPaginatedInstructorCourses(newPaginatedInstructorCourses, hasNextPage, hasPrevPage, currentPage, totalPages, totalCourses);
-            set({
-                cachedCurrentPageNumber: currentPage,
-                cachedTotalPages: totalPages,
-                cachedHasNextPage: hasNextPage,
-                cachedHasPrevPage: hasPrevPage,
-            });
-            return {
-                paginatedInstructorCourses,
-                currentPage,
-                hasNextPage,
-                hasPrevPage,
-                totalPages,
-                totalCourses
-            };
-        }
-        catch (error: unknown) {
-            console.error("This is the error of fetchInstructorCourse in useCourseInstructor Store ", error instanceof Error ? error.message : "Error fetching paginated instructor courses through instructor Store")
-            const message: string = error instanceof Error ? error.message : "Something went wrong";
-            clientLogger.error("Error fetching paginated instructor courses through instructor Store", { message, error });
-            return {
-                paginatedInstructorCourses: [],
-                currentPage: page,
-                hasNextPage: false,
-                hasPrevPage: page > 1,
-                totalPages: 1,
-                totalCourses: 0,
-            };
-        }
-        finally {
-            set({ isLoading: false })
-        }
+    fetchPaginatedInstructorCourses: async ({
+      page,
+      itemsPerPage,
+      instructorId,
+    }: {
+      page: number;
+      itemsPerPage: number;
+      instructorId: string;
+    }) => {
+      set({ isLoading: true });
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: itemsPerPage.toString(),
+        });
+        console.log("These are the params instructor courses", params);
+        const response = await axios.get(
+          `/api/admin/course/instructor/${instructorId.toString()}?${params.toString()}`
+        );
+        const {
+          paginatedInstructorCourses,
+          currentPage,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
+          totalInstructorCourses,
+        } = response.data.data;
+        console.log(
+          "These are the courses by the instructor ",
+          paginatedInstructorCourses
+        );
+        const totalCourses = totalInstructorCourses;
+        const newPaginatedInstructorCourses = paginatedInstructorCourses;
+        get().setPaginatedInstructorCourses(
+          newPaginatedInstructorCourses,
+          hasNextPage,
+          hasPrevPage,
+          currentPage,
+          totalPages,
+          totalCourses
+        );
+        set({
+          cachedCurrentPageNumber: currentPage,
+          cachedTotalPages: totalPages,
+          cachedHasNextPage: hasNextPage,
+          cachedHasPrevPage: hasPrevPage,
+        });
+        return {
+          paginatedInstructorCourses,
+          currentPage,
+          hasNextPage,
+          hasPrevPage,
+          totalPages,
+          totalCourses,
+        };
+      } catch (error: unknown) {
+        console.error(
+          "This is the error of fetchInstructorCourse in useCourseInstructor Store ",
+          error instanceof Error
+            ? error.message
+            : "Error fetching paginated instructor courses through instructor Store"
+        );
+        const message: string =
+          error instanceof Error ? error.message : "Something went wrong";
+        clientLogger.error(
+          "Error fetching paginated instructor courses through instructor Store",
+          { message, error }
+        );
+        return {
+          paginatedInstructorCourses: [],
+          currentPage: page,
+          hasNextPage: false,
+          hasPrevPage: page > 1,
+          totalPages: 1,
+          totalCourses: 0,
+        };
+      } finally {
+        set({ isLoading: false });
+      }
     },
     createCourse: async (data: CreateCourseBody) => {
-        set({ isLoading: true });
-        try {
-            const response = await axios.post('/api/admin/course/create', data);
-            if (!response.data.success) {
-                return
-            }
-            toast.success('Course created successfully');
-            set({ isLoading: false });
-        } catch (error: unknown) {
-            console.log("This is the error in create course function ", error, error instanceof Error && error.message)
-            const message = getErrorMessage(error, "Something went wrong, while creating course");
-            toast.error("Something went wrong")
-            clientLogger.error("Something went wrong, while creating course", { message, error });
-            throw new Error(message);
+      set({ isLoading: true });
+      try {
+        const response = await axios.post("/api/admin/course/create", data);
+        if (!response.data.success) {
+          return;
         }
-    },
-    updateCourse: async (data: UpdateCourseBody,courseId: string) => {
-        set({ isLoading: true });
-        try {
-            const response = await axios.patch(`/api/admin/course/${courseId}`, data);
-            if (!response.data.success) {
-                toast.error(response.data.message);
-                return
-            }
-            toast.success('Course updated successfully');
-            set({ isLoading: false });
-        } catch (error: unknown) {
-            console.error("This is the error in update course function ", error, error instanceof Error && error.message)
-            const message = getErrorMessage(error, "Something went wrong, while updating course");
-            toast.error("Something went wrong")
-            clientLogger.error("Something went wrong, while updating course", { message, error });
-            throw new Error(message);
-        }
-    },
-    deleteInstructorCourse: async ({ page, itemsPerPage, courseId, instructorId }: { page: number, itemsPerPage: number, courseId: string, instructorId: string }) => {
-        try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                limit: itemsPerPage.toString(),
-                courseId: courseId.toString()
-            })
-            const response = await axios.delete(`/api/admin/course/instructor/${instructorId}?${params.toString()}`);
-            clientLogger.info("Instructor course deleted successfully", { courseId, message: response.data.message });
-            return await get().fetchPaginatedInstructorCourses({ page, itemsPerPage, instructorId });
-        }
-        catch (error: unknown) {
-            const message: string = error instanceof Error ? error.message : "Something went wrong";
-            clientLogger.error("Error deleting instructor course through instructor Store", { message, error });
-            return {
-                paginatedInstructorCourses: [],
-                currentPage: page,
-                hasNextPage: false,
-                hasPrevPage: page > 1,
-                totalPages: 1,
-                totalCourses: 0,
-            };
-        }
-
-    },
-    setPaginatedInstructorCourses: (newPaginatedInstructorCourses, newHasNextPage, newHasPrevPage, newCurrentPageNumber, newTotalPages, newTotalCourses) => {
-        set({
-            cachedPaginatedInstructorCourses: newPaginatedInstructorCourses,
-            cachedHasNextPage: newHasNextPage,
-            cachedHasPrevPage: newHasPrevPage,
-            cachedCurrentPageNumber: newCurrentPageNumber,
-            cachedTotalPages: newTotalPages,
-            cachedTotalCourses: newTotalCourses,
-            hasFetched: true,
+        toast.success("Course created successfully");
+        set({ isLoading: false });
+      } catch (error: unknown) {
+        console.log(
+          "This is the error in create course function ",
+          error,
+          error instanceof Error && error.message
+        );
+        const message = getErrorMessage(
+          error,
+          "Something went wrong, while creating course"
+        );
+        toast.error("Something went wrong");
+        clientLogger.error("Something went wrong, while creating course", {
+          message,
+          error,
         });
+        throw new Error(message);
+      }
+    },
+    updateCourse: async (data: UpdateCourseBody, courseId: string) => {
+      set({ isLoading: true });
+      try {
+        const response = await axios.patch(
+          `/api/admin/course/${courseId}`,
+          data
+        );
+        if (!response.data.success) {
+          toast.error(response.data.message);
+          return;
+        }
+        toast.success("Course updated successfully");
+        set({ isLoading: false });
+      } catch (error: unknown) {
+        console.error(
+          "This is the error in update course function ",
+          error,
+          error instanceof Error && error.message
+        );
+        const message = getErrorMessage(
+          error,
+          "Something went wrong, while updating course"
+        );
+        toast.error("Something went wrong");
+        clientLogger.error("Something went wrong, while updating course", {
+          message,
+          error,
+        });
+        throw new Error(message);
+      }
+    },
+    deleteInstructorCourse: async ({
+      page,
+      itemsPerPage,
+      courseId,
+      instructorId,
+    }: {
+      page: number;
+      itemsPerPage: number;
+      courseId: string;
+      instructorId: string;
+    }) => {
+      try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: itemsPerPage.toString(),
+          courseId: courseId.toString(),
+        });
+        const response = await axios.delete(
+          `/api/admin/course/instructor/${instructorId}?${params.toString()}`
+        );
+        clientLogger.info("Instructor course deleted successfully", {
+          courseId,
+          message: response.data.message,
+        });
+        return await get().fetchPaginatedInstructorCourses({
+          page,
+          itemsPerPage,
+          instructorId,
+        });
+      } catch (error: unknown) {
+        const message: string =
+          error instanceof Error ? error.message : "Something went wrong";
+        clientLogger.error(
+          "Error deleting instructor course through instructor Store",
+          { message, error }
+        );
+        return {
+          paginatedInstructorCourses: [],
+          currentPage: page,
+          hasNextPage: false,
+          hasPrevPage: page > 1,
+          totalPages: 1,
+          totalCourses: 0,
+        };
+      }
+    },
+    setPaginatedInstructorCourses: (
+      newPaginatedInstructorCourses,
+      newHasNextPage,
+      newHasPrevPage,
+      newCurrentPageNumber,
+      newTotalPages,
+      newTotalCourses
+    ) => {
+      set({
+        cachedPaginatedInstructorCourses: newPaginatedInstructorCourses,
+        cachedHasNextPage: newHasNextPage,
+        cachedHasPrevPage: newHasPrevPage,
+        cachedCurrentPageNumber: newCurrentPageNumber,
+        cachedTotalPages: newTotalPages,
+        cachedTotalCourses: newTotalCourses,
+        hasFetched: true,
+      });
     },
     clearPaginatedInstructorCourses: () => {
-        set({
-            cachedPaginatedInstructorCourses: [],
-            cachedCurrentPageNumber: 1,
-            cachedTotalPages: 1,
-            cachedHasNextPage: false,
-            cachedHasPrevPage: false,
-            cachedTotalCourses: 0,
-            hasFetched: false,
-        });
+      set({
+        cachedPaginatedInstructorCourses: [],
+        cachedCurrentPageNumber: 1,
+        cachedTotalPages: 1,
+        cachedHasNextPage: false,
+        cachedHasPrevPage: false,
+        cachedTotalCourses: 0,
+        hasFetched: false,
+      });
     },
     setInstructorCourses: (courses) => {
-        set({
-            cachedPaginatedInstructorCourses: courses,
-            cachedTotalCourses: courses.length,
-            hasFetched: true,
-        });
+      set({
+        cachedPaginatedInstructorCourses: courses,
+        cachedTotalCourses: courses.length,
+        hasFetched: true,
+      });
     },
-}))
+  })
+);

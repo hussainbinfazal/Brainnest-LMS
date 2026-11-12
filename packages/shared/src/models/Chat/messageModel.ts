@@ -1,12 +1,11 @@
-import mongoose, {Schema,Model} from 'mongoose';
+import mongoose, { Model, Schema } from 'mongoose';
 import { IMessage } from 'src/types';
 
-
-export const messageSchema:Schema<IMessage> = new mongoose.Schema(
+export const messageSchema: Schema<IMessage> = new mongoose.Schema(
   {
     sender: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', 
+      ref: 'User',
       required: true,
     },
     receiver: {
@@ -19,10 +18,10 @@ export const messageSchema:Schema<IMessage> = new mongoose.Schema(
       required: true,
     },
     messageofTheLimit: {
-      type: String, 
+      type: String,
     },
-    isReadByInstructor: Boolean, 
-    isReadByStudent: Boolean, 
+    isReadByInstructor: Boolean,
+    isReadByStudent: Boolean,
     senderType: String,
     isDeleted: {
       type: Boolean,
@@ -36,10 +35,10 @@ export const messageSchema:Schema<IMessage> = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const Message: Model<IMessage> = mongoose.models.Message || mongoose.model<IMessage>('Message', messageSchema);
+const Message: Model<IMessage> =
+  mongoose.models.Message || mongoose.model<IMessage>('Message', messageSchema);
 export default Message;

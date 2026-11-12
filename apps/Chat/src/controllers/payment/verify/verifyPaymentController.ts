@@ -1,97 +1,101 @@
+import { PaymentService, markPaymentCompleted } from '@repo/payment';
+import { Payment, connectDB } from '@repo/shared/server';
+import { Chat, Course, IChat, Message, User } from '@repo/shared/server';
+import { logger } from '@repo/shared/server';
 import crypto from 'crypto';
 import { Request, Response } from 'express';
-import { connectDB, Payment } from '@repo/shared/server';
-import { User, Course, Message, Chat, IChat } from '@repo/shared/server';
-import { logger } from '@repo/shared/server';
 import mongoose from 'mongoose';
-import { markPaymentCompleted, PaymentService } from '@repo/payment';
+
 const paymentService = new PaymentService();
 
-export async function verifyChatPayment(request: Request, response: Response): Promise<Response> {
-    await connectDB(process.env.MONGODB_URI!);
-    let razorpayPaymentId;
-    const session = await mongoose.startSession();
-    try {
+export async function verifyChatPayment(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  await connectDB(process.env.MONGODB_URI!);
+  let razorpayPaymentId;
+  const session = await mongoose.startSession();
+  try {
+    const { chatId, paymentId, signature, orderId, messageLimit } =
+      request.body;
 
-        const { chatId, paymentId, signature, orderId, messageLimit } = request.body;
-
-        // Verify Razorpay signature
-        const isAuthentic = paymentService.verifyPayment(orderId, paymentId, signature);
-        razorpayPaymentId = paymentId
-        if (!isAuthentic) {
-            return response.status(400).json({
-                success: false,
-                message: 'Invalid payment signature'
-            });
-        }
-        await session.withTransaction(async () => {
-            const [payment, chat] = await Promise.all([
-                Payment.findOne({
-                    razorpayOrderId: orderId,
-                    paymentStatus: "Pending"
-                }).session(session),
-                Chat.findById(chatId).session(session)
-            ]);
-
-            if (!payment) {
-                logger.warn("Payment not found", { orderId, paymentId });
-                throw new Error("Payment not found");
-            }
-            if (!chat) {
-                logger.warn("Chat not found", { chatId });
-                throw new Error("Chat not found");
-
-            }
-
-            if (!messageLimit || messageLimit <= 0) {
-                logger.warn("Invalid message limit", { messageLimit });
-                throw new Error("Invalid message limit");
-            }
-            chat.isPaid = true;
-            chat.paidAt = new Date();
-            chat.paymentResult = {
-                id: paymentId,
-                status: 'completed',
-                update_time: new Date().toISOString()
-            };
-            chat.isLimitExceeded = false;
-            chat.isActive = true;
-            chat.isRenewed = true;
-            chat.totalInterval += 1; // Update interval as needed
-            chat.messageRemaining = messageLimit;
-            chat.messageLimit = messageLimit;
-            chat.messageCount = 0;
-            await Promise.all([
-                markPaymentCompleted({
-                    payment,
-                    paymentId,
-                    session
-                }),
-                chat.save({ session })
-            ]);
-
-        });
-        // Update chat in database
-        return response.status(200).json({
-            success: true,
-            message: "Payment verified successfully",
-            chatId: chatId,
-            paymentId
-        });
-
-    } catch (error: unknown) {
-        logger.error("Error in verifying payment", { error })
-        await reconcileQueue.add('reconcile-single', {
-            razorpayPaymentId: razorpayPaymentId // ✅ matches job.data.razorpayPaymentId
-        });
-        const message = error instanceof Error ? error.message : 'Unknown error';
-        return response.status(500).json({
-            success: false,
-            message: `Payment verification failed:${message}`,
-            error: message
-        });
-    } finally {
-        await session.endSession();
+    // Verify Razorpay signature
+    const isAuthentic = paymentService.verifyPayment(
+      orderId,
+      paymentId,
+      signature,
+    );
+    razorpayPaymentId = paymentId;
+    if (!isAuthentic) {
+      return response.status(400).json({
+        success: false,
+        message: 'Invalid payment signature',
+      });
     }
+    await session.withTransaction(async () => {
+      const [payment, chat] = await Promise.all([
+        Payment.findOne({
+          razorpayOrderId: orderId,
+          paymentStatus: 'Pending',
+        }).session(session),
+        Chat.findById(chatId).session(session),
+      ]);
 
+      if (!payment) {
+        logger.warn('Payment not found', { orderId, paymentId });
+        throw new Error('Payment not found');
+      }
+      if (!chat) {
+        logger.warn('Chat not found', { chatId });
+        throw new Error('Chat not found');
+      }
+
+      if (!messageLimit || messageLimit <= 0) {
+        logger.warn('Invalid message limit', { messageLimit });
+        throw new Error('Invalid message limit');
+      }
+      chat.isPaid = true;
+      chat.paidAt = new Date();
+      chat.paymentResult = {
+        id: paymentId,
+        status: 'completed',
+        update_time: new Date().toISOString(),
+      };
+      chat.isLimitExceeded = false;
+      chat.isActive = true;
+      chat.isRenewed = true;
+      chat.totalInterval += 1; // Update interval as needed
+      chat.messageRemaining = messageLimit;
+      chat.messageLimit = messageLimit;
+      chat.messageCount = 0;
+      await Promise.all([
+        markPaymentCompleted({
+          payment,
+          paymentId,
+          session,
+        }),
+        chat.save({ session }),
+      ]);
+    });
+    // Update chat in database
+    return response.status(200).json({
+      success: true,
+      message: 'Payment verified successfully',
+      chatId: chatId,
+      paymentId,
+    });
+  } catch (error: unknown) {
+    logger.error('Error in verifying payment', { error });
+    await reconcileQueue.add('reconcile-single', {
+      razorpayPaymentId: razorpayPaymentId, // ✅ matches job.data.razorpayPaymentId
+    });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return response.status(500).json({
+      success: false,
+      message: `Payment verification failed:${message}`,
+      error: message,
+    });
+  } finally {
+    await session.endSession();
+  }
 }

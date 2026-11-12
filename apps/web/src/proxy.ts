@@ -1,48 +1,60 @@
-
-import { NextResponse, NextRequest } from "next/server"
+import { NextResponse, NextRequest } from "next/server";
 import { logger } from "@/utils/logger/logger.edge/logger.edge";
-import { getToken } from "next-auth/jwt"
-import type { JWT } from "next-auth/jwt"
+import { getToken } from "next-auth/jwt";
+import type { JWT } from "next-auth/jwt";
 import { RateLimit as rateLimit } from "@repo/shared/config/redisConfig/rate-limiters/rate-limit";
-import { checkIp, GLOBAL_IP_KEY } from '@repo/shared/server';
+import { checkIp, GLOBAL_IP_KEY } from "@repo/shared/server";
 import { failResponse } from "@/lib/helpers/failResponseHelper";
 import { USER_ROLE } from "@repo/shared";
 
 export async function proxy(req: NextRequest) {
-  const { pathname }: { pathname: string } = req.nextUrl
+  const { pathname }: { pathname: string } = req.nextUrl;
   const requestId: string = crypto.randomUUID();
   const start: number = Date.now();
 
   const log = (message: string, data?: any) => {
-    logger.info({ requestId, message, duration: `${Date.now() - start}ms`, path: req.nextUrl.pathname, tokenPresent: !!token, ...data })
-  }
-  if (pathname.startsWith('/api')) {
-    if (process.env.NODE_ENV === 'production') {
-      const { allowed, remaining, retryAfterSec, ip } = await checkIp(req, GLOBAL_IP_KEY.namespace, GLOBAL_IP_KEY.max, GLOBAL_IP_KEY.windowSec);
+    logger.info({
+      requestId,
+      message,
+      duration: `${Date.now() - start}ms`,
+      path: req.nextUrl.pathname,
+      tokenPresent: !!token,
+      ...data,
+    });
+  };
+  if (pathname.startsWith("/api")) {
+    if (process.env.NODE_ENV === "production") {
+      const { allowed, remaining, retryAfterSec, ip } = await checkIp(
+        req,
+        GLOBAL_IP_KEY.namespace,
+        GLOBAL_IP_KEY.max,
+        GLOBAL_IP_KEY.windowSec
+      );
       try {
         if (!allowed) {
           return failResponse(
-            { message: 'Too many requests' },
+            { message: "Too many requests" },
             429,
             undefined,
-            { 'Retry-After': String(retryAfterSec) },
-            true,
+            { "Retry-After": String(retryAfterSec) },
+            true
           );
         }
       } catch (error: unknown) {
-        logger.error('Global limiter unavailable', { error, ip: ip });
+        logger.error("Global limiter unavailable", { error, ip: ip });
         // fail open
       }
     }
     return NextResponse.next();
   }
-  const token: JWT | null = await getToken({
+  const token: JWT | null = (await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
-    cookieName: process.env.NODE_ENV === 'production'
-      ? '__Secure-authjs.session-token'
-      : 'authjs.session-token'
-  }) as JWT | null
+    cookieName:
+      process.env.NODE_ENV === "production"
+        ? "__Secure-authjs.session-token"
+        : "authjs.session-token",
+  })) as JWT | null;
 
   // Define public routes that don't require authentication
   const publicRoutes: string[] = [
@@ -55,66 +67,79 @@ export async function proxy(req: NextRequest) {
     "/terms",
     "/blog",
     "/search",
-    "/courses"
-  ]
+    "/courses",
+  ];
 
-  const isPublicRoute: boolean | null = publicRoutes.some(route =>
-    pathname === route ||
-    pathname.startsWith("/blog/") ||
-    pathname.startsWith("/search/")
-  ) || (pathname.match(/^\/courses\/[^/]+$/) && pathname !== '/courses/liked-courses')
+  const isPublicRoute: boolean | null =
+    publicRoutes.some(
+      (route) =>
+        pathname === route ||
+        pathname.startsWith("/blog/") ||
+        pathname.startsWith("/search/")
+    ) ||
+    (pathname.match(/^\/courses\/[^/]+$/) &&
+      pathname !== "/courses/liked-courses");
 
   // Allow access to public routes without authentication
   if (isPublicRoute) {
     // But redirect authenticated users away from login/register pages
     if ((pathname === "/login" || pathname === "/register") && token) {
-      log('Redirecting authenticated user away from auth pages');
-      return NextResponse.redirect(new URL("/", req.url))
+      log("Redirecting authenticated user away from auth pages");
+      return NextResponse.redirect(new URL("/", req.url));
     }
-    log('Allowing access to public route')
-    return NextResponse.next()
+    log("Allowing access to public route");
+    return NextResponse.next();
   }
 
   // Require authentication for protected routes
   if (!token) {
-    log('No token, redirecting to login')
-    return NextResponse.redirect(new URL("/login", req.url))
+    log("No token, redirecting to login");
+    return NextResponse.redirect(new URL("/login", req.url));
   }
-  const instructorRoutes = pathname.startsWith('/instructor') && token.role !== USER_ROLE.INSTRUCTOR && token.role !== USER_ROLE.ADMIN
+  const instructorRoutes =
+    pathname.startsWith("/instructor") &&
+    token.role !== USER_ROLE.INSTRUCTOR &&
+    token.role !== USER_ROLE.ADMIN;
   if (instructorRoutes) {
-    log('Non-instructor trying to access instructor route')
-    return NextResponse.redirect(new URL("/", req.url))
-
+    log("Non-instructor trying to access instructor route");
+    return NextResponse.redirect(new URL("/", req.url));
   }
   // Check admin access for admin routes
-  if (pathname.startsWith("/admin") && token.role !== USER_ROLE.INSTRUCTOR && token.role !== USER_ROLE.ADMIN) {
-    log('Non-admin trying to access admin route')
-    return NextResponse.redirect(new URL("/", req.url))
+  if (
+    pathname.startsWith("/admin") &&
+    token.role !== USER_ROLE.INSTRUCTOR &&
+    token.role !== USER_ROLE.ADMIN
+  ) {
+    log("Non-admin trying to access admin route");
+    return NextResponse.redirect(new URL("/", req.url));
   }
-  log('Allowing access to protected route')
-  const res: NextResponse = NextResponse.next()
+  log("Allowing access to protected route");
+  const res: NextResponse = NextResponse.next();
   res.headers.set("X-Request-ID", requestId);
   res.headers.set("X-Response-Time", `${Date.now() - start}ms`);
-  return res
+  return res;
 }
 
 export const config = {
-  matcher: [{
-
-    // Run on everything EXCEPT: Next internals, root files, folders (with trailing slash), and image files
-    source:
-      "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|\\.well-known/|reviews/|assets/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-    missing: [
-
-      //// Header Next.js sets on router prefetches
-      {
-        type: 'header', key: 'next-router-prefetch'
-      }, {
-        ///Header browsers set on prefetches
-        type: 'header', key: "purpose", value: 'prefetch'
-      }]
-
-  }
+  matcher: [
+    {
+      // Run on everything EXCEPT: Next internals, root files, folders (with trailing slash), and image files
+      source:
+        "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|\\.well-known/|reviews/|assets/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+      missing: [
+        //// Header Next.js sets on router prefetches
+        {
+          type: "header",
+          key: "next-router-prefetch",
+        },
+        {
+          ///Header browsers set on prefetches
+          type: "header",
+          key: "purpose",
+          value: "prefetch",
+        },
+      ],
+    },
     /*
      * Match all request paths except for the ones starting with:
      * - api (API routes)
@@ -125,4 +150,4 @@ export const config = {
      */
     // '/((?!_next/static|_next/image|favicon.ico|\\.well-known|reviews|assets).*)',
   ],
-}
+};

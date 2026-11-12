@@ -1,14 +1,24 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle, ArrowRight, Star, Users, BookOpen, LucideIcon } from "lucide-react";
+import {
+  PlayCircle,
+  ArrowRight,
+  Star,
+  Users,
+  BookOpen,
+  LucideIcon,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export interface CStats {
-  icon: LucideIcon; label: string; value: string
-}[]
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}
+[];
 export default function HeroSection() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -56,16 +66,16 @@ export default function HeroSection() {
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto">
-            Master in-demand skills with expert-led courses, hands-on projects, and personalized learning paths designed for career growth.
+            Master in-demand skills with expert-led courses, hands-on projects,
+            and personalized learning paths designed for career growth.
           </p>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Button
-
               size="lg"
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-              onClick={() => router.push('/courses')}
+              onClick={() => router.push("/courses")}
             >
               Explore Courses
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -87,7 +97,9 @@ export default function HeroSection() {
                 <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
                   <stat.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {stat.value}
+                </div>
                 <div className="text-sm text-gray-600">{stat.label}</div>
               </div>
             ))}

@@ -1,69 +1,83 @@
-import { logger } from "@repo/shared/server";
-import { toFile } from "groq-sdk";
-import { voiceLLM } from "../LLM/llm";
+import { logger } from '@repo/shared/server';
+import { toFile } from 'groq-sdk';
+
+import { voiceLLM } from '../LLM/llm';
 
 const MAX_AUDIO_BYTES = 24 * 1024 * 1024;
 type TranscriptionSegment = { text: string; no_speech_prob?: number };
 
 function isTranscriptionSegment(value: unknown): value is TranscriptionSegment {
-    if (typeof value !== "object" || value === null || !("text" in value) || typeof value.text !== "string") {
-        return false;
-    }
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    !('text' in value) ||
+    typeof value.text !== 'string'
+  ) {
+    return false;
+  }
 
-    return !("no_speech_prob" in value) || typeof value.no_speech_prob === "number";
+  return (
+    !('no_speech_prob' in value) || typeof value.no_speech_prob === 'number'
+  );
 }
 
 export async function transcribeVideoToText({
-    userId,
+  userId,
+  courseId,
+  lessonId,
+  mp3Url,
+}: {
+  userId: string;
+  courseId?: string;
+  lessonId?: string;
+  mp3Url: string;
+}): Promise<{
+  courseId: string | undefined;
+  lessonId: string | undefined;
+  transcript: string;
+  segments: TranscriptionSegment[];
+}> {
+  const res = await fetch(mp3Url, { signal: AbortSignal.timeout(120_000) });
+  // Throw on any non-200 so BullMQ retries (Cloudinary answers 423 while still generating)
+  if (!res.ok) {
+    logger.error('Error in Transcription', {
+      status: res.status,
+    });
+    throw new Error(`Audio download failed: ${res.status}`);
+  }
+  console.log('This is the response in transcribeVideoToText', res);
+  // Read the whole body into memory
+  const buffer = Buffer.from(await res.arrayBuffer());
+  // Fail clearly instead of letting the API reject an oversized file
+  if (buffer.length > MAX_AUDIO_BYTES) {
+    logger.error('Audio too large for transcription', {
+      size: buffer.length,
+      maxSize: MAX_AUDIO_BYTES,
+    });
+    // TODO: split the audio into chunks for long lessons
+    throw new Error(`Audio too large: ${buffer.length} bytes`);
+  }
+  const file = await toFile(buffer, `${lessonId}.mp3`, { type: 'audio/mpeg' });
+
+  const transcription = await voiceLLM.audio.transcriptions.create({
+    file,
+    model: 'whisper-large-v3',
+    temperature: 0,
+    response_format: 'verbose_json',
+  });
+  console.log(
+    'This is the transcription in transcribeVideoToText',
+    transcription,
+  );
+  logger.info('Transcription on audio completed on package');
+  const rawSegments: unknown = (transcription as { segments?: unknown })
+    .segments;
+  return {
     courseId,
     lessonId,
-    mp3Url,
-}: {
-    userId: string;
-    courseId?: string;
-    lessonId?: string;
-    mp3Url: string;
-}): Promise<{
-    courseId: string | undefined;
-    lessonId: string | undefined;
-    transcript: string;
-    segments: TranscriptionSegment[];
-}> {
-    const res = await fetch(mp3Url, { signal: AbortSignal.timeout(120_000) });
-    // Throw on any non-200 so BullMQ retries (Cloudinary answers 423 while still generating)
-    if (!res.ok) {
-        logger.error("Error in Transcription", {
-            status: res.status
-        })
-        throw new Error(`Audio download failed: ${res.status}`);
-    }
-    console.log("This is the response in transcribeVideoToText", res);
-    // Read the whole body into memory
-    const buffer = Buffer.from(await res.arrayBuffer());
-    // Fail clearly instead of letting the API reject an oversized file
-    if (buffer.length > MAX_AUDIO_BYTES) {
-        logger.error("Audio too large for transcription", {
-            size: buffer.length,
-            maxSize: MAX_AUDIO_BYTES,
-        });
-        // TODO: split the audio into chunks for long lessons
-        throw new Error(`Audio too large: ${buffer.length} bytes`);
-    }
-    const file = await toFile(buffer, `${lessonId}.mp3`, { type: "audio/mpeg" });
-
-    const transcription = await voiceLLM.audio.transcriptions.create({
-        file,
-        model: "whisper-large-v3",
-        temperature: 0,
-        response_format: "verbose_json",
-    });
-    console.log("This is the transcription in transcribeVideoToText", transcription);
-    logger.info("Transcription on audio completed on package");
-    const rawSegments: unknown = (transcription as { segments?: unknown }).segments;
-    return {
-        courseId,
-        lessonId,
-        transcript: transcription.text,
-        segments: Array.isArray(rawSegments) ? rawSegments.filter(isTranscriptionSegment) : [],
-    };
-};
+    transcript: transcription.text,
+    segments: Array.isArray(rawSegments)
+      ? rawSegments.filter(isTranscriptionSegment)
+      : [],
+  };
+}

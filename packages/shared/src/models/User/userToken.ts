@@ -1,45 +1,51 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import mongoose, { Model, Schema } from 'mongoose';
+
 import { IUserToken } from '../../types/model.types';
 
-
-
-export const UserTokenSchema: Schema<IUserToken> = new mongoose.Schema({
+export const UserTokenSchema: Schema<IUserToken> = new mongoose.Schema(
+  {
     userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
-
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     type: {
-        type: String,
-        enum: ['reset', 'password-reset', 'email-verification', "number-verification", 'refresh'],
+      type: String,
+      enum: [
+        'reset',
+        'password-reset',
+        'email-verification',
+        'number-verification',
+        'refresh',
+      ],
     },
     attempts: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
     token: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     expiresAt: {
-        type: Date,
-        required: true
+      type: Date,
+      required: true,
     },
     isVerified: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     isUsed: {
-        type: Boolean,
-        default: false
-    }
-
-},
-    { timestamps: true }
-)
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true },
+);
 
 UserTokenSchema.index({ userId: 1, type: 1 }, { unique: true });
 
-const UserToken: Model<IUserToken> = mongoose.models.UserToken || mongoose.model<IUserToken>('UserToken', UserTokenSchema);
+const UserToken: Model<IUserToken> =
+  mongoose.models.UserToken ||
+  mongoose.model<IUserToken>('UserToken', UserTokenSchema);
 export default UserToken;

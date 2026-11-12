@@ -3,9 +3,7 @@ import { LeesonIdPageComp } from "@/app/components/CourseIDComp/LessonIDComp/Les
 
 // Render a YouTube video player
 const LeesonIdPage = (): JSX.Element => {
-  
   return <LeesonIdPageComp />;
-   
 };
 
 export default LeesonIdPage;

@@ -27,7 +27,7 @@ import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import Image from "next/image";
 import { RxCrossCircled } from "react-icons/rx";
 import Tiptap from "@/components/Tiptap/Tiptap";
-import { CCourse, CLesson, CSection, } from "@/types/client";
+import { CCourse, CLesson, CSection } from "@/types/client";
 import { CUpdateCourseForm } from "@/types/forms/formValidators";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import {
@@ -41,9 +41,18 @@ import { ObjectId } from "bson";
 
 import { useInstructorCoursesStore } from "@/lib/store/instructorsStore/useInstructorCoursesStore";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, FormProvider, useFieldArray, useForm } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useFieldArray,
+  useForm,
+} from "react-hook-form";
 import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
-import { categoryToSubcategories, LEVELS, uiLanguages } from "@/locales/locales";
+import {
+  categoryToSubcategories,
+  LEVELS,
+  uiLanguages,
+} from "@/locales/locales";
 import { getErrorMessage } from "@repo/shared";
 import z from "zod";
 import {
@@ -56,12 +65,12 @@ import {
   SectionItem,
 } from "../Create-Course/courseFields";
 type EditorCourseCompParams = {
-  renderedCourse: CCourse,
-  renderedCourseSections: CSection[],
-  renderedCourseLessons: CLesson[],
-  requestCourseId: string,
-  className?: string,
-}
+  renderedCourse: CCourse;
+  renderedCourseSections: CSection[];
+  renderedCourseLessons: CLesson[];
+  requestCourseId: string;
+  className?: string;
+};
 
 // default lesson shape in one place (match your schema's field names!)
 const EMPTY_LESSON = {
@@ -133,7 +142,8 @@ const getCourseFormValues = (
     sections: sections.map((section) => ({
       ...section,
       lessons: lessons.filter(
-        (lesson) => section._id !== undefined && lesson.sectionId === section._id
+        (lesson) =>
+          section._id !== undefined && lesson.sectionId === section._id
       ),
     })),
     faq: course.faq,
@@ -142,11 +152,23 @@ const getCourseFormValues = (
   };
 };
 
-const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourseLessons, requestCourseId, className }: EditorCourseCompParams): JSX.Element => {
+const EditCourseComp = ({
+  renderedCourse,
+  renderedCourseSections,
+  renderedCourseLessons,
+  requestCourseId,
+  className,
+}: EditorCourseCompParams): JSX.Element => {
   const router = useRouter();
-  const [fetchedCourse, setFetchedCourse] = useState<CCourse | null>(renderedCourse)
-  const [fetchedSections, setFetchedSections] = useState<CSection[]>(renderedCourseSections)
-  const [fetchedLessons, setFetchedLessons] = useState<CLesson[]>(renderedCourseLessons)
+  const [fetchedCourse, setFetchedCourse] = useState<CCourse | null>(
+    renderedCourse
+  );
+  const [fetchedSections, setFetchedSections] = useState<CSection[]>(
+    renderedCourseSections
+  );
+  const [fetchedLessons, setFetchedLessons] = useState<CLesson[]>(
+    renderedCourseLessons
+  );
   const updateCourse = useInstructorCoursesStore((state) => state.updateCourse);
   const isLoading = useInstructorCoursesStore((state) => state.isLoading);
   const form = useForm<
@@ -196,7 +218,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
   // );
 
   const onSubmit = async (data: UpdateCourseBody) => {
-    console.log("Update course button clicked")
+    console.log("Update course button clicked");
     try {
       //attach derived totals
       await updateCourse(
@@ -222,7 +244,6 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
       const message = getErrorMessage(error, "Failed to create course");
       toast.error(message);
     }
-
   };
 
   const onInvalidSubmit = () => {
@@ -238,15 +259,19 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
         "This is the rendered parent Category",
         course.category.parent?.name
       );
-      console.log("This is the rendered childCategory", course.category.name)
-      console.log("This is the rendered Sections", renderedCourseSections)
+      console.log("This is the rendered childCategory", course.category.name);
+      console.log("This is the rendered Sections", renderedCourseSections);
       console.log("This is the rendered Lessons", renderedCourseLessons);
     }
-  }, [fetchedCourse, fetchedSections, fetchedLessons, form, renderedCourse])
-
+  }, [fetchedCourse, fetchedSections, fetchedLessons, form, renderedCourse]);
 
   return (
-    <div className={cn("flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8", className)}>
+    <div
+      className={cn(
+        "flex flex-col min-h-screen w-full items-center justify-center gap-4 mt-6 mb-8",
+        className
+      )}
+    >
       <FormProvider {...form}>
         <Card className="w-87.5 md:w-137.5 space-y-4">
           <CardHeader className="">
@@ -255,34 +280,46 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
           </CardHeader>
           <CardContent className="">
             <form
-              id='update-course-form'
+              id="update-course-form"
               onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
-              className="space-y-4 relative">
-              <FileField label="Course Cover Image" accept='image/*' {...cover}
+              className="space-y-4 relative"
+            >
+              <FileField
+                label="Course Cover Image"
+                accept="image/*"
+                {...cover}
                 onFile={async (f) => {
                   const result = await cover.upload(f, "thumbnail");
                   if (result) {
-                    setValue("coverImage", result.url, { shouldValidate: true });
-                    setValue("coverPublicId", result.public_id, { shouldValidate: true });
+                    setValue("coverImage", result.url, {
+                      shouldValidate: true,
+                    });
+                    setValue("coverPublicId", result.public_id, {
+                      shouldValidate: true,
+                    });
                     // setPreviewNewCover(result.url);
                   }
                 }}
-                error={errors.coverImage?.message ?? errors?.coverPublicId?.message} required={true}
+                error={
+                  errors.coverImage?.message ?? errors?.coverPublicId?.message
+                }
+                required={true}
                 onCancel={cover.cancel}
                 isUploading={cover.isUploading}
                 progress={cover.progress}
-                url={watch("coverImage") ?? ''}
-                fileKind='image'
+                url={watch("coverImage") ?? ""}
+                fileKind="image"
               />
-              <Field label="Title" error={errors.title?.message} required={true}>
-                <Input
-                  {...register("title")}
-
-                />
+              <Field
+                label="Title"
+                error={errors.title?.message}
+                required={true}
+              >
+                <Input {...register("title")} />
               </Field>
               <Field label="Description" error={errors.description?.message}>
                 <Controller
-                  name='description'
+                  name="description"
                   control={control}
                   render={({ field }) => (
                     <Tiptap
@@ -295,55 +332,60 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
               </Field>
               <FileField
                 label="Preview video"
-                accept='video/*'
+                accept="video/*"
                 {...previewVideo}
                 onFile={async (f: File) => {
                   const result = await previewVideo.upload(f, "preview-video");
                   if (result) {
-                    setValue("previewVideo", result.url, { shouldValidate: true });
-                    setValue('previewVideoPublicId', result.public_id, { shouldValidate: true });
+                    setValue("previewVideo", result.url, {
+                      shouldValidate: true,
+                    });
+                    setValue("previewVideoPublicId", result.public_id, {
+                      shouldValidate: true,
+                    });
                   }
                 }}
                 onCancel={previewVideo.cancel}
                 isUploading={previewVideo.isUploading}
                 progress={previewVideo.progress}
-                url={watch("previewVideo") ?? ''}
-                fileKind={'video'}
+                url={watch("previewVideo") ?? ""}
+                fileKind={"video"}
                 error={
-                  errors.previewVideo?.message ?? errors?.previewVideoPublicId?.message
+                  errors.previewVideo?.message ??
+                  errors?.previewVideoPublicId?.message
                 }
               />
-              <Field label='Price' error={errors.price?.message}>
+              <Field label="Price" error={errors.price?.message}>
                 <Input
                   required={true}
-                  type={'number'}
+                  type={"number"}
                   step="1"
                   min={0}
                   max={100000}
-                  {...register('price', { valueAsNumber: true })}
+                  {...register("price", { valueAsNumber: true })}
                   placeholder="e.g. ₹69/$69"
                 />
-
               </Field>
               <Field label="Discount (%)" error={errors.discount?.message}>
                 <Input
                   type="number"
                   min={0}
-                  {...register('discount', { valueAsNumber: true })}
+                  {...register("discount", { valueAsNumber: true })}
                   placeholder="e.g. 10,20,40"
                 />
               </Field>
               <Field
                 required={true}
                 label="Category"
-                error={errors.category?.name?.message ?? errors.category?.message}
-
+                error={
+                  errors.category?.name?.message ?? errors.category?.message
+                }
               >
                 <Select
                   value={parentCategory}
                   onValueChange={(v) => {
                     setParentCategory(v);
-                    setValue('category.name', v, { shouldValidate: true })
+                    setValue("category.name", v, { shouldValidate: true });
                   }}
                 >
                   <SelectTrigger className="w-full">
@@ -358,15 +400,20 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="SubCategory" error={errors.subCategory?.message} required={true}>
+              <Field
+                label="SubCategory"
+                error={errors.subCategory?.message}
+                required={true}
+              >
                 <Controller
-                  name='subCategory'
+                  name="subCategory"
                   control={control}
                   render={({ field }) => (
                     <Select
-                      value={field.value ?? ''}
+                      value={field.value ?? ""}
                       onValueChange={field.onChange}
-                      disabled={!parentCategory}>
+                      disabled={!parentCategory}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a Subcategory" />
                       </SelectTrigger>
@@ -378,9 +425,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                         ))}
                       </SelectContent>
                     </Select>
-
                   )}
-
                 />
               </Field>
               <Field label="Tags" error={errors.tags?.message} required={true}>
@@ -389,7 +434,7 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   control={control}
                   render={({ field }) => (
                     <CommaListField
-                      inputType='text'
+                      inputType="text"
                       value={field.value ?? []}
                       onChange={field.onChange}
                       onBlur={field.onBlur}
@@ -404,12 +449,19 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                 <Input readOnly value={fetchedCourse?.totalDurationInSeconds} type="number" disabled />
               </Field>
               } */}
-              <Field label="Level" error={errors.level?.message} required={true}>
+              <Field
+                label="Level"
+                error={errors.level?.message}
+                required={true}
+              >
                 <Controller
                   name="level"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value ?? ''} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a level" />
                       </SelectTrigger>
@@ -422,12 +474,13 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                       </SelectContent>
                     </Select>
                   )}
-
-
-
                 />
               </Field>
-              <Field label="What you will learn" error={errors.whatYouWillLearn?.message} required={true}>
+              <Field
+                label="What you will learn"
+                error={errors.whatYouWillLearn?.message}
+                required={true}
+              >
                 <Controller
                   name="whatYouWillLearn"
                   control={control}
@@ -443,7 +496,11 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   )}
                 />
               </Field>
-              <Field label="Requirements" error={errors.requirements?.message} required={true}>
+              <Field
+                label="Requirements"
+                error={errors.requirements?.message}
+                required={true}
+              >
                 <Controller
                   name="requirements"
                   control={control}
@@ -459,12 +516,19 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   )}
                 />
               </Field>
-              <Field label="Language" error={errors.language?.message} required={true}>
+              <Field
+                label="Language"
+                error={errors.language?.message}
+                required={true}
+              >
                 <Controller
                   name="language"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a language" />
                       </SelectTrigger>
@@ -479,7 +543,11 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   )}
                 />
               </Field>
-              <Field label="Lesson release schedule" error={errors.dripType?.message} required={true}>
+              <Field
+                label="Lesson release schedule"
+                error={errors.dripType?.message}
+                required={true}
+              >
                 <Controller
                   name="dripType"
                   control={control}
@@ -494,17 +562,24 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                       <SelectContent>
                         <SelectItem value="free">Free</SelectItem>
                         <SelectItem value="sequential">Sequential</SelectItem>
-                        <SelectItem value="drip-by-date">Drip by date</SelectItem>
+                        <SelectItem value="drip-by-date">
+                          Drip by date
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
                 />
               </Field>
               <div className="relative flex flex-col gap-2 rounded-md border border-border p-2">
-                <h3 className="pl-1 text-sm font-medium">Topics to be covered</h3>
+                <h3 className="pl-1 text-sm font-medium">
+                  Topics to be covered
+                </h3>
                 {/* item.id is the stable key, not the index */}
                 {topics.fields.map((item, i) => (
-                  <div key={item.id} className="relative mb-4 space-y-2 rounded-md border border-border p-2">
+                  <div
+                    key={item.id}
+                    className="relative mb-4 space-y-2 rounded-md border border-border p-2"
+                  >
                     {/* remove button, hidden for the first topic */}
                     {i > 0 && (
                       <Button
@@ -535,7 +610,11 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                       <Input {...register(`topics.${i}.description`)} />
                     </Field>
                     {/* active flag */}
-                    <Field label="IsActive" error={errors.topics?.[i]?.isActive?.message} required={true}>
+                    <Field
+                      label="IsActive"
+                      error={errors.topics?.[i]?.isActive?.message}
+                      required={true}
+                    >
                       <Controller
                         control={control}
                         name={`topics.${i}.isActive`}
@@ -558,7 +637,6 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                       name: "",
                       description: "",
                       isActive: true,
-
                     })
                   }
                 >
@@ -588,15 +666,23 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                   onClick={() =>
                     sections.append({
                       ...createEmptySection(),
-                      order: form.getValues("dripType") === "free"
-                        ? getNextCourseSectionOrder(form.getValues("sections"))
-                        : EMPTY_LESSON.order,
-                      lessons: [{
-                        ...EMPTY_LESSON,
-                        order: form.getValues("dripType") === "free"
-                          ? getNextCourseLessonOrder(form.getValues("sections"))
+                      order:
+                        form.getValues("dripType") === "free"
+                          ? getNextCourseSectionOrder(
+                              form.getValues("sections")
+                            )
                           : EMPTY_LESSON.order,
-                      }],
+                      lessons: [
+                        {
+                          ...EMPTY_LESSON,
+                          order:
+                            form.getValues("dripType") === "free"
+                              ? getNextCourseLessonOrder(
+                                  form.getValues("sections")
+                                )
+                              : EMPTY_LESSON.order,
+                        },
+                      ],
                     })
                   }
                 >
@@ -607,7 +693,10 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
                 <h3 className=" text-sm font-medium pl-1">Faqs</h3>
                 {/* faq now uses useFieldArray fields, not form.faq */}
                 {faq.fields.map((item, i) => (
-                  <div key={item.id} className="relative mb-4 space-y-2 border border-border rounded-md flex-1 p-2">
+                  <div
+                    key={item.id}
+                    className="relative mb-4 space-y-2 border border-border rounded-md flex-1 p-2"
+                  >
                     {/* remove button */}
 
                     {/* question: registered, so no manual onChange handler needed */}
@@ -662,25 +751,32 @@ const EditCourseComp = ({ renderedCourse, renderedCourseSections, renderedCourse
               >
                 + Add All Faqs
               </Button>
-              
             </form>
           </CardContent>
           <CardFooter className="flex justify-between">
-            
-
-            <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600 " size="default" variant="outline" onClick={() => router.back()}>
+            <Button
+              className="active:scale-90 hover:scale-120 ease-in-out duration-600 "
+              size="default"
+              variant="outline"
+              onClick={() => router.back()}
+            >
               Cancel
             </Button>
-            <Button className="active:scale-90 hover:scale-120 ease-in-out duration-600" type="submit" form="update-course-form" disabled={isSubmitting} size="default" variant="default" >
+            <Button
+              className="active:scale-90 hover:scale-120 ease-in-out duration-600"
+              type="submit"
+              form="update-course-form"
+              disabled={isSubmitting}
+              size="default"
+              variant="default"
+            >
               {isSubmitting ? "Updating..." : "Update"}
             </Button>
-
-            
           </CardFooter>
         </Card>
       </FormProvider>
-    </div >
+    </div>
   );
-}
+};
 
 export default EditCourseComp;

@@ -1,6 +1,5 @@
 import { MetadataRoute } from "next";
 
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages with high priority
   const staticPages: MetadataRoute.Sitemap = [
@@ -106,29 +105,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     // TODO: Implement database queries for dynamic routes
     // Example pattern for fetching courses:
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
-    });
-    
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/courses`,
+      {
+        next: { revalidate: 3600 }, // Revalidate every hour
+      }
+    );
+
     if (response.ok) {
       const courses = await response.json();
-      
+
       courses.forEach((course: any) => {
         // Add course page
         dynamicPages.push({
           url: `${process.env.NEXT_PUBLIC_BASE_URL}/courses/${course._id}`,
-          lastModified: course.updatedAt ? new Date(course.updatedAt) : new Date(),
+          lastModified: course.updatedAt
+            ? new Date(course.updatedAt)
+            : new Date(),
           changeFrequency: "weekly",
           priority: 0.8,
         });
-        
+
         // Add lesson pages within each course
         course.sections?.forEach((section: any) => {
           section.lessons?.forEach((lesson: any) => {
             dynamicPages.push({
               url: `${process.env.NEXT_PUBLIC_BASE_URL}/courses/${course._id}/${lesson._id}`,
-              lastModified: lesson.updatedAt ? new Date(lesson.updatedAt) : new Date(),
+              lastModified: lesson.updatedAt
+                ? new Date(lesson.updatedAt)
+                : new Date(),
               changeFrequency: "weekly",
               priority: 0.7,
             });
@@ -136,7 +142,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
       });
     }
-    
+
     // TODO: Fetch chat routes if needed:
     // const chatsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chats`, {
     //   next: { revalidate: 3600 },
@@ -152,10 +158,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     //     });
     //   });
     // }
-  } catch (error : unknown) {
-    console.error("Error fetching dynamic routes for sitemap:", {error:error});
+  } catch (error: unknown) {
+    console.error("Error fetching dynamic routes for sitemap:", {
+      error: error,
+    });
   }
   // Combine all sitemap entries
   return [...staticPages, ...userPages, ...dynamicPages];
 }
-

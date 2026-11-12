@@ -4,13 +4,12 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import type { Session } from "next-auth";
 
-
 const AuthPage = async (): Promise<JSX.Element> => {
   const session: Session | null = await auth();
 
   if (session?.user) {
     redirect("/"); //Explicit redirect the user to the homepage
-  };
+  }
 
   return <AuthPageComp />;
 };

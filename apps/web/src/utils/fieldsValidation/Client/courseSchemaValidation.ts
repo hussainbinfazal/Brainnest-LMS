@@ -79,7 +79,6 @@ const sectionBase = z.object({
 });
 
 const createLessonSchema = lessonBase.extend({
-
   durationInSeconds: lessonBase.shape.durationInSeconds.default(0),
   isPreview: lessonBase.shape.isPreview.default(false),
   previewDurationInSeconds:
@@ -162,25 +161,27 @@ function getCourseOrderIssues(
   return issues;
 }
 
-export const createCourseSchema = courseBase.extend({
-  discount: courseBase.shape.discount.default(0),
-  faq: courseBase.shape.faq.default([]),
-  requirements: courseBase.shape.requirements.default([]),
-  whatYouWillLearn: courseBase.shape.whatYouWillLearn.default([]),
-  status: courseBase.shape.status.default("draft"),
-  level: courseBase.shape.level.default("beginner"),
-  certificate: courseBase.shape.certificate.default(false),
-  tags: courseBase.shape.tags.default([]),
-  topics: courseBase.shape.topics.default([]),
-  sections: z
-    .array(createSectionSchema)
-    .min(1, "Add at least one course section"),
-  totalLessons: courseBase.shape.totalLessons.default(0),
-}).superRefine((course, ctx) => {
-  getCourseOrderIssues(course.sections).forEach((issue) =>
-    ctx.addIssue({ code: "custom", ...issue })
-  );
-});
+export const createCourseSchema = courseBase
+  .extend({
+    discount: courseBase.shape.discount.default(0),
+    faq: courseBase.shape.faq.default([]),
+    requirements: courseBase.shape.requirements.default([]),
+    whatYouWillLearn: courseBase.shape.whatYouWillLearn.default([]),
+    status: courseBase.shape.status.default("draft"),
+    level: courseBase.shape.level.default("beginner"),
+    certificate: courseBase.shape.certificate.default(false),
+    tags: courseBase.shape.tags.default([]),
+    topics: courseBase.shape.topics.default([]),
+    sections: z
+      .array(createSectionSchema)
+      .min(1, "Add at least one course section"),
+    totalLessons: courseBase.shape.totalLessons.default(0),
+  })
+  .superRefine((course, ctx) => {
+    getCourseOrderIssues(course.sections).forEach((issue) =>
+      ctx.addIssue({ code: "custom", ...issue })
+    );
+  });
 
 const objectId = z.string().regex(/^[a-f/d]{24}$/i, "Invalid Id");
 // const updateLessonBase = lessonBase.extend({

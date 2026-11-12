@@ -1,39 +1,43 @@
-import {UserToken} from '@repo/shared/server';
+import { UserToken } from "@repo/shared/server";
 import { logger } from "@repo/shared/server";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import { validateEmail } from "@/utils/phoneValidators";
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-    }
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
 });
-export async function sendEmail(userId: string, email: string, otp: string): Promise<void> {
-    await UserToken.deleteMany({ userId: userId, type: "reset" });
-    if(!validateEmail(email)){
-        logger.error("Invalid email format",{ email});
-        throw new Error("Invalid email format");
-    }
-    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+export async function sendEmail(
+  userId: string,
+  email: string,
+  otp: string
+): Promise<void> {
+  await UserToken.deleteMany({ userId: userId, type: "reset" });
+  if (!validateEmail(email)) {
+    logger.error("Invalid email format", { email });
+    throw new Error("Invalid email format");
+  }
+  const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    try {
-        const issueUserToken = await new UserToken({
-            userId: userId,
-            type: "reset",
-            token: hashedOtp,
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-            isVerified: false
-        })
+  try {
+    const issueUserToken = await new UserToken({
+      userId: userId,
+      type: "reset",
+      token: hashedOtp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      isVerified: false,
+    });
 
-        await issueUserToken.save();
-        await transporter.sendMail({
-            from: '"Brainnest LMS" <noreply@brainnest.com>',
-            to: email,
-            subject: 'Your Brainnest Email Verification Code',
-            html: `
+    await issueUserToken.save();
+    await transporter.sendMail({
+      from: '"Brainnest LMS" <noreply@brainnest.com>',
+      to: email,
+      subject: "Your Brainnest Email Verification Code",
+      html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                         <h2>Email Verification</h2>
                         <p>Your Brainnest verification code is:</p>
@@ -43,14 +47,13 @@ export async function sendEmail(userId: string, email: string, otp: string): Pro
                         <p>This code will expire in 5 minutes.</p>
                         <p>If you didn't request this code, please ignore this email.</p>
                     </div>
-                `
-        })
+                `,
+    });
 
-        // Implement email sending logic her 
-        logger.info(`Sending email to ${email} with OTP`);
-    } catch (error: any) {
-        logger.error("Error sending email", error);
-        throw error;
-    }
-
+    // Implement email sending logic her
+    logger.info(`Sending email to ${email} with OTP`);
+  } catch (error: any) {
+    logger.error("Error sending email", error);
+    throw error;
+  }
 }

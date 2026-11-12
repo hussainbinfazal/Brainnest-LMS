@@ -1,44 +1,43 @@
-import mongoose, { Schema, Model} from "mongoose";
-import { ICart } from "src/types";
+import mongoose, { Model, Schema } from 'mongoose';
+import { ICart } from 'src/types';
 
-
-
-export const cartSchema: Schema<ICart> = new mongoose.Schema({
+export const cartSchema: Schema<ICart> = new mongoose.Schema(
+  {
     user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     courses: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Course',
-            index: true
-
-        }
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+        index: true,
+      },
     ],
     subTotal: {
-        type: Number,
-        default: 0,
-        min: 0,
+      type: Number,
+      default: 0,
+      min: 0,
     },
     discount: {
-        type: Number,
-        default: 0,
-        min: 0,
+      type: Number,
+      default: 0,
+      min: 0,
     },
     tax: {
-        type: Number,
-        default: 0,
-        min: 0,
+      type: Number,
+      default: 0,
+      min: 0,
     },
     total: {
-        type: Number,
-        default: 0,
-        min: 0,
-    }
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+  },
+  { timestamps: true },
+);
 
-}, { timestamps: true });
-
-
-const Cart: Model<ICart> = mongoose.models.Cart || mongoose.model<ICart>('Cart', cartSchema);
+const Cart: Model<ICart> =
+  mongoose.models.Cart || mongoose.model<ICart>('Cart', cartSchema);
 export default Cart;

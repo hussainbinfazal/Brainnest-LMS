@@ -1,15 +1,14 @@
 import { CCategory, CReview } from "@/types/client";
-import { IReview } from '@repo/shared/server';
+import { IReview } from "@repo/shared/server";
 import { serializeDocument } from "./serializeDocument";
-import { ICategory } from '@repo/shared/server';
-
+import { ICategory } from "@repo/shared/server";
 
 export function serializeReview(review: IReview): CReview {
-    return serializeDocument(review) as unknown as CReview;
+  return serializeDocument(review) as unknown as CReview;
 }
 export function serializeReviews(reviews: IReview[]): CReview[] {
-    return serializeDocument(reviews) as unknown as CReview[];
+  return serializeDocument(reviews) as unknown as CReview[];
 }
 export function serializeCategories(category: ICategory[]): CCategory[] {
-    return serializeDocument(category) as unknown as CCategory[];
+  return serializeDocument(category) as unknown as CCategory[];
 }

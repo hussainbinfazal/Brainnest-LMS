@@ -13,7 +13,11 @@
 
 /* Custom Video.js Theme */
 .vjs-theme-brainnest {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 .vjs-theme-brainnest .vjs-control-bar {
@@ -165,7 +169,7 @@
 }
 
 .vjs-theme-brainnest .vjs-play-progress::before {
-  content: '';
+  content: "";
   position: absolute;
   right: -6px;
   top: 50%;
@@ -262,7 +266,10 @@
   font-weight: 500;
 }
 
-.vjs-theme-brainnest .vjs-playback-rates .vjs-playback-rates-button .vjs-icon-placeholder {
+.vjs-theme-brainnest
+  .vjs-playback-rates
+  .vjs-playback-rates-button
+  .vjs-icon-placeholder {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -271,7 +278,10 @@
   text-align: center;
 }
 
-.vjs-theme-brainnest .vjs-playback-rates .vjs-playback-rates-button .vjs-icon-placeholder::before {
+.vjs-theme-brainnest
+  .vjs-playback-rates
+  .vjs-playback-rates-button
+  .vjs-icon-placeholder::before {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -401,11 +411,11 @@
     height: 50px;
     padding: 6px 12px;
   }
-  
+
   .vjs-theme-brainnest .vjs-button {
     margin: 0 1px;
   }
-  
+
   .vjs-theme-brainnest .vjs-time-control {
     font-size: 0.8rem;
   }
@@ -416,7 +426,7 @@
     height: 45px;
     padding: 4px 8px;
   }
-  
+
   .vjs-theme-brainnest .vjs-progress-control {
     margin: 0 8px;
   }

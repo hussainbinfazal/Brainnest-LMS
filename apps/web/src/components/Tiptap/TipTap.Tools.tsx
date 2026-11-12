@@ -1,5 +1,3 @@
-
-
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -34,45 +32,49 @@ export const TOOLBAR_ITEMS: ToolbarItem[] = [
     //Bold Icon
     content: <BiBold />,
     //Name used by isActive
-    activeName: 'bold',
-    ///Toggle bold on the current selection 
-    run: (editor) => editor.chain().focus().toggleBold().run()
-  }, {
+    activeName: "bold",
+    ///Toggle bold on the current selection
+    run: (editor) => editor.chain().focus().toggleBold().run(),
+  },
+  {
     ///Id for the Italic Button
-    id: 'italic',
-    label: 'italic',
+    id: "italic",
+    label: "italic",
     content: <FaItalic />,
-    activeName: 'italic',
+    activeName: "italic",
     run: (editor) => editor.chain().focus().toggleItalic().run(),
   },
   {
-    id: 'underline',
-    label: 'underline',
+    id: "underline",
+    label: "underline",
     content: <MdFormatUnderlined />,
-    activeName: 'underline',
+    activeName: "underline",
     run: (editor) => editor.chain().focus().toggleUnderline().run(),
-  }, {
-    id: 'bullet-list',
-    label: 'Bullet List',
+  },
+  {
+    id: "bullet-list",
+    label: "Bullet List",
     content: <FaListUl />,
     activeName: "bulletList",
     run: (editor) => editor.chain().focus().toggleBulletList().run(),
-  }, {
-    id: 'orderedList',
+  },
+  {
+    id: "orderedList",
     label: "Numbered list",
     content: "1. List",
-    activeName: 'orderedList',
+    activeName: "orderedList",
     run: (editor) => editor.chain().focus().toggleOrderedList().run(),
   },
   {
-    id: 'undo',
+    id: "undo",
     label: "Undo",
     content: <CgUndo />,
     run: (editor) => editor.chain().focus().undo().run(),
-  }, {
-    id: 'redo',
+  },
+  {
+    id: "redo",
     label: "Redo",
     content: <FaRedoAlt />,
     run: (editor) => editor.chain().focus().redo().run(),
-  }
+  },
 ];

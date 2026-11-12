@@ -20,11 +20,11 @@ const ContactPage = (): React.JSX.Element => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const router = useRouter();
   const [formData, setFormData] = useState<{
-    name: string,
-    email: string,
-    subject: string,
-    category: string,
-    message: string,
+    name: string;
+    email: string;
+    subject: string;
+    category: string;
+    message: string;
   }>({
     name: "",
     email: "",
@@ -32,9 +32,15 @@ const ContactPage = (): React.JSX.Element => {
     category: "",
     message: "",
   });
-  const [formStatus, setFormStatus] = useState<null | "success" | "sending">(null);
+  const [formStatus, setFormStatus] = useState<null | "success" | "sending">(
+    null
+  );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -154,7 +160,7 @@ const ContactPage = (): React.JSX.Element => {
 
         {/* Contact Methods Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {contactMethods.map((method: any, index : number) => (
+          {contactMethods.map((method: any, index: number) => (
             <div
               key={index}
               className={`${method.bgColor} ${method.borderColor} border-2 rounded-xl p-6 hover:shadow-lg dark:hover:shadow-2xl transition-all duration-200 group`}
@@ -199,8 +205,8 @@ const ContactPage = (): React.JSX.Element => {
                     formStatus === "success"
                       ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300"
                       : formStatus === "sending"
-                      ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300"
-                      : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
+                        ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300"
+                        : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
                   }`}
                 >
                   <div className="flex items-center">
@@ -214,8 +220,8 @@ const ContactPage = (): React.JSX.Element => {
                     {formStatus === "success"
                       ? "Message sent successfully! We'll get back to you soon."
                       : formStatus === "sending"
-                      ? "Sending your message..."
-                      : "There was an error sending your message. Please try again."}
+                        ? "Sending your message..."
+                        : "There was an error sending your message. Please try again."}
                   </div>
                 </div>
               )}
@@ -397,10 +403,16 @@ const ContactPage = (): React.JSX.Element => {
               cutting-edge courses designed by industry experts.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200" onClick={(): void => router.push("/courses")}>
+              <button
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                onClick={(): void => router.push("/courses")}
+              >
                 Browse Courses
               </button>
-              <button className="border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-400 dark:hover:text-gray-900 font-semibold py-3 px-8 rounded-lg transition-all duration-200" onClick={(): void => router.push("/")}>
+              <button
+                className="border-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-400 dark:hover:text-gray-900 font-semibold py-3 px-8 rounded-lg transition-all duration-200"
+                onClick={(): void => router.push("/")}
+              >
                 Back To Home
               </button>
             </div>

@@ -461,8 +461,7 @@ const allLessons = [
     durationInSeconds: 600,
     sectionId: "section-1",
   },
-
-]
+];
 
 const defaultProps: any = {
   initialCourse: course,
@@ -504,9 +503,7 @@ beforeEach(() => {
   mockUpdateUserCourse.mockReset();
   mockSetUpdatingLike.mockReset();
 
-
-
-  //User Progress Store 
+  //User Progress Store
   mockFetchCourseProgress.mockReset();
   mockIsLessonCompleted.mockReset();
   // Restore implementations if needed
@@ -627,7 +624,7 @@ describe("CourseIdPageComp - Description", () => {
     expect(showMoreButton).toBeInTheDocument();
   });
 
-  test("expands description when Show more is clicked", async() => {
+  test("expands description when Show more is clicked", async () => {
     renderComponent();
 
     const expandButton = screen.getByRole("button", {
@@ -648,7 +645,7 @@ describe("CourseIdPageComp - Description", () => {
   test("collapses description when Show less is clicked", async () => {
     renderComponent();
 
-    //User will click show more button to 
+    //User will click show more button to
     const showMoreButton = screen.getByRole("button", {
       name: /Show more/i,
     });

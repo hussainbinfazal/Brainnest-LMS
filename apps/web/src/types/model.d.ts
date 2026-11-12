@@ -241,7 +241,6 @@
 //   verificationCode: string;
 //   isRevoked: boolean;
 
-
 // }
 // export interface IUserToken extends Document {
 //   _id: Types.ObjectId;

@@ -1,18 +1,43 @@
 import Image from "next/image";
 
 export interface CCompanies {
-  name: string; logo: string;
+  name: string;
+  logo: string;
 }
-export default function SocialProof() :React.JSX.Element {
+export default function SocialProof(): React.JSX.Element {
   const companies: CCompanies[] = [
-    { name: "Volkswagen", logo: "https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals" },
-    { name: "Samsung", logo: "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals" },
-    { name: "Cisco", logo: "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals" },
-    { name: "Vimeo", logo: "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals" },
-    { name: "Procter & Gamble", logo: "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals" },
-    { name: "HPE", logo: "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals" },
-    { name: "Citi", logo: "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals" },
-    { name: "Ericsson", logo: "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals" }
+    {
+      name: "Volkswagen",
+      logo: "https://cms-images.udemycdn.com/content/tqevknj7om/svg/volkswagen_logo.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "Samsung",
+      logo: "https://cms-images.udemycdn.com/content/2gevcc0kxt/svg/samsung_logo.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "Cisco",
+      logo: "https://cms-images.udemycdn.com/content/mueb2ve09x/svg/cisco_logo.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "Vimeo",
+      logo: "https://cms-images.udemycdn.com/content/ryaowrcjb2/svg/vimeo_logo_resized-2.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "Procter & Gamble",
+      logo: "https://cms-images.udemycdn.com/content/bthyo156te/svg/procter_gamble_logo.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "HPE",
+      logo: "https://cms-images.udemycdn.com/content/luqe0d6mx2/svg/hewlett_packard_enterprise_logo.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "Citi",
+      logo: "https://cms-images.udemycdn.com/content/siaewwmkch/svg/citi_logo.svg?position=c&quality=80&x.app=portals",
+    },
+    {
+      name: "Ericsson",
+      logo: "https://cms-images.udemycdn.com/content/swmv0okrlh/svg/ericsson_logo.svg?position=c&quality=80&x.app=portals",
+    },
   ];
 
   return (

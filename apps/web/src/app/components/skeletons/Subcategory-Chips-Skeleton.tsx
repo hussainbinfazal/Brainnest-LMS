@@ -1,6 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils';
-import React from 'react'
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import React from "react";
 
 interface SubcategoryChipsSkeletonProps {
   length?: number;
@@ -8,17 +8,21 @@ interface SubcategoryChipsSkeletonProps {
   skeletonClassName?: string;
 }
 
-const SubcategoryChipsSkeleton = ({length=6, className, skeletonClassName}: SubcategoryChipsSkeletonProps):React.JSX.Element => {
+const SubcategoryChipsSkeleton = ({
+  length = 6,
+  className,
+  skeletonClassName,
+}: SubcategoryChipsSkeletonProps): React.JSX.Element => {
   return (
     <div className={cn("flex gap-3 mt-6", className)}>
-    {Array.from({ length }).map((_, i) => (
+      {Array.from({ length }).map((_, i) => (
         <Skeleton
-            key={i}
-            className={cn("h-9 w-24 rounded-full skeleton-shimmer")}
+          key={i}
+          className={cn("h-9 w-24 rounded-full skeleton-shimmer")}
         />
-    ))}
-</div>
-  )
-}
+      ))}
+    </div>
+  );
+};
 
-export default SubcategoryChipsSkeleton
+export default SubcategoryChipsSkeleton;

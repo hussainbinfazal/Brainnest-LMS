@@ -3,19 +3,18 @@ import SectionHeaderSkeleton from "../skeletons/Section-Header-Skeleton";
 import TabsSkeleton from "../skeletons/Tabs-Skeleton";
 import CategoryChipsSkeleton from "../skeletons/Category-Chips-Skeleton";
 import SubcategoryChipsSkeleton from "../skeletons/Subcategory-Chips-Skeleton";
-import { CategoryCarouselSkeleton, CourseCarouselSkeleton } from "../skeletons/Carousel-Skeletons";
+import {
+  CategoryCarouselSkeleton,
+  CourseCarouselSkeleton,
+} from "../skeletons/Carousel-Skeletons";
 import CompanyLogosSkeleton from "../skeletons/Company-Logos-Skeleton";
 import { ReviewCardBackgroundSkeleton } from "../skeletons/Review-Card-Skeleton";
 
-import {
-  Carousel,
-  CarouselContent,
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent } from "@/components/ui/carousel";
 
 export default function HomePageSkeleton(): React.JSX.Element {
   return (
     <main className="w-full bg-brand-white dark:bg-black justify-center">
-
       {/* Hero */}
       <section className="flex justify-center py-8">
         <div className="w-[90%] xl:max-w-[75%]">
@@ -30,7 +29,10 @@ export default function HomePageSkeleton(): React.JSX.Element {
 
           <Carousel className="mt-8">
             <CarouselContent>
-              <CourseCarouselSkeleton length={6} className={"w-full basis-1/5"} />
+              <CourseCarouselSkeleton
+                length={6}
+                className={"w-full basis-1/5"}
+              />
             </CarouselContent>
           </Carousel>
         </div>
@@ -39,7 +41,6 @@ export default function HomePageSkeleton(): React.JSX.Element {
       {/* Skills */}
       <section className="flex justify-center py-16">
         <div className="w-[90%] 2xl:max-w-[75%]">
-
           <SectionHeaderSkeleton />
 
           <TabsSkeleton className="mt-6" />
@@ -48,17 +49,18 @@ export default function HomePageSkeleton(): React.JSX.Element {
 
           <Carousel className="mt-8">
             <CarouselContent>
-              <CourseCarouselSkeleton length={6} className={"w-full basis-1/5"} />
+              <CourseCarouselSkeleton
+                length={6}
+                className={"w-full basis-1/5"}
+              />
             </CarouselContent>
           </Carousel>
-
         </div>
       </section>
 
       {/* Popular Categories */}
       <section className="flex justify-center py-16">
         <div className="w-[90%] xl:max-w-[75%]">
-
           <SectionHeaderSkeleton />
 
           <Carousel className="mt-8 w-full">
@@ -66,7 +68,6 @@ export default function HomePageSkeleton(): React.JSX.Element {
               <CategoryCarouselSkeleton length={6} className={"w-full"} />
             </CarouselContent>
           </Carousel>
-
         </div>
       </section>
 
@@ -78,14 +79,11 @@ export default function HomePageSkeleton(): React.JSX.Element {
       {/* Reviews */}
       <section className="flex justify-center py-16">
         <div className="w-[90%] xl:max-w-[75%]">
-
           <SectionHeaderSkeleton />
 
           <ReviewCardBackgroundSkeleton className="mt-8" />
-
         </div>
       </section>
-
     </main>
   );
 }

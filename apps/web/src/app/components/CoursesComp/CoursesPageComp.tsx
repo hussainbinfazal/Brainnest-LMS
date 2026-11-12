@@ -35,41 +35,53 @@ import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { getVisiblePages } from "@/lib/helpers/pagesCalculationHelper";
 import CoursesPageSkeleton from "./CoursesPage-skeleton";
 
-
 interface CoursesPageCompProps {
   initialCourses?: CCourse[];
   pagCourses: {
-    paginatedCourses: CCourse[],
-    currentPage: number,
-    hasNextPage: boolean,
-    hasPrevPage: boolean,
-    totalPages: number,
-    totalCourses: number
-  }
+    paginatedCourses: CCourse[];
+    currentPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+    totalPages: number;
+    totalCourses: number;
+  };
   categoriesWithChildren: CCategoryWithChildren[];
-  initialFacetsCategories: CCategoryWithChildren[],
-  initialFacetsLanguages: string[],
-  initialFacetsLevels: string[]
-  className?: string
+  initialFacetsCategories: CCategoryWithChildren[];
+  initialFacetsLanguages: string[];
+  initialFacetsLevels: string[];
+  className?: string;
 }
 type CCoursesFilter = {
-  category: string,
-  subCategory: string,
-  languages: string[],
-  levels: string[]
-}
-const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, initialFacetsCategories, initialFacetsLanguages, initialFacetsLevels, className }: CoursesPageCompProps): React.JSX.Element => {
+  category: string;
+  subCategory: string;
+  languages: string[];
+  levels: string[];
+};
+const CoursesPageComp = ({
+  initialCourses,
+  categoriesWithChildren,
+  pagCourses,
+  initialFacetsCategories,
+  initialFacetsLanguages,
+  initialFacetsLevels,
+  className,
+}: CoursesPageCompProps): React.JSX.Element => {
   const router = useRouter();
-  const [courses, setCourses] = useState<CCourse[] |
-  []>(pagCourses.paginatedCourses);
-  const [categories, setCategories] = useState<CCategoryWithChildren[] | []>(categoriesWithChildren);
+  const [courses, setCourses] = useState<CCourse[] | []>(
+    pagCourses.paginatedCourses
+  );
+  const [categories, setCategories] = useState<CCategoryWithChildren[] | []>(
+    categoriesWithChildren
+  );
   const [filters, setFilters] = useState<CCoursesFilter>({
     category: "",
     subCategory: "",
     languages: [],
     levels: [],
   });
-  const [sidebarCategories, setSidebarCategories] = useState<Record<string, string[]>>({});
+  const [sidebarCategories, setSidebarCategories] = useState<
+    Record<string, string[]>
+  >({});
   const [languages, setLanguages] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -80,23 +92,43 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
   const itemsPerPage: number = 6; //This is limit;
   const user = useAuthStore((state) => state.authUser);
   const setAuthUser = useAuthStore((state) => state.setAuthUser);
-  const cachedPaginatedCourses = useCourseStore((state) => state.cachedPaginatedCourses);
-  const fetchPaginatedCourses = useCourseStore((state) => state.fetchPaginatedCourse);
-  const setPaginatedCourses = useCourseStore((state) => state.setPaginatedCourses);
-  const cachedCurrentPageNumber = useCourseStore((state) => state.cachedCurrentPageNumber);
+  const cachedPaginatedCourses = useCourseStore(
+    (state) => state.cachedPaginatedCourses
+  );
+  const fetchPaginatedCourses = useCourseStore(
+    (state) => state.fetchPaginatedCourse
+  );
+  const setPaginatedCourses = useCourseStore(
+    (state) => state.setPaginatedCourses
+  );
+  const cachedCurrentPageNumber = useCourseStore(
+    (state) => state.cachedCurrentPageNumber
+  );
   const cachedTotalPages = useCourseStore((state) => state.cachedTotalPages);
   const cachedHasNextPage = useCourseStore((state) => state.cachedHasNextPage);
   const cachedHasPrevPage = useCourseStore((state) => state.cachedHasPrevPage);
-  const cachedTotalCourses = useCourseStore((state) => state.cachedTotalCourses);
+  const cachedTotalCourses = useCourseStore(
+    (state) => state.cachedTotalCourses
+  );
   const setLiked = useUserCourseStore((state) => state.updateUserCourse);
   const setUpdatingLike = useUserCourseStore((state) => state.setUpdatingLike);
-  const setUserCourseById = useUserCourseStore((state) => state.setUserCourseById);
-  const fetchUserCoursesByIds = useUserCourseStore((state) => state.fetchUserCoursesByIds);
-  const getUserCourseById = useUserCourseStore((state) => state.getUserCourseById);
-  const userCourseByCourseId = useUserCourseStore((state) => state.userCourseByCourseId);
-  const isLiked = (courseId: string) => userCourseByCourseId[courseId]?.isLiked ?? false;
+  const setUserCourseById = useUserCourseStore(
+    (state) => state.setUserCourseById
+  );
+  const fetchUserCoursesByIds = useUserCourseStore(
+    (state) => state.fetchUserCoursesByIds
+  );
+  const getUserCourseById = useUserCourseStore(
+    (state) => state.getUserCourseById
+  );
+  const userCourseByCourseId = useUserCourseStore(
+    (state) => state.userCourseByCourseId
+  );
+  const isLiked = (courseId: string) =>
+    userCourseByCourseId[courseId]?.isLiked ?? false;
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(searchTerm);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] =
+    useState<string>(searchTerm);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
@@ -145,9 +177,15 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
   ];
   // Fetch all courses logic
   const fetchAllCourses = useCallback(async (): Promise<void> => {
-
     try {
-      await fetchPaginatedCourses({ page: currentPage, itemsPerPage, category: filters.category, childCategory: filters.subCategory, languages: filters.languages, levels: filters.levels });
+      await fetchPaginatedCourses({
+        page: currentPage,
+        itemsPerPage,
+        category: filters.category,
+        childCategory: filters.subCategory,
+        languages: filters.languages,
+        levels: filters.levels,
+      });
       setCourses(useCourseStore.getState().cachedPaginatedCourses);
       setCurrentPage(useCourseStore.getState().cachedCurrentPageNumber);
       setTotalPages(useCourseStore.getState().cachedTotalPages);
@@ -156,12 +194,22 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
       setHasPrevPage(useCourseStore.getState().cachedHasPrevPage);
       setIsLoading(false);
     } catch (error: unknown) {
-      const message: string = error instanceof Error ? error.message : "Unknown error occurred while fetching courses.";
+      const message: string =
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred while fetching courses.";
       clientLogger.error("Failed to fetch courses", { message, error });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [currentPage, itemsPerPage, filters.category, filters.subCategory, filters.languages, filters.levels,]);
+  }, [
+    currentPage,
+    itemsPerPage,
+    filters.category,
+    filters.subCategory,
+    filters.languages,
+    filters.levels,
+  ]);
 
   //Sidebar Logic
   const handleCategoryClick = (categoryId: string) => {
@@ -179,7 +227,10 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
     }));
     // setCurrentPage(1);
   };
-  const handleCheckboxChange = (value: string, type: "languages" | "levels") => {
+  const handleCheckboxChange = (
+    value: string,
+    type: "languages" | "levels"
+  ) => {
     setFilters((prev) => {
       const current = prev[type];
       const updated = current.includes(value)
@@ -201,13 +252,13 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
     // console.log("1. LIKE COURSE FUNCTION CALLED")
     const store = useUserCourseStore.getState();
     const currentUserCourse = store.userCourseByCourseId[courseId];
-    const isUpdating = store.isUpdatingLikeByCourseId[courseId]
+    const isUpdating = store.isUpdatingLikeByCourseId[courseId];
     // console.log("2. LIKE COURSE FUNCTION CALLED")
 
     //Avoid duplicate request
     if (isUpdating) {
       toast.error("You have already liked this course");
-      return
+      return;
     }
 
     // console.log("3. LIKE COURSE FUNCTION CALLED")
@@ -221,7 +272,7 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
       likedAt: shouldLike ? new Date() : null,
     });
 
-    // We have to pass pass courseId from params in the url 
+    // We have to pass pass courseId from params in the url
     try {
       // console.log("3. This is the try block of the like course function")
       // console.log("This is the should Like state",shouldLike)
@@ -231,15 +282,18 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
       });
       const response = shouldLike
         ? await axios.post(`/api/likeCourse/${courseId}?${params.toString()}`)
-        : await axios.delete(`/api/dislikeCourse/${courseId}?${params.toString()}`);
-      const updatedUserCourse = response.data.userCourse
-      setUserCourseById(courseId as string, updatedUserCourse)
-      toast.success(`${shouldLike ? "Course liked! You'll find it in your Liked Courses." : "Course disliked!"}`);
+        : await axios.delete(
+            `/api/dislikeCourse/${courseId}?${params.toString()}`
+          );
+      const updatedUserCourse = response.data.userCourse;
+      setUserCourseById(courseId as string, updatedUserCourse);
+      toast.success(
+        `${shouldLike ? "Course liked! You'll find it in your Liked Courses." : "Course disliked!"}`
+      );
       // console.log("LIKE DEBUG FRONTEND:", {
       //   currentUserCourse,
       //   isLiked,
       // });
-
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         // console.log("LIKE COURSE API ERROR:", {
@@ -248,32 +302,40 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
         //   message: error.message,
         // });
 
-        clientLogger.error(`Error ${shouldLike ? "liking" : "disliking"} course`, {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
+        clientLogger.error(
+          `Error ${shouldLike ? "liking" : "disliking"} course`,
+          {
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message,
+          }
+        );
       }
-      const message = error instanceof Error ? error.message : "Something went wrong while   liking the course.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while   liking the course.";
       setUserCourseById(courseId as string, previousUserCourse);
-      clientLogger.error(`Error ${shouldLike ? "liking" : "disliking"} course`, message);
+      clientLogger.error(
+        `Error ${shouldLike ? "liking" : "disliking"} course`,
+        message
+      );
       toast.error(`Failed to ${shouldLike ? "like" : "dislike"} course`);
     } finally {
       setUpdatingLike(courseId, false);
     }
-  }
+  };
   const searchedCourses: CCourse[] =
     searchTerm.trim() === ""
       ? courses
       : courses.filter((course) => {
-        const title: string = course.title?.toLowerCase() || "";
-        const instructorName: string = course.instructorId?.name?.toLowerCase() || "";
-        const term: string | null = searchTerm.toLowerCase();
+          const title: string = course.title?.toLowerCase() || "";
+          const instructorName: string =
+            course.instructorId?.name?.toLowerCase() || "";
+          const term: string | null = searchTerm.toLowerCase();
 
-        return title.includes(term) || instructorName.includes(term);
-      });
-
-
+          return title.includes(term) || instructorName.includes(term);
+        });
 
   //Pagination
   const handlePageChange = (page: number): void => {
@@ -289,7 +351,10 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
 
   // Debounce search term for atleast 400ms
   useEffect(() => {
-    const timer: NodeJS.Timeout = setTimeout((): void => setDebouncedSearchTerm(searchTerm), 400);
+    const timer: NodeJS.Timeout = setTimeout(
+      (): void => setDebouncedSearchTerm(searchTerm),
+      400
+    );
     return (): void => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -301,21 +366,27 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
   }, [courses, user]);
 
   if (isLoading) {
-    return <CoursesPageSkeleton />
+    return <CoursesPageSkeleton />;
   }
 
   return (
-    <div className={cn("w-screen min-h-screen h-screen flex flex-col relative overflow-hidden", className)}>
+    <div
+      className={cn(
+        "w-screen min-h-screen h-screen flex flex-col relative overflow-hidden",
+        className
+      )}
+    >
       {isLoading && (
         <div className="w-full relative">
           <LoadingBarLoader isLoading={isLoading} />
         </div>
       )}
       <div className="w-full h-full flex flex-row gap-6 relative bg-white dark:bg-black">
-        {(
+        {
           <div
-            className={`min-h-screen h-full! ${closeSidebar ? "w-17.5" : "w-62.5"
-              }  border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white overflow-y-auto`}
+            className={`min-h-screen h-full! ${
+              closeSidebar ? "w-17.5" : "w-62.5"
+            }  border-r flex flex-col gap-4 relative z-10 md:z-0 left-0 top-0 md:relative dark:bg-black bg-white overflow-y-auto`}
           >
             <div className="min-h-screen h-full flex flex-col relative gap-4">
               <div className="min-h-screen h-full flex flex-col relative ">
@@ -340,37 +411,42 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                       className="flex flex-col justify-center gap-3"
                     >
                       <p className="mt-3 mb-3 text-xl">Categories</p>
-                      {initialFacetsCategories.map((cat: CCategoryWithChildren) => (
-                        <div key={cat._id} className="flex flex-col gap-2">
-                          <p className={cn(
-                            "font-semibold pl-0",
-                            filters.category === cat._id && "text-blue-500"
-                          )}
-                          // onClick={() => handleCategoryClick(cat._id)}
-                          >
-                            {cat.name.charAt(0).toUpperCase() +
-                              cat.name.slice(1)}
-                          </p>
-                          <div className="pl-0 space-y-3 mt-1 ">
-                            {cat.children?.map((sub) => (
-                              <div key={sub._id} className="flex gap-3 items-center">
-                                <input
-                                  type="checkbox"
-                                  value={sub._id}
-                                  className="mr-2 appearance-none w-3 h-3 rounded-full border border-gray-400 checked:bg-blue-500"
-                                  checked={filters.subCategory === sub._id}
-                                  onChange={() => {
-                                    handleSubCategoryChange(sub._id)
-
-                                  }
-                                  }
-                                />
-                                {sub.name.charAt(0).toUpperCase() + sub.name.slice(1)}
-                              </div>
-                            ))}
+                      {initialFacetsCategories.map(
+                        (cat: CCategoryWithChildren) => (
+                          <div key={cat._id} className="flex flex-col gap-2">
+                            <p
+                              className={cn(
+                                "font-semibold pl-0",
+                                filters.category === cat._id && "text-blue-500"
+                              )}
+                              // onClick={() => handleCategoryClick(cat._id)}
+                            >
+                              {cat.name.charAt(0).toUpperCase() +
+                                cat.name.slice(1)}
+                            </p>
+                            <div className="pl-0 space-y-3 mt-1 ">
+                              {cat.children?.map((sub) => (
+                                <div
+                                  key={sub._id}
+                                  className="flex gap-3 items-center"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    value={sub._id}
+                                    className="mr-2 appearance-none w-3 h-3 rounded-full border border-gray-400 checked:bg-blue-500"
+                                    checked={filters.subCategory === sub._id}
+                                    onChange={() => {
+                                      handleSubCategoryChange(sub._id);
+                                    }}
+                                  />
+                                  {sub.name.charAt(0).toUpperCase() +
+                                    sub.name.slice(1)}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
 
                     <div
@@ -420,11 +496,12 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
               </div>
             </div>
           </div>
-        )}
-        {(
+        }
+        {
           <div
-            className={`${closeSidebar ? "w-[calc(100%-70px)]" : "flex-1"
-              } md:w-2/3 min-h-screen h-full flex flex-col gap-2 justify-between pt-4 overflow-auto pr-5`}
+            className={`${
+              closeSidebar ? "w-[calc(100%-70px)]" : "flex-1"
+            } md:w-2/3 min-h-screen h-full flex flex-col gap-2 justify-between pt-4 overflow-auto pr-5`}
           >
             <span className="w-full flex justify-between items-center">
               <span className="inline-block text-3xl">Courses</span>
@@ -434,7 +511,9 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                   placeholder="Search"
                   className="w-full"
                   value={searchTerm}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setSearchTerm(e.target.value)
+                  }
                 />
                 <IoSearch className="absolute top-2 right-2" />
               </span>
@@ -481,14 +560,16 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                                 {course?.instructorId?.name}
                               </p>
                               <div className="flex gap-2">
-                                <Badge className='' variant="outline">
+                                <Badge className="" variant="outline">
                                   {course?.averageRating
                                     ? formatRatingNumber(course.averageRating)
                                     : "0"}
                                 </Badge>
-                                <Badge className='' variant="outline">
+                                <Badge className="" variant="outline">
                                   {course?.totalDurationInSeconds
-                                    ? convertToTotalHours(course.totalDurationInSeconds)
+                                    ? convertToTotalHours(
+                                        course.totalDurationInSeconds
+                                      )
                                     : "0"}{" "}
                                   hours
                                 </Badge>
@@ -510,7 +591,7 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                                 </Button>
                               ) : (
                                 <Button
-                                  size='default'
+                                  size="default"
                                   variant="outline"
                                   onClick={() => {
                                     toggleLikeCourse(course._id);
@@ -524,8 +605,8 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                               )}
 
                               <Button
-                                variant='default'
-                                size='default'
+                                variant="default"
+                                size="default"
                                 onClick={() => {
                                   router.push(`/courses/${course._id}`);
                                 }}
@@ -543,9 +624,9 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
               </div>
             </div>
             <div className="py-4">
-              {(
-                <Pagination className=''>
-                  <PaginationContent className=''>
+              {
+                <Pagination className="">
+                  <PaginationContent className="">
                     <PaginationItem>
                       <PaginationPrevious
                         onClick={() => handlePageChange(currentPage - 1)}
@@ -556,9 +637,14 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                       />
                     </PaginationItem>
 
-                    {getVisiblePages({ currentPage, totalPages, maxVisiblePages }).map((page) => (
+                    {getVisiblePages({
+                      currentPage,
+                      totalPages,
+                      maxVisiblePages,
+                    }).map((page) => (
                       <PaginationItem key={page}>
-                        <PaginationLink className=''
+                        <PaginationLink
+                          className=""
                           onClick={() => handlePageChange(page)}
                           isActive={page === currentPage}
                         >
@@ -568,7 +654,7 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                     ))}
 
                     <PaginationItem>
-                      <PaginationEllipsis className='' />
+                      <PaginationEllipsis className="" />
                     </PaginationItem>
 
                     <PaginationItem>
@@ -582,14 +668,13 @@ const CoursesPageComp = ({ initialCourses, categoriesWithChildren, pagCourses, i
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
-              )}
+              }
             </div>
           </div>
-        )}
+        }
       </div>
     </div>
   );
 };
 
-export default CoursesPageComp
-  ;
+export default CoursesPageComp;

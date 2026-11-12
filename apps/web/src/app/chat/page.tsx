@@ -8,7 +8,6 @@
 
 // export default async function ChatPage(): Promise<JSX.Element> {
 
-
 //   let fetchChats: CChat[] = []
 //   const fetchChatOnServer = async (): Promise<CChat[]> => {
 //     try {

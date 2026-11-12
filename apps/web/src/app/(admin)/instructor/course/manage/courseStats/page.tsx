@@ -2,8 +2,6 @@ import { CourseStatsComp } from "@/app/components/AdminComp/AdminCourseComp/Cour
 import React from "react";
 
 const CourseStatsPage: React.FC = (): React.JSX.Element => {
-
-
   return <CourseStatsComp />;
 };
 

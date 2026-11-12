@@ -47,18 +47,22 @@ export function getNextCourseLessonOrder(
   const lessonOrders = (sections ?? [])
     .flatMap((section) => section.lessons ?? [])
     .map((lesson) => lesson.order)
-    .filter((order): order is number => typeof order === "number" && Number.isFinite(order));
+    .filter(
+      (order): order is number =>
+        typeof order === "number" && Number.isFinite(order)
+    );
 
   return lessonOrders.length ? Math.max(...lessonOrders) + 1 : 0;
 }
 export function getNextCourseSectionOrder(
   sections: { order?: number }[] | undefined
 ): number {
-
-  let sectionOrder: number[] = (sections ?? []).map((section) => section.order)
-    .filter((order): order is number => typeof order === "number" && Number.isFinite(order));
-
-
+  let sectionOrder: number[] = (sections ?? [])
+    .map((section) => section.order)
+    .filter(
+      (order): order is number =>
+        typeof order === "number" && Number.isFinite(order)
+    );
 
   return sectionOrder.length ? Math.max(...sectionOrder) + 1 : 0;
 }
@@ -122,24 +126,25 @@ export function FileField(props: {
   disabled?: boolean;
   required?: boolean;
   children?: ReactNode;
-
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     //reuse field for label + error
     <Field label={props.label} error={props.error} required={props.required}>
-      {props.isUploading ? (<div className="relative">
-        <Button
-          type="button"
-          className="absolute right-0 bottom-6 text-sm z-10 py-5 "
-          onClick={props.onCancel}
-        >
-          Cancel Upload <RxCross2 />
-        </Button>
-        <Skeleton className="h-10 w-full skeleton-shimmer z-0" />
-        <ProgressScroller progress={props.progress} className={"mt-2"} />
-      </div>) : (
+      {props.isUploading ? (
+        <div className="relative">
+          <Button
+            type="button"
+            className="absolute right-0 bottom-6 text-sm z-10 py-5 "
+            onClick={props.onCancel}
+          >
+            Cancel Upload <RxCross2 />
+          </Button>
+          <Skeleton className="h-10 w-full skeleton-shimmer z-0" />
+          <ProgressScroller progress={props.progress} className={"mt-2"} />
+        </div>
+      ) : (
         <>
           {/* Keep the native picker hidden; the button below opens it. */}
           <Input
@@ -160,9 +165,10 @@ export function FileField(props: {
             className="w-full"
             disabled={props.disabled}
             onClick={() => fileInputRef.current?.click()}
-
           >
-            {props.fileName || props.url ? "Choose another file" : "Choose file"}
+            {props.fileName || props.url
+              ? "Choose another file"
+              : "Choose file"}
           </Button>
           {/* show chosen file name */}
           {props.fileName && (
@@ -214,18 +220,22 @@ export function FileField(props: {
 // Stable empty array, so the default does not change identity on every render
 const EMPTY: string[] = [];
 // Turn "a, b,, c" into ["a", "b", "c"]
-const parse = (raw: string): string[] => raw.split(',').map((s) => s.trim()).filter(Boolean)
+const parse = (raw: string): string[] =>
+  raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
 export function CommaListField(props: {
   inputType: string;
   value: string[];
   onChange: (v: string[]) => void;
-  onBlur?: () => void
+  onBlur?: () => void;
   placeholder?: string;
-  required?: boolean
+  required?: boolean;
 }) {
   // Fall back to the stable empty array
-  const value: string[] = props.value ?? EMPTY
+  const value: string[] = props.value ?? EMPTY;
   //raw text lives here, not in the form
   const [text, setText] = useState(value.join(", "));
   /// Resync only when the form value really differs from what the user sees
@@ -235,7 +245,8 @@ export function CommaListField(props: {
     // A reset or async load changes the value; normal typing does not, so commas survive
     //does what's in the input already mean the same thing as the form's array
     //user>raw>parsed>form
-    if (JSON.stringify(current) !== JSON.stringify(value)) setText(value.join(", "));
+    if (JSON.stringify(current) !== JSON.stringify(value))
+      setText(value.join(", "));
     // text is intentionally omitted, this must run when the form value changes, not on each keystroke
   }, [props.value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
@@ -263,7 +274,6 @@ export function CommaListField(props: {
 export function BooleanSelect(props: {
   value: boolean;
   onChange: (v: boolean) => void;
-
 }) {
   return (
     //convert between string and boolean at the boundary
@@ -289,13 +299,13 @@ export function LessonItem({
   lessonIndex,
   canRemove,
   onRemove,
-  required
+  required,
 }: {
   sectionIndex: number;
   lessonIndex: number;
   canRemove: boolean;
   onRemove: () => void;
-  required?: boolean
+  required?: boolean;
 }) {
   // read form helpers from the provider, no prop drilling
   const {
@@ -321,10 +331,22 @@ export function LessonItem({
     //uplaod and get url
     const result = await video.upload(file, "lecture-video");
     if (!result) return;
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`, result.url, { shouldValidate: true });
+    setValue(
+      `sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`,
+      result.url,
+      { shouldValidate: true }
+    );
     // setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.mp3Url`, result.mp3Url, { shouldValidate: true });
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.videoPublicId`, result.public_id, { shouldValidate: true });
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
+    setValue(
+      `sections.${sectionIndex}.lessons.${lessonIndex}.videoPublicId`,
+      result.public_id,
+      { shouldValidate: true }
+    );
+    setValue(
+      `sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`,
+      Math.floor(Number(result.duration ?? 0)),
+      { shouldValidate: true }
+    );
   };
   ///preview video: upload, the store the url and duration
   const handlePreview = async (file: File) => {
@@ -332,10 +354,22 @@ export function LessonItem({
     const result = await preview.upload(file, "preview-video");
     if (!result) return;
     ///Field in schema, value and validation
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`, result.url, { shouldValidate: true });
+    setValue(
+      `sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`,
+      result.url,
+      { shouldValidate: true }
+    );
     // setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.mp3Url`, result.mp3Url, { shouldValidate: true });
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewPublicId`, result.public_id, { shouldValidate: true });
-    setValue(`sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`, Math.floor(Number(result.duration ?? 0)), { shouldValidate: true });
+    setValue(
+      `sections.${sectionIndex}.lessons.${lessonIndex}.previewPublicId`,
+      result.public_id,
+      { shouldValidate: true }
+    );
+    setValue(
+      `sections.${sectionIndex}.lessons.${lessonIndex}.previewDurationInSeconds`,
+      Math.floor(Number(result.duration ?? 0)),
+      { shouldValidate: true }
+    );
   };
   return (
     <div className="relative mb-4 space-y-2 rounded-md border border-border p-2">
@@ -357,7 +391,11 @@ export function LessonItem({
         />
       </Field>
       {/* lesson description */}
-      <Field label="Lesson Description" error={err?.description?.message} required={true}>
+      <Field
+        label="Lesson Description"
+        error={err?.description?.message}
+        required={true}
+      >
         <Controller
           name={`sections.${sectionIndex}.lessons.${lessonIndex}.description`}
           control={control}
@@ -366,7 +404,6 @@ export function LessonItem({
               description={field.value ?? ""}
               onChange={field.onChange}
               placeholder="e.g. Variables, loops, functions"
-
             />
           )}
         />
@@ -376,8 +413,10 @@ export function LessonItem({
         /> */}
       </Field>
 
-      <LessonAiSuggestion sectionIndex={sectionIndex} lessonIndex={lessonIndex} />
-
+      <LessonAiSuggestion
+        sectionIndex={sectionIndex}
+        lessonIndex={lessonIndex}
+      />
 
       {/* main video upload */}
       <FileField
@@ -385,7 +424,10 @@ export function LessonItem({
         accept="video/*"
         {...video}
         onFile={handleVideo}
-        url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`) ?? ""}
+        url={
+          watch(`sections.${sectionIndex}.lessons.${lessonIndex}.videoUrl`) ??
+          ""
+        }
         fileKind={"video"}
         error={err?.videoUrl?.message ?? err?.videoPublicId?.message}
         onCancel={video.cancel}
@@ -394,14 +436,21 @@ export function LessonItem({
         required={true}
       />
       {/* readOnly, NOT disabled: disabled inputs submit undefined in RHF */}
-      <Field label="Lesson Duration (seconds)" error={err?.durationInSeconds?.message} required={true}>
+      <Field
+        label="Lesson Duration (seconds)"
+        error={err?.durationInSeconds?.message}
+        required={true}
+      >
         <Input
           type="number"
           min={0}
           readOnly
-          {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`, {
-            valueAsNumber: true,
-          })}
+          {...register(
+            `sections.${sectionIndex}.lessons.${lessonIndex}.durationInSeconds`,
+            {
+              valueAsNumber: true,
+            }
+          )}
         />
       </Field>
       {/* lesson order */}
@@ -411,16 +460,26 @@ export function LessonItem({
           min={0}
           max={maxLessonOrder}
           type="number"
-          {...register(`sections.${sectionIndex}.lessons.${lessonIndex}.order`, { valueAsNumber: true })}
+          {...register(
+            `sections.${sectionIndex}.lessons.${lessonIndex}.order`,
+            { valueAsNumber: true }
+          )}
         />
       </Field>
       {/* is this lesson a free preview */}
-      <Field label="Lesson IsPreview" error={err?.isPreview?.message} required={true}>
+      <Field
+        label="Lesson IsPreview"
+        error={err?.isPreview?.message}
+        required={true}
+      >
         <Controller
           control={control}
           name={`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`}
           render={({ field }) => (
-            <BooleanSelect value={field.value ?? false} onChange={field.onChange} />
+            <BooleanSelect
+              value={field.value ?? false}
+              onChange={field.onChange}
+            />
           )}
         />
       </Field>
@@ -430,20 +489,22 @@ export function LessonItem({
         accept="video/*"
         {...preview}
         onFile={handlePreview}
-        url={watch(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`) ?? ""}
+        url={
+          watch(`sections.${sectionIndex}.lessons.${lessonIndex}.previewUrl`) ??
+          ""
+        }
         fileKind="video"
         error={err?.previewUrl?.message ?? err?.previewPublicId?.message}
         onCancel={preview.cancel}
         progress={preview.progress}
         isUploading={preview.isUploading}
-        disabled={!watch(`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`)}
+        disabled={
+          !watch(`sections.${sectionIndex}.lessons.${lessonIndex}.isPreview`)
+        }
       />
     </div>
   );
 }
-
-
-
 
 // Props for one section row
 export const SectionItem: React.FC<{
@@ -456,12 +517,14 @@ export const SectionItem: React.FC<{
   onCancel?: () => void;
 }> = ({ sectionIndex, canRemove, onRemove, onCancel }) => {
   // Get form helpers from the nearest <FormProvider>
-  const { register,
+  const {
+    register,
     control,
     setValue,
     watch,
     getValues,
-    formState: { errors }, } = useFormContext<CCreateCourse>();
+    formState: { errors },
+  } = useFormContext<CCreateCourse>();
   // Safe here: top level of a component, called once per render
   const lessons = useFieldArray({
     control,
@@ -482,16 +545,28 @@ export const SectionItem: React.FC<{
     <div className="relative mb-4 space-y-2 rounded-md border border-border p-2">
       {/* Remove button, only for sections after the first */}
       {canRemove && (
-        <button type="button" className="absolute right-2 top-0 text-lg rounded-full bg-red" onClick={onRemove}>
+        <button
+          type="button"
+          className="absolute right-2 top-0 text-lg rounded-full bg-red"
+          onClick={onRemove}
+        >
           <RxCross2 />
         </button>
       )}
       {/* Section title */}
-      <Field label="Title" error={errors.sections?.[sectionIndex]?.title?.message} required={true}>
+      <Field
+        label="Title"
+        error={errors.sections?.[sectionIndex]?.title?.message}
+        required={true}
+      >
         <Input {...register(`sections.${sectionIndex}.title`)} />
       </Field>
       {/* Section description */}
-      <Field label="Description" error={errors.sections?.[sectionIndex]?.description?.message} required={true}>
+      <Field
+        label="Description"
+        error={errors.sections?.[sectionIndex]?.description?.message}
+        required={true}
+      >
         <Controller
           name={`sections.${sectionIndex}.description`}
           control={control}
@@ -504,13 +579,19 @@ export const SectionItem: React.FC<{
           )}
         />
       </Field>
-      <Field label="Section Order" error={errors.sections?.[sectionIndex]?.order?.message} required={true}>
+      <Field
+        label="Section Order"
+        error={errors.sections?.[sectionIndex]?.order?.message}
+        required={true}
+      >
         <Input
           readOnly={watch("dripType") === "free"}
           min={0}
           max={Math.max(sectionCount - 1, 0)}
           type="number"
-          {...register(`sections.${sectionIndex}.order`, { valueAsNumber: true })}
+          {...register(`sections.${sectionIndex}.order`, {
+            valueAsNumber: true,
+          })}
         />
       </Field>
       {/* One LessonItem per lesson, lesson.id is the stable key */}

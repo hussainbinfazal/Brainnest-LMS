@@ -1,18 +1,16 @@
-import { ClientSession } from "mongoose";
-import {PaymentsDocument } from '@repo/shared/server';
-
+import { PaymentsDocument } from '@repo/shared/server';
+import { ClientSession } from 'mongoose';
 
 export async function markPaymentCompleted({
   payment,
   paymentId,
-  session
+  session,
 }: {
   payment: PaymentsDocument;
   paymentId: string;
   session: ClientSession;
-
 }) {
-  payment.paymentStatus = "Completed";
+  payment.paymentStatus = 'Completed';
   payment.paymentId = paymentId;
   payment.paymentAt = new Date();
 

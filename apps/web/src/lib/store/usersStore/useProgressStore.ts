@@ -1,228 +1,213 @@
 "use client";
 
 import { create } from "zustand";
-import { CProgressStore, CProgress, CLessonProgress} from "@/types/client";
+import { CProgressStore, CProgress, CLessonProgress } from "@/types/client";
 import axios from "axios";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
-
 export interface CSectionProgress {
-    sectionId: string;
-    completedCount: number;
-    totalLessons: number;
+  sectionId: string;
+  completedCount: number;
+  totalLessons: number;
 }
-export const useProgressStore = create<CProgressStore>(
-    (set, get) => ({
-        progressByCourse: {},
-        progressByLessons: {} as Record<string, CLessonProgress[]>,
-        completedLessonIds: {} as Record<string, string[]>,
-        loadingByCourse: {},
-        loadingLessonsProgress: {},
+export const useProgressStore = create<CProgressStore>((set, get) => ({
+  progressByCourse: {},
+  progressByLessons: {} as Record<string, CLessonProgress[]>,
+  completedLessonIds: {} as Record<string, string[]>,
+  loadingByCourse: {},
+  loadingLessonsProgress: {},
 
-        fetchCourseProgress: async (courseId: string) => {
-            const existingProgress =
-                get().progressByCourse[courseId];
+  fetchCourseProgress: async (courseId: string) => {
+    const existingProgress = get().progressByCourse[courseId];
 
-            const existingLessonsProgress =
-                get().progressByLessons[courseId];
-            const existingCompletedLessonIds = get().completedLessonIds[courseId];
-            // Already fetched
-            if (existingProgress) {
-                return;
-            };
+    const existingLessonsProgress = get().progressByLessons[courseId];
+    const existingCompletedLessonIds = get().completedLessonIds[courseId];
+    // Already fetched
+    if (existingProgress) {
+      return;
+    }
 
-            if (existingLessonsProgress) {
-                return;
-            };
-            if (existingCompletedLessonIds) {
-                return;
-            };
-            // Already fetching
-            if (get().loadingByCourse[courseId]) {
-                return;
-            };
-            if (get().loadingLessonsProgress[courseId]) {
-                return;
-            };
+    if (existingLessonsProgress) {
+      return;
+    }
+    if (existingCompletedLessonIds) {
+      return;
+    }
+    // Already fetching
+    if (get().loadingByCourse[courseId]) {
+      return;
+    }
+    if (get().loadingLessonsProgress[courseId]) {
+      return;
+    }
 
-            set((state) => ({
-                loadingByCourse: {
-                    ...state.loadingByCourse,
-                    [courseId]: true,
-                },
-                loadingLessonsProgress: {
-                    ...state.loadingLessonsProgress,
-                    [courseId]: true,
-                },
-            }));
+    set((state) => ({
+      loadingByCourse: {
+        ...state.loadingByCourse,
+        [courseId]: true,
+      },
+      loadingLessonsProgress: {
+        ...state.loadingLessonsProgress,
+        [courseId]: true,
+      },
+    }));
 
-            try {
-                // const response = await axios.get(
-                //     `/api/progress/${courseId}`
-                // );
+    try {
+      // const response = await axios.get(
+      //     `/api/progress/${courseId}`
+      // );
 
-                ///Update these urls to fetch the course progress and lessons progress separately
-                const [progressResponse] = await Promise.all([
-                    await axios.get(
-                        `/api/progress/${courseId}/$`
-                    ),
+      ///Update these urls to fetch the course progress and lessons progress separately
+      const [progressResponse] = await Promise.all([
+        await axios.get(`/api/progress/${courseId}/$`),
+      ]);
 
-                ])
-
-                set((state) => ({
-                    progressByCourse: {
-                        ...state.progressByCourse,
-                        [courseId]: progressResponse.data.progress,
-                    },
-                    progressByLessons: {
-                        ...state.progressByLessons,
-                        [courseId]: progressResponse.data.lessonsProgress,
-                    },
-                    completedLessonIds: {
-                        ...state.completedLessonIds,
-                        [courseId]: progressResponse.data.completedLessonIds,
-                    }
-                }));
-                clientLogger.info("Fetched course progress successfully", { courseId, progress: progressResponse.data.progress, lessonsProgress: progressResponse.data.lessonsProgress, completedLessonIds: progressResponse.data.completedLessonIds });
-            } catch (error: unknown) {
-                let message = "Something went wrong";
-                if (axios.isAxiosError(error)) {
-                    message =
-                        error.response?.data?.message ||
-                        error.message ||
-                        message;
-                } else if (error instanceof Error) {
-                    message = error.message;
-                }
-                clientLogger.error("Failed to fetch course progress", { message });
-                // console.error(
-                //     "Failed to fetch course progress",
-                //     error
-                // );
-            } finally {
-                set((state) => ({
-                    loadingByCourse: {
-                        ...state.loadingByCourse,
-                        [courseId]: false,
-                    },
-                }));
-            }
+      set((state) => ({
+        progressByCourse: {
+          ...state.progressByCourse,
+          [courseId]: progressResponse.data.progress,
         },
-
-        setCourseProgress: (
-            courseId: string,
-            progress: CProgress,
-        ) =>
-            set((state) => ({
-                progressByCourse: {
-                    ...state.progressByCourse,
-                    [courseId]: progress,
-                },
-
-            })),
-        setLessonsProgress: (
-            courseId: string,
-            userLessonsProgress: CLessonProgress[]
-        ) =>
-            set((state) => ({
-                progressByLessons: {
-                    ...state.progressByLessons,
-                    [courseId]: userLessonsProgress,
-                },
-            })),
-
-        //To be complete
-        isLessonCompleted: (
-            courseId: string,
-            lessonId: string
-        ) => {
-            const lessonProgress =
-                get().progressByLessons[courseId];
-
-            return (
-                lessonProgress?.filter((progress) => progress.lessonId === lessonId && progress.status === "completed" && progress.progressPercentage === 100).length > 0 ? true : false
-            );
+        progressByLessons: {
+          ...state.progressByLessons,
+          [courseId]: progressResponse.data.lessonsProgress,
         },
-
-        markLessonCompleted: async (
-            courseId: string,
-            lessonId: string,
-            sectionId: string,
-            userId: string
-        ) => {
-            try {
-                const response = await axios.post(`/api/progress/complete/${courseId}/${lessonId}`);
-                const updatedProgress = response.data.courseProgress;
-                const updatedLesson = response.data.lessonProgress;
-                const updatedCompletedLessonIds = response.data.completedLessonIds;
-
-                useProgressStore.getState().setCourseProgress(courseId, updatedProgress);
-                set((state) => {
-                    const current =
-                        state.progressByCourse[courseId];
-
-                    if (!current) return state;
-
-                    if (
-                        current.sectionProgress.filter((section: CSectionProgress) => section.sectionId === sectionId && section.completedCount >= section.totalLessons).length > 0 // If the section is already completed, do not mark the lesson as completed
-                    ) {
-                        return state;
-                    }
-
-                    const existing = state.progressByLessons[courseId] || [];
-                    const next = existing.some((item) => item.lessonId === updatedLesson.lessonId)
-                        ? existing.map((item) =>
-                            item.lessonId === updatedLesson.lessonId
-                                ? { ...item, ...updatedLesson }
-                                : item
-                        )
-                        : [...existing, updatedLesson];
-                    return {
-                        progressByLessons: {
-                            ...state.progressByLessons,
-                            [courseId]: next,
-                        },
-                        completedLessonIds: {
-                            ...state.completedLessonIds,
-                            [courseId]: updatedCompletedLessonIds,
-                        }
-
-                    };
-                });
-            } catch (error: unknown) {
-                let message = "Something went wrong";
-                if (axios.isAxiosError(error)) {
-                    message =
-                        error.response?.data?.message ||
-                        error.message ||
-                        message;
-                } else if (error instanceof Error) {
-                    message = error.message;
-                }
-            }
-
+        completedLessonIds: {
+          ...state.completedLessonIds,
+          [courseId]: progressResponse.data.completedLessonIds,
         },
+      }));
+      clientLogger.info("Fetched course progress successfully", {
+        courseId,
+        progress: progressResponse.data.progress,
+        lessonsProgress: progressResponse.data.lessonsProgress,
+        completedLessonIds: progressResponse.data.completedLessonIds,
+      });
+    } catch (error: unknown) {
+      let message = "Something went wrong";
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      clientLogger.error("Failed to fetch course progress", { message });
+      // console.error(
+      //     "Failed to fetch course progress",
+      //     error
+      // );
+    } finally {
+      set((state) => ({
+        loadingByCourse: {
+          ...state.loadingByCourse,
+          [courseId]: false,
+        },
+      }));
+    }
+  },
 
-        clearCourseProgress: (courseId: string) =>
-            set((state) => {
-                const {
-                    [courseId]: _,
-                    ...remaining
-                } = state.progressByCourse;
-                const {
-                    [courseId]: __,
-                    ...remainingLessons
-                } = state.progressByLessons;
-                const {
-                    [courseId]: ___,
-                    ...remainingCompletedLessonIds
-                } = state.completedLessonIds;
+  setCourseProgress: (courseId: string, progress: CProgress) =>
+    set((state) => ({
+      progressByCourse: {
+        ...state.progressByCourse,
+        [courseId]: progress,
+      },
+    })),
+  setLessonsProgress: (
+    courseId: string,
+    userLessonsProgress: CLessonProgress[]
+  ) =>
+    set((state) => ({
+      progressByLessons: {
+        ...state.progressByLessons,
+        [courseId]: userLessonsProgress,
+      },
+    })),
 
-                return {
-                    progressByCourse: remaining,
-                    progressByLessons: remainingLessons,
-                    completedLessonIds: remainingCompletedLessonIds,
-                };
-            }),
-    })
-);
+  //To be complete
+  isLessonCompleted: (courseId: string, lessonId: string) => {
+    const lessonProgress = get().progressByLessons[courseId];
+
+    return lessonProgress?.filter(
+      (progress) =>
+        progress.lessonId === lessonId &&
+        progress.status === "completed" &&
+        progress.progressPercentage === 100
+    ).length > 0
+      ? true
+      : false;
+  },
+
+  markLessonCompleted: async (
+    courseId: string,
+    lessonId: string,
+    sectionId: string,
+    userId: string
+  ) => {
+    try {
+      const response = await axios.post(
+        `/api/progress/complete/${courseId}/${lessonId}`
+      );
+      const updatedProgress = response.data.courseProgress;
+      const updatedLesson = response.data.lessonProgress;
+      const updatedCompletedLessonIds = response.data.completedLessonIds;
+
+      useProgressStore.getState().setCourseProgress(courseId, updatedProgress);
+      set((state) => {
+        const current = state.progressByCourse[courseId];
+
+        if (!current) return state;
+
+        if (
+          current.sectionProgress.filter(
+            (section: CSectionProgress) =>
+              section.sectionId === sectionId &&
+              section.completedCount >= section.totalLessons
+          ).length > 0 // If the section is already completed, do not mark the lesson as completed
+        ) {
+          return state;
+        }
+
+        const existing = state.progressByLessons[courseId] || [];
+        const next = existing.some(
+          (item) => item.lessonId === updatedLesson.lessonId
+        )
+          ? existing.map((item) =>
+              item.lessonId === updatedLesson.lessonId
+                ? { ...item, ...updatedLesson }
+                : item
+            )
+          : [...existing, updatedLesson];
+        return {
+          progressByLessons: {
+            ...state.progressByLessons,
+            [courseId]: next,
+          },
+          completedLessonIds: {
+            ...state.completedLessonIds,
+            [courseId]: updatedCompletedLessonIds,
+          },
+        };
+      });
+    } catch (error: unknown) {
+      let message = "Something went wrong";
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+    }
+  },
+
+  clearCourseProgress: (courseId: string) =>
+    set((state) => {
+      const { [courseId]: _, ...remaining } = state.progressByCourse;
+      const { [courseId]: __, ...remainingLessons } = state.progressByLessons;
+      const { [courseId]: ___, ...remainingCompletedLessonIds } =
+        state.completedLessonIds;
+
+      return {
+        progressByCourse: remaining,
+        progressByLessons: remainingLessons,
+        completedLessonIds: remainingCompletedLessonIds,
+      };
+    }),
+}));

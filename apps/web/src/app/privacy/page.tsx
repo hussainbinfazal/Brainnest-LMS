@@ -16,11 +16,11 @@ import {
   Moon,
 } from "lucide-react";
 
-const PrivacyPage = () : React.JSX.Element => {
+const PrivacyPage = (): React.JSX.Element => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
-  useEffect(() : void => {
+  useEffect((): void => {
     // Check if user has a theme preference or system preference
     const savedTheme = localStorage.getItem("theme");
     const systemPrefersDark = window.matchMedia(
@@ -36,7 +36,7 @@ const PrivacyPage = () : React.JSX.Element => {
     }
   }, []);
 
-  const toggleTheme = () : void => {
+  const toggleTheme = (): void => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
 
@@ -49,7 +49,7 @@ const PrivacyPage = () : React.JSX.Element => {
     }
   };
 
-  const toggleSection = (sectionId : string) => {
+  const toggleSection = (sectionId: string) => {
     setExpandedSection(expandedSection === sectionId ? null : sectionId);
   };
 

@@ -1,6 +1,6 @@
-import jwt from "jsonwebtoken";
-import { Request, Response, NextFunction } from "express";
 import { logger } from '@repo/shared/server';
+import { NextFunction, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -16,33 +16,32 @@ export interface AuthRequest extends Request {
 export const authMiddleware = (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
-    const authHeader =
-      req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
-    if (!authHeader?.startsWith("Bearer ")) {
-        logger.error("Unauthorized");
+    if (!authHeader?.startsWith('Bearer ')) {
+      logger.error('Unauthorized');
       return res.status(401).json({
-        message: "Unauthorized",
+        message: 'Unauthorized',
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.split(' ')[1];
 
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET!
-    ) as AuthRequest["user"];
+      process.env.JWT_SECRET!,
+    ) as AuthRequest['user'];
 
     req.user = decoded;
 
     next();
-  } catch (error:unknown) {
-    logger.error("Invalid token");
+  } catch (error: unknown) {
+    logger.error('Invalid token');
     return res.status(401).json({
-      message: "Invalid token",
+      message: 'Invalid token',
     });
   }
 };

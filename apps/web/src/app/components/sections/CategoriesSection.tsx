@@ -1,8 +1,14 @@
-"use client"
+"use client";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { getCategoryImagePath } from "@/app/components/getCategoryImagePath";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,8 +17,10 @@ import type { EmblaOptionsType } from "embla-carousel";
 import { useState } from "react";
 import { CCarouselOptions, CCategoriesSectionProps } from "@/types/client";
 
-export default function CategoriesSection({ categories: categories, isLoading: isLoading }: CCategoriesSectionProps) {
-
+export default function CategoriesSection({
+  categories: categories,
+  isLoading: isLoading,
+}: CCategoriesSectionProps) {
   if (isLoading) {
     return (
       <section className="py-20 bg-gray-50">
@@ -50,16 +58,21 @@ export default function CategoriesSection({ categories: categories, isLoading: i
         </div>
 
         <Carousel
-          setApi={() => { }}
+          setApi={() => {}}
           plugins={[]}
           opts={CCarouselOptions}
           className="w-full"
         >
           <CarouselContent className="w-full -ml-4">
             {categories.map((category: string, index: number) => {
-              const [imgSrc, setImgSrc] = useState(getCategoryImagePath(category));
+              const [imgSrc, setImgSrc] = useState(
+                getCategoryImagePath(category)
+              );
               return (
-                <CarouselItem key={category} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                <CarouselItem
+                  key={category}
+                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                >
                   <Link href="/courses" className="block">
                     <Card className="group h-64 border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
                       <CardContent className="p-0 h-48 relative">
@@ -72,7 +85,9 @@ export default function CategoriesSection({ categories: categories, isLoading: i
                               className="object-contain"
                               sizes="80px"
                               onError={(e) => {
-                                setImgSrc(`https://via.placeholder.com/80x80/f0f0f0/666666?text=${category.charAt(0)}`);
+                                setImgSrc(
+                                  `https://via.placeholder.com/80x80/f0f0f0/666666?text=${category.charAt(0)}`
+                                );
                               }}
                             />
                           </div>
@@ -92,8 +107,7 @@ export default function CategoriesSection({ categories: categories, isLoading: i
                     </Card>
                   </Link>
                 </CarouselItem>
-              )
-
+              );
             })}
           </CarouselContent>
           <CarouselPrevious className="hidden md:flex -left-4" />

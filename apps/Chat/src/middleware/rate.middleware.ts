@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit from 'express-rate-limit';
 
 export const globalRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
@@ -8,8 +8,7 @@ export const globalRateLimiter = rateLimit({
 
   message: {
     success: false,
-    message:
-      "Too many requests, please try again later.",
+    message: 'Too many requests, please try again later.',
   },
 });
 
@@ -21,8 +20,7 @@ export const userRateLimiter = rateLimit({
 
   message: {
     success: false,
-    message:
-      "Too many requests, please try again later.",
+    message: 'Too many requests, please try again later.',
   },
 });
 export const messageRateLimiter = rateLimit({
@@ -33,8 +31,7 @@ export const messageRateLimiter = rateLimit({
 
   message: {
     success: false,
-    message:
-      "Too many requests, please try again later.",
+    message: 'Too many requests, please try again later.',
   },
 });
 export const authRateLimiter = rateLimit({
@@ -42,11 +39,10 @@ export const authRateLimiter = rateLimit({
   max: 5,
 
   message: {
-    message:
-      "Too many login attempts",
+    message: 'Too many login attempts',
   },
 });
-  
+
 export const chatRateLimiter = rateLimit({
   windowMs: 1000, // 15 min
   max: 6,
@@ -55,7 +51,6 @@ export const chatRateLimiter = rateLimit({
 
   message: {
     success: false,
-    message:
-      "Too many requests, please try again later.",
+    message: 'Too many requests, please try again later.',
   },
-  })
+});

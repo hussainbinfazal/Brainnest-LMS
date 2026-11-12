@@ -15,8 +15,8 @@ export interface CCertificate {
   certificatePreview?: string;
   pdfUrl?: string; // Base64 encoded PDF
   generatedAt?: Date;
-  verficationCode: string,
-  isRevoked: boolean
+  verficationCode: string;
+  isRevoked: boolean;
 }
 
 export interface CAuthUser {
@@ -27,16 +27,14 @@ export interface CAuthUser {
   password?: string;
   phoneNumber?: string;
   profileImage?: string;
-  role: 'student' | 'admin' | 'instructor';
+  role: "student" | "admin" | "instructor";
   isVerified: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-
-
 export interface CChatMessage {
-  role: 'user' | 'instructor';
+  role: "user" | "instructor";
   content: string;
   createdAt: Date;
   updatedAt?: Date;
@@ -47,21 +45,21 @@ export interface CPayment {
   amount: number;
   paymentId?: string;
   paymentAt?: Date;
-  paymentBy?: {
-    _id: string;
-    name: string;
-    email: string;
-    role: string;
-    phoneNumber?: string;
-  } | string;
+  paymentBy?:
+    | {
+        _id: string;
+        name: string;
+        email: string;
+        role: string;
+        phoneNumber?: string;
+      }
+    | string;
   paymentOf: string;
-  paymentOnModel: 'Course' | 'Chat';
-  paymentStatus: 'Pending' | 'Completed' | 'Failed';
+  paymentOnModel: "Course" | "Chat";
+  paymentStatus: "Pending" | "Completed" | "Failed";
   createdAt?: Date;
   updatedAt?: Date;
 }
-
-
 
 export interface CChat {
   _id: string;
@@ -122,7 +120,7 @@ export interface CMessage {
   messageofTheLimit?: string;
   isReadByInstructor?: boolean;
   isReadByStudent?: boolean;
-  senderType?: 'user' | 'instructor' | string;
+  senderType?: "user" | "instructor" | string;
   isDeleted?: boolean;
   isDeletedByReceiver?: boolean;
   isDeletedBySender?: boolean;
@@ -133,8 +131,10 @@ export interface CMessage {
 export interface CServerToClientEvents {
   message: (messageData: Message) => void;
   messageByAdmin: (messageData: Message) => void;
-  userStatus: (status: { userId: string; status: 'online' | 'offline' }) => void;
-
+  userStatus: (status: {
+    userId: string;
+    status: "online" | "offline";
+  }) => void;
 }
 
 // Events that the client sends to the server
@@ -142,7 +142,6 @@ export interface CClientToServerEvents {
   message: (messageData: Message) => void;
   messageByAdmin: (messageData: Message) => void;
   testEvent: (data: { hello: string }) => void;
-
 }
 
 export interface CChapter {
@@ -193,33 +192,30 @@ export interface CVideoPlayerProps extends React.HTMLAttributes<HTMLVideoElement
 export interface CChapter {
   title: string;
   time: number;
-};
+}
 export interface CSubtitle {
   src: string;
   lang: string;
   label: string;
   default?: boolean;
-};
+}
 
 export interface CQualityOption {
   label: string;
   src: string;
   selected?: boolean;
-};
+}
 
 export interface CWatermark {
   text?: string;
   image?: string;
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-};
-
+  position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+}
 
 export interface CCategoriesSectionProps {
   categories: string[];
   isLoading: boolean;
 }
-
-
 
 const CCarouselOptions: EmblaOptionsinterface = {
   align: "start",
@@ -227,16 +223,14 @@ const CCarouselOptions: EmblaOptionsinterface = {
   dragFree: true,
 };
 export interface CCategory {
-  _id: string
+  _id: string;
   name: string;
   slug: string;
   parent: null | {
-    _id: string,
-    name: string
-  }
-};
-
-
+    _id: string;
+    name: string;
+  };
+}
 
 export interface CCourse {
   _id: string;
@@ -253,7 +247,7 @@ export interface CCourse {
   averageRating: number;
   discount: number;
   level: CourseLevel;
-  totalEnrolledCount: number,
+  totalEnrolledCount: number;
   language: string;
   status: "draft" | "published" | "archived" | "deleted";
   totalReviews: number;
@@ -267,7 +261,7 @@ export interface CCourse {
   isPreview: boolean;
   previewVideo?: string;
   tags?: string[];
-  dripType: string,
+  dripType: string;
   category: CCategory;
   totalDurationInSeconds: number;
   isDeleted: boolean;
@@ -289,8 +283,8 @@ export interface CCourseManage {
   averageRating: number;
   price: number;
   discount: number;
-  level: 'beginner' | 'intermediate' | 'expert';
-  totalEnrolledCount: number,
+  level: "beginner" | "intermediate" | "expert";
+  totalEnrolledCount: number;
   language: string;
   status: "draft" | "published" | "archived" | "deleted";
   topics: CTopic[];
@@ -322,9 +316,9 @@ export interface CProgress {
   user: string;
   courseId: string;
   sectionProgress: sectionProgress[];
-  completedLessonsCount: number,
-  percentageCompleted: number,
-  lastAccessedAt: Date
+  completedLessonsCount: number;
+  percentageCompleted: number;
+  lastAccessedAt: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -358,8 +352,7 @@ export interface CCourseShowcaseProps {
 export interface CReviewUser {
   name: string;
   profileImage?: string;
-};
-
+}
 
 export interface CReview {
   _id: string;
@@ -440,7 +433,6 @@ export interface CEmailOtpSenderProps {
 export interface CSendOtpResponse {
   message: string;
   otp?: string;
-
 }
 export interface CVerifyOtpResponse {
   message: string;
@@ -451,9 +443,6 @@ export interface CResendOtpResponse {
   message: string;
   // add other fields your API returns if needed
 }
-
-
-
 
 export interface CCourseRatingProps {
   courseId: string;
@@ -468,7 +457,6 @@ export interface CCreateCouponResponse {
   _id: string;
   createdAt?: string;
   updatedAt?: string;
-
 }
 
 export interface CCoupon {
@@ -484,7 +472,6 @@ export interface CCoupon {
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }
-
 
 export interface CUpdateCouponResponse {
   updatedCoupon: Coupon;
@@ -522,19 +509,13 @@ interface CProgressStore {
   loadingLessonsProgress: Record<string, boolean>;
   fetchCourseProgress: (courseId: string) => Promise<void>;
 
-  setCourseProgress: (
-    courseId: string,
-    progress: CProgress
-  ) => void;
+  setCourseProgress: (courseId: string, progress: CProgress) => void;
   setLessonsProgress: (
     courseId: string,
     lessonsProgress: CLessonProgress[]
   ) => void;
 
-  isLessonCompleted: (
-    courseId: string,
-    lessonId: string
-  ) => boolean;
+  isLessonCompleted: (courseId: string, lessonId: string) => boolean;
 
   markLessonCompleted: (
     courseId: string,
@@ -543,9 +524,7 @@ interface CProgressStore {
     userId: string
   ) => void;
 
-  clearCourseProgress: (
-    courseId: string
-  ) => void;
+  clearCourseProgress: (courseId: string) => void;
 }
 export interface CCartStore {
   cart: Record<string, CartItem>; // key can be productId
@@ -565,7 +544,7 @@ export interface CCart {
   coupon?: Coupon | null;
 }
 export interface CChatMessage {
-  role: 'user' | 'instructor' | 'system';
+  role: "user" | "instructor" | "system";
   content: string;
 }
 
@@ -582,7 +561,7 @@ export interface CCourseStore {
   cachedTotalPages: number;
   cachedHasNextPage: boolean;
   cachedHasPrevPage: boolean;
-  cachedTotalCourses: number
+  cachedTotalCourses: number;
   reviews: CReview[];
   categories: CCategoryWithChildren[];
   isLoading: boolean;
@@ -594,13 +573,37 @@ export interface CCourseStore {
     fetchedCategories?: CCategoryWithChildren[];
     force?: boolean;
   }) => Promise<CCourse[]>;
-  fetchPaginatedCourse: (options: { page: number; itemsPerPage: number, category?: string, childCategory?: string, languages?: string[], levels?: string[] }) => Promise<{ paginatedCourses: CCourse[], currentPage: number, hasNextPage: boolean, hasPrevPage: boolean, totalPages: number, totalCourses: number }>;
-  setPaginatedCourses: (paginatedCourses: CCourse[], newHasNextPage: boolean, newHasPrevPage: boolean, newCurrentPageNumber: number, newTotalPages: number, newTotalCourses: number, category?: string, subCategories?: string[], languages?: string[], levels?: string[]) => void;
+  fetchPaginatedCourse: (options: {
+    page: number;
+    itemsPerPage: number;
+    category?: string;
+    childCategory?: string;
+    languages?: string[];
+    levels?: string[];
+  }) => Promise<{
+    paginatedCourses: CCourse[];
+    currentPage: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+    totalPages: number;
+    totalCourses: number;
+  }>;
+  setPaginatedCourses: (
+    paginatedCourses: CCourse[],
+    newHasNextPage: boolean,
+    newHasPrevPage: boolean,
+    newCurrentPageNumber: number,
+    newTotalPages: number,
+    newTotalCourses: number,
+    category?: string,
+    subCategories?: string[],
+    languages?: string[],
+    levels?: string[]
+  ) => void;
   clearPaginatedCourses: () => void;
   setCourses: (courses: CCourse[]) => void;
   clearCourses: () => void;
 }
-
 
 export interface CTopic {
   _id?: string;
@@ -610,8 +613,7 @@ export interface CTopic {
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
-
-};
+}
 export interface CFaq {
   question: string;
   answer: string;
@@ -632,21 +634,20 @@ export interface CLesson {
   createdAt?: string;
   updatedAt?: string;
   order: number;
-  status?: 'completed' | 'incomplete';
-};
+  status?: "completed" | "incomplete";
+}
 export type CCreateCourseSectionForm = Omit<CSection, "lessons"> & {
   lessons: (Omit<CLesson, "sectionId"> & {
     // These fields are now added to every lesson
     previewPublicId?: string;
     videoPublicId: string;
   })[];
-
 };
 export type CCreateLesson = CLesson & {
   previewPublicId?: string;
   videoPublicId: string;
 };
-export type CCreateSection = CSection
+export type CCreateSection = CSection;
 export interface CLessonProgress {
   _id?: string;
   userId: string;
@@ -661,14 +662,14 @@ export interface CLessonProgress {
   updatedAt?: Date;
 }
 export interface CSection {
-  _id?: string,
+  _id?: string;
   courseId: string;
   title: string;
   description: string;
   order: number;
   lessons: CLesson[];
   createdAt?: string;
-  updatedAt?: string
+  updatedAt?: string;
 }
 
 export interface PaymentsResponse {
@@ -737,7 +738,6 @@ export interface CRazorpayVerifyResponse {
 
 export interface CorderItem {
   course: ICourse | string;
-
 }
 
 export interface CpaymentResultS {
@@ -762,7 +762,10 @@ export interface COrder {
   updatedAt?: Date;
 }
 export interface CFeatureSection {
-  icon: LucideIcon, title: string, description: string, color: string
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  color: string;
 }
 
 export type CuploadType = (typeof RESOURCE_TYPE)[UploadPurpose];
@@ -799,4 +802,4 @@ export type CFacets = {
   levels: {
     _id: string;
   }[];
-}
+};

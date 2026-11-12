@@ -17,11 +17,9 @@ export function formatRelativeDate(dateString?: string): string {
   if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`;
   if (weeks < 4) return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
 
-  return date.toLocaleDateString(
-    'en-US', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  }
-  );
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  });
 }

@@ -23,8 +23,15 @@ const EDITOR_CLASSES = [
   "[&_ol]:list-decimal [&_ol]:pl-6",
 ].join(" ");
 
-
-const Tiptap = ({ description, onChange, placeholder }: { description: string; onChange: (html: string) => void; placeholder: string }) => {
+const Tiptap = ({
+  description,
+  onChange,
+  placeholder,
+}: {
+  description: string;
+  onChange: (html: string) => void;
+  placeholder: string;
+}) => {
   const editor = useEditor({
     extensions: [StarterKit, Underline],
     content: description || "",
@@ -37,7 +44,6 @@ const Tiptap = ({ description, onChange, placeholder }: { description: string; o
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
-
   });
 
   useEffect(() => {
@@ -45,14 +51,14 @@ const Tiptap = ({ description, onChange, placeholder }: { description: string; o
     //Never overwrite when the user is typing(don't jump the cursor)
     if (editor.isFocused) return;
     ///Normalized the incoming value so undefined and "" behave the same
-    const incoming = description || ""
+    const incoming = description || "";
     ///An empty editor returns "<p></p>, so treat it as "" before comparison"
     const current = editor.isEmpty ? "" : editor.getHTML();
     //Only touch the editor if the content is really different
     if (incoming !== current) {
       //Replace the editor with the new value
       editor.commands.setContent(incoming);
-    };
+    }
   }, [description, editor]);
 
   if (!editor) return null;
@@ -85,14 +91,13 @@ const Tiptap = ({ description, onChange, placeholder }: { description: string; o
             {item.content}
           </Button>
         ))}
-
       </div>
 
       {/* Editor */}
       <EditorContent
         editor={editor}
         placeholder={placeholder}
-      // className="min-h-37.5 border rounded-md p-3 "
+        // className="min-h-37.5 border rounded-md p-3 "
       />
     </div>
   );

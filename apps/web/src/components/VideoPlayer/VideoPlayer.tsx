@@ -1,13 +1,19 @@
 "use client";
-import React, { useRef, useEffect, useState } from 'react';
-import videojs from 'video.js';
+import React, { useRef, useEffect, useState } from "react";
+import videojs from "video.js";
 
-import 'video.js/dist/video-js.css';
-import './VideoPlayerStyles.css';
-import type Player from 'video.js/dist/types/player';
-import { Chapter, QualityOption, Subtitle, VideoPlayerProps, Watermark } from '@/types/client';
-import { logger } from '@repo/shared';
-const VideoButton = videojs.getComponent('Button');
+import "video.js/dist/video-js.css";
+import "./VideoPlayerStyles.css";
+import type Player from "video.js/dist/types/player";
+import {
+  Chapter,
+  QualityOption,
+  Subtitle,
+  VideoPlayerProps,
+  Watermark,
+} from "@/types/client";
+import { logger } from "@repo/shared";
+const VideoButton = videojs.getComponent("Button");
 type VideoButtonType = any;
 
 const VideoPlayer = ({
@@ -22,14 +28,14 @@ const VideoPlayer = ({
   controls = true,
   fluid = true,
   responsive = true,
-  aspectRatio = '16:9',
+  aspectRatio = "16:9",
   hotkeys = true,
   chapters = [],
   subtitles = [],
   quality = [],
   analytics = true,
   watermark = null,
-  className = '',
+  className = "",
   ...props
 }: VideoPlayerProps): React.ReactNode => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -47,7 +53,7 @@ const VideoPlayer = ({
 
     // Ensure the element is in the DOM
     if (!document.contains(videoRef.current)) {
-      console.warn('Video element not in DOM yet, waiting...');
+      console.warn("Video element not in DOM yet, waiting...");
       return;
     }
 
@@ -60,10 +66,12 @@ const VideoPlayer = ({
       aspectRatio: aspectRatio,
       playbackRates: playbackRates,
       poster: poster,
-      sources: [{
-        src: src,
-        type: 'video/mp4'
-      }],
+      sources: [
+        {
+          src: src,
+          type: "video/mp4",
+        },
+      ],
       // plugins: {
       //   hotkeys: hotkeys ? {
       //     volumeStep: 0.1,
@@ -73,9 +81,9 @@ const VideoPlayer = ({
       // },
       html5: {
         vhs: {
-          overrideNative: true
-        }
-      }
+          overrideNative: true,
+        },
+      },
     };
 
     // Initialize Video.js player with a small delay
@@ -83,14 +91,13 @@ const VideoPlayer = ({
       if (!videoRef.current) return;
       const player = videojs(videoRef.current, videoJsOptions, () => {
         setIsLoading(false);
-        logger.info('Video.js player initialized');
+        logger.info("Video.js player initialized");
       });
       return player;
     };
 
     // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
-
       if (videoRef.current && document.contains(videoRef.current)) {
         const player = initializePlayer();
         playerRef.current = player;
@@ -99,19 +106,18 @@ const VideoPlayer = ({
     }, 100);
 
     const setupPlayerEvents = (player: Player) => {
-
       // Event listeners
-      player.on('loadedmetadata', () => {
+      player.on("loadedmetadata", () => {
         setDuration(player.duration() ?? 0);
       });
 
-      player.on('timeupdate', () => {
+      player.on("timeupdate", () => {
         const current = player.currentTime();
         setCurrentTime(current ?? 0);
         onTimeUpdate && onTimeUpdate(current ?? 0, player.duration() ?? 0);
       });
 
-      player.on('progress', () => {
+      player.on("progress", () => {
         const buffered = player.buffered();
         if (buffered.length > 0) {
           const bufferedEnd = buffered.end(buffered.length - 1);
@@ -120,28 +126,28 @@ const VideoPlayer = ({
         }
       });
 
-      player.on('play', () => {
+      player.on("play", () => {
         setIsPlaying(true);
       });
 
-      player.on('pause', () => {
+      player.on("pause", () => {
         setIsPlaying(false);
       });
 
-      player.on('ended', () => {
+      player.on("ended", () => {
         setIsPlaying(false);
         onComplete && onComplete();
       });
 
-      player.on('volumechange', () => {
+      player.on("volumechange", () => {
         setVolume(player.volume() ?? 0);
       });
 
-      player.on('ratechange', () => {
+      player.on("ratechange", () => {
         setPlaybackRate(player.playbackRate() ?? 0);
       });
 
-      player.on('fullscreenchange', () => {
+      player.on("fullscreenchange", () => {
         setIsFullscreen(player.isFullscreen() ?? false);
       });
 
@@ -180,10 +186,14 @@ const VideoPlayer = ({
 
   const addCustomComponents = (player: Player) => {
     // Custom progress bar with chapters
-    const progressBar = player.getChild('ControlBar')?.getChild('ProgressControl');
+    const progressBar = player
+      .getChild("ControlBar")
+      ?.getChild("ProgressControl");
 
     // Custom volume control
-    const volumeControl = player.getChild('ControlBar')?.getChild('VolumePanel');
+    const volumeControl = player
+      .getChild("ControlBar")
+      ?.getChild("VolumePanel");
 
     // Add custom buttons
     addCustomButtons(player);
@@ -191,26 +201,30 @@ const VideoPlayer = ({
 
   const addCustomButtons = (player: Player) => {
     // Remove any existing skip buttons first
-    const controlBar = player.getChild('controlBar');
-    const existingButtons = controlBar?.children().filter((child: any) =>
-      child.name() && (child.name().includes('skip') || child.name().includes('Skip'))
-    );
-    existingButtons?.forEach(button => controlBar?.removeChild(button));
+    const controlBar = player.getChild("controlBar");
+    const existingButtons = controlBar
+      ?.children()
+      .filter(
+        (child: any) =>
+          child.name() &&
+          (child.name().includes("skip") || child.name().includes("Skip"))
+      );
+    existingButtons?.forEach((button) => controlBar?.removeChild(button));
 
-    const Button = videojs.getComponent('Button');
+    const Button = videojs.getComponent("Button");
 
     class SkipForwardButton extends Button {
       constructor(player: Player, options: any) {
         super(player, options);
-        (this as any).controlText('Skip Forward');
+        (this as any).controlText("Skip Forward");
       }
 
       buildCSSClass() {
-        return 'vjs-skip-forward-button vjs-button';
+        return "vjs-skip-forward-button vjs-button";
       }
 
       createEl() {
-        const button = super.createEl('button');
+        const button = super.createEl("button");
         button.innerHTML = `
           <span class="vjs-icon-placeholder">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -224,7 +238,10 @@ const VideoPlayer = ({
       handleClick() {
         const player = this.player();
         const currentTime = player.currentTime();
-        const newTime = Math.min(currentTime as number + 10, player.duration() ?? 0);
+        const newTime = Math.min(
+          (currentTime as number) + 10,
+          player.duration() ?? 0
+        );
         player.currentTime(newTime);
       }
     }
@@ -232,15 +249,15 @@ const VideoPlayer = ({
     class SkipBackwardButton extends Button {
       constructor(player: Player, options: any) {
         super(player, options);
-        (this as any).controlText('Skip Backward');
+        (this as any).controlText("Skip Backward");
       }
 
       buildCSSClass() {
-        return 'vjs-skip-backward-button vjs-button';
+        return "vjs-skip-backward-button vjs-button";
       }
 
       createEl() {
-        const button = super.createEl('button');
+        const button = super.createEl("button");
         button.innerHTML = `
           <span class="vjs-icon-placeholder">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -254,38 +271,38 @@ const VideoPlayer = ({
       handleClick() {
         const player = this.player();
         const currentTime = player.currentTime();
-        const newTime = Math.max(currentTime as number - 10, 0);
+        const newTime = Math.max((currentTime as number) - 10, 0);
         player.currentTime(newTime);
       }
     }
 
     // Register components only if not already registered
-    if (!videojs.getComponent('SkipForwardButton')) {
-      videojs.registerComponent('SkipForwardButton', SkipForwardButton);
+    if (!videojs.getComponent("SkipForwardButton")) {
+      videojs.registerComponent("SkipForwardButton", SkipForwardButton);
     }
-    if (!videojs.getComponent('SkipBackwardButton')) {
-      videojs.registerComponent('SkipBackwardButton', SkipBackwardButton);
+    if (!videojs.getComponent("SkipBackwardButton")) {
+      videojs.registerComponent("SkipBackwardButton", SkipBackwardButton);
     }
 
     // Add buttons to control bar only if they don't exist
-    if (!controlBar?.getChild('SkipBackwardButton')) {
-      controlBar?.addChild('SkipBackwardButton', {}, 1);
+    if (!controlBar?.getChild("SkipBackwardButton")) {
+      controlBar?.addChild("SkipBackwardButton", {}, 1);
     }
-    if (!controlBar?.getChild('SkipForwardButton')) {
-      controlBar?.addChild('SkipForwardButton', {}, 2);
+    if (!controlBar?.getChild("SkipForwardButton")) {
+      controlBar?.addChild("SkipForwardButton", {}, 2);
     }
   };
 
   const addChapters = (player: Player, chapters: Chapter[]) => {
     // Add chapter markers to progress bar
-    chapters.forEach(chapter => {
-      const marker = document.createElement('div');
-      marker.className = 'vjs-chapter-marker';
+    chapters.forEach((chapter) => {
+      const marker = document.createElement("div");
+      marker.className = "vjs-chapter-marker";
       const duration = player.duration() ?? 0;
       marker.style.left = `${(chapter.time / duration) * 100}%`;
       marker.title = chapter.title;
 
-      const progressBar = player.el().querySelector('.vjs-progress-holder');
+      const progressBar = player.el().querySelector(".vjs-progress-holder");
       if (progressBar) {
         progressBar.appendChild(marker);
       }
@@ -293,89 +310,90 @@ const VideoPlayer = ({
   };
 
   const addSubtitles = (player: Player, subtitles: Subtitle[]) => {
-    subtitles.forEach(subtitle => {
+    subtitles.forEach((subtitle) => {
       player.addRemoteTextTrack({
-        kind: 'subtitles',
+        kind: "subtitles",
         src: subtitle.src,
         srclang: subtitle.lang,
         label: subtitle.label,
-        default: subtitle.default || false
+        default: subtitle.default || false,
       });
     });
   };
 
   const addQualitySelector = (player: Player, qualities: QualityOption[]) => {
     // Add quality selector menu
-    const qualityButton = videojs.getComponent('MenuButton');
+    const qualityButton = videojs.getComponent("MenuButton");
     const QualityButton = (videojs as any).extend(qualityButton, {
       constructor: function () {
         qualityButton.apply(this, arguments as any);
-        this.controlText('Quality');
+        this.controlText("Quality");
       },
       createItems: function () {
         const items: any[] = [];
-        qualities.forEach(quality => {
-          items.push(new QualityMenuItem(player, {
-            label: quality.label,
-            src: quality.src,
-            selected: quality.selected || false
-          }));
+        qualities.forEach((quality) => {
+          items.push(
+            new QualityMenuItem(player, {
+              label: quality.label,
+              src: quality.src,
+              selected: quality.selected || false,
+            })
+          );
         });
         return items;
-      }
+      },
     });
 
-    const qualityMenuItem = videojs.getComponent('MenuItem');
+    const qualityMenuItem = videojs.getComponent("MenuItem");
     const QualityMenuItem = (videojs as any).extend(qualityMenuItem, {
       handleClick: function () {
         const currentTime = player.currentTime();
         player.src(this.options_.src);
         player.currentTime(currentTime);
         player.play();
-      }
+      },
     });
 
-    videojs.registerComponent('QualityButton', QualityButton);
-    videojs.registerComponent('QualityMenuItem', QualityMenuItem);
+    videojs.registerComponent("QualityButton", QualityButton);
+    videojs.registerComponent("QualityMenuItem", QualityMenuItem);
 
-    player?.getChild('controlBar')?.addChild('QualityButton', {}, 14);
+    player?.getChild("controlBar")?.addChild("QualityButton", {}, 14);
   };
 
   const addWatermark = (player: Player, watermark: Watermark) => {
-    const watermarkDiv = document.createElement('div');
-    watermarkDiv.className = 'vjs-watermark';
-    watermarkDiv.innerHTML = watermark.text || '';
+    const watermarkDiv = document.createElement("div");
+    watermarkDiv.className = "vjs-watermark";
+    watermarkDiv.innerHTML = watermark.text || "";
     if (watermark.image) {
       watermarkDiv.style.backgroundImage = `url(${watermark.image})`;
     }
-    watermarkDiv.style.position = watermark.position || 'top-right';
+    watermarkDiv.style.position = watermark.position || "top-right";
 
     player.el().appendChild(watermarkDiv);
   };
 
   const takeScreenshot = (player: Player) => {
-    const video = player.el().querySelector('video') as HTMLVideoElement | null;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const video = player.el().querySelector("video") as HTMLVideoElement | null;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     if (video && ctx) {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx?.drawImage(video, 0, 0);
 
-      canvas.toBlob(blob => {
+      canvas.toBlob((blob) => {
         const url = URL.createObjectURL(blob as Blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `screenshot-${Date.now()}.png`;
         a.click();
         URL.revokeObjectURL(url);
       });
-
     }
   };
 
   const togglePictureInPicture = async (player: Player) => {
-    const video = player.el().querySelector('video');
+    const video = player.el().querySelector("video");
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
@@ -383,7 +401,7 @@ const VideoPlayer = ({
         await video?.requestPictureInPicture();
       }
     } catch (error) {
-      console.error('Picture-in-Picture error:', error);
+      console.error("Picture-in-Picture error:", error);
     }
   };
 
@@ -393,13 +411,15 @@ const VideoPlayer = ({
     const secs = Math.floor(seconds % 60);
 
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div className={`relative w-full max-w-full bg-black rounded-xl overflow-hidden shadow-2xl ${className}`}>
+    <div
+      className={`relative w-full max-w-full bg-black rounded-xl overflow-hidden shadow-2xl ${className}`}
+    >
       {title && (
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-5 py-4 text-white">
           <h3 className="m-0 text-xl font-semibold text-shadow">{title}</h3>

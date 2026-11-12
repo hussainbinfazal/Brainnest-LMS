@@ -1,15 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",  
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
     "target": "ESNext",
     "module": "ESNext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
-    "types": ["jest", "@testing-library/jest-dom","node"],
-    "allowJs": true, // 
+    "lib": ["DOM", "ESNext"],
+    "types": ["jest", "@testing-library/jest-dom", "node"],
+    "allowJs": true, //
     "checkJs": false, //
     "jsx": "preserve", //
     "moduleResolution": "bundler",
@@ -20,22 +17,11 @@
     "baseUrl": "./src",
     "ignoreDeprecations": "6.0",
     "paths": {
-      "@/*": [
-        "*"
-      ],
-      "@repo/shared": [
-        "../../../packages/shared/src/index.ts"
-      ],
-      "@repo/shared/*": [
-        "../../../packages/shared/src/*"
-      ],
-      "@repo/payment": [
-        "../../../packages/payment/src/index.ts"
-      ],
-      "@repo/payment/*": [
-        "../../../packages/payment/src/*"
-      ],
-      
+      "@/*": ["*"],
+      "@repo/shared": ["../../../packages/shared/src/index.ts"],
+      "@repo/shared/*": ["../../../packages/shared/src/*"],
+      "@repo/payment": ["../../../packages/payment/src/index.ts"],
+      "@repo/payment/*": ["../../../packages/payment/src/*"]
     },
     // "ignoreDeprecations": "6.0",
     "incremental": true,
@@ -53,9 +39,12 @@
     "instrumentation.ts",
     "src",
     "src/types/**/*",
-    ".next/types/**/*.ts"
-, "../../packages/shared/src/config/cloudinary/cloudinary.ts", "jest.setup.ts", "../../packages/shared/src/config/redisConfig/rate-limiters/rate-LimitIP.ts", "../../packages/shared/src/utils/getClientIp.ts", "../../packages/payment/src/paymentHelpers"  ],
-  "exclude": [
-    "node_modules"
-  ]
+    ".next/types/**/*.ts",
+    "../../packages/shared/src/config/cloudinary/cloudinary.ts",
+    "jest.setup.ts",
+    "../../packages/shared/src/config/redisConfig/rate-limiters/rate-LimitIP.ts",
+    "../../packages/shared/src/utils/getClientIp.ts",
+    "../../packages/payment/src/paymentHelpers"
+  ],
+  "exclude": ["node_modules"]
 }

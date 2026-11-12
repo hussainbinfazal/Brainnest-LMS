@@ -1,19 +1,19 @@
 {
   "name": "@repo/worker",
   "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "typecheck": "tsc --noEmit --watch",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
     "main": "./dist/index.js",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit --watch",
     "types": "./dist/index.d.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@repo/ai-service": "workspace:*",
     "@repo/payment": "workspace:*",

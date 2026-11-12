@@ -223,7 +223,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
             </div> */}
               {/* {Title} */}
-              <Field label="Title" error={errors.title?.message} required={true}>
+              <Field
+                label="Title"
+                error={errors.title?.message}
+                required={true}
+              >
                 <Input
                   {...register("title")}
                   placeholder="e.g. JavaScript Course"
@@ -289,7 +293,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 onFile={async (f: File) => {
                   const result = await previewVideo.upload(f, "preview-video");
                   if (result) {
-                    setValue("previewVideo", result.url, { shouldValidate: true });
+                    setValue("previewVideo", result.url, {
+                      shouldValidate: true,
+                    });
                     setValue("previewVideoPublicId", result.public_id, {
                       shouldValidate: true,
                     });
@@ -386,7 +392,6 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {/* discount percent */}
               <Field label="Discount (%)" error={errors.discount?.message}>
                 <Input
-
                   type="number"
                   min={0}
                   {...register("discount", { valueAsNumber: true })}
@@ -445,7 +450,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               <Field
                 required={true}
                 label="Category"
-                error={errors.category?.name?.message ?? errors.category?.message}
+                error={
+                  errors.category?.name?.message ?? errors.category?.message
+                }
               >
                 <Select
                   value={parentCategory}
@@ -467,7 +474,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 </Select>
               </Field>
               {/* subcategory: the value actually stored in the form */}
-              <Field label="SubCategory" error={errors.subCategory?.message} required={true}>
+              <Field
+                label="SubCategory"
+                error={errors.subCategory?.message}
+                required={true}
+              >
                 <Controller
                   name="subCategory"
                   control={control}
@@ -569,12 +580,19 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* level */}
-              <Field label="Level" error={errors.level?.message} required={true}>
+              <Field
+                label="Level"
+                error={errors.level?.message}
+                required={true}
+              >
                 <Controller
                   name="level"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a level" />
                       </SelectTrigger>
@@ -609,7 +627,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* what you will learn */}
-              <Field label="What you will learn" error={errors.whatYouWillLearn?.message} required={true}>
+              <Field
+                label="What you will learn"
+                error={errors.whatYouWillLearn?.message}
+                required={true}
+              >
                 <Controller
                   name="whatYouWillLearn"
                   control={control}
@@ -644,7 +666,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* requirements */}
-              <Field label="Requirements" error={errors.requirements?.message} required={true}>
+              <Field
+                label="Requirements"
+                error={errors.requirements?.message}
+                required={true}
+              >
                 <Controller
                   name="requirements"
                   control={control}
@@ -683,12 +709,19 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
 
               </div> */}
               {/* language */}
-              <Field label="Language" error={errors.language?.message} required={true}>
+              <Field
+                label="Language"
+                error={errors.language?.message}
+                required={true}
+              >
                 <Controller
                   name="language"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a language" />
                       </SelectTrigger>
@@ -703,7 +736,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                   )}
                 />
               </Field>
-              <Field label="Lesson release schedule" error={errors.dripType?.message} required={true}>
+              <Field
+                label="Lesson release schedule"
+                error={errors.dripType?.message}
+                required={true}
+              >
                 <Controller
                   name="dripType"
                   control={control}
@@ -718,7 +755,9 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                       <SelectContent>
                         <SelectItem value="free">Free</SelectItem>
                         <SelectItem value="sequential">Sequential</SelectItem>
-                        <SelectItem value="drip-by-date">Drip by date</SelectItem>
+                        <SelectItem value="drip-by-date">
+                          Drip by date
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   )}
@@ -819,7 +858,11 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     <Input {...register(`topics.${i}.description`)} />
                   </Field>
                   {/* active flag */}
-                  <Field label="IsActive" error={errors.topics?.[i]?.isActive?.message} required={true}>
+                  <Field
+                    label="IsActive"
+                    error={errors.topics?.[i]?.isActive?.message}
+                    required={true}
+                  >
                     <Controller
                       control={control}
                       name={`topics.${i}.isActive`}
@@ -842,7 +885,6 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                     name: "",
                     description: "",
                     isActive: true,
-
                   })
                 }
               >
@@ -884,12 +926,17 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
                 onClick={() =>
                   sections.append({
                     ...EMPTY_SECTION,
-                    lessons: [{
-                      ...EMPTY_LESSON,
-                      order: form.getValues("dripType") === "free"
-                        ? getNextCourseLessonOrder(form.getValues("sections"))
-                        : EMPTY_LESSON.order,
-                    }],
+                    lessons: [
+                      {
+                        ...EMPTY_LESSON,
+                        order:
+                          form.getValues("dripType") === "free"
+                            ? getNextCourseLessonOrder(
+                                form.getValues("sections")
+                              )
+                            : EMPTY_LESSON.order,
+                      },
+                    ],
                   })
                 }
               >
@@ -1052,7 +1099,6 @@ export const CreateCourseComp: React.FC<{ className?: string }> = ({
               {/* <Button size="default" className="" type="button" onClick={appendLessons} variant="outline">
               + Add Lessons
             </Button> */}
-
 
               {/* {form.faq.map((item: CFaq, index: number) => (
               <div key={index} className="mb-4 space-y-2 relative ">

@@ -7,7 +7,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
-
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -21,7 +20,7 @@ import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { LiaShoppingCartSolid } from "react-icons/lia";
 import { CiHeart } from "react-icons/ci";
 import { useState, useRef } from "react";
-import { signOut } from "next-auth/react"
+import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -81,7 +80,7 @@ export function AppSidebar() {
                 href="/myprofile/mycertificates"
                 className="px-4 text-xl font-semibold"
               >
-                My Certificates{ }
+                My Certificates{}
               </Link>
             )}
           </nav>
@@ -108,26 +107,35 @@ export function AppSidebar() {
             {authUser &&
               (authUser.role === USER_ROLE.INSTRUCTOR ? (
                 <Link href="instructor/course/manage">
-                  <Button className=" rounded-sm" variant="default"
-                    size="sm"
-                  >Manage</Button>
+                  <Button className=" rounded-sm" variant="default" size="sm">
+                    Manage
+                  </Button>
                 </Link>
               ) : (
                 <Link href={"/course/manage"}>
-                  <Button variant="default"
-                    size="sm" className="ml-4 rounded-sm">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="ml-4 rounded-sm"
+                  >
                     Teach on Brainnest
                   </Button>
                 </Link>
               ))}
             {authUser ? (
-              <Button className=""
+              <Button
+                className=""
                 variant="default"
-                size="sm" onClick={handleLogout}>Sign out</Button>
+                size="sm"
+                onClick={handleLogout}
+              >
+                Sign out
+              </Button>
             ) : (
               <Link href="/login">
-                <Button variant="default"
-                  size="sm" className="rounded-sm">Login</Button>
+                <Button variant="default" size="sm" className="rounded-sm">
+                  Login
+                </Button>
               </Link>
             )}
           </div>
@@ -146,7 +154,6 @@ export function AppSidebar() {
                         src={authUser?.profileImage}
                       />
                       <AvatarFallback className="my-class">
-
                         {authUser?.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -169,18 +176,19 @@ export function AppSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem className=""
-                  inset onClick={() => router.push("/myprofile")}>
+                <DropdownMenuItem
+                  className=""
+                  inset
+                  onClick={() => router.push("/myprofile")}
+                >
                   <span onClick={() => router.push("/mycourses")}>Account</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className=""
-                  inset>
+                <DropdownMenuItem className="" inset>
                   <span onClick={() => router.push("/course/manage")}>
                     Manage Courses
                   </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className=""
-                  inset>
+                <DropdownMenuItem className="" inset>
                   <span>
                     {authUser ? (
                       <p

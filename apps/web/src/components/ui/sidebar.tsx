@@ -25,8 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export interface SidebarProviderProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElement> {
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -48,87 +47,73 @@ export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   collapsible?: "offcanvas" | "icon" | "none";
 }
 
-export interface SidebarTriggerProps
-  extends React.ComponentPropsWithoutRef<typeof Button> { }
+export interface SidebarTriggerProps extends React.ComponentPropsWithoutRef<
+  typeof Button
+> {}
 
-export interface SidebarRailProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> { }
+export interface SidebarRailProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
 
-export interface SidebarInsetProps
-  extends React.HTMLAttributes<HTMLElement> { }
+export interface SidebarInsetProps extends React.HTMLAttributes<HTMLElement> {}
 
-export interface SidebarInputProps
-  extends React.ComponentPropsWithoutRef<typeof Input> { }
+export interface SidebarInputProps extends React.ComponentPropsWithoutRef<
+  typeof Input
+> {}
 
-export interface SidebarHeaderProps
-  extends React.HTMLAttributes<HTMLDivElement> { }
+export interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SidebarFooterProps
-  extends React.HTMLAttributes<HTMLDivElement> { }
+export interface SidebarFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SidebarSeparatorProps
-  extends React.ComponentPropsWithoutRef<typeof Separator> { }
+export interface SidebarSeparatorProps extends React.ComponentPropsWithoutRef<
+  typeof Separator
+> {}
 
-export interface SidebarContentProps
-  extends React.HTMLAttributes<HTMLDivElement> { }
+export interface SidebarContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SidebarGroupProps
-  extends React.HTMLAttributes<HTMLDivElement> { }
+export interface SidebarGroupProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SidebarGroupLabelProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface SidebarGroupLabelProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
 }
 
-export interface SidebarGroupActionProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface SidebarGroupActionProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
 }
 
-export interface SidebarGroupContentProps
-  extends React.HTMLAttributes<HTMLDivElement> { }
+export interface SidebarGroupContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SidebarMenuProps
-  extends React.HTMLAttributes<HTMLUListElement> { }
+export interface SidebarMenuProps extends React.HTMLAttributes<HTMLUListElement> {}
 
-export interface SidebarMenuItemProps
-  extends React.LiHTMLAttributes<HTMLLIElement> { }
+export interface SidebarMenuItemProps extends React.LiHTMLAttributes<HTMLLIElement> {}
 
 export interface SidebarMenuButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-  VariantProps<typeof sidebarMenuButtonVariants> {
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof sidebarMenuButtonVariants> {
   asChild?: boolean;
   isActive?: boolean;
   tooltip?: string | React.ComponentPropsWithoutRef<typeof TooltipContent>;
 }
 
-export interface SidebarMenuActionProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface SidebarMenuActionProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
   showOnHover?: boolean;
 }
 
-export interface SidebarMenuBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement> { }
+export interface SidebarMenuBadgeProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export interface SidebarMenuSkeletonProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface SidebarMenuSkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   showIcon?: boolean;
 }
 
-export interface SidebarMenuSubProps
-  extends React.HTMLAttributes<HTMLUListElement> { }
+export interface SidebarMenuSubProps extends React.HTMLAttributes<HTMLUListElement> {}
 
-export interface SidebarMenuSubItemProps
-  extends React.LiHTMLAttributes<HTMLLIElement> { }
+export interface SidebarMenuSubItemProps extends React.LiHTMLAttributes<HTMLLIElement> {}
 
-export interface SidebarMenuSubButtonProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface SidebarMenuSubButtonProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   asChild?: boolean;
   size?: "sm" | "md";
   isActive?: boolean;
 }
-
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state" as const;
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -222,11 +207,13 @@ function SidebarProvider({
       <TooltipProvider delayDuration={0}>
         <div
           data-slot="sidebar-wrapper"
-          style={{
-            "--sidebar-width": SIDEBAR_WIDTH,
-            "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-            ...style,
-          } as React.CSSProperties}
+          style={
+            {
+              "--sidebar-width": SIDEBAR_WIDTH,
+              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+              ...style,
+            } as React.CSSProperties
+          }
           className={cn(
             "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
             className
@@ -273,9 +260,11 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
-          style={{
-            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-          } as React.CSSProperties}
+          style={
+            {
+              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+            } as React.CSSProperties
+          }
           side={side}
         >
           <SheetHeader className="sr-only">
@@ -466,7 +455,11 @@ function SidebarGroup({ className, ...props }: SidebarGroupProps) {
   );
 }
 
-function SidebarGroupLabel({ className, asChild = false, ...props }: SidebarGroupLabelProps) {
+function SidebarGroupLabel({
+  className,
+  asChild = false,
+  ...props
+}: SidebarGroupLabelProps) {
   const Comp = asChild ? Slot : "div";
 
   return (
@@ -483,7 +476,11 @@ function SidebarGroupLabel({ className, asChild = false, ...props }: SidebarGrou
   );
 }
 
-function SidebarGroupAction({ className, asChild = false, ...props }: SidebarGroupActionProps) {
+function SidebarGroupAction({
+  className,
+  asChild = false,
+  ...props
+}: SidebarGroupActionProps) {
   const Comp = asChild ? Slot : "button";
 
   return (
@@ -502,7 +499,10 @@ function SidebarGroupAction({ className, asChild = false, ...props }: SidebarGro
   );
 }
 
-function SidebarGroupContent({ className, ...props }: SidebarGroupContentProps) {
+function SidebarGroupContent({
+  className,
+  ...props
+}: SidebarGroupContentProps) {
   return (
     <div
       data-slot="sidebar-group-content"
@@ -596,11 +596,13 @@ function SidebarMenuButton({
       <TooltipContent
         side="right"
         align="center"
-        className=''
+        className=""
 
         hidden={state !== "collapsed" || isMobile}
         {...tooltip}
-      >{tooltip.children}</TooltipContent>
+      >
+        {tooltip.children}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -626,7 +628,7 @@ function SidebarMenuAction({
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         showOnHover &&
-        "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
+          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
         className
       )}
       {...props}
@@ -653,7 +655,11 @@ function SidebarMenuBadge({ className, ...props }: SidebarMenuBadgeProps) {
   );
 }
 
-function SidebarMenuSkeleton({ className, showIcon = false, ...props }: SidebarMenuSkeletonProps) {
+function SidebarMenuSkeleton({
+  className,
+  showIcon = false,
+  ...props
+}: SidebarMenuSkeletonProps) {
   // Random width between 50 to 90%.
   const width = React.useMemo(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`;
@@ -675,9 +681,11 @@ function SidebarMenuSkeleton({ className, showIcon = false, ...props }: SidebarM
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={{
-          "--skeleton-width": width,
-        } as React.CSSProperties}
+        style={
+          {
+            "--skeleton-width": width,
+          } as React.CSSProperties
+        }
       />
     </div>
   );

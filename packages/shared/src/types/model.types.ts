@@ -1,4 +1,4 @@
-import mongoose, { Document, HydratedDocument, Types } from "mongoose";
+import mongoose, { Document, HydratedDocument, Types } from 'mongoose';
 
 export interface ICourse {
   _id: Types.ObjectId;
@@ -14,12 +14,12 @@ export interface ICourse {
   coverImage: string;
   mp3Url: string;
   tags: string[];
-  status: "draft" | "published" | "archived" | "deleted";
+  status: 'draft' | 'published' | 'archived' | 'deleted';
   isPaid: boolean;
   discount: number;
   totalDurationInSeconds: number;
   language: string;
-  level: "beginner" | "intermediate" | "advanced";
+  level: 'beginner' | 'intermediate' | 'advanced';
   certificate: boolean;
   faq: {
     question: string;
@@ -38,20 +38,17 @@ export interface ICourse {
   deletedAt: Date;
   createdAt: Date;
   updatedAt: Date;
-
 }
 export interface IFaq {
   question: string;
   answer: string;
 }
 
-
 export interface ICategory {
   _id: Types.ObjectId;
   name: string;
   slug: string;
   parent: Types.ObjectId;
-
 }
 export interface IEnrollment {
   _id: Types.ObjectId;
@@ -79,7 +76,7 @@ export interface ILesson {
   createdAt?: Date;
   updatedAt?: Date;
   isDeleted?: boolean;
-  status?: "completed" | "incomplete";
+  status?: 'completed' | 'incomplete';
 }
 export interface IReview {
   _id: Types.ObjectId;
@@ -88,7 +85,7 @@ export interface IReview {
   rating: number;
   comment: string;
   spamScore: number;
-  status: "clean" | "suspicious" | "spam";
+  status: 'clean' | 'suspicious' | 'spam';
   ipAdress: string;
   score: number;
   createdAt: Date | string;
@@ -104,7 +101,7 @@ export interface ITopic {
   updatedAt?: Date;
 }
 export interface ICart {
-  _id: Types.ObjectId
+  _id: Types.ObjectId;
   user: Types.ObjectId;
   courses: (Types.ObjectId | ICourse)[];
   subTotal: number;
@@ -165,7 +162,6 @@ export interface ICoupon {
   usedCount: number;
   isActive: boolean;
   createdBy: Types.ObjectId;
-
 }
 export interface ICouponUsage {
   _id: Types.ObjectId;
@@ -192,6 +188,7 @@ export interface IOrder {
   user: Types.ObjectId;
   orderItems: {
     course: Types.ObjectId;
+    price: number;
   }[];
   paymentMethod: string;
   razorpayOrderId: string;
@@ -211,15 +208,15 @@ export interface IOrder {
 export interface IPayments {
   _id: Types.ObjectId;
   amount: number;
-  paymentId: string;
-  paymentAt: Date;
+  paymentId?: string;
+  paymentAt?: Date;
   paymentBy: Types.ObjectId;
   paymentOf: Types.ObjectId;
   paymentMethod: string;
   razorpayOrderId: string;
+  reconcileCheckedAt: Date;
   paymentOnModel: 'Course' | 'Chat' | 'Order';
   paymentStatus: 'Pending' | 'Completed' | 'Failed';
-
 }
 export interface IProgress {
   _id: Types.ObjectId;
@@ -229,7 +226,7 @@ export interface IProgress {
     sectionId: Types.ObjectId;
     completedCount: number;
     totalLessons: number;
-  }
+  };
   completedLessonsCount: number;
   percentageCompleted: number;
   lastAccessedAt: Date;
@@ -245,10 +242,10 @@ export interface ILessonProgress {
   progressPercentage: number;
   completedAt: Date;
 }
-export type UserRole = "student" | "admin" | "instructor";
+export type UserRole = 'student' | 'admin' | 'instructor';
 export interface IUser {
   _id: Types.ObjectId;
-  username: string,
+  username: string;
   name: string;
   email: string;
   password: string;
@@ -272,12 +269,16 @@ export interface ICertificate {
   generatedAt: Date;
   verificationCode: string;
   isRevoked: boolean;
-
-
 }
 export interface IUserToken {
   userId: Types.ObjectId;
-  type: 'reset' | 'verification' | 'refresh' | 'email-verification' | 'number-verification' | 'password-reset';
+  type:
+    | 'reset'
+    | 'verification'
+    | 'refresh'
+    | 'email-verification'
+    | 'number-verification'
+    | 'password-reset';
   token: string;
   expiresAt: Date;
   isVerified: boolean;
@@ -298,7 +299,6 @@ export interface IUserCourse {
   completedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
-
 }
 
 export interface ICategory {
@@ -320,9 +320,8 @@ export interface ISection {
 }
 
 export type CreateSectionType = ISection & {
-  lessons: ILesson[]
-}
-
+  lessons: ILesson[];
+};
 
 export type CourseDocument = HydratedDocument<ICourse>;
 export type CategoryDocument = HydratedDocument<ICategory>;

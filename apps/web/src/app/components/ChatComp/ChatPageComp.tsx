@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
@@ -25,9 +31,14 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { MdCircle } from "react-icons/md";
-import { CAuthUser, CChat, CClientToServerEvents, CMessage, CServerToClientEvents } from "@/types/client";
+import {
+  CAuthUser,
+  CChat,
+  CClientToServerEvents,
+  CMessage,
+  CServerToClientEvents,
+} from "@/types/client";
 import { Socket } from "socket.io-client";
-
 
 export interface RazorpayOptions {
   key: string;
@@ -47,7 +58,13 @@ export interface ISelectedPlan {
   messages: string;
   price: string;
 }
-export default function ChatPageComp({serverChats, className}:{serverChats: CChat[], className?: string}): React.JSX.Element {
+export default function ChatPageComp({
+  serverChats,
+  className,
+}: {
+  serverChats: CChat[];
+  className?: string;
+}): React.JSX.Element {
   const router = useRouter();
   const user: CAuthUser = useAuthStore((state) => state.authUser);
   const userId: string = useMemo(() => user?._id, [user]) ?? "";
@@ -56,7 +73,10 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
   const [isLoading, setIsLoading] = useState<Boolean>(true);
   const [message, setMessage] = useState<string>("");
   const [chats, setChats] = useState<CChat[]>(serverChats ?? []);
-  const [socket, setSocket] = useState<Socket<CServerToClientEvents, CClientToServerEvents> | null>(null);
+  const [socket, setSocket] = useState<Socket<
+    CServerToClientEvents,
+    CClientToServerEvents
+  > | null>(null);
   const [isLimitExceeded, setIsLimitExceeded] = useState<boolean>();
   const [isActive, setIsActive] = useState<boolean>(false);
   const [selectedPlan, setSelectedPlan] = useState<ISelectedPlan | null>(null);
@@ -69,7 +89,10 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
   const [isPaid, setIsPaid] = useState<Boolean>(false);
   const [activeChatId, setActiveChatId] = useState<String | null>("");
   const [messageCount, setMessageCount] = useState<Number>(0);
-  const socketRef = useRef<Socket<CServerToClientEvents, CClientToServerEvents> | null>(null);
+  const socketRef = useRef<Socket<
+    CServerToClientEvents,
+    CClientToServerEvents
+  > | null>(null);
   const [userStatus, setUserStatus] = useState<Record<string, string>>({});
   const onlineUserIds = useMemo(() => {
     return Object.entries(userStatus)
@@ -121,7 +144,7 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
         // that falls out of the range of 2xx
         throw new Error(
           error.response.data.message ||
-          `Payment verification failed with status ${error.response.status}`
+            `Payment verification failed with status ${error.response.status}`
         );
       } else if (error.request) {
         // The request was made but no response was received
@@ -135,8 +158,7 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
     }
   };
   const handleBuyPlans = async (): Promise<void | string | Number> => {
-    if (!activeChat)
-      return toast.error("Please select a chat first");
+    if (!activeChat) return toast.error("Please select a chat first");
     try {
       // Check if user is logged in
       if (!user) {
@@ -249,12 +271,11 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
     }
 
     socket?.emit("message", {
-
       sender: activeChat.sender,
       receiver: activeChat.receiver,
       message,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
     const response = console.log("This is the message :", message);
 
@@ -334,7 +355,6 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
     if (user && !socketRef.current) {
       fetch("/api/socket").then(() => {
         if (isMounted) {
-
           const newSocket = connectSocket(userId!);
           setSocket(newSocket);
           socketRef.current = newSocket;
@@ -350,17 +370,26 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
             setMessages((prev) => [...prev, msg]);
           });
 
-          newSocket.on("userStatus", ({ userId, status }: { userId: string; status: 'online' | 'offline' }) => {
-            // console.log(`${userId} is now ${status}`);
-            setUserStatus((prev) => ({
-              ...prev,
-              [userId]: status,
-            }));
-            // console.log(
-            //   "This is the user Id received from in the user Status :",
-            //   userId
-            // );
-          });
+          newSocket.on(
+            "userStatus",
+            ({
+              userId,
+              status,
+            }: {
+              userId: string;
+              status: "online" | "offline";
+            }) => {
+              // console.log(`${userId} is now ${status}`);
+              setUserStatus((prev) => ({
+                ...prev,
+                [userId]: status,
+              }));
+              // console.log(
+              //   "This is the user Id received from in the user Status :",
+              //   userId
+              // );
+            }
+          );
         }
       });
     }
@@ -380,10 +409,8 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
   }, [activeChat]);
 
   useEffect(() => {
-
     if (user) {
       const timer = setTimeout(() => {
-
         fetchChat();
         setIsLoading(false);
         setSelectedPlan(plans[0]);
@@ -433,27 +460,33 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
     // );
   }, [userStatus]);
   return (
-    <div className={cn("w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ", className)}>
+    <div
+      className={cn(
+        "w-full min-h-screen flex flex-col items-center bg-white dark:bg-black justify-start h-screen ",
+        className
+      )}
+    >
       <div className="w-full h-[95%] flex justify-between items-start overflow-none bg-black">
         <div
-          className={`flex flex-col  justify-start h-full overflow-hidden ${isCollapsed ? "w-[80px]" : "w-[300px]"
-            } bg-black dark:bg-black  gap-2`}
+          className={`flex flex-col  justify-start h-full overflow-hidden ${
+            isCollapsed ? "w-[80px]" : "w-[300px]"
+          } bg-black dark:bg-black  gap-2`}
         >
           {isLoading ? (
             <Skeleton className="w-full !h-full py-3" />
           ) : (
             <div className="w-full h-full  overflow-y-none border-r bg-black ">
-              <div
-                className=" h-full w-full !bg-black !flex"
-              >
+              <div className=" h-full w-full !bg-black !flex">
                 <div
-                  className={`transition-all duration-300 h-full flex flex-col relative bg-black gap-2 ${isCollapsed ? "w-[80px] pr-3" : "w-[300px]"
-                    }`}
+                  className={`transition-all duration-300 h-full flex flex-col relative bg-black gap-2 ${
+                    isCollapsed ? "w-[80px] pr-3" : "w-[300px]"
+                  }`}
                 >
                   <div className="pl-4 w-full flex !border-none !outline-none items-center bg-black">
                     <div
-                      className={`w-full flex items-center ${isCollapsed ? "justify-center" : "justify-between"
-                        } px-2 py-4 pb-2`}
+                      className={`w-full flex items-center ${
+                        isCollapsed ? "justify-center" : "justify-between"
+                      } px-2 py-4 pb-2`}
                     >
                       {!isCollapsed && (
                         <p className="text-2xl text-white">Chats</p>
@@ -479,10 +512,11 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
                       chats.map((chat: CChat) => (
                         <div key={chat._id}>
                           <div
-                            className={`flex items-center gap-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 p-1 rounded-md ${activeChatId === chat._id
-                              ? "bg-gray-200 dark:bg-gray-700"
-                              : ""
-                              }`}
+                            className={`flex items-center gap-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 p-1 rounded-md ${
+                              activeChatId === chat._id
+                                ? "bg-gray-200 dark:bg-gray-700"
+                                : ""
+                            }`}
                             onClick={() => {
                               setActiveChatId(chat._id);
                               setActiveChat(chat);
@@ -570,8 +604,19 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
                     </form>
                   </CardContent>
                   <CardFooter className="flex justify-between py-2">
-                    <Button size="default" variant="outline" className="cursor-pointer">Back</Button>
-                    <Button size="default" variant="default" className="cursor-pointer" onClick={handleBuyPlans}>
+                    <Button
+                      size="default"
+                      variant="outline"
+                      className="cursor-pointer"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      size="default"
+                      variant="default"
+                      className="cursor-pointer"
+                      onClick={handleBuyPlans}
+                    >
                       Pay Now
                     </Button>
                   </CardFooter>
@@ -610,14 +655,16 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
                       <div
                         key={message._id}
                         ref={messagesContainerRef}
-                        className={`${isCurrentUserSender ? "justify-end" : "justify-start"
-                          } flex items-center gap-2 w-full  p-2`}
+                        className={`${
+                          isCurrentUserSender ? "justify-end" : "justify-start"
+                        } flex items-center gap-2 w-full  p-2`}
                       >
                         <div
-                          className={`min-w-1/3 px-2 py-4 relative bg-red-500 ${isCurrentUserSender
-                            ? "rounded-bl-lg rounded-tr-lg rounded-tl-lg"
-                            : "rounded-br-lg rounded-tr-lg rounded-tl-lg"
-                            }`}
+                          className={`min-w-1/3 px-2 py-4 relative bg-red-500 ${
+                            isCurrentUserSender
+                              ? "rounded-bl-lg rounded-tr-lg rounded-tl-lg"
+                              : "rounded-br-lg rounded-tr-lg rounded-tl-lg"
+                          }`}
                         >
                           <div className="absolute bottom-0 right-1 text-sm">
                             {new Date(message.createdAt).toLocaleTimeString(
@@ -657,7 +704,7 @@ export default function ChatPageComp({serverChats, className}:{serverChats: CCha
                       variant="default"
                       className="w-9 h-9 rounded-full absolute right-2 top-2 z-11"
                       onClick={() => saveMessage()}
-                      disabled={isActive }
+                      disabled={isActive}
                     >
                       <AiOutlineSend />
                     </Button>

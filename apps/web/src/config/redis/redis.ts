@@ -1,11 +1,8 @@
-import { logger, initializeRedis } from '@repo/shared/server'
-import { Redis as UpstashRedis } from '@upstash/redis'
-
-
-
+import { logger, initializeRedis } from "@repo/shared/server";
+import { Redis as UpstashRedis } from "@upstash/redis";
 
 if (!process.env.UPSTASH_REDIS_URL || !process.env.UPSTASH_REDIS_TOKEN) {
-    throw new Error("Missing Upstash Redis environment variables")
+  throw new Error("Missing Upstash Redis environment variables");
 }
 /*
 ----------------------------------
@@ -14,21 +11,12 @@ Used for caching / KV operations
 ----------------------------------
 */
 
-
-
-
-
 export const redisClient = new UpstashRedis({
-    url: process.env.UPSTASH_REDIS_URL!,
-    token: process.env.UPSTASH_REDIS_TOKEN!,
-})
+  url: process.env.UPSTASH_REDIS_URL!,
+  token: process.env.UPSTASH_REDIS_TOKEN!,
+});
 initializeRedis(redisClient);
-export default redisClient
-
-
-
-
-
+export default redisClient;
 
 /*
 ----------------------------------
@@ -41,4 +29,3 @@ Used for BullMQ queues
 //     enableReadyCheck: false
 // });
 // export { redisClient, ioRedis }
-

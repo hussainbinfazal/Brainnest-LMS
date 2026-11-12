@@ -56,8 +56,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ========================================
@@ -66,7 +70,11 @@
 
 /* Main Theme Container */
 .vjs-theme-brainnest {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 /* ========================================
@@ -135,7 +143,7 @@
 
 /* Progress Bar Scrubber Handle */
 .vjs-theme-brainnest .vjs-play-progress::before {
-  content: '';
+  content: "";
   position: absolute;
   right: -6px;
   top: 50%;
@@ -220,17 +228,17 @@
 
 /* Screenshot Button Icon */
 .vjs-theme-brainnest .vjs-screenshot-button::before {
-  content: '📷'; /* Camera emoji for screenshot functionality */
+  content: "📷"; /* Camera emoji for screenshot functionality */
 }
 
 /* Picture-in-Picture Button Icon */
 .vjs-theme-brainnest .vjs-pip-button::before {
-  content: '⧉'; /* PiP symbol for picture-in-picture mode */
+  content: "⧉"; /* PiP symbol for picture-in-picture mode */
 }
 
 /* Quality Selection Button */
 .vjs-theme-brainnest .vjs-quality-button::before {
-  content: 'HD'; /* HD text indicator */
+  content: "HD"; /* HD text indicator */
   font-size: 0.8rem;
   font-weight: bold;
 }
@@ -321,7 +329,7 @@
 
 /* Analytics Item Bullet Point */
 .analytics-item::before {
-  content: '•'; /* Bullet point separator */
+  content: "•"; /* Bullet point separator */
   color: #667eea; /* Brand color accent */
   margin-right: 8px;
   font-weight: bold;
@@ -332,29 +340,29 @@
   .video-title h3 {
     font-size: 1rem;
   }
-  
+
   .video-title {
     padding: 12px 16px;
   }
-  
+
   .vjs-theme-brainnest .vjs-control-bar {
     height: 50px;
     padding: 6px 12px;
   }
-  
+
   .vjs-theme-brainnest .vjs-button {
     margin: 0 1px;
   }
-  
+
   .vjs-theme-brainnest .vjs-time-control {
     font-size: 0.8rem;
   }
-  
+
   .video-analytics {
     padding: 8px 16px;
     font-size: 0.8rem;
   }
-  
+
   .analytics-item {
     flex: 1 1 50%;
   }
@@ -365,11 +373,11 @@
     height: 45px;
     padding: 4px 8px;
   }
-  
+
   .vjs-theme-brainnest .vjs-progress-control {
     margin: 0 8px;
   }
-  
+
   .analytics-item {
     flex: 1 1 100%;
   }

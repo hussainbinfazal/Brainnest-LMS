@@ -1,65 +1,144 @@
-import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
+import {
+  failResponse,
+  successResponse,
+} from "@/lib/helpers/failResponseHelper";
 import { auth } from "@/auth";
 import { CUserCourse } from "@/types/client";
 import { CustomNextRequest } from "@/types/server";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
-import { checkIp, connectDB, ISessionUser, IUserCourse, logger, USER_COURSE_DETAIL, USER_COURSE_DETAIL_IP_KEY, userCourse, validateMongooseId } from '@repo/shared/server';
-import { CACHE_TTL, getCached, setCached } from "@repo/shared/config/redisConfig/cache-helper";
+import {
+  checkIp,
+  connectDB,
+  ISessionUser,
+  IUserCourse,
+  logger,
+  USER_COURSE_DETAIL,
+  USER_COURSE_DETAIL_IP_KEY,
+  userCourse,
+  validateMongooseId,
+} from "@repo/shared/server";
+import {
+  CACHE_TTL,
+  getCached,
+  setCached,
+} from "@repo/shared/config/redisConfig/cache-helper";
 import { Session } from "next-auth";
 import { NextResponse } from "next/server";
 
-export async function GET(request:
-    CustomNextRequest, context: { params: Promise<{ courseId: string | string[] }> }): Promise<NextResponse> {
-    const { allowed, retryAfterSec, ip } = await checkIp(request, USER_COURSE_DETAIL_IP_KEY.namespace, USER_COURSE_DETAIL_IP_KEY.max, USER_COURSE_DETAIL_IP_KEY.windowSec);
-    if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
-    const authSession: Session | null = await auth()
-    if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
-    const user: ISessionUser | null = authSession?.user;
-    if (!user) {
-        logger.info("Unauthorized access", { ip: ip });
-        return failResponse({ message: "Unauthorized" }, 401, undefined, undefined, true)
-    }
+export async function GET(
+  request: CustomNextRequest,
+  context: { params: Promise<{ courseId: string | string[] }> }
+): Promise<NextResponse> {
+  const { allowed, retryAfterSec, ip } = await checkIp(
+    request,
+    USER_COURSE_DETAIL_IP_KEY.namespace,
+    USER_COURSE_DETAIL_IP_KEY.max,
+    USER_COURSE_DETAIL_IP_KEY.windowSec
+  );
+  if (!allowed)
+    return failResponse(
+      { message: "Too many requests" },
+      429,
+      undefined,
+      { "Retry-After": String(retryAfterSec) },
+      true
+    );
+  const authSession: Session | null = await auth();
+  if (!authSession)
+    return failResponse(
+      { message: "Unauthorized", ip: ip },
+      401,
+      undefined,
+      undefined,
+      true
+    );
+  const user: ISessionUser | null = authSession?.user;
+  if (!user) {
+    logger.info("Unauthorized access", { ip: ip });
+    return failResponse(
+      { message: "Unauthorized" },
+      401,
+      undefined,
+      undefined,
+      true
+    );
+  }
 
-    const userId: string = user.id;
-    const params = await context.params;
-    const courseId = Array.isArray(params.courseId)
-        ? params.courseId[0]
-        : params.courseId;
-    try {
-        if (!validateMongooseId({ courseId: courseId })) {
-            logger.warn("Invalid course id", { courseId });
-            throw new Error("Invalid course Id");
-        }
-        if (!validateMongooseId({ userId: userId })) {
-            logger.warn("Invalid user id", { userId });
-            throw new Error("Invalid user Id");
-        }
-        const cached = await getCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`);
-        if (cached) {
-            logger.info("User Courses fetched from cache");
-            return successResponse({ userCourse: cached }, 200, undefined, undefined, true);
-        }
-        await connectDB(process.env.MONGODB_URI!);
-        const authUserCourse: IUserCourse | null = await userCourse.findOne({ userId: userId, courseId: courseId }).lean().exec();
-        if (!authUserCourse) {
-            logger.info("User Courses not found");
-            return failResponse({ message: "User Course not found" }, 404, undefined, undefined, true);
-        }
-        const serialized = serializeUserCourse(authUserCourse);
-        await setCached<CUserCourse>(USER_COURSE_DETAIL.namespace, `${userId}-${courseId}`, serialized, CACHE_TTL.MEDIUM);
-        logger.info("User Courses fetched successfully");
-        console.log("LIKE DEBUG:", {
-            userId,
-            courseId,
-            userCourseId: authUserCourse?._id,
-            isLiked: authUserCourse?.isLiked,
-            likedAt: authUserCourse?.likedAt,
-        });
-        return successResponse({ message: "User Courses fetched successfully", userCourse: serialized }, 200, undefined, undefined, true);
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Something went wrong';
-        logger.error("Error fetching User Courses", { message, error });
-        return failResponse({ message: "Something went wrong" }, 500, undefined, undefined, true);
+  const userId: string = user.id;
+  const params = await context.params;
+  const courseId = Array.isArray(params.courseId)
+    ? params.courseId[0]
+    : params.courseId;
+  try {
+    if (!validateMongooseId({ courseId: courseId })) {
+      logger.warn("Invalid course id", { courseId });
+      throw new Error("Invalid course Id");
     }
-
+    if (!validateMongooseId({ userId: userId })) {
+      logger.warn("Invalid user id", { userId });
+      throw new Error("Invalid user Id");
+    }
+    const cached = await getCached<CUserCourse>(
+      USER_COURSE_DETAIL.namespace,
+      `${userId}-${courseId}`
+    );
+    if (cached) {
+      logger.info("User Courses fetched from cache");
+      return successResponse(
+        { userCourse: cached },
+        200,
+        undefined,
+        undefined,
+        true
+      );
+    }
+    await connectDB(process.env.MONGODB_URI!);
+    const authUserCourse: IUserCourse | null = await userCourse
+      .findOne({ userId: userId, courseId: courseId })
+      .lean()
+      .exec();
+    if (!authUserCourse) {
+      logger.info("User Courses not found");
+      return failResponse(
+        { message: "User Course not found" },
+        404,
+        undefined,
+        undefined,
+        true
+      );
+    }
+    const serialized = serializeUserCourse(authUserCourse);
+    await setCached<CUserCourse>(
+      USER_COURSE_DETAIL.namespace,
+      `${userId}-${courseId}`,
+      serialized,
+      CACHE_TTL.MEDIUM
+    );
+    logger.info("User Courses fetched successfully");
+    console.log("LIKE DEBUG:", {
+      userId,
+      courseId,
+      userCourseId: authUserCourse?._id,
+      isLiked: authUserCourse?.isLiked,
+      likedAt: authUserCourse?.likedAt,
+    });
+    return successResponse(
+      { message: "User Courses fetched successfully", userCourse: serialized },
+      200,
+      undefined,
+      undefined,
+      true
+    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching User Courses", { message, error });
+    return failResponse(
+      { message: "Something went wrong" },
+      500,
+      undefined,
+      undefined,
+      true
+    );
+  }
 }

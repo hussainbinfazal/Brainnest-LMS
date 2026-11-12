@@ -17,7 +17,11 @@ const Button: React.FC<CButtonProps> = ({ variant, className, ...props }) => {
 
   return <button className={`${variantClasses} ${className}`} {...props} />;
 };
-export default function Footer({ className }: { className?: string }): React.JSX.Element {
+export default function Footer({
+  className,
+}: {
+  className?: string;
+}): React.JSX.Element {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 

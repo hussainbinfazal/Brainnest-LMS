@@ -1,5 +1,16 @@
-import { CATEGORIES_ALL, Category, connectDB, Course, ICategory, logger } from '@repo/shared/server';
-import { getCached, setCached, CACHE_TTL } from "@repo/shared/config/redisConfig/cache-helper";
+import {
+  CATEGORIES_ALL,
+  Category,
+  connectDB,
+  Course,
+  ICategory,
+  logger,
+} from "@repo/shared/server";
+import {
+  getCached,
+  setCached,
+  CACHE_TTL,
+} from "@repo/shared/config/redisConfig/cache-helper";
 import { CCategory } from "@/types/client";
 import { serializeCategories } from "@/utils/serializer/review.Serializer";
 import mongoose from "mongoose";
@@ -14,10 +25,17 @@ import mongoose from "mongoose";
  * key means the cached data stays reusable for any consumer, not just one
  * specific tree shape.
  */
-export async function getCategoriesWithCache(): Promise<CCategoryWithChildren[]> {
-  const cached = await getCached<CCategoryWithChildren[]>(CATEGORIES_ALL.namespace, CATEGORIES_ALL.id);
+export async function getCategoriesWithCache(): Promise<
+  CCategoryWithChildren[]
+> {
+  const cached = await getCached<CCategoryWithChildren[]>(
+    CATEGORIES_ALL.namespace,
+    CATEGORIES_ALL.id
+  );
   if (cached) {
-    logger.info("Categories fetched from cache", { categoryCount: cached.length });
+    logger.info("Categories fetched from cache", {
+      categoryCount: cached.length,
+    });
     return cached;
   }
 
@@ -30,31 +48,52 @@ export async function getCategoriesWithCache(): Promise<CCategoryWithChildren[]>
 
     const categoriesWithCourses = await Category.find({
       _id: { $in: categoryIdsWithCourses },
-    }).select("_id parent").lean().exec();
+    })
+      .select("_id parent")
+      .lean()
+      .exec();
     const parentIds = categoriesWithCourses
       .map((category) => category.parent)
-      .filter((parent): parent is mongoose.Types.ObjectId => parent instanceof mongoose.Types.ObjectId);
-    const categoryIds: mongoose.Types.ObjectId[] = [...categoryIdsWithCourses, ...parentIds];
+      .filter(
+        (parent): parent is mongoose.Types.ObjectId =>
+          parent instanceof mongoose.Types.ObjectId
+      );
+    const categoryIds: mongoose.Types.ObjectId[] = [
+      ...categoryIdsWithCourses,
+      ...parentIds,
+    ];
 
     const totalCategories: ICategory[] = await Category.find({
       _id: { $in: categoryIds },
-    }).populate("parent", "_id name")
+    })
+      .populate("parent", "_id name")
       .lean()
       .exec();
 
-    console.log("totalCategories-------------------->", totalCategories.length, totalCategories);
+    console.log(
+      "totalCategories-------------------->",
+      totalCategories.length,
+      totalCategories
+    );
     const serialized: CCategory[] = serializeCategories(totalCategories);
     const mapped: CCategoryWithChildren[] = buildCategoryTree(serialized);
-    await setCached(CATEGORIES_ALL.namespace, CATEGORIES_ALL.id, mapped, CACHE_TTL.VERY_LONG);
-    logger.info("Categories fetched successfully", { categoryCount: serialized.length });
+    await setCached(
+      CATEGORIES_ALL.namespace,
+      CATEGORIES_ALL.id,
+      mapped,
+      CACHE_TTL.VERY_LONG
+    );
+    logger.info("Categories fetched successfully", {
+      categoryCount: serialized.length,
+    });
     return mapped;
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Error in fetching categories";
+    const message =
+      error instanceof Error ? error.message : "Error in fetching categories";
     logger.error("Error fetching Categories", { message, error });
     return [];
   }
 }
-
 
 export interface CCategoryWithChildren extends CCategory {
   children: CCategory[];
@@ -72,33 +111,46 @@ export interface CCategoryWithChildren extends CCategory {
  * `child.parent === p._id` instead.
  */
 
-
-export function buildCategoryTree(categories: CCategory[]): CCategoryWithChildren[] {
+export function buildCategoryTree(
+  categories: CCategory[]
+): CCategoryWithChildren[] {
   if (!categories || categories.length === 0) {
-    logger.warn("Categories array is empty or undefined. Cannot build category tree.", { totalCategories: categories?.length ?? 0 });
-    throw new Error("Categories array is empty or undefined. Cannot build category tree.");
+    logger.warn(
+      "Categories array is empty or undefined. Cannot build category tree.",
+      { totalCategories: categories?.length ?? 0 }
+    );
+    throw new Error(
+      "Categories array is empty or undefined. Cannot build category tree."
+    );
   }
   const parents: CCategory[] = categories.filter((c) => !c.parent);
 
-
   return parents.map((p: CCategory) => ({
     ...p,
-    children: categories.filter((child: CCategory) => child.parent?._id?.toString() === p._id?.toString()),
+    children: categories.filter(
+      (child: CCategory) => child.parent?._id?.toString() === p._id?.toString()
+    ),
   }));
 }
 
-
 //For particular course category tree, we can use this function to build the tree for a specific category and its children. This is useful when we want to display the category hierarchy for a specific course.
-export function buildCourseCategoryTree(categories: CCategory[], categoryId: string): CCategoryWithChildren | null {
+export function buildCourseCategoryTree(
+  categories: CCategory[],
+  categoryId: string
+): CCategoryWithChildren | null {
   if (!categoryId) {
-    logger.warn("Category ID is required to build course category tree.", { categoryId });
+    logger.warn("Category ID is required to build course category tree.", {
+      categoryId,
+    });
     throw new Error("Category ID is required to build course category tree.");
-  };
+  }
   const parent = categories.find((c) => c._id === categoryId);
   if (!parent) return null;
 
   return {
     ...parent,
-    children: categories.filter((c) => c.parent?._id?.toString() === parent._id)
+    children: categories.filter(
+      (c) => c.parent?._id?.toString() === parent._id
+    ),
   };
 }
