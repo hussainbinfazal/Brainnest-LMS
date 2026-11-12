@@ -1,9 +1,9 @@
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
-import { User, Order, Course, checkIp, connectDB, validateMongooseId, logger, Enrollment, Payment, INIT_PAYMENT_USER_KEY, checkUser, INIT_PAYMENT_IP_KEY } from '@repo/shared/server';
-import { NextRequest, NextResponse } from 'next/server';
-import { CustomNextRequest, ISessionUser, RazorpayCreateOrderRequest } from '@/types/server';
+import { Order, Course, checkIp, connectDB, validateMongooseId, logger, Enrollment, Payment, INIT_PAYMENT_USER_KEY, checkUser, INIT_PAYMENT_IP_KEY } from '@repo/shared/server';
+import { NextResponse } from 'next/server';
+import { CustomNextRequest, ISessionUser } from '@/types/server';
 
-import { getRazorpay, ORDER_STATUS, PAYMENT_STATUS, PaymentService } from '@repo/payment';
+import { getRazorpay, ORDER_STATUS, PAYMENT_STATUS } from '@repo/payment';
 import mongoose from 'mongoose';
 import { Session } from 'next-auth';
 import { auth } from '@/auth';
@@ -14,11 +14,8 @@ const createOrderBodySchema = z.object({
 });
 
 export async function POST(request: CustomNextRequest): Promise<NextResponse> {
-
     const { allowed, retryAfterSec, ip } = await checkIp(request, INIT_PAYMENT_IP_KEY.namespace, INIT_PAYMENT_IP_KEY.max, INIT_PAYMENT_IP_KEY.windowSec);
-
     if (!allowed) return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(retryAfterSec) }, true);
-
     const authSession: Session | null = await auth()
     if (!authSession) return failResponse({ message: "Unauthorized", ip: ip }, 401, undefined, undefined, true);
 
