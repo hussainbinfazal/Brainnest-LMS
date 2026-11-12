@@ -84,7 +84,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     logger.error("Error verifying payment", { error });
     if (signatureVerified) {
       try {
-        await axios.post(`${workerUrl}/api/payment/settle-payment`, { razorpayPaymentId: paymentId });
+        await axios.post(`${workerUrl}/api/payment/settle-payment`, { razorpayPaymentId: paymentId },
+          { headers: { "x-internal-secret": internalAuthSecret }, timeout: 10_000 }
+        );
       } catch (workerError: unknown) {
         logger.error("Could not settle queue settle retry", { orderId, workerError });
       }
