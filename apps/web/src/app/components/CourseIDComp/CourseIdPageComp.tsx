@@ -128,8 +128,8 @@ export default function CourseIdPageComp({
   const setUserCourseById = useUserCourseStore(
     (state) => state.setUserCourseById
   );
-  const userCourseByCourseId = useUserCourseStore(
-    (state) => state.userCourseByCourseId
+  const fetchAllUserCoursesByUserIds = useUserCourseStore(
+    (state) => state.fetchAllUserCoursesByUserIds
   );
   const setUpdatingLike = useUserCourseStore((state) => state.setUpdatingLike);
   const setLiked = useUserCourseStore((state) => state.updateUserCourse);
@@ -224,8 +224,8 @@ export default function CourseIdPageComp({
     onSuccess: () => {
       toast.success("Payment successful! You now have access to the course.");
       void fetchUser();
-      if (courseId) {
-        void fetchUserCourseById(courseId);
+      if (user?._id) {
+        void fetchAllUserCoursesByUserIds(user._id);
       }
     },
   });
