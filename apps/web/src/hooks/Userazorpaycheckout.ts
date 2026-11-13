@@ -99,7 +99,7 @@ async function pollOrderStatus(
 }
 
 ////The main hook
-export function useRazorpayCheckout(options: UseRazorpayCheckoutOptions) {
+export function useRazorpayCheckout(options: UseRazorpayCheckoutOptions,) {
   const [status, setStatus] = useState<CCheckoutStatus>(CheckoutStatus.idle);
   ///Last Error Message
   const [error, setError] = useState<string | null>(null);

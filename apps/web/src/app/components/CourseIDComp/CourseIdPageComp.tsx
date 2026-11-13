@@ -148,6 +148,9 @@ export default function CourseIdPageComp({
   const authUserCompletedLessons = useProgressStore(
     (state) => state.completedLessonIds
   );
+  const fetchUserCourseById = useUserCourseStore(
+    (state) => state.fetchUserCourseById
+  )
   const [course, setCourse] = useState<CCourse>(initialCourse);
   const [lessons, setLessons] = useState<CLesson[] | null>(allLessons ?? []);
   const [sections, setSections] = useState<CSection[] | null>(
@@ -220,7 +223,10 @@ export default function CourseIdPageComp({
     brandName: "Brainnest-LMS",
     onSuccess: () => {
       toast.success("Payment successful! You now have access to the course.");
-      fetchUser();
+      void fetchUser();
+      if (courseId) {
+        void fetchUserCourseById(courseId);
+      }
     },
   });
   const fetchCourseProgress = useProgressStore(
@@ -503,7 +509,7 @@ export default function CourseIdPageComp({
         // that falls out of the range of 2xx
         throw new Error(
           error.response.data.message ||
-            `Payment verification failed with status ${error.response.status}`
+          `Payment verification failed with status ${error.response.status}`
         );
       } else if (error.request) {
         // The request was made but no response was received
@@ -530,6 +536,8 @@ export default function CourseIdPageComp({
       description: `Purchase: ${course.title}`,
       prefill: { name: user.name, email: user.email },
     });
+    ///fetchuserCourse 
+    // fetchUserCourseById(courseId);
 
     // // Show loading state
     // toast.loading("Processing your purchase...");
@@ -705,7 +713,7 @@ export default function CourseIdPageComp({
         initialReviews?.length &&
         allCategories.length > 0 &&
         courseCategory,
-      relevantCategoryCourses.length > 0 &&
+        relevantCategoryCourses.length > 0 &&
         instructorStats &&
         otherCoursesByInstructor &&
         initialTopic &&
@@ -885,14 +893,9 @@ export default function CourseIdPageComp({
                 size="default"
                 variant="default"
                 onClick={() => {
-                  if (!user) {
-                    router.push("/login");
-                    toast.error("Please login first");
-                    return;
-                  }
                   handleBuyNow();
                 }}
-                className="group-hover:scale-110 ease-in-out duration-400 transition-transform active:scale-90"
+                className="group-hover:scale-110 ease-in-out duration-400 transition-transform active:scale-90 cursor-pointer"
               >
                 Buy Now
               </Button>
@@ -1026,10 +1029,10 @@ export default function CourseIdPageComp({
                     {subCat.name}
                   </Link>
                 ))) || (
-                <p className="text-sm text-gray-500">
-                  No related topics found.
-                </p>
-              )}
+                  <p className="text-sm text-gray-500">
+                    No related topics found.
+                  </p>
+                )}
             </div>
           </div>
         }
@@ -1075,11 +1078,10 @@ export default function CourseIdPageComp({
                     className="w-full flex flex-col justify-between items-center relative"
                   >
                     <div
-                      className={`w-full min-h-17.5 justify-between items-center flex border-2 border-gray-300 rounded px-4 ${
-                        section._id === viewSectionId
-                          ? "rounded-b-none"
-                          : "rounded"
-                      }`}
+                      className={`w-full min-h-17.5 justify-between items-center flex border-2 border-gray-300 rounded px-4 ${section._id === viewSectionId
+                        ? "rounded-b-none"
+                        : "rounded"
+                        }`}
                     >
                       <div className="flex gap-4 flex-1">
                         {isEnrolled && (
@@ -1129,11 +1131,10 @@ export default function CourseIdPageComp({
                         (lesson: CLesson) => {
                           return (
                             <div
-                              className={`w-full min-h-25 border-2 border-t-none flex justify-between px-4 ${
-                                section._id === viewSectionId
-                                  ? "rounded-b-none"
-                                  : "rounded"
-                              }`}
+                              className={`w-full min-h-25 border-2 border-t-none flex justify-between px-4 ${section._id === viewSectionId
+                                ? "rounded-b-none"
+                                : "rounded"
+                                }`}
                             >
                               <p className="flex items-center gap-3 ">
                                 <MdOutlineOndemandVideo className="text-xl" />{" "}
@@ -1142,11 +1143,10 @@ export default function CourseIdPageComp({
                               <p className="flex items-center gap-4">
                                 {user && (
                                   <FaEye
-                                    className={`${
-                                      isLessonCompleted
-                                        ? "text-blue-500 "
-                                        : " dark:data-[state=active]:text-white"
-                                    } mr-2 cursor-pointer`}
+                                    className={`${isLessonCompleted
+                                      ? "text-blue-500 "
+                                      : " dark:data-[state=active]:text-white"
+                                      } mr-2 cursor-pointer`}
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       router.push(
@@ -1228,7 +1228,7 @@ export default function CourseIdPageComp({
                 <div className="grid-cols-6 flex-1">
                   <Carousel
                     opts={{}}
-                    setApi={() => {}}
+                    setApi={() => { }}
                     plugins={[]}
                     className="w-full"
                   >
@@ -1277,8 +1277,8 @@ export default function CourseIdPageComp({
                                         <p className="text-sm text-muted-foreground">
                                           {formatRelativeDate(
                                             review?.createdAt ||
-                                              review?.updatedAt ||
-                                              "2023-01-01T00:00:00.000Z"
+                                            review?.updatedAt ||
+                                            "2023-01-01T00:00:00.000Z"
                                           )}
                                         </p>
                                       </div>
@@ -1345,7 +1345,7 @@ export default function CourseIdPageComp({
               {coursesByInstructor.length > 0 && (
                 <div className="grid-cols-6 flex-1">
                   <Carousel
-                    setApi={() => {}}
+                    setApi={() => { }}
                     opts={{}}
                     plugins={[]}
                     className="w-full"
@@ -1386,9 +1386,9 @@ export default function CourseIdPageComp({
                                       <p className="text-sm text-muted-foreground">
                                         {courseCategory
                                           ? courseCategory?.name
-                                              .charAt(0)
-                                              .toUpperCase() +
-                                            course?.category?.name.slice(1)
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          course?.category?.name.slice(1)
                                           : ""}
                                       </p>
                                       <p className="text-sm text-muted-foreground">
@@ -1481,11 +1481,10 @@ export default function CourseIdPageComp({
                                 <FaStar
                                   size={28}
                                   key={index}
-                                  className={`cursor-pointer transition-colors ${
-                                    currentRating <= (hover || rating)
-                                      ? "text-yellow-400"
-                                      : "text-gray-300"
-                                  }`}
+                                  className={`cursor-pointer transition-colors ${currentRating <= (hover || rating)
+                                    ? "text-yellow-400"
+                                    : "text-gray-300"
+                                    }`}
                                   onClick={(): void => {
                                     field.onChange(currentRating);
                                   }}
@@ -1538,7 +1537,7 @@ export default function CourseIdPageComp({
                   loop: true,
                   dragFree: true,
                 }}
-                setApi={() => {}}
+                setApi={() => { }}
                 plugins={[
                   Autoplay({
                     delay: 2500,

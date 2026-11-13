@@ -20,6 +20,7 @@
     "@repo/shared": "workspace:*",
     "axios": "^1.21.0",
     "ioredis": "5.10.1",
+    "mongoose": "^9.12.1",
     "razorpay": "^2.9.6"
   },
   "devDependencies": {

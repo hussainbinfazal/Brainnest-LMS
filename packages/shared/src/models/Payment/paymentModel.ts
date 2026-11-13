@@ -50,7 +50,7 @@ export const paymentsSchema: Schema<IPayments> = new mongoose.Schema(
 );
 // Index that matches the sweep query and sort
 
-PaymentSchema.index({ paymentStatus: 1, reconcileCheckedAt: 1, createdAt: 1 });
+paymentsSchema.index({ paymentStatus: 1, reconcileCheckedAt: 1, createdAt: 1 });
 const Payment: Model<IPayments> =
   mongoose.models.Payment ||
   mongoose.model<IPayments>('Payment', paymentsSchema);

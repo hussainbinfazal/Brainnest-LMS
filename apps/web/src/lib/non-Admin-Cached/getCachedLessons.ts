@@ -18,17 +18,33 @@ export async function getLessonsByIdWithCache(
 ): Promise<CLesson[]> {
   await connectDB(process.env.MONGODB_URI!);
   try {
-    const cached = await getCached<CLesson[]>(
+    const cached = await getCached<CLesson[] | string>(
       LESSONS_BY_COURSE.namespace,
       courseId
     );
-    if (cached) return cached;
+    if (Array.isArray(cached)) return cached;
+    if (typeof cached === "string") {
+      try {
+        const parsed: unknown = JSON.parse(cached);
+        if (Array.isArray(parsed)) return parsed;
+        logger.warn("Ignoring invalid cached lessons", { courseId });
+      } catch (error: unknown) {
+        logger.warn(
+          "Unable to parse cached lessons; refreshing from database",
+          {
+            courseId,
+            error,
+          }
+        );
+      }
+    }
+
     const lessons: ILesson[] = await Lesson.find({ courseId }).lean().exec();
     const serialized = serializeLessons(lessons);
     await setCached(
       LESSONS_BY_COURSE.namespace,
       courseId,
-      JSON.stringify(serialized),
+      serialized,
       CACHE_TTL.MEDIUM
     );
     return serialized;

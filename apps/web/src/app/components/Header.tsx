@@ -58,7 +58,8 @@ export default function Header({
   const [chatAlreadyExists, setChatAlreadyExists] = useState<boolean>(false);
   const [cartItemsCount, setCartItemsCount] = useState<number>(0);
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-
+  const role = sessionUser?.role ?? authUser?.role
+  const isInstructor = role === USER_ROLE.INSTRUCTOR
   const handleLogout = async (): Promise<void> => {
     setIsLoggingOut(true);
     await signOut();
@@ -137,7 +138,7 @@ export default function Header({
             color={theme === "dark" ? "#ffff3f" : "#2196f3"}
             width="100%"
             height="3px"
-            // className="dark:bg-[#ffff3f]"
+          // className="dark:bg-[#ffff3f]"
           />
         </div>
       )}
@@ -202,13 +203,13 @@ export default function Header({
               {sessionUser
                 ? sessionUser?.role === USER_ROLE.INSTRUCTOR
                 : authUser?.role === USER_ROLE.INSTRUCTOR && (
-                    <Link
-                      href={`/myprofile`}
-                      className="px-4 hover:underline underline-offset-4"
-                    >
-                      Instructor
-                    </Link>
-                  )}
+                  <Link
+                    href={`/myprofile`}
+                    className="px-4 hover:underline underline-offset-4"
+                  >
+                    Instructor
+                  </Link>
+                )}
             </nav>
 
             <div className="flex items-center gap-4">
@@ -270,13 +271,12 @@ export default function Header({
                 {isMenuOpen && (
                   <div ref={menuRef}>
                     <Card
-                      className={`menu absolute top-2 right-5 ${
-                        chatAlreadyExists
+                      className={`menu absolute top-2 right-5 ${chatAlreadyExists
                           ? "min-h-45"
                           : sessionUser
                             ? "min-h-38"
                             : " min-h-10"
-                      }  w-40 z-70`}
+                        }  w-40 z-70`}
                     >
                       <CardContent className="flex flex-col gap-3 items-center justify-center">
                         {session?.user && (

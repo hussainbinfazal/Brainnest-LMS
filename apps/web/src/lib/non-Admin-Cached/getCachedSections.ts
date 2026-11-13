@@ -20,17 +20,33 @@ export async function getSectionsByIdWithCache(
 ): Promise<CSection[]> {
   await connectDB(process.env.MONGODB_URI!);
   try {
-    const cached = await getCached<CSection[]>(
+    const cached = await getCached<CSection[] | string>(
       SECTIONS_BY_COURSE.namespace,
       courseId
     );
-    if (cached) return cached;
+    if (Array.isArray(cached)) return cached;
+    if (typeof cached === "string") {
+      try {
+        const parsed: unknown = JSON.parse(cached);
+        if (Array.isArray(parsed)) return parsed;
+        logger.warn("Ignoring invalid cached sections", { courseId });
+      } catch (error: unknown) {
+        logger.warn(
+          "Unable to parse cached sections; refreshing from database",
+          {
+            courseId,
+            error,
+          }
+        );
+      }
+    }
+
     const sections: ISection[] = await Section.find({ courseId }).lean().exec();
     const serialized = serializeSections(sections);
     await setCached(
       SECTIONS_BY_COURSE.namespace,
       courseId,
-      JSON.stringify(serialized),
+      serialized,
       CACHE_TTL.MEDIUM
     );
     return serialized;

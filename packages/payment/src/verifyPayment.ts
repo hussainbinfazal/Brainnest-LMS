@@ -7,7 +7,7 @@ import {
   brainnestHandlers,
   verifyCheckoutSignature,
 } from '@repo/payment';
-import { Payment, PaymentDocument, logger } from '@repo/shared/server';
+import { AUTH_USER, Payment, PaymentDocument, USER_COURSE_DETAIL, USER_COURSE_LIST, invalidateCached, logger } from '@repo/shared/server';
 import mongoose, { ClientSession, Types } from 'mongoose';
 
 // Error that carries an HTTP status for the route to use
@@ -28,6 +28,7 @@ export async function settlePayment(
 ): Promise<SettleOutcome> {
   const session = await mongoose.startSession();
   let outcome: SettleOutcome = 'already_settled';
+  let userCourseCacheKey: string | null = null;
   const {
     razorpayOrderId,
     razorpayPaymentId,
@@ -51,6 +52,10 @@ export async function settlePayment(
       if (!existingPayment) {
         outcome = 'not_found';
         return;
+      }
+
+      if (existingPayment.paymentOnModel === 'Course') {
+        userCourseCacheKey = `${existingPayment.paymentBy.toString()}-${existingPayment.paymentOf.toString()}`;
       }
 
       if (Math.round(existingPayment.amount * 100) !== amountInPaise) {
@@ -95,6 +100,18 @@ export async function settlePayment(
       await handler.fulfill({ payment, session });
       outcome = 'settled';
     });
+    if (userCourseCacheKey) {
+      await Promise.all([
+        invalidateCached(
+          USER_COURSE_DETAIL.namespace,
+          userCourseCacheKey,
+        ),
+        invalidateCached(AUTH_USER.namespace,
+          paymentBy),
+
+        invalidateCached(USER_COURSE_LIST.namespace, paymentBy)
+      ])
+    }
     logger.info('Settled payment with id: ', { ...input, outcome });
     return outcome;
   } finally {

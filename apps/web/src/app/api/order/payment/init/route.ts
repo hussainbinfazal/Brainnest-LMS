@@ -98,7 +98,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
         true
       );
 
-    await connectDB(process.env.MONGDB_URI!);
+    await connectDB(process.env.MONGODB_URI!);
 
     const [course, alreadyPurchased] = await Promise.all([
       Course.findById(courseId).select("title price").lean().exec(),
