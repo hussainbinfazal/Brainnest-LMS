@@ -224,8 +224,9 @@ export default function CourseIdPageComp({
     onSuccess: () => {
       toast.success("Payment successful! You now have access to the course.");
       void fetchUser();
-      if (user?._id) {
-        void fetchAllUserCoursesByUserIds(user._id);
+      if (user?._id && courseId) {
+        void fetchUserCourseById(courseId, user._id);
+        // void fetchAllUserCoursesByUserIds(user._id);
       }
     },
   });
@@ -776,6 +777,8 @@ export default function CourseIdPageComp({
               alt=""
               src={course?.coverImage ? course?.coverImage : ""}
               fill
+              loading="eager"
+              sizes="(min-width: 1024px) 60vw, (min-width: 768px) 70vw, 90vw"
               className="rounded-lg"
             />
           </div>

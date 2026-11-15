@@ -112,6 +112,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     ]);
 
     if (!course) {
+      console.error("Course or user not found")
       return failResponse(
         { message: "Course or user not found" },
         404,
@@ -121,6 +122,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
       );
     }
     if (alreadyPurchased) {
+      console.error("This course is already purchased")
       return failResponse(
         {
           message: "Course already purchased",
@@ -135,6 +137,7 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     ////Check with classes
     const price: number = Number(course.price);
     if (!Number.isFinite(price) || price <= 0) {
+      console.log("Invalid Course Price", price);
       return failResponse(
         { message: "Invalid course price" },
         400,

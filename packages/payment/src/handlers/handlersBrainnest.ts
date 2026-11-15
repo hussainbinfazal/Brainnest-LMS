@@ -102,7 +102,8 @@ export const brainnestHandlers: PaymentHandlers = {
                         update: {
                             $set: {
                                 userId: payment.paymentBy,
-                                isEnrolledAt: true,
+                                enrolledAt: new Date(),
+                                isEnrolled: true,
                             },
                         },
                         upsert: true,

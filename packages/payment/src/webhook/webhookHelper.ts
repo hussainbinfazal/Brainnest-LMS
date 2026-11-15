@@ -6,8 +6,11 @@ import { PAYMENT_SOURCE } from '../payment.constant';
 
 export async function handleRazorypayWebhook(
   req: { rawBody: string; signature: string | null },
-  userId: string,
 ): Promise<{ status: number }> {
+  console.log('handleRazorypayWebhook & This is the secret in the razorpaywebhook', {
+    secret: process.env.RAZORPAY_WEBHOOK_SECRET,
+    req: req
+  });
   if (!req.signature || !verifyWebhookSignature(req.rawBody, req.signature)) {
     return { status: 400 };
   }
@@ -20,12 +23,12 @@ export async function handleRazorypayWebhook(
     // Razorpay payment nested structure
     const entity = event.payload?.payment?.entity;
     //Signed but malformed: acknowledge so Razorpay stops retrying
-    if (entity?.order_id || !entity?.id) return { status: 200 };
+    if (!entity?.order_id || !entity?.id) return { status: 200 };
     const jobData = {
       razorpayOrderId: entity.order_id,
       razorpayPaymentId: entity.id,
       paymentMethod: entity.method,
-      paymentBy: userId,
+      // paymentBy: userId,
       amount: entity.amount,
       error: entity.error,
       source: 'webhook',
@@ -58,10 +61,12 @@ export async function handleRazorypayWebhook(
         { headers: { 'x-internal-secret': internalSecret }, timeout: 10_000 },
       );
     } catch (workerError) {
+      console.error("Error in worker route")
       logger.error('Failed to send settle job to worker', { workerError });
       throw new Error();
     }
   } else {
+    console.error("This the error in webhook helper", event.event)
     logger.error('Ignored Razorpay event', { event: event.event });
   }
   return { status: 200 };
