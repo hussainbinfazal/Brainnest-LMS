@@ -12,6 +12,40 @@ import { embeddings } from '../Embeddings/embeddings';
 
 const result = configDotenv({ path: './.env' });
 
+// Import the native driver's collection type
+import type { Collection } from 'mongodb';
+
+// Create the vector index only when it does not exist yet
+export async function ensureVectorIndex(
+  // Collection that holds the lesson chunks
+  collection: Collection,
+): Promise<void> {
+  // Name your vector store already asks for
+  const name = 'vector-index';
+  // Look up an existing index with this name
+  const existing = await collection.listSearchIndexes(name).toArray();
+  // Stop here if it already exists, because creating twice throws an error
+  if (existing.length > 0) return;
+  // Create the vector index with the filter fields at the top level
+  await collection.createSearchIndex({
+    // Index name used by getVectorStore
+    name,
+    // Tell MongoDB this is a vector index
+    type: 'vectorSearch',
+    // Describe the vector field and the filter fields
+    definition: {
+      fields: [
+        // Vector field; all-MiniLM-L6-v2 produces 384 dimensions
+        { type: 'vector', path: 'embedding', numDimensions: 384, similarity: 'cosine' },
+        // Fields used by preFilter must be declared here
+        { type: 'filter', path: 'userId' },
+        { type: 'filter', path: 'uploadId' },
+        { type: 'filter', path: 'lessonId' },
+        { type: 'filter', path: 'courseId' },
+      ],
+    },
+  });
+}
 // This is prod with mongo db atlas search
 // export async function getVectorStore(): Promise<MongoDBAtlasVectorSearch> {
 //     await connectDB(process.env.MONGODB_URI!);
@@ -35,7 +69,7 @@ export async function getVectorStore(): Promise<MongoDBAtlasVectorSearch> {
   await client.connect();
   const db = client.db('LMS');
   const collection = db.collection('documents');
-
+  await ensureVectorIndex(collection); //To create filter in the db on start up
   return new MongoDBAtlasVectorSearch(embeddings, {
     collection,
     indexName: 'vector-index',
@@ -57,6 +91,19 @@ export async function addChunks(
   await vectorStore.addDocuments(docs);
 }
 
+// export async function deleteChunks(
+//   uploadId: string,
+//   userId: string,
+// ): Promise<void> {
+//   await client.connect();
+//   await client
+//     .db('LMS')
+//     .collection('documents')
+//     .deleteMany({
+//       "metadata.uploadId": uploadId,
+//       "metadata.userId": userId
+//     });
+// }
 export async function deleteChunks(
   uploadId: string,
   userId: string,
@@ -66,7 +113,7 @@ export async function deleteChunks(
     .db('LMS')
     .collection('documents')
     .deleteMany({
-      "metadata.uploadId": uploadId,
-      "metadata.userId": userId
+      uploadId,
+      userId
     });
 }
