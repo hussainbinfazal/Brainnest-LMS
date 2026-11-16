@@ -11,7 +11,6 @@ import {
   failResponse,
   successResponse,
 } from "@/lib/helpers/failResponseHelper";
-import { auth } from "@/auth";
 
 type RazorpayWebhookEvent = {
   event?: string;
@@ -29,6 +28,8 @@ export async function POST(
 ): Promise<NextResponse> {
   logger.info("Razorpay webhook received");
   const rawBody = await request.text();
+  const event = JSON.parse(rawBody) as RazorpayWebhookEvent;
+  const razorpayOrderId = event.payload?.payment?.entity?.order_id;
   const signature = request.headers.get("x-razorpay-signature");
   console.log("This is the signature on api/webhooks route", signature);
   // if (!signature || !verifyWebhookSignature(rawBody, signature)) {
@@ -59,29 +60,30 @@ export async function POST(
   //   );
   // }
 
-  // await connectDB(process.env.MONGODB_URI);
-  // const payment = await Payment.findOne({ razorpayOrderId })
-  //   .select("paymentBy")
-  //   .lean()
-  //   .exec();
-  // if (!payment?.paymentBy) {
-  //   logger.error("No local payment found for Razorpay order", {
-  //     razorpayOrderId,
-  //   });
-  //   return failResponse(
-  //     {
-  //       message: "No local payment found for Razorpay order",
-  //       razorpayOrderId,
-  //     },
-  //     500,
-  //     undefined,
-  //     undefined,
-  //     true
-  //   );
-  // }
+  await connectDB(process.env.MONGODB_URI);
+  const payment = await Payment.findOne({ razorpayOrderId })
+    .select("paymentBy")
+    .lean()
+    .exec();
+  if (!payment?.paymentBy) {
+    logger.error("No local payment found for Razorpay order", {
+      razorpayOrderId,
+    });
+    return failResponse(
+      {
+        message: "No local payment found for Razorpay order",
+        razorpayOrderId,
+      },
+      500,
+      undefined,
+      undefined,
+      true
+    );
+  }
 
   const result = await handleRazorypayWebhook(
     { rawBody, signature },
+    payment.paymentBy
   );
   if (result.status >= 400) {
     return failResponse(

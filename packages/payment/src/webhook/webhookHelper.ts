@@ -6,6 +6,7 @@ import { PAYMENT_SOURCE } from '../payment.constant';
 
 export async function handleRazorypayWebhook(
   req: { rawBody: string; signature: string | null },
+  userId: string
 ): Promise<{ status: number }> {
   console.log('handleRazorypayWebhook & This is the secret in the razorpaywebhook', {
     secret: process.env.RAZORPAY_WEBHOOK_SECRET,
@@ -28,7 +29,7 @@ export async function handleRazorypayWebhook(
       razorpayOrderId: entity.order_id,
       razorpayPaymentId: entity.id,
       paymentMethod: entity.method,
-      // paymentBy: userId,
+      paymentBy: userId,
       amount: entity.amount,
       error: entity.error,
       source: 'webhook',
