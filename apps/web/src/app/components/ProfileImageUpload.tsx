@@ -60,6 +60,7 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({
   const startPosRef = useRef<{ x: number; y: number }>(null);
   const [flipX, setFlipX] = useState(false);
   const [flipY, setFlipY] = useState(false);
+  const { upload } = useFileUploadField();
   //Decoded image is cached here once per upload instead of being re-created with new Image() on every wheel tick/drag end.
   const decodedImgRef = useRef<HTMLImageElement | null>(null);
   // Latest cropped output, kept as a Blob (not base64) so Save can hand it
@@ -191,7 +192,6 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({
       const file = new File([croppedBlobRef.current], "profile.jpg", {
         type: "image/jpeg",
       }); ///Create file from the cropped blob
-      const { upload } = useFileUploadField();
       const result = await upload(file, "avatar"); //Upload file to cloudinary
       if (!result) {
         throw new Error("Upload failed. Please try again.");
@@ -485,39 +485,37 @@ function ProfileImageUpload<TFieldValues extends FieldValues>({
             </button>
           </div>
 
-          {fileUploadStats !== "uploaded" && (
+          <div
+            ref={containerRef}
+            className="relative overflow-hidden w-full h-64 dark:bg-black bg-gray-100 rounded-md cursor-move border-2 border-gray-300 dark:border-neutral-700"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onWheel={handleWheel}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <div
-              ref={containerRef}
-              className="relative overflow-hidden w-full h-64 dark:bg-black bg-gray-100 rounded-md cursor-move border-2 border-gray-300 dark:border-neutral-700"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onWheel={handleWheel}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${flipX ? -scale : scale}, ${flipY ? -scale : scale}) rotate(${rotation}deg)`,
+                transformOrigin: "center",
+              }}
             >
-              <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                style={{
-                  transform: `translate(${position.x}px, ${position.y}px) scale(${flipX ? -scale : scale}, ${flipY ? -scale : scale}) rotate(${rotation}deg)`,
-                  transformOrigin: "center",
-                }}
-              >
-                <img
-                  ref={imageRef}
-                  src={image}
-                  alt="Upload"
-                  className="block max-w-full max-h-full object-contain"
-                />
-              </div>
-
-              {/* Circular overlay to show crop area */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-32 h-32 rounded-full border-2 border-white shadow-inner bg-transparent opacity-80"></div>
-              </div>
+              <img
+                ref={imageRef}
+                src={image}
+                alt="Upload"
+                className="block max-w-full max-h-full object-contain"
+              />
             </div>
-          )}
+
+            {/* Circular overlay to show crop area */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-32 h-32 rounded-full border-2 border-white shadow-inner bg-transparent opacity-80"></div>
+            </div>
+          </div>
         </div>
       )}
 
