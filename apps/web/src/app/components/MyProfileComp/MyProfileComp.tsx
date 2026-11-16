@@ -22,20 +22,33 @@ import { toast } from "sonner";
 import { logger } from "@repo/shared/server";
 import { validateEmail, validatePhoneNumber } from "@/utils/phoneValidators";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { CAuthUser, CCourse, CLesson } from "@/types/client";
+import { CAuthUser, CCourse, CLesson, CUserCourse } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
 import { USER_ROLE } from "@repo/shared";
+import { useSession } from "next-auth/react";
+import { convertToTotalHours, formatRatingNumber } from "@/utils/timeFormat";
 
-export const MyProfilePageComp = (): JSX.Element => {
+
+export type MyProfilePageProps = {
+  completedCourseIds: string[] | [];
+  pendingCourseIds: string[] | [];
+  enrolledUserCourses: CUserCourse[] | [];
+  coursesUserEnrolled: CCourse[] | [];
+  className?: string;
+};
+export const MyProfilePageComp = ({ completedCourseIds, pendingCourseIds, enrolledUserCourses, coursesUserEnrolled, className }: MyProfilePageProps): JSX.Element => {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const authUser: CAuthUser | null = useAuthStore((state) => state.authUser);
-  const setAuthUser = useAuthStore((state) => state.setAuthUser);
-  const fetchCourses = useCourseStore((state) => state.fetchCourses);
-  const { fetchUser } = useAuthStore();
+  // const setAuthUser = useAuthStore((state) => state.setAuthUser);
+  const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser);
+  // const fetchCourses = useCourseStore((state) => state.fetchCourses);
+  const [enrolledCourses, setEnrolledCourses] = useState<CUserCourse[]>(enrolledUserCourses);
+  const [coursesEnrolled, setCoursesEnrolled] = useState<CCourse[]>(coursesUserEnrolled);
+  const completedCourses = completedCourseIds.length;
+  const pendingCourses = pendingCourseIds.length;
   const [loading, setLoading] = useState<boolean>(true);
-  const [completedCourses, setCompletedCourses] = useState<number>(0);
   const [completedLessons, setCompletedLessons] = useState<number>(0);
-  const [pendingCourses, setPendingCourses] = useState<number>(0);
   const [pendingLessons, setPendingLessons] = useState<number>(0);
   const [viewPassword, setViewPassword] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string | null>("");
@@ -45,95 +58,53 @@ export const MyProfilePageComp = (): JSX.Element => {
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
-  const userId = authUser?._id;
-  const completedCourseOfUser = (): void => {
-    // Use the completedCourses field directly from user data
-    const completedCoursesCount: number =
-      authUser?.completedCourses?.length || 0;
-    const enrolledCoursesCount: number = authUser?.enrolledCourses?.length || 0;
-    const pendingCoursesCount: number =
-      enrolledCoursesCount - completedCoursesCount;
-
-    setCompletedCourses(completedCoursesCount);
-    setPendingCourses(pendingCoursesCount);
-
-    // For lessons, we still need to check the courses if available
-    if (courses.length > 0) {
-      let completedLessons = 0;
-      let pendingLessons = 0;
-
-      courses.forEach((course: CCourse) => {
-        const isEnrolled = authUser?.enrolledCourses?.some(
-          (enrolledId) => enrolledId.toString() === course._id.toString()
-        );
-        if (!isEnrolled) return;
-
-        course.lessons?.forEach((lesson: CLesson) => {
-          if (lesson.status === "completed") {
-            completedLessons++;
-          } else {
-            pendingLessons++;
-          }
-        });
-      });
-
-      setCompletedLessons(completedLessons);
-      setPendingLessons(pendingLessons);
-    }
-  };
+  const userId = authUser?._id ?? session?.user.id;
 
   const filteredCourses: CCourse[] =
     searchTerm?.trim() === ""
-      ? courses.filter((course: CCourse) =>
-          authUser?.enrolledCourses?.includes(course._id)
-        )
-      : courses.filter((course: CCourse) => {
-          const isEnrolled = authUser?.enrolledCourses?.includes(course._id);
-          if (!isEnrolled) return false;
+      ? coursesUserEnrolled
+      : coursesUserEnrolled.filter((course: CCourse) => {
+        const title: string = course.title?.toLowerCase() || "";
+        const instructorName: string =
+          course.instructorId?.name?.toLowerCase() || "";
+        const term = searchTerm?.toLowerCase() || null;
 
-          const title: string = course.title?.toLowerCase() || "";
-          const instructorName: string =
-            course.instructorId?.name?.toLowerCase() || "";
-          const term = searchTerm?.toLowerCase() || null;
+        return (
+          title.includes(term ?? "") || instructorName.includes(term ?? "")
+        );
+      });
 
-          return (
-            title.includes(term ?? "") || instructorName.includes(term ?? "")
-          );
-        });
-  const lessonProgress = (course: CCourse) => {
-    const totalLessons: number = course?.lessons?.length || 0;
-    const completedLessons: number =
-      course?.lessons?.filter((lesson) => lesson.status === "completed")
-        .length || 0;
-    const progressPercentage: number =
-      totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
-    return Number(progressPercentage.toFixed(2));
-  };
+  // function formatRatingNumber(num: number): string {
+  //   if (num >= 1_000_000) {
+  //     return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  //   } else if (num >= 1_000) {
+  //     return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  //   } else {
+  //     return num.toString();
+  //   }
+  // }
+  // function convertToTotalHours(timeStr: string | number): number {
+  //   const parts = timeStr.toString().split(":").map(Number);
 
-  function formatRatingNumber(num: number): string {
-    if (num >= 1_000_000) {
-      return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-    } else if (num >= 1_000) {
-      return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
-    } else {
-      return num.toString();
-    }
+  //   let hours: number = 0;
+  //   if (parts.length === 3) {
+  //     hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
+  //   } else if (parts.length === 2) {
+  //     hours = parts[0] / 60 + parts[1] / 3600;
+  //   } else if (parts.length === 1) {
+  //     hours = parts[0] / 3600;
+  //   }
+
+  //   return parseFloat(hours?.toFixed(2)); // rounded to 2 decimals
+  // }
+
+  function getProgress(courseId: string): number {
+    if (!courseId) throw new Error("Course Id is required");
+    const userCourseProgress = enrolledCourses.find(
+      (uc) => uc.courseId === courseId
+    );
+    return userCourseProgress?.progress ?? 0;
   }
-  function convertToTotalHours(timeStr: string | number): number {
-    const parts = timeStr.toString().split(":").map(Number);
-
-    let hours: number = 0;
-    if (parts.length === 3) {
-      hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
-    } else if (parts.length === 2) {
-      hours = parts[0] / 60 + parts[1] / 3600;
-    } else if (parts.length === 1) {
-      hours = parts[0] / 3600;
-    }
-
-    return parseFloat(hours?.toFixed(2)); // rounded to 2 decimals
-  }
-
   const sendEmail = async (): Promise<void> => {
     try {
       const response = await axios.post("/api/users/sendEmail", {
@@ -148,15 +119,6 @@ export const MyProfilePageComp = (): JSX.Element => {
     }
   };
   const handleUpdateUserInfo = async (): Promise<void> => {
-    const emailError: string | null = validateEmail(email);
-    const phoneError: string | null | number = validatePhoneNumber(
-      phoneNumber.toString()
-    );
-
-    if (emailError || phoneError) {
-      toast.error(emailError || phoneError); // Show the error message to the user
-      return;
-    }
     try {
       const userData = {
         phoneNumber: phoneNumber,
@@ -167,7 +129,7 @@ export const MyProfilePageComp = (): JSX.Element => {
       const response = await axios.put(`/api/users/${userId}`, { userData });
       const data = await response.data;
       // console.log("Updated Data", data);
-      fetchUser();
+      await fetchAuthUser();
       toast.success("Profile updated successfully");
     } catch (error: any) {
       throw error;
@@ -176,30 +138,12 @@ export const MyProfilePageComp = (): JSX.Element => {
   useEffect(() => {
     if (authUser) {
       // console.log('AuthUser in useEffect:', authUser);
-      completedCourseOfUser();
       setLoading(false);
-      setName(authUser?.name || "");
-      setEmail(authUser?.email || "");
-      setPhoneNumber(authUser?.phoneNumber || "");
-      setPassword(authUser?.password || "");
+      setName(authUser.name);
+      setEmail(authUser.email);
+      if (authUser.phoneNumber) setPhoneNumber(authUser?.phoneNumber);
     }
-  }, [authUser, courses]);
-
-  useEffect(() => {
-    // Fetch full user data when component mounts
-    if (!authUser) {
-      fetchUser();
-      logger.debug("Fetching user data...");
-    }
-  }, []);
-  useEffect(() => {
-    const timer: NodeJS.Timeout = setTimeout((): void => {
-      fetchCourses();
-      fetchUser();
-    }, 150);
-
-    return () => clearTimeout(timer);
-  }, []);
+  }, [authUser]);
   return (
     <div className="min-h-screen w-full flex flex-col justify-start items-center gap-4 py-6 relative pt-1">
       {loading && (
@@ -254,14 +198,14 @@ export const MyProfilePageComp = (): JSX.Element => {
               {loading ? (
                 <Skeleton className="h-4 w-10" />
               ) : (
-                authUser?.enrolledCourses?.length || 0
+                coursesEnrolled?.length || 0
               )}
             </span>
             <span className="text-sm">
               {loading ? <Skeleton className="h-4 w-8" /> : "courses"}
             </span>
           </span>
-          <Separator orientation="vertical" className="!h-[25px]  !w-[2px]" />
+          <Separator orientation="vertical" className="h-6.25!  w-0.5!" />
           <span className="flex flex-col justify-center items-center w-auto p-6 h-full">
             <span className="text-2xl font-semibold">
               {loading ? <Skeleton className="h-4 w-10" /> : completedCourses}
@@ -270,7 +214,7 @@ export const MyProfilePageComp = (): JSX.Element => {
               {loading ? <Skeleton className="h-4 w-8" /> : "completed"}
             </span>
           </span>
-          <Separator orientation="vertical" className="!h-[25px]  !w-[2px]" />
+          <Separator orientation="vertical" className="h-6.25!  w-0.5!" />
           <span className="flex flex-col justify-center items-center w-auto p-6 h-full">
             <span className="text-2xl font-semibold">
               {loading ? <Skeleton className="h-4 w-10" /> : pendingLessons}
@@ -279,7 +223,7 @@ export const MyProfilePageComp = (): JSX.Element => {
               {loading ? <Skeleton className="h-4 w-8" /> : "pending lessons"}
             </span>
           </span>
-          <Separator orientation="vertical" className="!h-[25px]  !w-[2px]" />
+          <Separator orientation="vertical" className="h-6.25!  w-0.5!" />
           <span className="flex flex-col justify-center items-center w-auto p-6 h-full">
             <span className="text-2xl font-semibold">
               {loading ? <Skeleton className="h-4 w-10" /> : pendingCourses}
@@ -408,7 +352,7 @@ export const MyProfilePageComp = (): JSX.Element => {
                   >
                     <Card
                       key={course?._id}
-                      className="w-full h-[280px] my-2 relative pt-0 pb-3 rounded-sm"
+                      className="w-full h-70px my-2 relative pt-0 pb-3 rounded-sm"
                     >
                       <CardContent className="h-3/5 max-h-3/5 w-full flex justify-center relative p-0">
                         {course?.coverImage ? (
@@ -423,34 +367,34 @@ export const MyProfilePageComp = (): JSX.Element => {
                             </div>
                             <div className="absolute -bottom-1 left-0 w-full z-0">
                               <Progress
-                                value={lessonProgress(course)}
+                                value={getProgress(course._id)}
                                 className="rounded-none bg-green-500 "
                               />
                             </div>
                           </>
                         ) : (
-                          <Skeleton className="w-full h-[150px]" />
+                          <Skeleton className="w-full h-37.5" />
                         )}
                       </CardContent>
                       <CardFooter className={"h-2/5 z-7"}>
                         <div className="w-full flex flex-col flex-1 items-start justify-center gap-2">
-                          <p className="capitalize text-lg font-semibold break-words leading-snug">
+                          <p className="capitalize text-lg font-semibold wrap-break-words leading-snug">
                             {course.title}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {course?.instructor?.name}
+                            {course?.instructorId?.name}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             ₹{parseInt(String(course?.price || 0))}
                           </p>
                           <div className="flex gap-2">
                             <Badge className="" variant="outline">
-                              {course?.rating &&
-                                formatRatingNumber(course.rating)}
+                              {course?.averageRating &&
+                                formatRatingNumber(course.averageRating)}
                             </Badge>
                             <Badge className="flex gap-2" variant="outline">
-                              {course?.duration &&
-                                convertToTotalHours(course.duration)}{" "}
+                              {course?.totalDurationInSeconds &&
+                                convertToTotalHours(course.totalDurationInSeconds)}{" "}
                               hours
                             </Badge>
                           </div>

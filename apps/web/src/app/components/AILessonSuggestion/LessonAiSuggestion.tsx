@@ -148,7 +148,7 @@ export function LessonAiSuggestion({
       <Button
         type="button"
         variant="outline"
-        className="text-sm"
+        className="text-sm transition-transform duration-150 ease-out active:scale-95 motion-reduce:transition-none"
         onClick={requestDraft}
       >
         Generate AI suggestion

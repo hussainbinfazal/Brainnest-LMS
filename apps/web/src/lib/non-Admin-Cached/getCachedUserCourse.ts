@@ -78,7 +78,7 @@ export async function getUserCourseByIdWithCache(
 
 export async function getAllUserCourseByIdWithCache(
   userId: string
-): Promise<CUserCourse[] | []> {
+): Promise<CUserCourse[]> {
   try {
     await connectDB(process.env.MONGODB_URI!);
     const cached = await getCached<CUserCourse[]>(
@@ -94,7 +94,7 @@ export async function getAllUserCourseByIdWithCache(
     }
 
     const authUserCourse: IUserCourse[] | null = await userCourse
-      .find({ userId: userId })
+      .find({ userId: userId }).sort({ createdAt: -1 })
       .lean()
       .exec();
     if (!authUserCourse) {

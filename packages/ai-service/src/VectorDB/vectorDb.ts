@@ -65,5 +65,8 @@ export async function deleteChunks(
   await client
     .db('LMS')
     .collection('documents')
-    .deleteMany({ uploadId, userId });
+    .deleteMany({
+      "metadata.uploadId": uploadId,
+      "metadata.userId": userId
+    });
 }
