@@ -1,7 +1,7 @@
 
 import { auth } from "@/auth";
 import { failResponse } from "@/lib/helpers/failResponseHelper";
-import { buildKey, checkIp, checkUser, getRedisClient, logger, PASSWORD_RESET_TOKEN, PASSWORD_RESET_USER, VERIFY_RESET_EMAIL_IP_KEY } from "@repo/shared/server";
+import { buildKey, checkIp, checkUser, getRedisClient, logger, PASSWORD_RESET_TOKEN, PASSWORD_RESET_USER, setCached, USER_EMAIL_VERIFIED_FLAG, VERIFY_RESET_EMAIL_IP_KEY } from "@repo/shared/server";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
@@ -49,6 +49,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     }
     // token is valid, so clear the pending pointer (a single call, no need to read it first)
     await redis.del(userRedisKey);
+    await setCached(USER_EMAIL_VERIFIED_FLAG.namespace, userId, "1", 15 * 60);
     // null means invalid, expired, or already used
     // if (!resetUserId) return failResponse({ message: "Invalid or expired link" }, 400);
     return failResponse({ success: true, message: "Email Verified Successfully" }, 200, undefined, undefined, true);

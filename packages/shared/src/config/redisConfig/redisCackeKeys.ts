@@ -524,6 +524,13 @@ export const PASSWORD_RESET_TOKEN = {
   description: 'To get reset token status ',
   usedIn: ['Password reset API token'],
 };
+export const USER_EMAIL_VERIFIED_FLAG = {
+  namespace: 'user-email-verified',
+  id: 'userId',
+  ttl: 'MEDIUM', //15 minutes
+  description: 'To get reset password email status ',
+  usedIn: ['Password reset API email status'],
+};
 
 
 /**
