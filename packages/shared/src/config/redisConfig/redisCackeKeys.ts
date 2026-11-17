@@ -510,6 +510,21 @@ export const COURSE_EXISTS = {
   description: 'To get transcription status for a lesson',
   usedIn: ['Transcription Status API'],
 };
+export const PASSWORD_RESET_USER = {
+  namespace: 'pwreset:user',
+  id: 'userId',
+  ttl: 'MEDIUM', //15 minutes
+  description: 'To get reset token status of the user',
+  usedIn: ['Password reset API'],
+};
+export const PASSWORD_RESET_TOKEN = {
+  namespace: 'pwreset:token',
+  id: 'token',
+  ttl: 'MEDIUM', //15 minutes
+  description: 'To get reset token status ',
+  usedIn: ['Password reset API token'],
+};
+
 
 /**
  * Queue Names (Used in apps/Worker/src/queue/)

@@ -4,33 +4,36 @@ import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
-import { logger } from "@repo/shared/server";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
-const page = (): JSX.Element => {
+const VerifyEmailPage = async (): Promise<JSX.Element> => {
   const [token, setToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const paramsToken = useSearchParams().get("token");
+  const { data: session, status } = useSession();
+  const authUser = useAuthStore((state) => state.authUser);
   const [emailverified, setEmailVerified] = useState<boolean>(false);
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
-  const authUser = useAuthStore((state) => state.authUser);
 
-  let userId = authUser?._id || authUser?.id;
+  let userId = authUser?._id ?? session?.user.id;
   const verifyEmail = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/api/users/verifyemail", {
+      const response = await axios.post("/api/users/verifyResetEmail", {
         token,
         userId,
       });
       // logger.info({ data: response.data }, "verifyEmail response");
       setEmailVerified(true);
-    } catch (error) {
+    } catch (error: unknown) {
       // logger.error(error);
       setEmailVerified(false);
+      toast.error("Something went wrong while verifying email");
       throw error;
     } finally {
       setLoading(false);
@@ -51,7 +54,7 @@ const page = (): JSX.Element => {
     <div className="flex flex-col items-center justify-center min-h-screen">
       <div className="w-[70%] h-full flex flex-col items-center justify-center">
         {loading ? (
-          <Skeleton className="w-[200px] h-[250px]" />
+          <Skeleton className="w-50 h-62.5" />
         ) : emailverified ? (
           <>
             <h1 className="text-2xl font-bold text-gray-600">
@@ -78,4 +81,4 @@ const page = (): JSX.Element => {
   );
 };
 
-export default page;
+export default VerifyEmailPage;

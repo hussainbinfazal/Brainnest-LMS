@@ -99,6 +99,25 @@ export async function setCached<T>(
     // fail silently — a cache write failure shouldn't break the request
   }
 }
+export async function setUpsertCached<T extends object>(
+  namespace: string,
+  id: string | number,
+  value: T,
+  ttlSeconds: number = CACHE_TTL.MEDIUM,
+): Promise<void> {
+  // if (USE_MEMORY || redisIsDown()) return memSet(buildKey(namespace, id), value, memTtlIO(ttlSeconds));
+  const key = buildKey(namespace, id);
+  logger.info('set Upsert function is called with this key ', { key });
+  const clean = Object.fromEntries(
+    Object.entries(value).filter(([, value]) => value !== undefined),
+  ) as Record<string, string>;
+  const redisClient = getRedisClient();
+  await redisClient
+    .multi()
+    .hset(key, clean)
+    .expire(key, ttlSeconds, 'NX')
+    .exec();
+}
 
 export async function invalidateCached(
   namespace: string,
@@ -407,22 +426,22 @@ export async function execOps<T>(ops: CacheOp<T>[]): Promise<unknown[]> {
 
 export type CacheOp<T> =
   | {
-      type: 'set';
-      namespace: string;
-      id: string | number;
-      value: T;
-      ttlSeconds: number;
-    }
+    type: 'set';
+    namespace: string;
+    id: string | number;
+    value: T;
+    ttlSeconds: number;
+  }
   | {
-      type: 'get';
-      namespace: string;
-      id: string | number;
-    }
+    type: 'get';
+    namespace: string;
+    id: string | number;
+  }
   | {
-      type: 'del';
-      namespace: string;
-      id: string | number;
-    };
+    type: 'del';
+    namespace: string;
+    id: string | number;
+  };
 
 export async function runCacheOps<T>(ops: CacheOp<T>[]): Promise<void> {
   if (ops.length === 0) return; //if no ops, do nothing

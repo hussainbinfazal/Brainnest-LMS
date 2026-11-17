@@ -19,8 +19,6 @@ import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import axios from "axios";
 import { toast } from "sonner";
-import { logger } from "@repo/shared/server";
-import { validateEmail, validatePhoneNumber } from "@/utils/phoneValidators";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CAuthUser, CCourse, CLesson, CUserCourse } from "@/types/client";
 import LoadingBarLoader from "../shared/LoadingBarLoader";
@@ -74,29 +72,6 @@ export const MyProfilePageComp = ({ completedCourseIds, pendingCourseIds, enroll
         );
       });
 
-  // function formatRatingNumber(num: number): string {
-  //   if (num >= 1_000_000) {
-  //     return (num / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-  //   } else if (num >= 1_000) {
-  //     return (num / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
-  //   } else {
-  //     return num.toString();
-  //   }
-  // }
-  // function convertToTotalHours(timeStr: string | number): number {
-  //   const parts = timeStr.toString().split(":").map(Number);
-
-  //   let hours: number = 0;
-  //   if (parts.length === 3) {
-  //     hours = parts[0] + parts[1] / 60 + parts[2] / 3600;
-  //   } else if (parts.length === 2) {
-  //     hours = parts[0] / 60 + parts[1] / 3600;
-  //   } else if (parts.length === 1) {
-  //     hours = parts[0] / 3600;
-  //   }
-
-  //   return parseFloat(hours?.toFixed(2)); // rounded to 2 decimals
-  // }
 
   function getProgress(courseId: string): number {
     if (!courseId) throw new Error("Course Id is required");

@@ -135,7 +135,6 @@ export async function POST(request: CustomNextRequest): Promise<NextResponse> {
     //     logger.info("User not found", { email });
     //     return NextResponse.json({ message: "User not found" }, { status: 404 });
     // }
-
     //Update and delete the cached lock, when user verifies email or resend email attempted
     await Promise.allSettled([
       invalidateCached(ATTEMPT_EMAIL_VERIFICATION.namespace, email), //Remove redis lock for future request for this email;
