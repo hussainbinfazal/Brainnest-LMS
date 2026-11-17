@@ -10,6 +10,7 @@ import z from "zod";
 // if (!resetUserId) return failResponse({ message: "Invalid or expired link" }, 400);
 const verifyResetEmailBodySchema = z.object({
     token: z.string(),
+    userId: z.string(),
 });
 export async function PUT(request: NextRequest): Promise<NextResponse> {
     const { allowed, retryAfterSec, ip } = await checkIp(request, VERIFY_RESET_EMAIL_IP_KEY.namespace, VERIFY_RESET_EMAIL_IP_KEY.max, VERIFY_RESET_EMAIL_IP_KEY.windowSec);
@@ -23,14 +24,16 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         return failResponse({ success: false, message: "Unauthorized" }, 401, undefined, undefined, true);
     }
     const userId = session.user.id;
+    const body = await parseBody(request, verifyResetEmailBodySchema);
+    if (!body.ok) return body.response;
+    const { token, userId: requestUserId } = body.data;
+    if (requestUserId === userId) return failResponse({ message: "Invalid or expired link" }, 400);
     const { allowed: isUserAllowed, retryAfterSec: userRetryAfter, ip: userIp } = await checkUser(userId, VERIFY_RESET_EMAIL_IP_KEY.namespace, VERIFY_RESET_EMAIL_IP_KEY.max, VERIFY_RESET_EMAIL_IP_KEY.windowSec);
     if (!isUserAllowed) {
         logger.warn("Too many requests", { ip: ip });
         return failResponse({ message: "Too many requests" }, 429, undefined, { "Retry-After": String(userRetryAfter) }, true);
     };
-    const body = await parseBody(request, verifyResetEmailBodySchema);
-    if (!body.ok) return body.response;
-    const { token } = body.data;
+
     const redis = getRedisClient();
     const incomingHash = createHash("sha256").update(token).digest("hex");
     // read and delete in one atomic step, so the token is single-use
@@ -48,6 +51,6 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     await redis.del(userRedisKey);
     // null means invalid, expired, or already used
     // if (!resetUserId) return failResponse({ message: "Invalid or expired link" }, 400);
-    return failResponse({  success: true,message: "Email Verified Successfully" }, 200, undefined, undefined, true);
+    return failResponse({ success: true, message: "Email Verified Successfully" }, 200, undefined, undefined, true);
 }
 
