@@ -253,7 +253,7 @@ export interface IUser {
   profileImage: string;
   role: UserRole;
   isVerified: boolean;
-
+  tokenVersion?: number
   createdAt: Date;
   updatedAt: Date;
 }
@@ -273,12 +273,12 @@ export interface ICertificate {
 export interface IUserToken {
   userId: Types.ObjectId;
   type:
-    | 'reset'
-    | 'verification'
-    | 'refresh'
-    | 'email-verification'
-    | 'number-verification'
-    | 'password-reset';
+  | 'reset'
+  | 'verification'
+  | 'refresh'
+  | 'email-verification'
+  | 'number-verification'
+  | 'password-reset';
   token: string;
   expiresAt: Date;
   isVerified: boolean;

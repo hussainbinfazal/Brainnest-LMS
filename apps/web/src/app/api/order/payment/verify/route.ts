@@ -11,6 +11,7 @@ import {
   VERIFY_PAYMENT_IP_KEY,
   checkUser,
   VERIFY_PAYMENT_USER_KEY,
+  passJobToWorker,
 } from "@repo/shared/server";
 import {
   getRazorpay,
@@ -18,11 +19,11 @@ import {
   verifyAndSettle,
   verifyCheckoutSignature,
 } from "@repo/payment";
-import axios from "axios";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
 import { Session } from "next-auth";
 import { auth } from "@/auth";
+import { workerApiLinks } from "@/utils/workerApiLinks";
 const verifyPaymentBodySchema = z.object({
   orderId: z.string().regex(/^order_[A-Za-z0-9]+$/),
   paymentId: z.string().regex(/^pay_[A-Za-z0-9]+$/),
@@ -149,9 +150,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         true
       );
     }
-    const workerUrl = process.env.WORKER_URL;
-    const internalAuthSecret = process.env.INTERNAL_AUTH_SECRET;
-    if (!workerUrl || !internalAuthSecret) {
+    if (!process.env.WORKER_URL || !process.env.INTERNAL_AUTH_SECRET) {
       logger.error("Error verifying payment", { error });
       return failResponse(
         {
@@ -167,13 +166,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     logger.error("Error verifying payment", { error });
     if (signatureVerified) {
       try {
-        await axios.post(
-          `${workerUrl}/payment/settle-payment`,
-          { razorpayPaymentId: paymentId, userId },
-          {
-            headers: { "x-internal-secret": internalAuthSecret },
-            timeout: 10_000,
-          }
+        await passJobToWorker(
+          workerApiLinks.payment.settlePayment,
+          { razorpayPaymentId: paymentId, userId }
         );
       } catch (workerError: unknown) {
         logger.error("Could not settle queue settle retry", {

@@ -6,6 +6,7 @@ import {
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { LEVELS } from "@/locales/locales";
 import { ISessionUser } from "@/types/server";
+import { workerApiLinks } from "@/utils/workerApiLinks";
 import { getErrorMessage, USER_ROLE } from "@repo/shared";
 import {
   ADMIN_AI_LESSON_DRAFT_IP_KEY,
@@ -16,8 +17,8 @@ import {
   getCachedHash,
   getCachedHashIO,
   logger,
+  passJobToWorker,
 } from "@repo/shared/server";
-import axios from "axios";
 import { Session } from "next-auth";
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -98,15 +99,8 @@ export async function POST(request: NextRequest) {
     const body = await parseBody(request, lessonDraftRequestSchema);
     if (!body.ok) return body.response;
 
-    const workerUrl = process.env.WORKER_URL;
-    const internalSecret = process.env.INTERNAL_AUTH_SECRET;
-    if (!workerUrl || !internalSecret) {
-      throw new Error("WORKER_URL and INTERNAL_AUTH_SECRET must be configured");
-    }
-
-    await axios.post(
-      // Worker address from a server-only env var
-      `${workerUrl}/transcribe/audioToText`,
+    await passJobToWorker(
+      workerApiLinks.transcription.audioToText,
       {
         videos: body.data.map(
           ({
@@ -138,9 +132,7 @@ export async function POST(request: NextRequest) {
             },
           })
         ),
-      },
-      // Internal secret header plus a timeout so the route cannot hang
-      { headers: { "x-internal-secret": internalSecret }, timeout: 10_000 }
+      }
     );
     return successResponse(
       { message: "Transcription job queued" },

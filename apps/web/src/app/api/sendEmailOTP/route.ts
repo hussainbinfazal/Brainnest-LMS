@@ -22,8 +22,10 @@ import {
 } from "@repo/shared/config/redisConfig/cache-helper";
 import { hashOtp } from "@/lib/OtpValidators";
 import { OTP_SEND_EMAIL_IP_KEY } from "@repo/shared/config/redisConfig/redisRateLimitKeys";
+import { passJobToWorker } from "@repo/shared/server";
 import axios from "axios";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
+import { workerApiLinks } from "@/utils/workerApiLinks";
 
 function generateOTP(): string {
   return otpGenerator.generate(6, {
@@ -57,10 +59,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return body.response;
   }
   const { email } = body.data;
-  console.log(
-    "URL of the worker in the sendEmail route",
-    `${process.env.EMAIL_API_URL}/internal/email-otp`
-  );
   try {
     //Atomic
     const acquired = await setOnlyIfNotExist(
@@ -98,25 +96,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Send email via nodemailer //use worker queue from the shared repo, via http call to add the job in the job in queue
     //
-    const response = await axios.post(
-      `${process.env.EMAIL_API_URL}/internal/email-otp`,
+    await passJobToWorker(
+      workerApiLinks.email.sendOtp,
       {
         email,
         otp,
       },
       {
-        headers: {
-          "Content-Type": "application/json",
-          "x-internal-secret": process.env.INTERNAL_AUTH_SECRET!,
-        },
+        baseUrl: process.env.EMAIL_API_URL,
         timeout: 5000,
       }
     );
-
-    // The worker responds with 201 when the email job is queued.
-    if (response.status < 200 || response.status >= 300) {
-      throw new Error(`Worker returned HTTP ${response.status}`);
-    }
 
     return successResponse(
       {
@@ -155,6 +145,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error,
       message,
     });
-    return successResponse({ message }, 200, undefined, undefined, true);
+    return failResponse({ message }, status, undefined, undefined, true);
   }
 }

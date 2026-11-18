@@ -39,6 +39,7 @@ export const UserTokenSchema: Schema<IUserToken> = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+   
   },
   { timestamps: true },
 );

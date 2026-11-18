@@ -10,7 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
 import { auth } from "@/auth";
-import axios from "axios";
+import { passJobToWorker } from "@repo/shared/server";
+import { workerApiLinks } from "@/utils/workerApiLinks";
 
 const sendResetEmailBodySchema = z.object({
   // email: z.string().email(),
@@ -91,12 +92,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // run all three commands together
     await tx.exec();
 
-    const workerUrl = process.env.WORKER_URL;
-    const internalSecret = process.env.INTERNAL_AUTH;
-    if (!workerUrl || !internalSecret) {
-      throw new Error("WORKER_URL and INTERNAL_AUTH_SECRET must be configured");
-    }
-    const emailResponse = await axios.post(`${workerUrl}/send-reset-email`, { email: session.user.email, token: resetToken }, { headers: { "x-internal-secret": internalSecret }, timeout: 10_000 });
+    const emailResponse = await passJobToWorker(
+      workerApiLinks.auth.sendResetEmail,
+      { email: session.user.email, token: resetToken }
+    );
     logger.info("Email sent successfully");
     return successResponse(
       { success: true, message: "Email sent", emailResponse },
