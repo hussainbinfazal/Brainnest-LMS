@@ -96,8 +96,7 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         const parsedBody = await parseBody(req, changePasswordBodySchema);
         if (!parsedBody.ok) {
             if (!parsedBody.ok) return parsedBody.response;
-        }
-
+        };
         const { oldPassword, newPassword } = parsedBody.data;
         await connectDB(process.env.MONGODB_URI)
         const user = await User.findById(session.user.id).select("+password");
@@ -112,14 +111,12 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
         // Bump tokenVersion so every other session becomes invalid
         user.tokenVersion += 1;
         // Persist the change
-
-
         await user.save();
         return successResponse({ message: "Password changed successfully" }, 200);
         // TODO: send email with token
     } catch (error: unknown) {
-        const message = getErrorMessage(error, "Failed to send reset password email");
-        logger.error("Failed to send reset password email", { error, message });
+        const message = getErrorMessage(error, "Failed to change password");
+        logger.error("Failed to change password ", { error, message });
         return failResponse({ message }, 500, undefined, undefined, true);
     }
 }

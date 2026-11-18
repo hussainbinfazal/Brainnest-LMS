@@ -118,7 +118,7 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      await axios.post("/api/auth/change-password", {
+      await axios.put("/api/auth/change-password", {
         currentPassword,
         newPassword,
       });
