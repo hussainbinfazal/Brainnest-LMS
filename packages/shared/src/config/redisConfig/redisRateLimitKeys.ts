@@ -63,6 +63,14 @@ export const RESET_PASSWORD_IP_KEY = {
     'Guards reset email attempts against brute-forcing from a given IP',
   usedIn: ['Authentication'],
 } as const;
+export const CHANGE_PASSWORD_IP_KEY = {
+  namespace: 'limit-change-password:ip',
+  id: 'ip',
+  max: 10,
+  windowSec: 15 * 60,
+  description: 'Rate limits authenticated password changes by IP',
+  usedIn: ['Authentication'],
+} as const;
 export const FORGET_PASSWORD_IP_KEY = {
   namespace: 'limit-reset-password:ip',
   id: 'user',
