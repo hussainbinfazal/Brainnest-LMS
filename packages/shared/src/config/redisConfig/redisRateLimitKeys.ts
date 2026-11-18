@@ -54,8 +54,8 @@ export const INTERNAL_AUTH_IP_KEY = {
     'Guards worker routes against secret brute-forcing from a given IP',
   usedIn: ['Authentication'],
 } as const;
-export const RESET_EMAIL_IP_KEY = {
-  namespace: 'limit-reset-email:ip',
+export const RESET_PASSWORD_IP_KEY = {
+  namespace: 'limit-reset-password:ip',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
   windowSec: 60,
@@ -63,7 +63,16 @@ export const RESET_EMAIL_IP_KEY = {
     'Guards reset email attempts against brute-forcing from a given IP',
   usedIn: ['Authentication'],
 } as const;
-export const RESET_EMAIL_USER_KEY = {
+export const FORGET_PASSWORD_IP_KEY = {
+  namespace: 'limit-reset-password:ip',
+  id: 'user',
+  max: 300, // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description:
+    'Guards reset email attempts against brute-forcing from a given IP',
+  usedIn: ['Authentication'],
+} as const;
+export const RESET_PASSWORD_USER_KEY = {
   namespace: 'limit-reset-email:user',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
@@ -72,6 +81,15 @@ export const RESET_EMAIL_USER_KEY = {
     'Guards reset email attempts against brute-forcing from a given USER',
   usedIn: ['Authentication'],
 } as const;
+// export const FORGET_PASSWORD_USER_KEY = {
+//   namespace: 'limit-reset-email:user',
+//   id: 'user',
+//   max: 300, // generous ceiling for legitimate service-to-service traffic
+//   windowSec: 60,
+//   description:
+//     'Guards reset email attempts against brute-forcing from a given USER',
+//   usedIn: ['Authentication'],
+// } as const;
 export const VERIFY_RESET_EMAIL_IP_KEY = {
   namespace: 'limit-reset-verify-email:user',
   id: 'user',
@@ -81,7 +99,7 @@ export const VERIFY_RESET_EMAIL_IP_KEY = {
     'Guards reset email attempts against brute-forcing from a given USER',
   usedIn: ['Authentication'],
 } as const;
-export const VERIFYY_RESET_EMAIL_USER_KEY = {
+export const VERIFY_RESET_EMAIL_USER_KEY = {
   namespace: 'limit-reset-verify-email:user',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic

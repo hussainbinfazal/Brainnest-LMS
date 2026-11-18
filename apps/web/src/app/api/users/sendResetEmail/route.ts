@@ -68,10 +68,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const body = await parseBody(request, sendResetEmailBodySchema);
     if (!body.ok) return body.response;
     const { emailType } = body.data;
-    await UserToken.deleteMany({
-      userId: session.user.id,
-      type: "password-reset",
-    })
+    // await UserToken.deleteMany({
+    //   userId: session.user.id,
+    //   type: "password-reset",
+    // })
     const resetToken: string = randomBytes(32).toString("hex");
     const hashedToken: string = createHash("sha256")
       .update(resetToken)
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (!workerUrl || !internalSecret) {
       throw new Error("WORKER_URL and INTERNAL_AUTH_SECRET must be configured");
     }
-    const emailResponse = await axios.post(`${workerUrl}/send-reset-email`, { email: session.user.email, emailType, userId: session.user.id, resetToken }, { headers: { "x-internal-secret": internalSecret }, timeout: 10_000 });
+    const emailResponse = await axios.post(`${workerUrl}/send-reset-email`, { email: session.user.email, token: resetToken }, { headers: { "x-internal-secret": internalSecret }, timeout: 10_000 });
     logger.info("Email sent successfully");
     return successResponse(
       { success: true, message: "Email sent", emailResponse },
