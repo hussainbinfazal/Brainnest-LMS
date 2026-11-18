@@ -1,9 +1,10 @@
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getErrorMessage } from "@repo/shared";
-import { checkIp, connectDB, getCached, logger RESET_PASSWORD_IP_KEY, User } from "@repo/shared/server";
+import { checkIp, connectDB, getCached, logger, PASSWORD_RESET_TOKEN, RESET_PASSWORD_IP_KEY, User } from "@repo/shared/server";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import z from "zod";
 
 
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
         const { token, newPassword } = parsedBody.data;
         await connectDB(process.env.MONGODB_URI)
-        const hash = crypto.createHash("sha256").update(token).digest("hex");
+        const hash = createHash("sha256").update(token).digest("hex");
         const userId = await getCached(PASSWORD_RESET_TOKEN.namespace, hash);
         if (!userId) {
             return failResponse({ message: "Invalid or expired link" }, 400, undefined, undefined, true);

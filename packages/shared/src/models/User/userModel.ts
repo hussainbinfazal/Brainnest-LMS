@@ -49,7 +49,7 @@ export const userSchema: Schema<IUser> = new mongoose.Schema(
       type: Number,
       default: 0
     },
-  }
+  },
   { timestamps: true },
 );
 
