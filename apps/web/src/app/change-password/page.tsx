@@ -85,29 +85,34 @@ export default function ChangePasswordPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const passwordRequirements = [
-    { label: "At least 8 characters", met: newPassword.length >= 8 },
-    { label: "A lowercase letter", met: /[a-z]/.test(newPassword) },
-    { label: "An uppercase letter", met: /[A-Z]/.test(newPassword) },
-    { label: "A number", met: /[0-9]/.test(newPassword) },
-    {
-      label: "A special character",
-      met: /[^A-Za-z0-9\s]/.test(newPassword),
-    },
+    newPassword.length >= 8,
+    /[a-z]/.test(newPassword),
+    /[A-Z]/.test(newPassword),
+    /[0-9]/.test(newPassword),
+    /[^A-Za-z0-9\s]/.test(newPassword),
   ];
+  // const passwordRequirements = [
+  //   { label: "At least 8 characters", met: newPassword.length >= 8 },
+  //   { label: "A lowercase letter", met: /[a-z]/.test(newPassword) },
+  //   { label: "An uppercase letter", met: /[A-Z]/.test(newPassword) },
+  //   { label: "A number", met: /[0-9]/.test(newPassword) },
+  //   {
+  //     label: "A special character",
+  //     met: /[^A-Za-z0-9\s]/.test(newPassword),
+  //   },
+  // ];
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
 
-    if (!passwordRequirements.every(({ met }) => met)) {
+    if (!passwordRequirements.every(Boolean)) {
       setErrorMessage("Choose a password that meets all the requirements.");
       return;
     }
 
-    if (newPassword === currentPassword) {
-      setErrorMessage(
-        "Your new password must be different from your current password."
-      );
+    if (newPassword !== confirmPassword) {
+      setErrorMessage("Passwords do not match.");
       return;
     }
 
@@ -188,11 +193,35 @@ export default function ChangePasswordPage() {
                 className="space-y-1 text-sm text-muted-foreground"
                 aria-label="Password requirements"
               >
-                {passwordRequirements.map(({ label, met }) => (
+                {/* {passwordRequirements.map(({ label, met }) => (
                   <li key={label}>
                     {met ? "Met" : "Required"}: {label}
                   </li>
-                ))}
+                ))} */}
+                <ul
+                  className="space-y-1 text-sm text-muted-foreground"
+                  aria-label="Password requirements"
+                >
+                  {!passwordRequirements[0] && <li>
+                    {passwordRequirements[0] ? "Met" : "Required"}: at least 8
+                    characters
+                  </li>}
+                  {!passwordRequirements[1] && <li>
+                    {passwordRequirements[1] ? "Met" : "Required"}: a lowercase
+                    letter
+                  </li>}
+                  {!passwordRequirements[2] && <li>
+                    {passwordRequirements[2] ? "Met" : "Required"}: an uppercase
+                    letter
+                  </li>}
+                  {!passwordRequirements[3] && <li>
+                    {passwordRequirements[3] ? "Met" : "Required"}: a number
+                  </li>}
+                  {!passwordRequirements[4] && <li>
+                    {passwordRequirements[4] ? "Met" : "Required"}: a special
+                    character
+                  </li>}
+                </ul>
               </ul>
 
               <PasswordField
