@@ -22,96 +22,79 @@ import {
   logger,
   validateMongooseId,
   UserDocument,
+  checkIp,
+  UPDATE_PROFILE_IP_KEY,
+  checkUser,
+  FETCH_PROFILE_USER_KEY,
+  FETCH_PROFILE_IP_KEY,
+  ISessionUser,
+  UPDATE_PROFILE_USER_KEY,
 } from "@repo/shared/server"; // Ensure the path is correct
 import bcrypt from "bcryptjs";
 import { CustomNextRequest } from "@/types/server";
+import { auth } from "@/auth";
+import { Session } from "next-auth";
 
-// GET handler to fetch a user by ID from URL params
-export async function GET(
-  request: CustomNextRequest,
-  context: { params: Promise<{ userId: string | string[] }> }
-): Promise<NextResponse> {
-  try {
-    await connectDB(process.env.MONGODB_URI!);
 
-    const params = await context.params;
-    const userId = Array.isArray(params.userId)
-      ? params.userId[0]
-      : params.userId;
-    if (!userId) {
-      logger.info("User Id is required", { userId });
-      return failResponse(
-        { error: "User ID is required" },
-        400,
-        undefined,
-        undefined,
-        true
-      );
-    }
-    if (!validateMongooseId({ userId })) {
-      logger.info("Invalid User ID", { userId });
-      return failResponse(
-        { error: "Invalid User ID" },
-        400,
-        undefined,
-        undefined,
-        true
-      );
-    }
-    const user: IUser | null = await User.findById(userId).lean();
-    if (!user) {
-      logger.info("User not found");
-      return failResponse(
-        { error: "User not found" },
-        404,
-        undefined,
-        undefined,
-        true
-      );
-    }
-    logger.info("User fetched successfully", { userId });
-    return successResponse({ user }, 200, undefined, undefined, true);
-  } catch (error: any) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    logger.error(`Error in getting user: ${message}`);
-    return failResponse(
-      { message: `Error in getting user: ${message}` },
-      500,
-      undefined,
-      undefined,
-      true
-    );
-  }
-}
 
 export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ userId: string | string[] }> }
 ): Promise<NextResponse> {
   try {
+    const { allowed, retryAfterSec, ip } = await checkIp(
+      request,
+      UPDATE_PROFILE_IP_KEY.namespace,
+      UPDATE_PROFILE_IP_KEY.max,
+      UPDATE_PROFILE_IP_KEY.windowSec
+    );
+    if (!allowed)
+      return failResponse(
+        { message: "Too many requests" },
+        429,
+        undefined,
+        { "Retry-After": String(retryAfterSec) },
+        true
+      );
+    const authSession: Session | null = await auth();
+    if (!authSession)
+      return failResponse(
+        { message: "Unauthorized", ip: ip },
+        401,
+        undefined,
+        undefined,
+        true
+      );
+    const sessionUser: ISessionUser | null = authSession?.user;
+    const sessionUserId: string = sessionUser.id;
+    const { allowed: userAllowed, retryAfterSec: userRetryAfterSec } =
+      await checkUser(
+        sessionUserId,
+        UPDATE_PROFILE_USER_KEY.namespace,
+        UPDATE_PROFILE_USER_KEY.max,
+        UPDATE_PROFILE_USER_KEY.windowSec
+      );
+    if (!userAllowed)
+      return failResponse(
+        { message: "Too many requests" },
+        429,
+        undefined,
+        { "Retry-After": String(userRetryAfterSec) },
+        true
+      );
+
     // console.log("Put controller called")
-    await connectDB(process.env.MONGODB_URI!);
     const params = await context.params;
     const userId = Array.isArray(params.userId)
       ? params.userId[0]
       : params.userId;
-    const user: UserDocument | null = await User.findById(userId);
-    if (!user)
-      return failResponse(
-        { message: "User not found" },
-        404,
-        undefined,
-        undefined,
-        true
-      );
-    if (!userId)
-      return failResponse(
-        { message: "User id is required" },
-        400,
-        undefined,
-        undefined,
-        true
-      );
+    if (!userId || !validateMongooseId({ userId })) return failResponse({
+      message: "something went wrong"
+    }, 400, undefined, undefined, true)
+    
+    if (sessionUserId !== userId) {
+      return failResponse({ message: 'something went wrong' }, 401, undefined, undefined, true)
+    }
     const body = await parseBody(request, updateUserBodySchema);
     if (!body.ok) return body.response;
     const { userData } = body.data;
@@ -125,6 +108,18 @@ export async function PUT(
         undefined,
         true
       );
+    await connectDB(process.env.MONGODB_URI!);
+
+    const user: UserDocument | null = await User.findById(userId);
+    if (!user)
+      return failResponse(
+        { message: "User not found" },
+        404,
+        undefined,
+        undefined,
+        true
+      );
+    
     if (password && password.trim() !== "") {
       const hashedPassword = await bcrypt.hash(password, 10);
       user.password = hashedPassword;

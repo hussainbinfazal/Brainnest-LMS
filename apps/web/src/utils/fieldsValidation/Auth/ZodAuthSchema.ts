@@ -1,6 +1,13 @@
 import { validateEmail } from "@/utils/phoneValidators";
 import { z } from "zod";
 
+
+export const authBase = z.object({
+  email: z.string().email("Invalid email").refine(validateEmail),
+  profileImage: z.string(),
+  name: z.string().min(1)
+
+})
 export const loginSchema = z.object({
   email: z.string().email("Invalid email").refine(validateEmail),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -31,3 +38,9 @@ export const signUpSchema = signUpBase.refine(
   (d) => d.password === d.confirmPassword,
   { path: ["confirmPassword"], message: "Passwords do not match" }
 );
+
+export const editProfileSchema = authBase.extend(
+  {
+    phoneNumber: z.string().optional(),
+  }
+)

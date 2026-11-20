@@ -1,10 +1,11 @@
-  import { auth } from "@/auth";
+import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { getErrorMessage } from "@repo/shared";
 import {
   CHANGE_PASSWORD_IP_KEY,
   checkIp,
+  checkUser,
   connectDB,
   logger,
   User,
@@ -58,7 +59,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         true
       );
     }
-
+    const { allowed: isUserAllowed, retryAfterSec: retryAfter } =
+      await checkUser(
+        userId,
+        CHANGE_PASSWORD_USER_KEY.namespace,
+        CHANGE_PASSWORD_USER_KEY.max,
+        CHANGE_PASSWORD_USER_KEY.windowSec
+      );
+    if (!isUserAllowed) {
+      logger.warn("Too many requests in order status route", {
+        user: userId,
+      });
+      return failResponse(
+        { message: "Too many requests" },
+        429,
+        undefined,
+        { "Retry-After": String(retryAfter) },
+        true
+      );
+    }
     const body = await parseBody(request, changePasswordBodySchema);
     if (!body.ok) return body.response;
 

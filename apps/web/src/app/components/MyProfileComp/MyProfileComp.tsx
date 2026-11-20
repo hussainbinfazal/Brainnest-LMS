@@ -131,7 +131,7 @@ export const MyProfilePageComp = ({ completedCourseIds, pendingCourseIds, enroll
       setLoading(false);
       setName(authUser.name);
       setEmail(authUser.email);
-      if (authUser.phoneNumber) setPhoneNumber(authUser?.phoneNumber);
+      // if (authUser.phoneNumber) setPhoneNumber(authUser?.phoneNumber);
     }
   }, [authUser]);
   return (
@@ -282,7 +282,7 @@ export const MyProfilePageComp = ({ completedCourseIds, pendingCourseIds, enroll
             {/* )} */}
           </div>
 
-          <Input
+          {/* <Input
             className=""
             type="phoneNumber"
             placeholder="Phone Number"
@@ -293,7 +293,7 @@ export const MyProfilePageComp = ({ completedCourseIds, pendingCourseIds, enroll
               setPhoneNumber(e.target.value);
             }}
             disabled={!isEditing}
-          />
+          /> */}
         </div>
         {isEditing && (
           <div className="w-full flex justify-center items-center">

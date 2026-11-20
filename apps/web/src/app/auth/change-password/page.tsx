@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Field } from "@/app/components/AdminComp/AdminCourseComp/Create-Course/courseFields";
 
 type PasswordFieldProps = {
   id: string;
@@ -38,10 +39,7 @@ function PasswordField({
   disabled,
 }: PasswordFieldProps) {
   return (
-    <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium">
-        {label}
-      </label>
+    <Field label={label} htmlFor={id} required>
       <div className="relative">
         <Input
           id={id}
@@ -68,7 +66,7 @@ function PasswordField({
           )}
         </button>
       </div>
-    </div>
+    </Field>
   );
 }
 

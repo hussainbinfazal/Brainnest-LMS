@@ -63,6 +63,42 @@ export const RESET_PASSWORD_IP_KEY = {
     'Guards reset email attempts against brute-forcing from a given IP',
   usedIn: ['Authentication'],
 } as const;
+export const UPDATE_PROFILE_IP_KEY = {
+  namespace: 'limit-update-profile:ip',
+  id: 'ip',
+  max: 300, // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description:
+    'Guards update profile attempts against brute-forcing from a given IP',
+  usedIn: ['Authentication'],
+} as const;
+export const UPDATE_PROFILE_USER_KEY = {
+  namespace: 'limit-update-profile:user',
+  id: 'userId',
+  max: 300, // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description:
+    'Guards fetch profile attempts against brute-forcing from a given user',
+  usedIn: ['Authentication'],
+} as const;
+export const FETCH_PROFILE_IP_KEY = {
+  namespace: 'limit-update-profile:ip',
+  id: 'user',
+  max: 300, // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description:
+    'Guards update profile attempts against brute-forcing from a given IP',
+  usedIn: ['Authentication'],
+} as const;
+export const FETCH_PROFILE_USER_KEY = {
+  namespace: 'limit-fetch-profile:user',
+  id: 'user',
+  max: 300, // generous ceiling for legitimate service-to-service traffic
+  windowSec: 60,
+  description:
+    'Guards fetch profile attempts against brute-forcing from a given IP',
+  usedIn: ['Authentication'],
+} as const;
 export const CHANGE_PASSWORD_IP_KEY = {
   namespace: 'limit-change-password:ip',
   id: 'ip',

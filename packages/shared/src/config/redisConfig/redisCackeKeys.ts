@@ -437,6 +437,13 @@ export const AUTH_USER = {
   description: "User's authentication session",
   usedIn: ['Authentication'],
 };
+export const EDIT_AUTH_USER = {
+  namespace: 'auth:edit',
+  id: 'userId',
+  ttl: 'SMALL',
+  description: "User's authentication session",
+  usedIn: ['Authentication'],
+};
 
 // ============================================================================
 // QUEUE/JOB KEYS (BullMQ)

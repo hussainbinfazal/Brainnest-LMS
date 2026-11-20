@@ -38,14 +38,16 @@ export type ProfileImageUploadProps<TFieldValues extends FieldValues> = {
   fileUploadResult: (result: CUploadResult) => void;
   uploadStatus: Dispatch<SetStateAction<UploadStatus>>;
   className?: string;
+  imageUrl?: string;
 };
 function ProfileImageUpload<TFieldValues extends FieldValues>({
   field,
   fileUploadResult,
   uploadStatus,
   className,
+  imageUrl
 }: ProfileImageUploadProps<TFieldValues>) {
-  const [image, setImage] = useState<string | null>(null);
+  const [image, setImage] = useState<string | null>(imageUrl ?? null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });

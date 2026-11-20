@@ -72,11 +72,13 @@ export function getNextCourseSectionOrder(
 export function Field({
   label,
   error,
+  htmlFor,
   required,
   children,
 }: {
-  label: string;
+  label?: string;
   error?: string;
+  htmlFor?: string;
   required?: boolean;
   children: ReactNode;
 }) {
@@ -84,16 +86,18 @@ export function Field({
     // vertical spacing wrapper
     <div className="space-y-2">
       {/* Field label with the optional star */}
-      <Label>
-        {/* The label text */}
-        {label}
-        {/* Star only when required; aria-hidden stops screen readers saying "star" */}
-        {required && (
-          <span aria-hidden="true" className="text-destructive">
-            *
-          </span>
-        )}
-      </Label>
+      {label && (
+        <Label htmlFor={htmlFor}>
+          {/* The label text */}
+          {label}
+          {/* Star only when required; aria-hidden stops screen readers saying "star" */}
+          {required && (
+            <span aria-hidden="true" className="text-destructive">
+              *
+            </span>
+          )}
+        </Label>
+      )}
       {/* the actual input */}
       {children}
       {/* error text only when present */}
