@@ -4,7 +4,7 @@
 // } as const;
 import { id } from 'zod/v4/locales';
 
-export const OTP_SEND_EMAIL_IP_KEY = {
+export const SEND_CODE_EMAIL_IP_KEY = {
   namespace: 'limit-otp-send:ip',
   id: 'ip',
   max: 5,

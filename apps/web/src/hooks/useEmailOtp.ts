@@ -75,7 +75,7 @@ export function useSendEmailOtp(email: string): UseSendEmailOtpResult {
     setStatus("sending");
     setError(null);
     try {
-      await axios.post("/api/sendEmailOTP", { email });
+      await axios.post("/api/auth/verify-email", { email });
       setStatus("sent");
       setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
       return { ok: true };
@@ -147,7 +147,7 @@ export function useVerifyEmailOtp(
     setStatus("verifying");
     setError(null);
     try {
-      await axios.post("/api/verifyEmailOtp", { email, otp });
+      await axios.put("/api/auth/verify-email", { email, otp });
       setStatus("verified");
       setCooldownSeconds(RESEND_COOLDOWN_SECONDS);
       return { ok: true };

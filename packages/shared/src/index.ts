@@ -1,3 +1,5 @@
+import { logger } from './server';
+
 export * from './helper/getErrorMessage';
 // Union type derived from the array, so a new purpose is added in one place only
 export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
@@ -33,13 +35,13 @@ export const SESSION_TTL_SEC = 24 * 60 * 60;
 export const MAX_ACTIVE_SESSIONS = 3;
 
 export const RESOURCE_TYPE: Record<UploadPurpose, 'image' | 'video' | 'auto'> =
-  {
-    avatar: 'image',
-    thumbnail: 'image',
-    'lecture-video': 'video',
-    'preview-video': 'video',
-    'lecture_preview-video': 'video',
-  };
+{
+  avatar: 'image',
+  thumbnail: 'image',
+  'lecture-video': 'video',
+  'preview-video': 'video',
+  'lecture_preview-video': 'video',
+};
 
 export function uploadFolder(folder: string, subFolder: string): string {
   //For client
@@ -230,3 +232,28 @@ export const createMp3UrlFromId = (
 ): string =>
   // Start from the final video URL
   `${process.env.CLOUDINARY_CLIENT_URL}/${cloudName}/${process.env.CLOUDINARY_MP3_PATH}/${pendingId}.${process.env.CLOUDINARY_MP3_EXTENSION}`;
+export type AssetKind = "image" | "video";
+export interface MovedAsset {
+  //original pending pubilc_id (used as the look up key)
+  from: string;
+  //New public_id
+  to: string;
+  //Resource type, needed to move it back on rollback
+  kind: AssetKind;
+  ///HTTPS URL to store in MongoDB
+  url: string;
+  // Tag that was removed, so rollback can put it back
+  tag: string;
+}
+export let moved: Map<string, MovedAsset> = new Map();
+export const urlOf = (pendingId: string): string => {
+  // Get the entry from the move results
+  const asset = moved.get(pendingId);
+  // Fail loudly with the id, instead of a vague TypeError
+  if (!asset) {
+    logger.error("Asset not present in the moved state,");
+    throw new Error(`No moved asset for ${pendingId}`);
+  }
+  // Return the final HTTPS URL
+  return asset.url;
+};

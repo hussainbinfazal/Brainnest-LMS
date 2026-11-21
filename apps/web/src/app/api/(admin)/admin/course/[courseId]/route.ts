@@ -26,7 +26,7 @@ import {
   invalidateCached,
   COURSES_ALL,
   INSTRUCTOR_COURSE_WITH_ID,
-  LessonTranscript,
+
 } from "@repo/shared/server";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
 import mongoose, { Types } from "mongoose";
@@ -72,6 +72,7 @@ import {
 } from "./updateCourseHelpers";
 import axios from "axios";
 import { deleteStaleCourseAssets } from "@/utils/deleteStaleCourseAssets/deleteStaleCourseAssets";
+
 const COVER_PENDING_PREFIX = uploadFolder(
   TOPIC_FOLDER["thumbnail"],
   PENDING_THUMBNAIL_SUBFOLDER
@@ -764,10 +765,10 @@ export async function PATCH(
     const categoryId =
       category && subCategory
         ? await resolveCategory(
-            dbSession,
-            category.name.charAt(0).toUpperCase() + category.name.slice(1),
-            subCategory
-          )
+          dbSession,
+          category.name.charAt(0).toUpperCase() + category.name.slice(1),
+          subCategory
+        )
         : undefined;
     let committed = false;
     await session.withTransaction(async () => {
@@ -844,12 +845,12 @@ export async function PATCH(
       const lessonsToTranscribe = lessonDocs.flatMap((lesson) =>
         lesson.fields.mp3Url
           ? [
-              {
-                courseId,
-                lessonId: lesson._id.toString(),
-                mp3Url: lesson.fields.mp3Url,
-              },
-            ]
+            {
+              courseId,
+              lessonId: lesson._id.toString(),
+              mp3Url: lesson.fields.mp3Url,
+            },
+          ]
           : []
       );
 

@@ -12,6 +12,7 @@ const updateUserBodySchema = z.object({
       password: z.string().optional(),
       name: z.string().optional(),
       phoneNumber: z.string().optional(),
+      email: z.string().email(),
     })
     .passthrough(),
 });
@@ -29,14 +30,32 @@ import {
   FETCH_PROFILE_IP_KEY,
   ISessionUser,
   UPDATE_PROFILE_USER_KEY,
+  getCached,
+  USER_EMAIL_VERIFIED_FLAG,
 } from "@repo/shared/server"; // Ensure the path is correct
 import bcrypt from "bcryptjs";
 import { CustomNextRequest } from "@/types/server";
 import { auth } from "@/auth";
 import { Session } from "next-auth";
+import { Types } from "mongoose";
+import { PENDING_AVATAR_SUBFOLDER, TOPIC_FOLDER, uploadFolder, uploadTargetPublicId } from "@repo/shared";
+import { PendingAsset } from "@/utils/CloudinaryAssets";
 
+export const isPendingId = (
+  publicId: string | undefined,
+  prefix: string
+): publicId is string => !!publicId && publicId.startsWith(prefix);
 
-
+export const freshTarget = (folderKey: keyof typeof TOPIC_FOLDER): string =>
+  // Unique id per asset, independent of array positions
+  uploadTargetPublicId(
+    TOPIC_FOLDER[folderKey],
+    new Types.ObjectId().toString()
+  );
+const AVATAR_PENDING_PREFIX = uploadFolder(
+  TOPIC_FOLDER["avatar"],
+  PENDING_AVATAR_SUBFOLDER
+);
 export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ userId: string | string[] }> }
@@ -91,16 +110,39 @@ export async function PUT(
     if (!userId || !validateMongooseId({ userId })) return failResponse({
       message: "something went wrong"
     }, 400, undefined, undefined, true)
-    
+
     if (sessionUserId !== userId) {
       return failResponse({ message: 'something went wrong' }, 401, undefined, undefined, true)
     }
     const body = await parseBody(request, updateUserBodySchema);
     if (!body.ok) return body.response;
-    const { userData } = body.data;
+
+    const pendingAssets: PendingAsset[] = [];
+    // Old files to delete after a successful commit
+    const staleUrls: string[] = [];
+
+    //  Only a pending id is a new upload; an echoed existing id is ignored
+    const avatarPendingId = isPendingId(profileImagePublicId, AVATAR_PENDING_PREFIX)
+      ? profileImagePublicId
+      : undefined;
+    ///Course cover is an image ( the old code treated it as a video)
+    if (profileImagePublicId) {
+      pendingAssets.push({
+        publicId: profileImagePublicId,
+        kind: "image",
+        pendingPrefix: AVATAR_PENDING_PREFIX,
+        targetPublicId: freshTarget("avatar"),
+      });
+      // The old cover becomes garbage after commit
+      if (user.profileImage) staleUrls.push(course.coverImage);
+    }
+    await verifyAssets(pendingAssets);
+
+    ///Move files from pending to final
+    moved = await moveAssets(pendingAssets);
     // console.log("Body", userData);
-    const { password, name, phoneNumber } = userData;
-    if (!userData)
+    const { profileImage, profileImagePublicId, name, phoneNumber, email: bodyEmail } = body.data.userData;
+    if (!body.data.userData)
       return failResponse(
         { message: "User data is required" },
         400,
@@ -108,25 +150,23 @@ export async function PUT(
         undefined,
         true
       );
+    const email = bodyEmail.trim().toLowerCase();
+    const isEmailVerified = await getCached(USER_EMAIL_VERIFIED_FLAG.namespace, email)
+    if (!isEmailVerified) {
+      return failResponse({ message: "Please verify email first" }, 403, undefined, undefined, true)
+    }
     await connectDB(process.env.MONGODB_URI!);
 
-    const user: UserDocument | null = await User.findById(userId);
-    if (!user)
-      return failResponse(
-        { message: "User not found" },
-        404,
-        undefined,
-        undefined,
-        true
-      );
-    
-    if (password && password.trim() !== "") {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
+    await User.findOneAndUpdate(
+      { _id: sessionUserId }, {
+      $set: {
+        email: bodyEmail,
+        name,
+        phoneNumber: phoneNumber ?? null,
+        profileImage: urlOf(profileImagePublicId)
+      }
     }
-    user.phoneNumber = phoneNumber || user.phoneNumber;
-    user.name = name || user.name;
-    await user.save();
+    )
     // console.log("This is the updated User in the backend:",user)
     logger.info("User Updated Successfully");
     return successResponse(

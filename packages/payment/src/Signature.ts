@@ -8,7 +8,7 @@ import crypto from 'crypto';
 // });
 ///Compare two hex strings without leaking timing information
 
-function safeEqualHex(a: string, b: string): boolean {
+export function safeEqualHex(a: string, b: string): boolean {
   // To Decode the first hex string into raw bytes
   const bufA = Buffer.from(a, 'hex');
   const bufB = Buffer.from(b, 'hex');

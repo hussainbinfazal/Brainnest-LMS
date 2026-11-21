@@ -1,7 +1,8 @@
 import { logger } from "@repo/shared/server";
 import cloudinary from "@repo/shared/config/cloudinary/cloudinary";
+import { AssetKind, MovedAsset } from "@repo/shared";
 
-export type AssetKind = "image" | "video";
+
 export type AssetErrorCode =
   "DUPLICATE" | "INVALID_LOCATION" | "NOT_FOUND" | "TOO_LARGE" | "MOVE_FAILED";
 
@@ -18,18 +19,7 @@ export interface PendingAsset {
 
 //Describes one file after a successful move
 
-export interface MovedAsset {
-  //original pending pubilc_id (used as the look up key)
-  from: string;
-  //New public_id
-  to: string;
-  //Resource type, needed to move it back on rollback
-  kind: AssetKind;
-  ///HTTPS URL to store in MongoDB
-  url: string;
-  // Tag that was removed, so rollback can put it back
-  tag: string;
-}
+
 
 // Error carrying an HTTP status so the route can map it directly
 

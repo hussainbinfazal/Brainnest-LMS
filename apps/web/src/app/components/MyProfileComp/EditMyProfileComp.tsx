@@ -31,6 +31,7 @@ import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
 import { toast } from "sonner";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { VerifyCode } from "../AuthComponents/VerifyCode";
 
 type EditProfileCompProps = {
   savedUser: Partial<CAuthUser>;
@@ -47,6 +48,7 @@ export const EditProfileComp = ({
   const [user, setUser] = useState<Partial<CAuthUser>>(savedUser);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [profileUpdated, setProfileUpdated] = useState<boolean>(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string>("");
   const [fileUploadStatus, setFileUploadStatus] = useState<
     "idle" | "uploading" | "uploaded" | "error"
   >("idle");
@@ -74,9 +76,20 @@ export const EditProfileComp = ({
     watch,
     formState: { errors, isSubmitting },
   } = editProfileForm;
+  const email = watch("email")?.trim().toLowerCase();
+  const originalEmail = savedUser.email?.trim().toLowerCase();
+  const isNewEmail = Boolean(email && email !== originalEmail);
   const onSubmit = async (data: UpdateProfileBody) => {
     console.log("Update Profile button clicked");
     try {
+      const submittedEmail = data.email.trim().toLowerCase();
+      if (
+        submittedEmail !== originalEmail &&
+        verifiedEmail !== submittedEmail
+      ) {
+        toast.error("Verify your new email before saving");
+        return;
+      }
       await handleUpdateUser(data)
       // feedback and redirect
       toast.success("Course Updated successfully");
@@ -162,6 +175,13 @@ export const EditProfileComp = ({
 
                   </div>
                 </Field>
+                {isNewEmail && (
+                  <VerifyCode
+                    onVerified={(verified) =>
+                      setVerifiedEmail(verified.trim().toLowerCase())
+                    }
+                  />
+                )}
                 {/* {/Add Email Verification here} */}
                 <FileField
                   label="Profile Image"
