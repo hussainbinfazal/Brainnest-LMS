@@ -42,5 +42,6 @@ export const signUpSchema = signUpBase.refine(
 export const editProfileSchema = authBase.extend(
   {
     phoneNumber: z.string().optional(),
+    profileImagePublicId: z.string().optional()
   }
 )

@@ -70,12 +70,14 @@ export function getNextCourseSectionOrder(
 ////Course --------------------------------------------
 ///Label + input slot + error.message used by every field
 export function Field({
+  id,
   label,
   error,
   htmlFor,
   required,
   children,
 }: {
+  id?:string;
   label?: string;
   error?: string;
   htmlFor?: string;

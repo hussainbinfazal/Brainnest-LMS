@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { ControllerRenderProps } from "react-hook-form";
@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Field } from "@/app/components/AdminComp/AdminCourseComp/Create-Course/courseFields";
+import { Field, FileField } from "@/app/components/AdminComp/AdminCourseComp/Create-Course/courseFields";
 import { JSX } from "react/jsx-runtime";
 import {
   editProfileSchema,
@@ -23,28 +23,37 @@ import {
 } from "@/utils/fieldsValidation/Auth/ZodAuthSchema";
 import ProfileImageUpload from "../ProfileImageUpload";
 import { cn } from "@/lib/utils";
-import { clientLogger } from "@/utils/clientLogger/clientLogger";;
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { getErrorMessage } from "@repo/shared";
 import { CAuthUser, CUploadResult } from "@/types/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFileUploadField } from "@/hooks/Video/useFileUploadField";
+import { toast } from "sonner";
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 type EditProfileCompProps = {
   savedUser: Partial<CAuthUser>;
-  className: string;
+  className?: string;
 };
+export type UpdateProfileBody = z.infer<typeof editProfileSchema>;
 
 export const EditProfileComp = ({
   savedUser,
-  className,
+  className = "",
 }: EditProfileCompProps): JSX.Element => {
   const router = useRouter();
+  const { data: session, status } = useSession()
   const [user, setUser] = useState<Partial<CAuthUser>>(savedUser);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [profileUpdated, setProfileUpdated] = useState<boolean>(false);
   const [fileUploadStatus, setFileUploadStatus] = useState<
     "idle" | "uploading" | "uploaded" | "error"
   >("idle");
   const [fileUploadResult, setFileUploadResult] = useState<
     Partial<CUploadResult>
   >({});
+  const profile = useFileUploadField()
   const getUserFormValues = (user: Partial<CAuthUser>) => {
     return {
       name: user.name,
@@ -57,15 +66,40 @@ export const EditProfileComp = ({
     resolver: zodResolver(editProfileSchema),
     defaultValues: getUserFormValues(savedUser),
   });
+  const {
+    register,
+    control,
+    setValue,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = editProfileForm;
+  const onSubmit = async (data: UpdateProfileBody) => {
+    console.log("Update Profile button clicked");
+    try {
+      await handleUpdateUser(data)
+      // feedback and redirect
+      toast.success("Course Updated successfully");
+      // router.push("/course/manage");
+    } catch (error: unknown) {
+      const message = getErrorMessage(error, "Failed to create course");
+      toast.error(message);
+    }
+  };
 
+
+  const onInvalidSubmit = () => {
+    toast.error("Please complete the required fields highlighted in the form.");
+  };
   const handleUpdateUser = async (data: z.infer<typeof editProfileSchema>) => {
     setIsUpdating(true);
     try {
       let finalData = {
         ...data,
-        finalUploadResult: fileUploadResult
+        finalUploadResult: fileUploadResult,
       };
-
+      await axios.post(`/api/users/${user._id ?? session?.user.id}`)
+      setProfileUpdated(true)
     } catch (error: unknown) {
       let message: string = getErrorMessage(error, "Something went wrong");
       clientLogger.error("Something went wrong, while Login the user", {
@@ -76,145 +110,101 @@ export const EditProfileComp = ({
     }
   };
   return (
-    <div
-      className={cn(
-        "flex justify-center items-center min-h-screen gap-4 overflow-auto pt-8",
-        className
-      )}
-    >
-      <Form {...editProfileForm}>
-        <form
-          onSubmit={editProfileForm.handleSubmit(handleUpdateUser)}
-          className="space-y-8  py-4 min-h-125 "
-        >
-          <FormField
-            control={editProfileForm.control}
-            name="name"
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof editProfileSchema>,
-                "name"
-              >;
-            }) => (
-              <Field label="Name" htmlFor="edit-profile-name">
-                <FormItem className="">
-                  <FormControl id="edit-profile-name">
-                    <Input
-                      type="text"
-                      className=""
-                      placeholder="Name"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormMessage className="" />
-                </FormItem>
-              </Field>
-            )}
-          />
-
-          <FormField
-            control={editProfileForm.control}
-            name="email"
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof editProfileSchema>,
-                "email"
-              >;
-            }) => (
-              <Field label="Email" htmlFor="edit-profile-email">
-                <FormItem className="">
-                  <FormControl id="edit-profile-email">
-                    <Input
-                      type="email"
-                      className=""
-                      placeholder="Email"
-                      {...field}
-                    />
-                  </FormControl>
-
-                  <FormMessage className="" />
-                </FormItem>
-              </Field>
-            )}
-          />
-
-          <FormField
-            control={editProfileForm.control}
-            name="profileImage"
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof editProfileSchema>,
-                "profileImage"
-              >;
-            }) => (
-              <Field
-                label={
-                  fileUploadStatus !== "uploaded"
-                    ? "Upload Profile Picture"
-                    : undefined
-                }
+    <main className={cn("flex min-h-screen items-center justify-center px-4 py-12", className)}>
+      <FormProvider {...editProfileForm}>
+        <Card className="w-full max-w-lg">
+          <CardHeader>
+            <CardTitle>Edit your profile</CardTitle>
+            {/* <CardDescription>
+              Enter your current password and choose a strong new password.
+            </CardDescription> */}
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {profileUpdated ? (
+              <div className="space-y-4">
+                <p role="status">Your info has been changed successfully.</p>
+                <Button type="button" onClick={() => router.push("/login")}>
+                  Continue to login
+                </Button>
+              </div>
+            ) : (
+              <form id="edit-profile-form" className="space-y-6" onSubmit={handleSubmit(onSubmit, onInvalidSubmit)}
               >
-                <FormItem className="w-full min-w-0 relative">
-                  <FormControl id="edit-profile-image">
-                    <ProfileImageUpload<z.infer<typeof editProfileSchema>>
-                      field={field}
-                      fileUploadResult={setFileUploadResult}
-                      uploadStatus={setFileUploadStatus}
-                      className="w-full min-w-0"
-                      imageUrl={user.profileImage}
+                <Field
+                  id="name"
+                  label="Name"
+                  error={errors.name?.message}
+                  required={true}
+                >
+                  <div className="relative">
+                    <Input
+                      type="name"
+                      min={3}
+                      {...register("name")}
+                      placeholder="Enter your name"
                     />
-                  </FormControl>
 
-                  <FormMessage className="" />
-                </FormItem>
-              </Field>
-            )}
-          />
-          <FormField
-            control={editProfileForm.control}
-            name="email"
-            render={({
-              field,
-            }: {
-              field: ControllerRenderProps<
-                z.infer<typeof editProfileSchema>,
-                "email"
-              >;
-            }) => (
-              <Field label="Email" htmlFor="edit-profile-email">
-                <FormItem className="">
-                  <FormControl id="edit-profile-email">
+                  </div>
+                </Field>
+                <Field
+                  id="email"
+                  label="Email"
+                  error={errors.email?.message}
+                  required={true}
+                >
+                  <div className="relative">
                     <Input
                       type="email"
-                      className=""
-                      placeholder="Email"
-                      {...field}
+                      min={3}
+                      {...register("email")}
+                      placeholder="Enter your email"
                     />
-                  </FormControl>
 
-                  <FormMessage className="" />
-                </FormItem>
-              </Field>
+                  </div>
+                </Field>
+                {/* {/Add Email Verification here} */}
+                <FileField
+                  label="Profile Image"
+                  accept="image/*"
+                  {...profile}
+                  onFile={async (f) => {
+                    const result = await profile.upload(f, "avatar");
+                    if (result) {
+                      setValue("profileImage", result.url, {
+                        shouldValidate: true,
+                      });
+                      setValue("profileImagePublicId", result.public_id, {
+                        shouldValidate: true,
+                      });
+                      // setPreviewNewCover(result.url);
+                    }
+                  }}
+                  error={
+                    errors.profileImage?.message ?? errors?.profileImagePublicId?.message
+                  }
+                  required={true}
+                  onCancel={profile.cancel}
+                  isUploading={profile.isUploading}
+                  progress={profile.progress}
+                  url={watch("profileImage") ?? ""}
+                  fileKind="image"
+                />
+
+                <Button
+                  className="active:scale-90 hover:scale-120 ease-in-out duration-600"
+                  type="submit"
+                  form="edit-profile-form"
+                  disabled={isUpdating}
+                  size="default"
+                  variant="default"
+                >
+                  {isUpdating ? "Updating..." : "Update"}
+                </Button>
+              </form>
             )}
-          />
-          <Button
-            size="default"
-            variant="default"
-            className="w-full cursor-pointer"
-            type="submit"
-            disabled={editProfileForm.formState.isSubmitting}
-          >
-            Sign In
-          </Button>
-        </form>
-      </Form>
-    </div>
+          </CardContent>
+        </Card>
+      </FormProvider>
+    </main>
   );
 };

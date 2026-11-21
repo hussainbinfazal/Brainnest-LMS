@@ -176,7 +176,7 @@ export const MyProfilePageComp = ({ completedCourseIds, pendingCourseIds, enroll
           <span
             className="cursor-pointer text-sm "
             onClick={() => {
-              setIsEditing(!isEditing);
+              router.push('/myprofile/edit-profile');
             }}
           >
             {isEditing ? "Cancel" : "Edit Profile"}

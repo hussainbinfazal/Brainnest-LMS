@@ -10,7 +10,10 @@ import {
 } from "@repo/shared/server";
 import { redirect } from "next/navigation";
 import { JSX } from "react";
-type EditProfileUser = Pick<IUser, "name" | "email" | "phoneNumber">;
+type EditProfileUser = Pick<
+  IUser,
+  "name" | "email" | "phoneNumber" | "profileImage"
+>;
 export default async function editProfilePage(): Promise<JSX.Element> {
   const userSession = await auth();
   if (!userSession?.user?.id) {
@@ -21,14 +24,14 @@ export default async function editProfilePage(): Promise<JSX.Element> {
   const userId = userSession.user.id;
   let savedUser = await getCached<EditProfileUser>(
     EDIT_AUTH_USER.namespace,
-    userId,
+    userId
   );
 
   if (!savedUser) {
     try {
       await connectDB(process.env.MONGODB_URI!);
       savedUser = await User.findOne({ _id: userId })
-        .select("name email phoneNumber")
+        .select("_id name email phoneNumber profileImage")
         .lean()
         .exec();
     } catch (fetchError: unknown) {
@@ -43,5 +46,12 @@ export default async function editProfilePage(): Promise<JSX.Element> {
     }
   }
 
-  return <EditProfileComp user={savedUser} />;
+  const plainSavedUser = {
+    name: savedUser.name ?? "",
+    email: savedUser.email ?? "",
+    phoneNumber: savedUser.phoneNumber ?? "",
+    profileImage: savedUser.profileImage ?? "",
+  };
+
+  return <EditProfileComp savedUser={plainSavedUser} className="" />;
 }
