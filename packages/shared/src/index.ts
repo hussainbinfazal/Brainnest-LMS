@@ -257,3 +257,7 @@ export const urlOf = (pendingId: string): string => {
   // Return the final HTTPS URL
   return asset.url;
 };
+export const isPendingId = (
+  publicId: string | undefined,
+  prefix: string
+): publicId is string => !!publicId && publicId.startsWith(prefix);

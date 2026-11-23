@@ -483,7 +483,7 @@ export async function PATCH(
     ///Course cover is an image ( the old code treated it as a video)
     if (coverPendingId) {
       pendingAssets.push({
-        publicId: coverPendingId,
+        publicId: coverPendingId, //New Pending id with the prefix of that path
         kind: "image",
         pendingPrefix: COVER_PENDING_PREFIX,
         targetPublicId: freshTarget("thumbnail"),

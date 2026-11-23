@@ -25,31 +25,31 @@ export const WORKER_ENQUEUE_TRANSCRIBE = {
   namespace: 'limit-worker-enqueue-transcribe',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60, // consistent window with send, easier to reason about
-  description: 'Rate limit IPs on the verify-email-OTP route',
-  usedIn: ['User Verification'],
+  windowSec: 15 * 60, // Protects expensive transcription work.
+  description: 'Rate limits transcription job enqueue requests by client IP',
+  usedIn: ['Worker Transcription API'],
 };
 export const WORKER_SETTLE_PAYMENT = {
   namespace: 'limit-worker-settle-payment',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60, // consistent window with send, easier to reason about
-  description: 'Rate limit IPs on the verify-email-OTP route',
-  usedIn: ['User Verification'],
+  windowSec: 60,
+  description: 'Rate limits worker payment settlement requests by client IP',
+  usedIn: ['Worker Payment Settlement API'],
 };
 export const WORKE_SYNC_USERCOURE_LIKE = {
   namespace: 'limit-worker-sync-likes',
   id: 'ip',
   max: 30,
-  windowSec: 15 * 60, // consistent window with send, easier to reason about
-  description: 'Rate limit IPs on the verify-email-OTP route',
-  usedIn: ['User Verification'],
+  windowSec: 60,
+  description: 'Rate limits worker course-like synchronization by client IP',
+  usedIn: ['Worker Like Synchronization API'],
 };
 export const INTERNAL_AUTH_IP_KEY = {
   namespace: 'limit-internal-auth:ip',
   id: 'ip',
   max: 300, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 5 * 60,
   description:
     'Guards worker routes against secret brute-forcing from a given IP',
   usedIn: ['Authentication'],
@@ -58,7 +58,7 @@ export const RESET_PASSWORD_IP_KEY = {
   namespace: 'limit-reset-password:ip',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Guards reset email attempts against brute-forcing from a given IP',
   usedIn: ['Authentication'],
@@ -111,7 +111,7 @@ export const FORGET_PASSWORD_IP_KEY = {
   namespace: 'limit-reset-password:ip',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Guards reset email attempts against brute-forcing from a given IP',
   usedIn: ['Authentication'],
@@ -120,7 +120,7 @@ export const RESET_PASSWORD_USER_KEY = {
   namespace: 'limit-reset-email:user',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Guards reset email attempts against brute-forcing from a given USER',
   usedIn: ['Authentication'],
@@ -138,7 +138,7 @@ export const VERIFY_RESET_EMAIL_IP_KEY = {
   namespace: 'limit-reset-verify-email:user',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Guards reset email attempts against brute-forcing from a given USER',
   usedIn: ['Authentication'],
@@ -147,7 +147,7 @@ export const VERIFY_RESET_EMAIL_USER_KEY = {
   namespace: 'limit-reset-verify-email:user',
   id: 'user',
   max: 300, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Guards reset email attempts against brute-forcing from a given USER',
   usedIn: ['Authentication'],
@@ -165,7 +165,7 @@ export const UPDATE_TO_INSTRUCTOR_IP_KEY = {
   namespace: 'limit-update-to-instructor:ip',
   id: 'ip',
   max: 30,
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Backstop against anonymous spam of update to instructor from one IP',
   usedIn: ['Update to Instructor Rate Limiting'],
@@ -174,7 +174,7 @@ export const UPDATE_TO_INSTRUCTOR_USER_KEY = {
   namespace: 'limit-update-to-instructor:user',
   id: 'userId',
   max: 30,
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Backstop against anonymous spam of update to instructor from same user',
   usedIn: ['Update to Instructor Rate Limiting'],
@@ -272,7 +272,7 @@ export const REGISTER_IP_KEY = {
   namespace: 'limit-register:ip',
   id: 'ip',
   max: 30, // generous ceiling for legitimate service-to-service traffic
-  windowSec: 60,
+  windowSec: 15 * 60,
   description:
     'Backstop against anonymous spam of new register request from one IP',
   usedIn: ['Register Rate Limiting'],
@@ -346,7 +346,7 @@ export const PROGRESS_COMPLETE_IP_KEY = {
   namespace: 'limit-progress-complete:ip',
   id: 'ip',
   max: 20,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description:
     'Rate limits lesson completion and certificate job requests by client IP',
   usedIn: ['Lesson Completion API'],
@@ -392,7 +392,7 @@ export const ORDER_CREATE_CART_IP_KEY = {
   namespace: 'limit-order-create-cart:ip',
   id: 'ip',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits cart order creation by client IP',
   usedIn: ['Cart Order API'],
 } as const;
@@ -401,7 +401,7 @@ export const INIT_PAYMENT_IP_KEY = {
   namespace: 'limit-init-payment:ip',
   id: 'ip',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits initiate payment attempt by client IP',
   usedIn: ['Initiate Payment API'],
 } as const;
@@ -409,7 +409,7 @@ export const INIT_PAYMENT_USER_KEY = {
   namespace: 'limit-init-payment:user',
   id: 'user',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits initiate payment attempt by userId',
   usedIn: ['Initiate Payment API'],
 } as const;
@@ -417,7 +417,7 @@ export const VERIFY_PAYMENT_IP_KEY = {
   namespace: 'limit-verify-payment:ip',
   id: 'ip',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits verify payment attempt by client IP',
   usedIn: ['Initiate Payment API'],
 } as const;
@@ -425,7 +425,7 @@ export const VERIFY_PAYMENT_USER_KEY = {
   namespace: 'limit-verify-payment:user',
   id: 'user',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits verify payment attempt by userId',
   usedIn: ['Initiate Payment API'],
 } as const;
@@ -433,7 +433,7 @@ export const VERIFY_EMAIL_IP_KEY = {
   namespace: 'limit-verify-email:ip',
   id: 'ip',
   max: 20,
-  windowSec: 60,
+  windowSec: 15 * 60,
   description: 'Rate limits verify email attempt by particular ip',
   usedIn: ['Verfiy Email API'],
 } as const;
@@ -441,7 +441,7 @@ export const VERIFY_EMAIL_USER_KEY = {
   namespace: 'limit-verify-email:user',
   id: 'user',
   max: 20,
-  windowSec: 60,
+  windowSec: 15 * 60,
   description: 'Rate limits verify email attempt by particular user',
   usedIn: ['Verify Email API'],
 } as const;
@@ -450,7 +450,7 @@ export const ORDER_UPDATE_IP_KEY = {
   namespace: 'limit-order-update:ip',
   id: 'ip',
   max: 20,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits order status update requests by client IP',
   usedIn: ['Order Update API'],
 } as const;
@@ -488,7 +488,7 @@ export const ADMIN_COURSE_CREATE_USER_KEY = {
   namespace: 'limit-admin-course-create:user',
   id: 'userId',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits instructor course creation by client IP',
   usedIn: ['Admin Course Create API'],
 } as const;
@@ -496,7 +496,7 @@ export const ADMIN_COURSE_CREATE_IP_KEY = {
   namespace: 'limit-admin-course-create:ip',
   id: 'ip',
   max: 10,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description: 'Rate limits instructor course creation by client IP',
   usedIn: ['Admin Course Create API'],
 } as const;
@@ -514,7 +514,7 @@ export const ADMIN_COURSE_UPDATE_IP_KEY = {
   namespace: 'limit-admin-course-update:ip',
   id: 'ip',
   max: 20,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description:
     'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin Course Detail API'],
@@ -523,7 +523,7 @@ export const ADMIN_AI_LESSON_DRAFT_IP_KEY = {
   namespace: 'limit-admin-ai-lesson-draft:ip',
   id: 'ip',
   max: 20,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description:
     'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin AI Lesson Draft API'],
@@ -532,7 +532,7 @@ export const ADMIN_AI_LESSON_DRAFT_USER_KEY = {
   namespace: 'limit-admin-ai-lesson-draft:user',
   id: 'userId',
   max: 20,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description:
     'Rate limits instructor course detail reads and mutations by client userId',
   usedIn: ['Admin AI Lesson Draft API'],
@@ -541,7 +541,7 @@ export const ADMIN_COURSE_UPDATE_USER_KEY = {
   namespace: 'limit-user-admin-course-update:user',
   id: 'userId',
   max: 20,
-  windowSec: 60,
+  windowSec: 5 * 60,
   description:
     'Rate limits instructor course detail reads and mutations by client IP',
   usedIn: ['Admin Course Detail API'],
@@ -619,16 +619,20 @@ Limits are maximum requests per window. Windows are fixed-window durations.
 IP-BASED LIMITS (key pattern | max requests | window | purpose)
 limit-otp-send:ip:{ip}                         | 5   | 15m | Send email OTP
 limit-otp-verify-email:ip:{ip}                 | 30  | 15m | Verify email OTP
-limit-internal-auth:ip:{ip}                    | 300 | 60s | Internal/worker route authentication
+limit-worker-enqueue-transcribe:{ip}            | 30  | 15m | Enqueue transcription jobs
+limit-worker-settle-payment:{ip}                | 30  | 60s | Settle payments in worker
+limit-worker-sync-likes:{ip}                    | 30  | 60s | Sync course likes in worker
+limit-internal-auth:ip:{ip}                    | 300 | 5m  | Internal/worker route authentication
+limit-reset-password:ip:{ip}                    | 300 | 15m | Password reset requests
 limit-global:ip:{ip}                           | 100 | 60s | Global API protection
-limit-update-to-instructor:ip:{ip}             | 30  | 60s | Update-to-instructor endpoint
+limit-update-to-instructor:ip:{ip}             | 30  | 15m | Update-to-instructor endpoint
 limit-upload-init:ip:{ip}                      | 30  | 60s | Initialize upload
 limit-upload-sign:ip:{ip}                      | 30  | 60s | Generate upload signature
 limit-upload-complete:ip:{ip}                  | 30  | 60s | Complete upload
 limit-upload-avatar:ip:{ip}                    | 30  | 60s | Avatar upload signature
 limit-upload-thumbnails:ip:{ip}                | 30  | 60s | Thumbnail upload signature
 limit-upload-video:ip:{ip}                     | 30  | 60s | Video upload signature
-limit-register:ip:{ip}                         | 30  | 60s | Register
+limit-register:ip:{ip}                         | 30  | 15m | Register
 limit-user-profile:ip:{ip}                     | 120 | 60s | User profile reads
 limit-user-password-reset:ip:{ip}              | 10  | 15m | Password reset email requests
 limit-user-course-detail:ip:{ip}               | 120 | 60s | User course detail reads
@@ -636,18 +640,24 @@ limit-user-course-list:ip:{ip}                 | 120 | 60s | User course list re
 limit-user-course-batch:ip:{ip}                | 60  | 60s | Batched user course lookups
 limit-progress-lesson:ip:{ip}                  | 30  | 60s | Lesson progress generation/updates
 limit-progress-course:ip:{ip}                  | 60  | 60s | Course progress reads
-limit-progress-complete:ip:{ip}                | 20  | 60s | Lesson completion/certificate requests
+limit-progress-complete:ip:{ip}                | 20  | 5m  | Lesson completion/certificate requests
 limit-course-liked:ip:{ip}                      | 60  | 60s | Liked course list reads
 limit-course-like:ip:{ip}                       | 30  | 60s | Like/unlike operations
 limit-course-likes-list:ip:{ip}                 | 60  | 60s | Liked course search/list reads
 limit-cart:ip:{ip}                              | 60  | 60s | Cart reads and course mutations
-limit-order-create-cart:ip:{ip}                 | 10  | 60s | Create cart order
+limit-order-create-cart:ip:{ip}                 | 10  | 5m  | Create cart order
+limit-init-payment:ip:{ip}                      | 10  | 5m  | Initiate payment
+limit-verify-payment:ip:{ip}                    | 10  | 5m  | Verify payment
+limit-verify-email:ip:{ip}                      | 20  | 15m | Verify email
+limit-reset-verify-email:user:{ip}               | 300 | 15m | Verify reset email by IP
 limit-order-create-course:ip:{ip}               | 10  | 60s | Create course checkout order
-limit-order-update:ip:{ip}                      | 20  | 60s | Update order status
+limit-order-update:ip:{ip}                      | 20  | 5m  | Update order status
 limit-certificate:ip:{ip}                       | 20  | 60s | Certificate lookups
 limit-cart-course:ip:{ip}                       | 30  | 60s | Add/remove cart courses
 limit-admin-coupon:ip:{ip}                      | 5   | 60s | Admin coupon reads/mutations
-limit-admin-course-create:ip:{ip}               | 10  | 60s | Admin course creation
+limit-admin-course-create:ip:{ip}               | 10  | 5m  | Admin course creation
+limit-admin-course-update:ip:{ip}               | 20  | 5m  | Admin course updates
+limit-admin-ai-lesson-draft:ip:{ip}              | 20  | 5m  | Generate AI lesson drafts
 limit-admin-course-detail:ip:{ip}               | 20  | 60s | Admin course detail reads/mutations
 limit-admin-instructor-courses:ip:{ip}           | 60  | 60s | Admin instructor course list/delete
 limit-course-review-list:ip:{ip}                 | 60  | 60s | Course review listing
@@ -656,10 +666,18 @@ limit-course-rating:ip:{ip}                      | 15  | 60s | Course review cre
 limit-cron-reconcile:ip:{ip}                     | 5   | 60s | Payment reconciliation cron
 
 USER-BASED LIMITS (key pattern | max requests | window | purpose)
-limit-update-to-instructor:user:{userId}         | 30  | 60s | Update-to-instructor endpoint
+limit-update-to-instructor:user:{userId}         | 30  | 15m | Update-to-instructor endpoint
+limit-reset-email:user:{userId}                  | 300 | 15m | Password reset email actions
+limit-reset-verify-email:user:{userId}            | 300 | 15m | Verify reset email
 limit-upload-sign:user:{userId}                  | 15  | 60s | Generate upload signature
 limit-upload-init:user:{userId}                  | 15  | 60s | Initialize upload
 limit-upload-complete:user:{userId}              | 15  | 60s | Complete upload
+limit-init-payment:user:{userId}                  | 10  | 5m  | Initiate payment
+limit-verify-payment:user:{userId}                | 10  | 5m  | Verify payment
+limit-verify-email:user:{userId}                  | 20  | 15m | Verify email
+limit-admin-course-create:user:{userId}           | 10  | 5m  | Admin course creation
+limit-user-admin-course-update:user:{userId}      | 20  | 5m  | Admin course updates
+limit-admin-ai-lesson-draft:user:{userId}         | 20  | 5m  | Generate AI lesson drafts
 
 NOTES
 * The identifier inside {braces} is the actual client IP or authenticated user id;
