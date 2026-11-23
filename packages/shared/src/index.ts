@@ -1,5 +1,3 @@
-import { logger } from './server';
-
 export * from './helper/getErrorMessage';
 // Union type derived from the array, so a new purpose is added in one place only
 export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
@@ -251,7 +249,6 @@ export const urlOf = (pendingId: string): string => {
   const asset = moved.get(pendingId);
   // Fail loudly with the id, instead of a vague TypeError
   if (!asset) {
-    logger.error("Asset not present in the moved state,");
     throw new Error(`No moved asset for ${pendingId}`);
   }
   // Return the final HTTPS URL

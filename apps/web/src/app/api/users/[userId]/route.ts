@@ -37,6 +37,8 @@ import {
   getRedisClient,
   USER_UPDATE_PROFILE_LOCK,
   buildKey,
+  AUTH_USER,
+  invalidateCached,
 } from "@repo/shared/server"; // Ensure the path is correct
 import bcrypt from "bcryptjs";
 import { CustomNextRequest } from "@/types/server";
@@ -191,6 +193,7 @@ export async function PUT(
     await savedUser.save()
     if (staleUrls.length) await deleteStaleAvatarAssets(staleUrls, savedUser._id).catch((e) => logger.warn(String(e)));
     // console.log("This is the updated User in the backend:",user)
+    await invalidateCached(AUTH_USER.namespace, savedUser._id)
     logger.info("User Updated Successfully");
     return successResponse(
       { message: "User updated successfully", savedUser },
@@ -216,7 +219,7 @@ export async function PUT(
       (error as { code?: number }).code === 11000 &&
       // keyPattern names the violated index, so other indexes are not misreported
       "email" in
-        ((error as { keyPattern?: Record<string, unknown> }).keyPattern ?? {});
+      ((error as { keyPattern?: Record<string, unknown> }).keyPattern ?? {});
     // Tell the client it is a conflict, not a crash
     if (isDupEmail) {
       return failResponse(

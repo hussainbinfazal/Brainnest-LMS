@@ -19,7 +19,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BarLoader } from "react-spinners";
 import { ModeToggle } from "@/components/Dark";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { User } from "next-auth";
 import { CAuthUser, CChatMessage } from "@/types/client";
 import { cn } from "@/lib/utils";
 import { DottedGlowBackground } from "@/components/ui/dotted-glow-background";
@@ -272,10 +271,10 @@ export default function Header({
                   <div ref={menuRef}>
                     <Card
                       className={`menu absolute top-2 right-5 ${chatAlreadyExists
-                          ? "min-h-45"
-                          : sessionUser
-                            ? "min-h-38"
-                            : " min-h-10"
+                        ? "min-h-45"
+                        : sessionUser
+                          ? "min-h-38"
+                          : " min-h-10"
                         }  w-40 z-70`}
                     >
                       <CardContent className="flex flex-col gap-3 items-center justify-center">

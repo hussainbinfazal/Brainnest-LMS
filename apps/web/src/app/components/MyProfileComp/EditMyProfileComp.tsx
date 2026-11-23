@@ -11,6 +11,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { VerifyCode } from "../AuthComponents/VerifyCode";
+import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 
 type EditProfileCompProps = {
   savedUser: Partial<CAuthUser>;
@@ -52,6 +54,7 @@ export const EditProfileComp = ({
   const [fileUploadStatus, setFileUploadStatus] = useState<
     "idle" | "uploading" | "uploaded" | "error"
   >("idle");
+  const fetchAuthUser = useAuthStore((state) => state.fetchAuthUser);
   const [fileUploadResult, setFileUploadResult] = useState<
     Partial<CUploadResult>
   >({});
@@ -90,9 +93,11 @@ export const EditProfileComp = ({
         toast.error("Verify your new email before saving");
         return;
       }
-      await handleUpdateUser(data)
+      await handleUpdateUser(data);
       // feedback and redirect
-      toast.success("Course Updated successfully");
+      toast.success("Profile updated successfully");
+      fetchAuthUser();
+      router.back();
       // router.push("/course/manage");
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Failed to create course");
@@ -183,7 +188,7 @@ export const EditProfileComp = ({
                   />
                 )}
                 {/* {/Add Email Verification here} */}
-                <FileField
+                {/* <FileField
                   label="Profile Image"
                   accept="image/*"
                   {...profile}
@@ -208,6 +213,35 @@ export const EditProfileComp = ({
                   progress={profile.progress}
                   url={watch("profileImage") ?? ""}
                   fileKind="image"
+                /> */}
+                <FormField
+                  control={editProfileForm.control}
+                  name="profileImage"
+                  render={({
+                    field,
+                  }: {
+                    field: ControllerRenderProps<
+                      z.infer<typeof editProfileSchema>,
+                      "profileImage"
+                    >;
+                  }) => (
+                    <FormItem className="w-full min-w-0 relative">
+                      {fileUploadStatus !== "uploaded" && (
+                        <FormLabel className="">Upload Profile Picture</FormLabel>
+                      )}
+                      <FormControl>
+                        <ProfileImageUpload<z.infer<typeof editProfileSchema>>
+                          field={field}
+                          fileUploadResult={setFileUploadResult}
+                          uploadStatus={setFileUploadStatus}
+                          className="w-full min-w-0"
+                          imageUrl={watch("profileImage") ?? ""}
+                        />
+                      </FormControl>
+
+                      <FormMessage className="" />
+                    </FormItem>
+                  )}
                 />
 
                 <Button

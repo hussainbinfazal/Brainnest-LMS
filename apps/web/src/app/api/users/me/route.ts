@@ -45,7 +45,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
 
   try {
     const authSession: Session | null = await auth();
-    if (!authSession)
+    if (!authSession?.user.id)
       return failResponse(
         { message: "Unauthorized", ip: ip },
         401,
@@ -53,17 +53,8 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
         undefined,
         true
       );
-    const authUser: ISessionUser | null = authSession?.user;
-    if (!authUser) {
-      logger.warn("Unauthorized access attempt", { ip: ip });
-      return failResponse(
-        { message: "Missing User Details" },
-        401,
-        undefined,
-        undefined,
-        true
-      );
-    }
+    const authUser: ISessionUser | null = authSession.user;
+
     const cached = await getCached<CAuthUser[]>(
       AUTH_USER.namespace,
       authUser.id
@@ -81,7 +72,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
     }
     await connectDB(process.env.MONGODB_URI!);
     // user basic info
-    const userDb: IUser | null = await User.findById(authUser?.id)
+    const userDb: IUser | null = await User.findById(authUser.id)
       .select("-password")
       .exec();
 
@@ -93,7 +84,7 @@ export async function GET(request: CustomNextRequest): Promise<NextResponse> {
         undefined,
         true
       );
-    logger.info("User fetched successfully", { userId: authUser?.id });
+    logger.info("User fetched successfully", { userId: authUser.id });
     await setCached(
       AUTH_USER.namespace,
       authUser.id,
