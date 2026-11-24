@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { failResponse, successResponse } from "@/lib/helpers/failResponseHelper";
 import { workerApiLinks } from "@/utils/workerApiLinks";
-import { buildKey, CACHE_TTL, checkIp, checkUser, getRedisClient, logger, passJobToWorker, SEND_CODE_EMAIL_IP_KEY, setCached, USER_EMAIL_VERIFIED_FLAG, VERIFY_EMAIL_IP_KEY, VERIFY_EMAIL_USER_KEY } from "@repo/shared/server";
+import { buildKey, CACHE_TTL, checkIp, checkUser, connectDB, getRedisClient, logger, passJobToWorker, SEND_CODE_EMAIL_IP_KEY, setCached, User, USER_EMAIL_VERIFIED_FLAG, VERIFY_EMAIL_IP_KEY, VERIFY_EMAIL_USER_KEY } from "@repo/shared/server";
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
@@ -39,8 +39,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         // Get the shared Redis client
         const key = buildKey('verify', email);
+        // Key that enforces one code request per email per 60 seconds
+        const cooldownKey = `${key}:cooldown`;
+        // SET with NX is atomic: it returns "OK" only if the key did not already exist
         const redis = await getRedisClient()
         const attemptsKey = `${key}:attempts`;
+        const canSend = await redis.set(cooldownKey, "1", {
+            ex: 60,
+            nx: true,
+        });
+        // If the cooldown is still active, refuse without touching the existing code
+        if (canSend !== "OK") {
+            // 429 tells the client to wait before asking again
+            return failResponse({ message: "Please wait before requesting another code" }, 429, undefined, undefined, true);
+        }
 
         // // Increment attempts atomically BEFORE checking the code
         // const attempts = await redis.incr(attemptsKey);
@@ -58,11 +70,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // }
 
         const code = crypto.randomInt(100_000, 1_000_000).toString();
-        await redis.hset(key, { code });
-        console.log("Here is the generated code that was suppose to sent to the user", code)
-        await redis.expire(key, 600);
+        ///atomic insert and delete
+        await redis
+            .multi()
+            // Store the code as a plain string with a 10-minute TTL in the same command
+            .hset(key, { code })
+            // Reset the failed-attempts counter for the fresh code]
+            .expire(key, 600)
+            .del(attemptsKey)
+            .exec();
         // Reset the failed-attempts counter so a fresh code starts clean
-        await redis.del(attemptsKey);
         await passJobToWorker(
             workerApiLinks.email.sendOtp,
             {
@@ -149,7 +166,10 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
         // Fetch the stored code (await is required; hget returns a Promise)
         const storedCode = await redis.hget(key, "code");
-
+        if (storedCode === null) {
+            // Same message as a wrong code, so we don't leak which case it is
+            return failResponse({ message: "Invalid or expired code" }, 400, undefined, undefined, true);
+        }
         const submittedCode = Buffer.from(otp, "utf8");
         const expectedCode = Buffer.from(String(storedCode) ?? "", "utf8");
         const isValid =
@@ -165,6 +185,9 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
 
         // Code is correct: delete it and the counter so it cannot be reused
         await redis.del(key, attemptsKey);
+        await connectDB(process.env.MONGODB_URI!)
+        await User.updateOne({ email }, { $set: { isVerified: true } });
+
         await setCached(USER_EMAIL_VERIFIED_FLAG.namespace, email, "1", CACHE_TTL.VERY_LONG)
     } catch (verifyEmailError: unknown) {
 
