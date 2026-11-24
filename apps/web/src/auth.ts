@@ -83,10 +83,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const newUser: UserDocument = new User({
               email: user.email,
               name: user.name,
-              username: generateUniqueUsername(user.name, user.email),
+              username: await generateUniqueUsername(user.name, user.email),
               role: "student",
-              profile: user.profileImage || "",
-              phoneNumber: user.phoneNumber || "",
+              profile: user.image ?? '',
+              phoneNumber: user.phoneNumber ?? "",
             });
             existingUser = await newUser.save();
           }
