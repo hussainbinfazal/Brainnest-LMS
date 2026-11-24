@@ -14,7 +14,10 @@ const updateUserBodySchema = z.object({
       phoneNumber: z.string().optional(),
       email: z.string().email(),
       profileImage: z.string(),
-      profileImagePublicId: z.string()
+      profileImagePublicId: z.string().optional(),
+      finalUploadResult: z
+        .object({ public_id: z.string().max(200).optional() })
+        .optional(),
     })
     .passthrough(),
 });
@@ -128,7 +131,11 @@ export async function PUT(
   }
   const body = await parseBody(request, updateUserBodySchema);
   if (!body.ok) return body.response;
-  const { profileImage, profileImagePublicId, name, phoneNumber, email: bodyEmail } = body.data.userData;
+  const { finalUploadResult, name, phoneNumber, email: bodyEmail } = body.data.userData;
+  const profileImagePublicId =
+    finalUploadResult?.public_id ??
+    body.data.userData.profileImagePublicId ??
+    "";
   if (!body.data.userData)
     return failResponse(
       { message: "User data is required" },

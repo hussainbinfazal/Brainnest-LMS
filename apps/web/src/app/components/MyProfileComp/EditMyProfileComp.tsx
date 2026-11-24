@@ -90,7 +90,7 @@ export const EditProfileComp = ({
         submittedEmail !== originalEmail &&
         verifiedEmail !== submittedEmail
       ) {
-        toast.error("Verify your new email before saving");
+        toast.error("Please verify new email first");
         return;
       }
       await handleUpdateUser(data);
@@ -116,7 +116,9 @@ export const EditProfileComp = ({
         ...data,
         finalUploadResult: fileUploadResult,
       };
-      await axios.post(`/api/users/${user._id ?? session?.user.id}`)
+      await axios.put(`/api/users/${user._id ?? session?.user.id}`, {
+        userData: finalData,
+      })
       setProfileUpdated(true)
     } catch (error: unknown) {
       let message: string = getErrorMessage(error, "Something went wrong");

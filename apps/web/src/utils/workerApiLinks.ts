@@ -5,8 +5,7 @@ export const workerApiLinks = {
     sendResetEmail: "send-reset-email",
   },
   email: {
-    sendOtp: "internal/email-otp",
-    verify:'/verify-email'
+    sendOtp: "/email-otp",
   },
   transcription: {
     audioToText: "transcribe/audioToText",

@@ -13,7 +13,7 @@ const sendEmailBodySchema = z.object({
 });
 const verifyEmailBodySchema = z.object({
     email: z.string().email(),
-    code: z.string().regex(/^\d{6}$/, "Code must contain exactly 6 digits")
+    otp: z.string().regex(/^\d{6}$/, "Code must contain exactly 6 digits")
 })
 export async function POST(request: NextRequest): Promise<NextResponse> {
     const { allowed: ipAllowed, retryAfterSec, ip } = await checkIp(
@@ -38,13 +38,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const email = parsedBody.data.email.trim().toLowerCase();
     try {
         // Get the shared Redis client
-        const redis = await getRedisClient();
+        const key = buildKey('verify', email);
+        const redis = await getRedisClient()
+        const attemptsKey = `${key}:attempts`;
+
+        // // Increment attempts atomically BEFORE checking the code
+        // const attempts = await redis.incr(attemptsKey);
+        // // On the first attempt, set an expiry so the counter cleans itself up
+        // if (attempts === 1) {
+        //     // 10 minutes; should match or exceed the code's own TTL
+        //     await redis.expire(attemptsKey, 600);
+        // }
+        // // Too many wrong guesses for this email: kill the code entirely
+        // if (attempts > 5) {
+        //     // Delete the code so it cannot be guessed any further
+        //     await redis.del(key);
+        //     // 429 tells the client to request a new code
+        //     return failResponse({ message: "Too many attempts. Request a new code." }, 429, undefined, undefined, true);
+        // }
+
+        const code = crypto.randomInt(100_000, 1_000_000).toString();
+        await redis.hset(key, { code });
+        console.log("Here is the generated code that was suppose to sent to the user", code)
+        await redis.expire(key, 600);
         // Reset the failed-attempts counter so a fresh code starts clean
-        await redis.del(`${buildKey("verify", email)}:attempts`);
+        await redis.del(attemptsKey);
         await passJobToWorker(
-            workerApiLinks.email.verify,
+            workerApiLinks.email.sendOtp,
             {
-                email
+                email,
+                otp: code,
             }
         );
     } catch (workerCallError: unknown) {
@@ -103,7 +126,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     }
     const email = parsedBody.data.email.trim().toLowerCase();
     // Extract the code the user submitted
-    const { code } = parsedBody.data;
+    const { otp } = parsedBody.data;
     try {
         const key = buildKey('verify', email);
         const redis = await getRedisClient()
@@ -127,7 +150,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         // Fetch the stored code (await is required; hget returns a Promise)
         const storedCode = await redis.hget(key, "code");
 
-        const submittedCode = Buffer.from(code, "utf8");
+        const submittedCode = Buffer.from(otp, "utf8");
         const expectedCode = Buffer.from(String(storedCode) ?? "", "utf8");
         const isValid =
             storedCode !== null &&
