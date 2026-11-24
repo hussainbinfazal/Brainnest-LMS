@@ -70,6 +70,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // }
 
         const code = crypto.randomInt(100_000, 1_000_000).toString();
+        // console.log("Here is the generated code ", code)
         ///atomic insert and delete
         await redis
             .multi()
