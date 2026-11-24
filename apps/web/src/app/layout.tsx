@@ -5,7 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import { Toaster } from "@/components/ui/sonner";
 
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -58,9 +58,6 @@ export default function RootLayout({
                   <Header />
                   {/* <LoadingBarLoader /> */}
                   <main className="flex-1">
-                    <div className="block md:hidden text-2xl">
-                      <SidebarTrigger className="" />
-                    </div>
                     {children}
                   </main>
                   <Footer />

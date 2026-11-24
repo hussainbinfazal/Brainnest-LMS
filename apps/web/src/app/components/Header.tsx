@@ -26,6 +26,7 @@ import { useUserCourseStore } from "@/lib/store/usersStore/useUserCourseStore";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { useClickOutSide } from "@/hooks/useClickOutside";
 import { USER_ROLE } from "@repo/shared";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 ///Add Skeletons while loading
 export default function Header({
   className,
@@ -145,7 +146,8 @@ export default function Header({
       <div
         className={`container flex justify-center h-14 max-w-screen-2xl items-center relative`}
       >
-        <div className="mr-4 flex">
+        <div className="mr-4 flex items-center">
+
           <Link
             href="/"
             className="mr-6 flex items-center space-x-2 cursor-pointer"
@@ -323,12 +325,14 @@ export default function Header({
                         </p>
                       </CardContent>
                     </Card>
+
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
+        <SidebarTrigger className="mr-2 hidden max-[970px]:flex" />
       </div>
     </header>
   );

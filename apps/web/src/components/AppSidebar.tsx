@@ -197,7 +197,7 @@ export function AppSidebar() {
                           handleLogout();
                         }}
                       >
-                        Sign Out
+                        Log out
                       </p>
                     ) : (
                       <p onClick={() => router.push("/login")}>Login</p>

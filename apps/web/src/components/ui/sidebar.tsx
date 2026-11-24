@@ -49,27 +49,27 @@ export interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export interface SidebarTriggerProps extends React.ComponentPropsWithoutRef<
   typeof Button
-> {}
+> { }
 
-export interface SidebarRailProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+export interface SidebarRailProps extends React.ButtonHTMLAttributes<HTMLButtonElement> { }
 
-export interface SidebarInsetProps extends React.HTMLAttributes<HTMLElement> {}
+export interface SidebarInsetProps extends React.HTMLAttributes<HTMLElement> { }
 
 export interface SidebarInputProps extends React.ComponentPropsWithoutRef<
   typeof Input
-> {}
+> { }
 
-export interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarHeaderProps extends React.HTMLAttributes<HTMLDivElement> { }
 
-export interface SidebarFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarFooterProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export interface SidebarSeparatorProps extends React.ComponentPropsWithoutRef<
   typeof Separator
-> {}
+> { }
 
-export interface SidebarContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarContentProps extends React.HTMLAttributes<HTMLDivElement> { }
 
-export interface SidebarGroupProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarGroupProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export interface SidebarGroupLabelProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
@@ -79,16 +79,16 @@ export interface SidebarGroupActionProps extends React.ButtonHTMLAttributes<HTML
   asChild?: boolean;
 }
 
-export interface SidebarGroupContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarGroupContentProps extends React.HTMLAttributes<HTMLDivElement> { }
 
-export interface SidebarMenuProps extends React.HTMLAttributes<HTMLUListElement> {}
+export interface SidebarMenuProps extends React.HTMLAttributes<HTMLUListElement> { }
 
-export interface SidebarMenuItemProps extends React.LiHTMLAttributes<HTMLLIElement> {}
+export interface SidebarMenuItemProps extends React.LiHTMLAttributes<HTMLLIElement> { }
 
 export interface SidebarMenuButtonProps
   extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof sidebarMenuButtonVariants> {
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  VariantProps<typeof sidebarMenuButtonVariants> {
   asChild?: boolean;
   isActive?: boolean;
   tooltip?: string | React.ComponentPropsWithoutRef<typeof TooltipContent>;
@@ -99,15 +99,15 @@ export interface SidebarMenuActionProps extends React.ButtonHTMLAttributes<HTMLB
   showOnHover?: boolean;
 }
 
-export interface SidebarMenuBadgeProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface SidebarMenuBadgeProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export interface SidebarMenuSkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   showIcon?: boolean;
 }
 
-export interface SidebarMenuSubProps extends React.HTMLAttributes<HTMLUListElement> {}
+export interface SidebarMenuSubProps extends React.HTMLAttributes<HTMLUListElement> { }
 
-export interface SidebarMenuSubItemProps extends React.LiHTMLAttributes<HTMLLIElement> {}
+export interface SidebarMenuSubItemProps extends React.LiHTMLAttributes<HTMLLIElement> { }
 
 export interface SidebarMenuSubButtonProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   asChild?: boolean;
@@ -303,8 +303,8 @@ function Sidebar({
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            ? "left-0group-data-[collapsible=offcanvas]:-left-(--sidebar-width)"
+            : "right-0 group-data-[collapsible=offcanvas]:-right-(--sidebar-width)",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -359,7 +359,7 @@ function SidebarRail({ className, ...props }: SidebarRailProps) {
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
+        "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2  after:w-0.5 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
@@ -628,7 +628,7 @@ function SidebarMenuAction({
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         showOnHover &&
-          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
+        "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
         className
       )}
       {...props}
