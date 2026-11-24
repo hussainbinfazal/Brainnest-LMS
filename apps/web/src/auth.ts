@@ -113,9 +113,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({
       token,
       user,
+      trigger,
     }: {
       token: JWT;
       user?: NextAuthUser;
+      trigger?: "signIn" | "signUp" | "update";
     }): Promise<JWT> {
       if (user) {
         token.id = user.id;
@@ -124,6 +126,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.phoneNumber = user.phoneNumber;
         token.role = user.role;
         token.profileImage = user.profileImage as string;
+      }
+      if (trigger === "update" && token.id) {
+        await connectDB(process.env.MONGODB_URI!);
+        const updatedUser = await User.findById(token.id)
+          .select("name email role phoneNumber profileImage")
+          .lean();
+        if (updatedUser) {
+          token.name = updatedUser.name;
+          token.email = updatedUser.email;
+          token.role = updatedUser.role;
+          token.phoneNumber = updatedUser.phoneNumber;
+          token.profileImage = updatedUser.profileImage as string;
+        }
       }
       return token;
     },

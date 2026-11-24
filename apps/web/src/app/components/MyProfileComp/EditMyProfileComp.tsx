@@ -46,7 +46,7 @@ export const EditProfileComp = ({
   className = "",
 }: EditProfileCompProps): JSX.Element => {
   const router = useRouter();
-  const { data: session, status } = useSession()
+  const { data: session, status, update: updateSession } = useSession()
   const [user, setUser] = useState<Partial<CAuthUser>>(savedUser);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [profileUpdated, setProfileUpdated] = useState<boolean>(false);
@@ -94,9 +94,10 @@ export const EditProfileComp = ({
         return;
       }
       await handleUpdateUser(data);
+      await updateSession();
+      await fetchAuthUser();
       // feedback and redirect
       toast.success("Profile updated successfully");
-      fetchAuthUser();
       router.back();
       // router.push("/course/manage");
     } catch (error: unknown) {
@@ -125,7 +126,8 @@ export const EditProfileComp = ({
       clientLogger.error("Something went wrong, while Login the user", {
         message,
       });
-      // toast.error();
+      throw error;
+    } finally {
       setIsUpdating(false);
     }
   };

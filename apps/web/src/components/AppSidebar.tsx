@@ -20,7 +20,7 @@ import { useAuthStore } from "@/lib/store/usersStore/useAuthStore";
 import { LiaShoppingCartSolid } from "react-icons/lia";
 import { CiHeart } from "react-icons/ci";
 import { useState, useRef } from "react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -30,13 +30,14 @@ import { useTheme } from "next-themes";
 import { USER_ROLE } from "@repo/shared";
 export function AppSidebar() {
   const router = useRouter();
+  const { data: session, status } = useSession()
   const { theme, setTheme } = useTheme();
   const authUser = useAuthStore((state) => state.authUser);
   const clearAuthUser = useAuthStore((state) => state.clearAuthUser);
   const menuRef = useRef(null); // <-- Add this
   const avatarRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
+  const isAuth = authUser ?? session?.user ?? null
   const handleLogout = async () => {
     await signOut();
 
@@ -51,12 +52,12 @@ export function AppSidebar() {
       <SidebarContent className="flex flex-col items-center justify-start pt-10 gap-4">
         <div className="flex flex-col">
           <nav className="flex flex-col items-center justify-center gap-4">
-            {authUser && (
+            {isAuth && (
               <Link href="/mycourses" className="px-4 text-xl font-semibold">
                 My Courses
               </Link>
             )}
-            {authUser && (
+            {isAuth && (
               <Link href="/courses" className="px-4 text-xl font-semibold">
                 Courses
               </Link>
@@ -70,17 +71,17 @@ export function AppSidebar() {
             <Link href="/courses/liked-courses" className="px-4">
               <CiHeart className="text-4xl hover:text-gray-200 font-semibold" />
             </Link>
-            {authUser && (
+            {isAuth && (
               <Link href="/myprofile" className="px-4 text-xl font-semibold">
                 Profile
               </Link>
             )}
-            {authUser && (
+            {isAuth && (
               <Link
                 href="/myprofile/mycertificates"
                 className="px-4 text-xl font-semibold"
               >
-                My Certificates{}
+                My Certificates{ }
               </Link>
             )}
           </nav>
@@ -104,8 +105,8 @@ export function AppSidebar() {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            {authUser &&
-              (authUser.role === USER_ROLE.INSTRUCTOR ? (
+            {isAuth &&
+              (isAuth.role === USER_ROLE.INSTRUCTOR ? (
                 <Link href="instructor/course/manage">
                   <Button className=" rounded-sm" variant="default" size="sm">
                     Manage
@@ -122,14 +123,14 @@ export function AppSidebar() {
                   </Button>
                 </Link>
               ))}
-            {authUser ? (
+            {isAuth ? (
               <Button
                 className=""
                 variant="default"
                 size="sm"
                 onClick={handleLogout}
               >
-                Sign out
+                Log out
               </Button>
             ) : (
               <Link href="/login">
@@ -147,18 +148,18 @@ export function AppSidebar() {
             <DropdownMenu onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton tooltip="Main Menu" className="">
-                  {authUser && (
+                  {isAuth && (
                     <Avatar className="ml-4 relative">
                       <AvatarImage
                         className="my-class"
-                        src={authUser?.profileImage}
+                        src={isAuth.profileImage}
                       />
                       <AvatarFallback className="my-class">
-                        {authUser?.name?.charAt(0).toUpperCase()}
+                        {isAuth.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   )}{" "}
-                  {authUser?.name}
+                  {isAuth?.name}
                   {isMenuOpen ? (
                     <HiChevronDown
                       className="ml-auto"
