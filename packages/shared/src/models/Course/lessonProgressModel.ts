@@ -21,7 +21,7 @@ const lessonProgressSchema = new mongoose.Schema<ILessonProgress>({
     type: Number,
     default: 0,
   },
-  completedAt: { type: Date, default: Date.now },
+  completedAt: { type: Date },
 });
 
 lessonProgressSchema.index({ userId: 1, lessonId: 1 }, { unique: true });

@@ -12,6 +12,7 @@ import {
   CVideoPlayerProps,
   CWatermark,
 } from "@/types/client";
+import { clientLogger } from "@/utils/clientLogger/clientLogger";
 
 const VideoButton = videojs.getComponent("Button");
 type VideoButtonType = any;
@@ -37,7 +38,7 @@ const VideoPlayer = ({
   watermark = null,
   className = "",
   ...props
-}: VideoPlayerProps): React.ReactNode => {
+}: CVideoPlayerProps): React.ReactNode => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<Player | null | undefined>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -91,7 +92,7 @@ const VideoPlayer = ({
       if (!videoRef.current) return;
       const player = videojs(videoRef.current, videoJsOptions, () => {
         setIsLoading(false);
-        logger.info("Video.js player initialized");
+        clientLogger.info("Video.js player initialized");
       });
       return player;
     };
@@ -293,7 +294,7 @@ const VideoPlayer = ({
     }
   };
 
-  const addChapters = (player: Player, chapters: Chapter[]) => {
+  const addChapters = (player: Player, chapters: CChapter[]) => {
     // Add chapter markers to progress bar
     chapters.forEach((chapter) => {
       const marker = document.createElement("div");
@@ -309,7 +310,7 @@ const VideoPlayer = ({
     });
   };
 
-  const addSubtitles = (player: Player, subtitles: Subtitle[]) => {
+  const addSubtitles = (player: Player, subtitles: CSubtitle[]) => {
     subtitles.forEach((subtitle) => {
       player.addRemoteTextTrack({
         kind: "subtitles",
@@ -321,7 +322,7 @@ const VideoPlayer = ({
     });
   };
 
-  const addQualitySelector = (player: Player, qualities: QualityOption[]) => {
+  const addQualitySelector = (player: Player, qualities: CQualityOption[]) => {
     // Add quality selector menu
     const qualityButton = videojs.getComponent("MenuButton");
     const QualityButton = (videojs as any).extend(qualityButton, {
@@ -360,7 +361,7 @@ const VideoPlayer = ({
     player?.getChild("controlBar")?.addChild("QualityButton", {}, 14);
   };
 
-  const addWatermark = (player: Player, watermark: Watermark) => {
+  const addWatermark = (player: Player, watermark: CWatermark) => {
     const watermarkDiv = document.createElement("div");
     watermarkDiv.className = "vjs-watermark";
     watermarkDiv.innerHTML = watermark.text || "";
@@ -421,7 +422,7 @@ const VideoPlayer = ({
       className={`relative w-full max-w-full bg-black rounded-xl overflow-hidden shadow-2xl ${className}`}
     >
       {title && (
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-5 py-4 text-white">
+        <div className="bg-linear-to-r from-blue-500 to-purple-600 px-5 py-4 text-white">
           <h3 className="m-0 text-xl font-semibold text-shadow">{title}</h3>
         </div>
       )}
@@ -443,7 +444,7 @@ const VideoPlayer = ({
       </div>
 
       {analytics && (
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 px-5 py-3 flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-200 border-t border-gray-200 dark:border-gray-600">
+        <div className="bg-linear-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 px-5 py-3 flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-200 border-t border-gray-200 dark:border-gray-600">
           <div className="flex items-center font-medium">
             <span className="text-blue-500 mr-2">•</span>
             <span>Current Time: {formatTime(currentTime)}</span>

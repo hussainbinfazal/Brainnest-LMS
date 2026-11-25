@@ -2,101 +2,44 @@ import {
   failResponse,
   successResponse,
 } from "@/lib/helpers/failResponseHelper";
-import { checkIp, PROGRESS_LESSON_IP_KEY } from "@repo/shared/server";
 import {
-  connectDB,
-  ILessonProgress,
-  IProgress,
+  checkIp,
+  Lesson,
+  LessonProgress,
+  LessonProgressStatus,
   Progress,
+  PROGRESS_BY_USER_COURSE,
+  PROGRESS_LESSON_IP_KEY,
+  USER_COURSE_DETAIL,
+  USER_COURSE_LIST,
+  connectDB,
+  logger,
+  userCourse as UserCourse,
 } from "@repo/shared/server";
-import { generateProgress, updateProgress } from "@/services/progressService";
+import { invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
-import { logger } from "@repo/shared/server";
 import { validateMongooseId } from "@/utils/fieldsValidation/idValidator/idValidator";
 
 import { Session } from "next-auth";
 import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
+import { NextResponse } from "next/server";
 
 const updateProgressBodySchema = z.object({
   progressValue: z.number().min(0).max(100),
+  lastPositionSeconds: z.number().min(0),
 });
 
-// export async function GET(request: CustomNextRequest, context: { params: { courseId: string, lessonId: string } }): Promise<NextResponse> {
-//     const user: ISessionUser | null = await getDataFromToken(request);
-//     if (!user || !user.id) {
-//         logger.info("Unauthorized access", { ip: ip });
-//         return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-//     }
-//     const userId: string = user.id;
-//     let cached = await getCached<CProgress>(`progress`, `${userId}:${context.params.courseId}`)
-//     await connectDB(process.env.MONGODB_URI!);
-//     try {
-//         const { courseId, lessonId } = context.params;
-//         const user: ISessionUser | null = await getDataFromToken(request);
-//         if (!user || !user.id) {
-//             logger.info("Unauthorized access", { ip: ip });
-//             return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
-//         }
-//         const userId: string = user.id;
-//         if (!validateMongooseId({ userId, courseId, lessonId })) {
-//             logger.info("Invalid course or lesson ID");
-//             return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
-//         }
-//         if (!validateMongooseId({ userId, courseId, lessonId })) {
-//             logger.info("Invalid course or lesson ID");
-//             return NextResponse.json({ message: "Invalid course or lesson ID" }, { status: 400 });
-//         };
-//         // const progress = await Progress.aggregate([
-//         //     {
-//         //         $match: {
-//         //             userId: new mongoose.Types.ObjectId(userId),
-//         //             courseId: new mongoose.Types.ObjectId(courseId)
-//         //         }
-//         //     },
-//         //     {
-//         //         $unwind: "$completedLessons"
-//         //     },
-//         //     {
-//         //         $match: {
-//         //             "completedLessons.lessonId": new mongoose.Types.ObjectId(lessonId)
-//         //         }
-//         //     },
-//         //     {
-//         //         $project: {
-//         //             _id: 0,
-//         //             lesson: "$completedLessons",
-//         //             lastAccessedAt: 1
-//         //         }
-//         //     }
-//         // ])
-//         const completion = await LessonCompletion.findOne(
-//             {
-//                 userId: new mongoose.Types.ObjectId(userId),
-//                 courseId: new mongoose.Types.ObjectId(courseId),
-//                 lessonId: new mongoose.Types.ObjectId(lessonId),
-//             },
-//             {
-//                 _id: 0,
-//                 lessonId: 1,
-//                 completedAt: 1,
-//             }
-//         ).lean();
-//         logger.info("This is the progress of the Lesson", { progress, lessonId });
-//         const serializedProgress = serializeProgress(progress[0]);
-//         await setCached<CProgress>("progress",
-//             `${userId}:${courseId}`, serializedProgress, CACHE_TTL.MEDIUM)
-//         return NextResponse.json({ message: "This is the progress of the lesson", progress: progress[0] }, { status: 200 });
-//     } catch (error: unknown) {
-//         logger.error("Error marking lesson complete:", { error });
-//         const message = error instanceof Error ? error.message : 'Unknown error';
-//         return NextResponse.json({ message: `Failed to fetch progress :${message}` }, { status: 500 });
-//     }
-// }
+
 export async function POST(
   request: CustomNextRequest,
-  context: { params: Promise<{ courseId: string | string[] }> }
+  context: {
+    params: Promise<{
+      courseId: string | string[];
+      lessonId: string | string[];
+    }>;
+  }
 ): Promise<NextResponse> {
   const { allowed, retryAfterSec, ip } = await checkIp(
     request,
@@ -112,12 +55,14 @@ export async function POST(
       { "Retry-After": String(retryAfterSec) },
       true
     );
-  // await connectDB(process.env.MONGODB_URI!);
   try {
     const params = await context.params;
     const courseId = Array.isArray(params.courseId)
       ? params.courseId[0]
       : params.courseId;
+    const lessonId = Array.isArray(params.lessonId)
+      ? params.lessonId[0]
+      : params.lessonId;
 
     const authSession: Session | null = await auth();
     if (!authSession)
@@ -128,6 +73,14 @@ export async function POST(
         undefined,
         true
       );
+    if (!validateMongooseId({ courseId, lessonId })) {
+      return failResponse({ message: "Invalid course or lesson Id" }, 400);
+    }
+    const parsedBody = await parseBody(request, updateProgressBodySchema);
+    if (!parsedBody.ok) {
+      return parsedBody.response;
+    }
+    const { progressValue, lastPositionSeconds } = parsedBody.data;
     const user: ISessionUser | null = authSession?.user;
     if (!user || !user.id) {
       logger.info("Unauthorized access", { ip: ip });
@@ -140,8 +93,8 @@ export async function POST(
       );
     }
     const userId: string = user.id;
-    if (!validateMongooseId({ userId, courseId })) {
-      logger.info("Invalid IDs", { userId, courseId });
+    if (!validateMongooseId({ userId, courseId, lessonId })) {
+      logger.info("Invalid IDs", { userId, courseId, lessonId });
       return failResponse(
         { message: "Invalid IDs" },
         400,
@@ -150,11 +103,165 @@ export async function POST(
         true
       );
     }
-    await progressQueue.add("generate-progress", { userId, courseId });
-    logger.info("Progress of the Lesson created in worker");
+
+    await connectDB(process.env.MONGODB_URI!);
+    const lesson = await Lesson.findOne({
+      _id: lessonId,
+      courseId,
+      isDeleted: { $ne: true },
+    })
+      .select("_id sectionId")
+      .lean()
+      .exec();
+    if (!lesson) {
+      return failResponse(
+        { message: "Lesson not found in this course" },
+        404,
+        undefined,
+        undefined,
+        true
+      );
+    }
+
+    const now = new Date();
+    const lessonProgressUpdate =
+      progressValue >= 100
+        ? {
+            $set: {
+              sectionId: lesson.sectionId,
+              lastPositionSeconds,
+              status: LessonProgressStatus.Completed,
+            },
+            $max: { progressPercentage: progressValue },
+            $min: { completedAt: now },
+          }
+        : {
+            $set: {
+              sectionId: lesson.sectionId,
+              lastPositionSeconds,
+            },
+            $max: { progressPercentage: progressValue },
+            $setOnInsert: { status: LessonProgressStatus.InProgress },
+          };
+
+    await LessonProgress.findOneAndUpdate(
+      { userId, courseId, lessonId },
+      lessonProgressUpdate,
+      { upsert: true, new: true, runValidators: true }
+    ).exec();
+
+    const courseLessons = await Lesson.find({
+      courseId,
+      isDeleted: { $ne: true },
+    })
+      .select("_id")
+      .lean()
+      .exec();
+    const courseLessonIds = courseLessons.map(({ _id }) => _id);
+    const lessonProgressRows = await LessonProgress.find({
+      userId,
+      courseId,
+      lessonId: { $in: courseLessonIds },
+    })
+      .select("lessonId status progressPercentage")
+      .lean()
+      .exec();
+    const progressByLessonId = new Map<
+      string,
+      (typeof lessonProgressRows)[number]
+    >();
+    for (const row of lessonProgressRows) {
+      progressByLessonId.set(row.lessonId.toString(), row);
+    }
+
+    let totalLessonProgress = 0;
+    let completedLessonsCount = 0;
+    for (const courseLesson of courseLessons) {
+      const lessonProgress = progressByLessonId.get(
+        courseLesson._id.toString()
+      );
+      if (lessonProgress?.status === LessonProgressStatus.Completed) {
+        completedLessonsCount += 1;
+        totalLessonProgress += 100;
+      } else {
+        totalLessonProgress += lessonProgress?.progressPercentage ?? 0;
+      }
+    }
+
+    const isCourseCompleted =
+      courseLessons.length > 0 &&
+      completedLessonsCount === courseLessons.length;
+    const courseProgress = isCourseCompleted
+      ? 100
+      : courseLessons.length > 0
+        ? Math.min(
+            99,
+            Math.floor(totalLessonProgress / courseLessons.length)
+          )
+        : 0;
+    const existingUserCourse = await UserCourse.findOne({
+      userId,
+      courseId,
+    })
+      .select("completedAt")
+      .lean()
+      .exec();
+    const completedAt = isCourseCompleted
+      ? existingUserCourse?.completedAt ?? now
+      : null;
+
+    await Promise.all([
+      Progress.findOneAndUpdate(
+        { userId, courseId },
+        {
+          $set: {
+            completedLessonsCount,
+            percentageCompleted: courseProgress,
+            lastAccessedAt: now,
+          },
+        },
+        { upsert: true, new: true }
+      ).lean().exec(),
+      UserCourse.findOneAndUpdate(
+        { userId, courseId },
+        {
+          $set: {
+            progress: courseProgress,
+            isCompleted: isCourseCompleted,
+            completedAt,
+          },
+        },
+        { upsert: true, new: true }
+      ).lean().exec(),
+    ]);
+
+    await Promise.all([
+      invalidateCached(
+        PROGRESS_BY_USER_COURSE.namespace,
+        `${userId}:${courseId}`
+      ),
+      invalidateCached(
+        USER_COURSE_DETAIL.namespace,
+        `${userId}-${courseId}`
+      ),
+      invalidateCached(USER_COURSE_LIST.namespace, userId),
+    ]);
+    logger.info("Progress saved successfully", {
+      userId,
+      courseId,
+      lessonId,
+      courseProgress,
+      isCourseCompleted,
+    });
     return successResponse(
-      { message: "Progress updated" },
-      202,
+      {
+        message: "Progress updated",
+        courseProgress,
+        completedLessonsCount,
+        totalLessons: courseLessons.length,
+        isCourseCompleted,
+      },
+      200,
       undefined,
       undefined,
       true
@@ -253,20 +360,20 @@ export async function PUT(
       );
     }
     //Integrate worker queue of other repo here
-    await progressQueue.add("update-progress", {
-      userId,
-      courseId,
-      lessonId,
-      progressValue,
-    });
-    logger.info("Progress of the Lesson updated in worker");
-    return successResponse(
-      { message: "Progress updated" },
-      202,
-      undefined,
-      undefined,
-      true
-    );
+    // await progressQueue.add("update-progress", {
+    //   userId,
+    //   courseId,
+    //   lessonId,
+    //   progressValue,
+    // });
+    // logger.info("Progress of the Lesson updated in worker");
+    // return successResponse(
+    //   { message: "Progress updated" },
+    //   202,
+    //   undefined,
+    //   undefined,
+    //   true
+    // );
   } catch (error: unknown) {
     logger.error("Error updating progress:", { error });
     const message = error instanceof Error ? error.message : "Unknown error";
