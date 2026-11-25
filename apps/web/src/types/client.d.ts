@@ -46,14 +46,14 @@ export interface CPayment {
   paymentId?: string;
   paymentAt?: Date;
   paymentBy?:
-    | {
-        _id: string;
-        name: string;
-        email: string;
-        role: string;
-        phoneNumber?: string;
-      }
-    | string;
+  | {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    phoneNumber?: string;
+  }
+  | string;
   paymentOf: string;
   paymentOnModel: "Course" | "Chat";
   paymentStatus: "Pending" | "Completed" | "Failed";
@@ -624,17 +624,17 @@ export interface CLesson {
   courseId?: string;
   name: string;
   videoUrl: string;
-  sectionId?: string;
+  mp3Url: string;
+  sectionId: Types.ObjectId;
   description: string;
   durationInSeconds: number;
   isPreview: boolean;
-  previewUrl?: string;
-  previewDurationInSeconds?: number;
+  previewUrl: string;
   order: number;
   createdAt?: string;
   updatedAt?: string;
   order: number;
-  status?: "completed" | "incomplete";
+  isDeleted: boolean;
 }
 export type CCreateCourseSectionForm = Omit<CSection, "lessons"> & {
   lessons: (Omit<CLesson, "sectionId"> & {

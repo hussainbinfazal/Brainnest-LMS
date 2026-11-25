@@ -10,60 +10,32 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CCourse, CLesson } from "@/types/client";
-import { logger } from "@repo/shared/server";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { cn } from "@/lib/utils";
 
 // Render a YouTube video player
 export const LeesonIdPageComp = ({
+  renderedCourse,
+  renderedLessons,
+  lesson,
   className,
 }: {
+  renderedCourse: CCourse;
+  renderedLessons: CLesson[];
+  lesson: CLesson;
   className?: string;
 }): React.JSX.Element => {
   const router = useRouter();
-  const courses = useCourseStore((state) => state.courses);
+  // const course = renderedCourse ?? useCourseStore((state) => state.courses);
+  const [lessons, setLessons] = useState<CLesson[]>(renderedLessons)
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [video, setVideo] = useState<string | null>(null);
-  const [course, setCourse] = useState<CCourse | null>(null);
-  const [currentLesson, setCurrentLesson] = useState<CLesson | null>(null);
+  const [video, setVideo] = useState<string | null>(lesson.videoUrl);
+  const [course, setCourse] = useState<CCourse>(renderedCourse);
+  const [currentLesson, setCurrentLesson] = useState<CLesson | null>(lesson);
   const [progress, setProgress] = useState<number>(0);
   const [watchTime, setWatchTime] = useState<number>(0);
   const { courseId, lessonId } = useParams();
   const playerRef = useRef<HTMLDivElement | null>(null);
-  const fetchCourseFromDB = useCallback(
-    async (courseId: string, lessonId?: string) => {
-      try {
-        const response = await axios.get(`/api/course/${courseId}`);
-        const data = await response.data.course;
-
-        if (!data) {
-          return;
-        }
-        setCourse(data);
-        const lesson = data.lessons.find(
-          (lesson: any) => lesson._id === lessonId
-        );
-        if (lesson) {
-          setVideo(lesson.video);
-          setCurrentLesson(lesson);
-        } else {
-          console.warn("Lesson not found!");
-        }
-        console.log(
-          "This is the course that was fetched from the database",
-          data
-        );
-        clientLogger.info(
-          "This is the course that was fetched from the database",
-          data
-        );
-        setIsLoading(false);
-      } catch (error: unknown) {
-        throw new Error(error as string);
-      }
-    },
-    [courseId, lessonId]
-  );
   const handleCompleteLesson = async (lessonId: string): Promise<void> => {
     try {
       await axios.post(`/api/progress/complete/${courseId}/${lessonId}`);
@@ -108,19 +80,7 @@ export const LeesonIdPageComp = ({
     }
   };
 
-  // logger.info({ progressPercent }, `Progress`);
-  useEffect(() => {
-    if (courseId && typeof courseId === "string") {
-      const timer = setTimeout(() => {
-        fetchCourseFromDB(courseId, lessonId as string);
-      }, 300); // Small delay to prevent immediate load
-      return () => clearTimeout(timer);
-    }
-  }, [fetchCourseFromDB, courseId, lessonId]);
-
-  useEffect(() => {
-    console.log("Course in the course State", course);
-  }, [course]);
+  // logger.info({ progressPercent }, `Progress`)
 
   // logger.info({ course }, "Course in the course State");
   console.log("video :", video);
@@ -158,8 +118,8 @@ export const LeesonIdPageComp = ({
           {video ? (
             <VideoPlayer
               src={video}
-              title={currentLesson?.name}
-              poster={course?.coverImage}
+              title={lesson.name}
+              poster={course.coverImage}
               onProgress={handleProgress}
               onTimeUpdate={handleTimeUpdate}
               onComplete={() => handleCompleteLesson(lessonId as string)}

@@ -6,13 +6,13 @@ import "video.js/dist/video-js.css";
 import "./VideoPlayerStyles.css";
 import type Player from "video.js/dist/types/player";
 import {
-  Chapter,
-  QualityOption,
-  Subtitle,
-  VideoPlayerProps,
-  Watermark,
+  CChapter,
+  CQualityOption,
+  CSubtitle,
+  CVideoPlayerProps,
+  CWatermark,
 } from "@/types/client";
-import { logger } from "@repo/shared";
+
 const VideoButton = videojs.getComponent("Button");
 type VideoButtonType = any;
 

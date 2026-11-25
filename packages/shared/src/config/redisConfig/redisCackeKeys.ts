@@ -142,6 +142,13 @@ export const LESSONS_BY_COURSE = {
   description: 'All lessons within a specific course',
   usedIn: ['Course Detail Page', 'Lesson List'],
 };
+export const LESSONS_BY_LESSONID = {
+  namespace: 'lessons:course:',
+  id: 'lessonId',
+  ttl: 'MEDIUM',
+  description: 'All lessons within a specific course',
+  usedIn: ['Course Detail Page', 'Lesson List'],
+};
 
 /**
  * namespace: "sections:course"

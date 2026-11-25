@@ -5,6 +5,7 @@ import {
   ILesson,
   Lesson,
   LESSONS_BY_COURSE,
+  LESSONS_BY_LESSONID,
   logger,
 } from "@repo/shared/server";
 import {
@@ -48,6 +49,49 @@ export async function getLessonsByIdWithCache(
       CACHE_TTL.MEDIUM
     );
     return serialized;
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching Lessons", { message, error });
+    return [];
+  }
+}
+export async function getLessonByIdWithCache(
+  courseId: string,
+  lessonId: string
+): Promise<CLesson> {
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+
+    const cached = await getCached<CLesson | string>(
+      LESSONS_BY_LESSONID.namespace,
+      lessonId
+    );
+    if (Array.isArray(cached)) return cached;
+    if (typeof cached === "string") {
+      try {
+        const parsed: unknown = JSON.parse(cached);
+        if (parsed) return parsed;
+        logger.warn("Ignoring invalid cached lessons", { courseId });
+      } catch (error: unknown) {
+        logger.warn(
+          "Unable to parse cached lessons; refreshing from database",
+          {
+            courseId,
+            error,
+          }
+        );
+      }
+    }
+
+    const lesson: ILesson[] = await Lesson.find({ courseId }).lean().exec();;
+    await setCached(
+      LESSONS_BY_LESSONID.namespace,
+      lessonId,
+      lesson,
+      CACHE_TTL.MEDIUM
+    );
+    return lesson;
   } catch (error: unknown) {
     const message =
       error instanceof Error ? error.message : "Something went wrong";
