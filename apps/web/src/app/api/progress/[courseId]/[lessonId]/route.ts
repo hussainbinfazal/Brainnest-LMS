@@ -229,7 +229,7 @@ export async function POST(
       return successResponse({ message: "Progress saved" }, 200, undefined, undefined, true)
     };
     const summary = await recomputeCourseProgress(userId, courseId)
-    logger.info("Lesson comleted", { userId, courseId, lessonId, ...summary });
+    logger.info("Lesson completed", { userId, courseId, lessonId, ...summary });
     return successResponse({ message: "Progress updated", ...summary }, 200, undefined, undefined, true)
     // const courseLessons = await Lesson.find({
     //   courseId,

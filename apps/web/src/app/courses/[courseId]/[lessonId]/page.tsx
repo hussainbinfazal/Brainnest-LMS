@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { logger, validateMongooseId } from "@repo/shared/server";
 import { getCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
 import { getLessonsByIdWithCache } from "@/lib/non-Admin-Cached/getCachedLessons";
+import { getUserProgressByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUserProgress";
 
 // Render a YouTube video player
 export async function LessonPage({
@@ -23,9 +24,12 @@ export async function LessonPage({
     logger.warn("Invalid course id")
     return redirect('/')
   }
-  const [course, lessons] = await Promise.all([
+  const [course, lessons, userProgress] = await Promise.all([
     getCourseByIdWithCache(courseId),
-    getLessonsByIdWithCache(courseId)
+    getLessonsByIdWithCache(courseId),
+    session.user.id
+      ? getUserProgressByIdWithCache(session.user.id, courseId)
+      : Promise.resolve(null),
   ]);
 
   if (!course || !lessons) {
@@ -37,7 +41,21 @@ export async function LessonPage({
     logger.warn("Lesson not found", { courseId, lessonId });
     return redirect("/");
   }
-  return <LeesonIdPageComp renderedCourse={course} renderedLessons={lessons} lesson={lesson} />;
+  const lessonProgress =
+    userProgress?.lessons.find((progress) => progress.lessonId === lessonId) ??
+    null;
+  return (
+    <LeesonIdPageComp
+      //This is current course.
+      renderedCourse={course}
+      //This is all lessons in this particular course.
+      renderedLessons={lessons}
+      ///this is the current that user is watching right now.
+      lesson={lesson}
+      //This is the progress of the current lesson here at this.
+      lessonProgress={lessonProgress}
+    />
+  );
 };
 
 export default LessonPage;

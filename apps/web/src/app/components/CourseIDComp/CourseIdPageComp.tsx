@@ -1077,7 +1077,7 @@ export default function CourseIdPageComp({
                 );
                 return (
                   <div
-                    key={section?.title}
+                    key={section?._id ?? section.title}
                     className="w-full flex flex-col justify-between items-center relative"
                   >
                     <div
@@ -1134,6 +1134,10 @@ export default function CourseIdPageComp({
                         (lesson: CLesson) => {
                           return (
                             <div
+                              key={
+                                lesson._id ??
+                                `${section._id ?? section.title}-${lesson.order}`
+                              }
                               className={`w-full min-h-25 border-2 border-t-none flex justify-between px-4 ${section._id === viewSectionId
                                 ? "rounded-b-none"
                                 : "rounded"

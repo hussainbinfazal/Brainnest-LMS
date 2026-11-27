@@ -27,17 +27,17 @@ export const LeesonIdPageComp = ({
   renderedCourse: CCourse;
   renderedLessons: CLesson[];
   lesson: CLesson;
-  lessonProgress: CLessonProgress;
+  lessonProgress?: CLessonProgress | null;
   className?: string;
 }): React.JSX.Element => {
   const router = useRouter();
   // const course = renderedCourse ?? useCourseStore((state) => state.courses);
   const { data: session, status } = useSession()
   const { courseId, lessonId } = useParams<{ courseId: string, lessonId: string }>()
-  const [progressSeconds, setProgressSeconds] = useState<number>(lessonProgress.lastPositionSeconds);
-  const [progressPercent, setProgressPercent] = useState<number>(lessonProgress.progressPercentage)
+  const [progressSeconds, setProgressSeconds] = useState<number>(lessonProgress?.lastPositionSeconds ?? 0);
+  const [progressPercent, setProgressPercent] = useState<number>(lessonProgress?.progressPercentage ?? 0)
   const [lessons, setLessons] = useState<CLesson[]>(renderedLessons)
-  const [userLessonProgress, setLessonProgress] = useState<CLessonProgress | null>(lessonProgress)
+  const [userLessonProgress, setLessonProgress] = useState<CLessonProgress | null>(lessonProgress ?? null)
   const lastSavedAtRef = useRef<number>(lessonProgress?.lastPositionSeconds ?? 0);
   const [watchTime, setWatchTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -112,7 +112,8 @@ export const LeesonIdPageComp = ({
   console.log("video :", video);
 
 
-  if (status !== "unauthenticated") {
+  const isCompleted = progressPercent >= 100;
+  if (status === "unauthenticated") {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-900">
         <div className="text-white text-xl">Loading lesson...</div>
@@ -120,7 +121,6 @@ export const LeesonIdPageComp = ({
     );
   }
   // Derived values, not state
-  const isCompleted = progressPercent >= 100;
   if (isLoading) {
     // logger.info({ video }, "video");
     <div className="h-screen flex items-center justify-center bg-gray-900">
@@ -156,6 +156,7 @@ export const LeesonIdPageComp = ({
               src={video}
               title={lesson.name}
               poster={course.coverImage}
+              startTime={progressSeconds}
               // onProgress={handleProgress}
               onPause={saveProgress}
               onTimeUpdate={handleTimeUpdate}
@@ -210,7 +211,7 @@ export const LeesonIdPageComp = ({
           <div className="bg-gray-800 p-4 rounded-lg">
             <h3 className="text-white font-semibold mb-2">Lesson Status</h3>
             <p className="text-lg font-semibold text-yellow-400">
-              {(progressPercent || 0) >= 100 ? "✅ Completed" : "📚 In Progress"}
+              {(isCompleted) ? "✅ Completed" : "📚 In Progress"}
             </p>
             <p className="text-gray-400 text-sm">
               {(progressPercent || 0) >= 90 ? "Well done!" : "Keep watching"}
