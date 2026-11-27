@@ -172,8 +172,10 @@ export interface CVideoPlayerProps extends React.HTMLAttributes<HTMLVideoElement
   src: string;
   poster?: string;
   title?: string;
+  startTime?: number;
   onProgress?: (percent: number) => void;
   onComplete?: () => void;
+  onPause: ?(currentTime: number, duration: number) => void;
   onTimeUpdate?: (current: number, duration: number) => void;
   playbackRates?: number[];
   autoplay?: boolean;

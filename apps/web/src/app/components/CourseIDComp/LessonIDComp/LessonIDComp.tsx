@@ -97,7 +97,7 @@ export const LeesonIdPageComp = ({
     setWatchTime(validCurrentTime);
     // Calculate progress percentage
     if (validDuration > 0) {
-      const progressPercent = Math.floor((validCurrentTime / validDuration) * 100;)
+      const progressPercent = Math.floor((validCurrentTime / validDuration) * 100)
       setProgressPercent((prev) => Math.max(prev, progressPercent));
     }
     // Auto-save progress every 10 seconds
@@ -156,10 +156,11 @@ export const LeesonIdPageComp = ({
               src={video}
               title={lesson.name}
               poster={course.coverImage}
-              onProgress={handleProgress}
+              // onProgress={handleProgress}
               onPause={saveProgress}
               onTimeUpdate={handleTimeUpdate}
-              onComplete={(duration: number) => void saveProgress(currentTime, duration)}
+              onComplete={(duration) => void saveProgress(duration, duration)}
+
               playbackRates={[0.5, 0.75, 1, 1.25, 1.5, 2]}
               analytics={true}
               watermark={{

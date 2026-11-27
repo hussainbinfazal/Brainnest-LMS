@@ -159,7 +159,7 @@ export async function POST(
         undefined,
         true
       );
-    }
+    };
     const userId: string = user.id;
     if (!validateMongooseId({ userId, courseId, lessonId })) {
       logger.info("Invalid IDs", { userId, courseId, lessonId });
