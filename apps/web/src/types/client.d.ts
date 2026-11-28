@@ -315,7 +315,7 @@ export interface sectionProgress {
 }
 export interface CProgress {
   _id: string;
-  user: string;
+  userId: string;
   courseId: string;
   sectionProgress: sectionProgress[];
   completedLessonsCount: number;

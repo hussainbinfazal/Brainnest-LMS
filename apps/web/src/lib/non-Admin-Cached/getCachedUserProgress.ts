@@ -1,6 +1,6 @@
 import { CLessonProgress, CProgress } from "@/types/client";
 import { serializeLessonsProgress } from "@/utils/serializer/lessonProgress.Serializer";
-import { serializeProgress } from "@/utils/serializer/progress.Serializer";
+import { serializeProgress, serializeProgresses } from "@/utils/serializer/progress.Serializer";
 import { serializeUserCourse } from "@/utils/serializer/userCourse.Serializer";
 import {
   connectDB,
@@ -10,6 +10,7 @@ import {
   logger,
   Progress,
   PROGRESS_BY_LESSON,
+  PROGRESS_BY_USER,
   PROGRESS_BY_USER_COURSE,
   userCourse,
   validateMongooseId,
@@ -24,6 +25,9 @@ import lessonProgress from "@repo/shared/models/Course/lessonProgressModel";
 type UserProgressResult = {
   currentProgress: CProgress;
   lessons: CLessonProgress[];
+};
+type UserAllProgressResult = {
+  allCurrentProgress: CProgress[];
 };
 export async function getUserProgressByIdWithCache(
   userId: string,
@@ -92,6 +96,60 @@ export async function getUserProgressByIdWithCache(
     return {
       currentProgress: progressSerialized,
       lessons: lessonWithStatusSerialized,
+    };
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong";
+    logger.error("Error fetching User Progress", { message, error });
+    return null;
+  }
+}
+export async function getUserProgressByUserIdWithCache(
+  userId: string,
+): Promise<UserAllProgressResult | null> {
+  await connectDB(process.env.MONGODB_URI!);
+  try {
+    if (!validateMongooseId({ courseId: userId })) {
+      logger.warn("Invalid user id", { userId });
+      throw new Error("Invalid user Id");
+    }
+
+
+    const allCachedProgress = await getCached<CProgress[]>(
+      PROGRESS_BY_USER.namespace,
+      `${userId}`
+    )
+
+    if (allCachedProgress) {
+      logger.info("User Progresses fetched from cache");
+      return {
+        allCurrentProgress: allCachedProgress,
+      };
+    }
+
+
+    const authUserProgress = await Progress.find({ userId }).lean<IProgress[]>().exec();
+    if (!authUserProgress) {
+      logger.info("User Progress not found");
+      return null;
+    }
+    const progressSerialized = serializeProgresses(authUserProgress);
+    await Promise.all([
+      setCached<CProgress[]>(
+        PROGRESS_BY_USER.namespace,
+        `${userId}`,
+        progressSerialized,
+        CACHE_TTL.MEDIUM
+      ),
+    ]);
+    // console.log("USER PROGRESS DEBUG:", {
+    //     userId,
+    //     courseId,
+    //     userProgressId: authUserProgress?._id,
+    // });
+    logger.info("User Progress fetched successfully");
+    return {
+      allCurrentProgress: progressSerialized,
     };
   } catch (error: unknown) {
     const message =

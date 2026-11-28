@@ -57,6 +57,13 @@ export const USER_BY_ID = {
   description: 'Single user details ',
   usedIn: ['Certificate Worker Job ', 'User API'],
 };
+export const PROGRESS_BY_USER = {
+  namespace: 'user',
+  id: 'userId',
+  ttl: 'MEDIUM',
+  description: 'Single user details ',
+  usedIn: ['My Courses component ', 'User API'],
+};
 
 export const LIKED_COURSES_BY_USER = {
   namespace: 'liked-courses',
