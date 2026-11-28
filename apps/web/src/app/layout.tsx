@@ -50,7 +50,7 @@ export default function RootLayout({
             {" "}
             <SidebarProvider className="" style={{}}>
               <div className="w-full">
-                <div className="block md:hidden">
+                <div className="block lg:hidden">
                   <AppSidebar />
                 </div>
 

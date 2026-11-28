@@ -338,6 +338,7 @@ function SidebarTrigger({ className, onClick, ...props }: SidebarTriggerProps) {
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
+        console.log("Toggle sidebar button clicked")
       }}
       {...props}
     >

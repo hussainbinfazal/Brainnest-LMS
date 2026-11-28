@@ -45,7 +45,10 @@ async function recomputeCourseProgress(userId: string, courseId: string,) {
     .exec();
   const savedUser = await getUserByIdWithCache(userId)
   const course = await getCourseByIdWithCache(courseId);
-  if (!course && !savedUser) return
+  if (!course && !savedUser) {
+    throw new Error("course not found")
+    return
+  }
   const courseLessonIds = courseLessons.map(({ _id }) => _id);
   const rows = await LessonProgress.find({ userId, courseId, lessonId: { $in: courseLessonIds } })
     .select('lessonId status progressPercentage')
