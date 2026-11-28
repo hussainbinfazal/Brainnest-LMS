@@ -43,12 +43,13 @@ import {
   toMp3Url,
   uploadFolder,
   uploadTargetPublicId,
+  MovedAsset,
 } from "@repo/shared";
 import { createCourseSchema } from "@/utils/fieldsValidation/Client/courseSchemaValidation";
 import {
   AssetError,
   moveAssets,
-  MovedAsset,
+  // MovedAsset,
   PendingAsset,
   rollbackMoves,
   verifyAssets,

@@ -14,6 +14,7 @@ import {
 } from "@repo/shared/server";
 import { IUser } from "@repo/shared/server";
 import { generateUniqueUsername } from "./utils/generateRandomUsername";
+import { getUserByIdWithCache } from "./lib/non-Admin-Cached/getCachedUser";
 
 type AuthUser = NextAuthUser;
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -51,6 +52,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: user.name,
           email: user.email,
           role: user.role,
+          username: user.username,
           phoneNumber: user.phoneNumber,
           profileImage: user.profileImage,
         };
@@ -98,6 +100,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.profileImage = existingUser.profileImage;
           user.name = existingUser.name;
           user.email = existingUser.email;
+          user.username = existingUser.username;
 
           return true;
         } catch (error: unknown) {
@@ -121,6 +124,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }): Promise<JWT> {
       if (user) {
         token.id = user.id;
+        token.username = user.username;
         token.name = user.name;
         token.email = user.email;
         token.phoneNumber = user.phoneNumber;
@@ -129,15 +133,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       if (trigger === "update" && token.id) {
         await connectDB(process.env.MONGODB_URI!);
-        const updatedUser = await User.findById(token.id)
+        let updatedUser = await getUserByIdWithCache(token.id) ?? await User.findById(token.id)
           .select("name email role phoneNumber profileImage")
           .lean();
         if (updatedUser) {
+
           token.name = updatedUser.name;
           token.email = updatedUser.email;
           token.role = updatedUser.role;
           token.phoneNumber = updatedUser.phoneNumber;
           token.profileImage = updatedUser.profileImage as string;
+          //Username is permanment you cannot change the username of the user, it is only created once up untill now in the current system
         }
       }
       return token;
@@ -150,6 +156,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.role = token.role as string;
       session.user.profileImage = token.profileImage as string;
       session.user.cartId = token.cartId as string;
+      session.user.username = token.username as string;
 
       return session;
     },

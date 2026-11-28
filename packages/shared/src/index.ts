@@ -3,13 +3,15 @@ export * from './helper/getErrorMessage';
 export const MAX_FILE_SIZE: Record<UploadPurpose, number> = {
   avatar: 2 * 1024 * 1024,
   thumbnail: 5 * 1024 * 1024,
+  certificate: 5 * 1024 * 1024,
   'lecture-video': 1000 * 1024 * 1024,
   'preview-video': 1000 * 1024 * 1024,
   'lecture_preview-video': 1000 * 1024 * 1024,
 };
 export const PENDING_AVATAR_SUBFOLDER = 'pending-avatars';
 export const PENDING_PREVIEW_VIDEO_SUBFOLDER = 'pending-preview-video';
-export const PENDING_THUMBNAIL_SUBFOLDER = 'pending-thumbnai';
+export const PENDING_THUMBNAIL_SUBFOLDER = 'pending-thumbnail';
+export const PENDING_CERTIFICATE_SUBFOLDER = 'pending-certificate';
 export const PENDING_LECTURES_SUBFOLDER = 'pending-lesson-lectures';
 export const PENDING_PREVIEW_LECTURES_SUBFOLDER =
   'pending-preview-lesson-lectures';
@@ -17,6 +19,7 @@ export const PENDING_PREVIEW_LECTURES_SUBFOLDER =
 export const TOPIC_FOLDER: Record<UploadPurpose, string> = {
   avatar: 'avatar',
   thumbnail: 'course_cover_image',
+  'certificate': 'course_certificate',
   'lecture-video': 'course_preview-video',
   'preview-video': 'course_preview-video',
   'lecture_preview-video': 'course_preview_lesson-video',
@@ -24,6 +27,7 @@ export const TOPIC_FOLDER: Record<UploadPurpose, string> = {
 export const TOPIC_TAGS: Record<UploadPurpose, string> = {
   avatar: 'pending_avatar',
   thumbnail: 'pending_thumbnail',
+  certificate: 'pending_certificate',
   'lecture-video': 'pending_lessons_lectures ',
   'preview-video': 'pending_preview_video',
   'lecture_preview-video': `course_preview_lesson-video`,
@@ -36,6 +40,7 @@ export const RESOURCE_TYPE: Record<UploadPurpose, 'image' | 'video' | 'auto'> =
 {
   avatar: 'image',
   thumbnail: 'image',
+  certificate: 'image',
   'lecture-video': 'video',
   'preview-video': 'video',
   'lecture_preview-video': 'video',
@@ -138,6 +143,21 @@ export const UPLOAD_POLICIES = {
     tags: TOPIC_TAGS['thumbnail'],
     transformation: 'c_limit,w_1024,h_576',
   },
+  // Course Certificate
+  certificate: {
+    // Image defaults
+    ...IMAGE,
+    requiresAuth: false,
+    // Thumbnail size limit
+    maxSize: 5 * MB,
+    // Top-level folder
+    folder: TOPIC_FOLDER['certificate'],
+    // Fixed the "thumbnai" typo
+    subFolder: PENDING_CERTIFICATE_SUBFOLDER,
+    // Tag for cleanup
+    tags: TOPIC_TAGS['certificate'],
+    transformation: 'c_limit,w_1024,h_576',
+  },
   // Course preview video
   'preview-video': {
     // Video defaults, including size
@@ -186,6 +206,7 @@ export const UPLOAD_POLICIES = {
 export type UploadPurpose =
   | 'avatar'
   | 'thumbnail'
+  | 'certificate'
   | 'lecture-video'
   | 'preview-video'
   | 'lecture_preview-video';

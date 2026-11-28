@@ -1,4 +1,16 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
+
+export type Serialized<T> =
+  // ObjectId becomes string (check this FIRST, because ObjectId also extends object)
+  T extends Types.ObjectId ? string
+  // Date becomes ISO string after JSON round-trip
+  : T extends Date ? string
+  // Arrays: serialize each element type
+  : T extends Array<infer U> ? Serialized<U>[]
+  // Plain objects: serialize every property
+  : T extends object ? { [K in keyof T]: Serialized<T[K]> }
+  // Primitives pass through unchanged
+  : T;
 
 // Your serializeDocument walks the object tree and converts those into plain strings
 export function serializeDocument<T>(value: T): T {

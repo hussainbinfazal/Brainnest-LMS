@@ -31,6 +31,7 @@ export async function authenticateUser(
       email: user.email,
       phoneNumber: user.phoneNumber,
       role: user.role,
+      username:user.username,
       profileImage: user.profileImage,
     };
   } catch (error: unknown) {

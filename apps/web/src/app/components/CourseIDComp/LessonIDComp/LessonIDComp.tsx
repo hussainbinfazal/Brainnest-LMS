@@ -3,7 +3,6 @@
 import React, { useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { useCourseStore } from "@/lib/store/usersStore/useCourseStore";
 import axios from "axios";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { CCourse, CLesson, CLessonProgress } from "@/types/client";
 import { clientLogger } from "@/utils/clientLogger/clientLogger";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { Router } from "lucide-react";
 
 const SAVE_EVERY_SECONDS: number = 10
 // Render a YouTube video player

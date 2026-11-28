@@ -4,6 +4,9 @@ export const workerApiLinks = {
     resetPassword: "reset-password",
     sendResetEmail: "send-reset-email",
   },
+  certificate: {
+    generateCertificate: 'certificate/generate'
+  },
   email: {
     sendOtp: "/email-otp",
   },

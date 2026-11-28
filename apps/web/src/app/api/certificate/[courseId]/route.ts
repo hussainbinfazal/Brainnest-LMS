@@ -2,7 +2,6 @@ import {
   failResponse,
   successResponse,
 } from "@/lib/helpers/failResponseHelper";
-
 import { NextRequest, NextResponse } from "next/server";
 import { Course, User, connectDB } from "@repo/shared/server";
 import { CustomNextRequest, ISessionUser } from "../../../../types/server";
@@ -20,6 +19,7 @@ import {
 } from "@repo/shared/server";
 import { auth } from "@/auth";
 import { Session } from "next-auth";
+import UserCourse from "@repo/shared/models/User/userCourse";
 
 export async function GET(
   request: CustomNextRequest,
@@ -52,7 +52,7 @@ export async function GET(
       );
     const user: ISessionUser | null = authSession?.user;
     const params = await context.params;
-    const courseId = Array.isArray(params.courseId)
+    const courseId: string = Array.isArray(params.courseId)
       ? params.courseId[0]
       : params.courseId;
     if (!user || !user.id) {
@@ -75,27 +75,18 @@ export async function GET(
         true
       );
 
-    const [courseDB, userDB] = await Promise.all([
+    const [userCourse, courseDB, userDB] = await Promise.all([
+      UserCourse.find({ userId: userId, courseId: courseId, isEnrolled: { $ne: { isEnrolled: false } } }).lean().exec(),
       Course.findById(courseId)
         .select("instructorId title")
         .populate("instructorId", "name")
         .lean(),
-      User.findById(userId).select("name").lean(),
+      User.findById(userId).select("name").lean().exec(),
     ]);
-
-    if (!courseDB || !userDB) {
-      logger.warn("User or Course not found in certificate route", {
-        user: userDB ? userDB : null,
-        course: courseDB ? courseDB : null,
-      });
-      return failResponse(
-        { message: "User or Course not found" },
-        404,
-        undefined,
-        undefined,
-        true
-      );
-    }
+    if (!userCourse.isEnrolled || !courseDB || !userDB) {
+      logger.warn("Invalid attempt to create certificate")
+      return failResponse({ message: "Please enroll in this course" }, 401, undefined, undefined, true)
+    };
 
     // Optional: check if user completed course
     const userProgress: IProgress | null = await Progress.findOne({
@@ -103,8 +94,7 @@ export async function GET(
       courseId: courseId,
     });
     const isCompleted: boolean | undefined =
-      userProgress?.percentageCompleted === 100 ? true : false;
-
+      userCourse.isCompleted ? userProgress?.percentageCompleted === 100 ? true : false : false;
     if (!isCompleted) {
       return failResponse(
         {

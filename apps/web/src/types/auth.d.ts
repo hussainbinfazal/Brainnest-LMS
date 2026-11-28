@@ -12,4 +12,5 @@ export interface AuthenticatedUser {
   phoneNumber?: string;
   role: UserRole;
   profileImage?: string;
+  username: string;
 }

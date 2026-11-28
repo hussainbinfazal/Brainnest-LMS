@@ -662,17 +662,7 @@ export default function CourseIdPageComp({
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
-  // useEffect(() => {
-  //   const script = document.createElement("script");
-  //   script.src = "https://checkout.razorpay.com/v1/checkout.js";
-  //   script.async = true;
-  //   document.body.appendChild(script);
-
-  //   return () => {
-  //     document.body.removeChild(script);
-  //   };
-  // }, []);
-
+  
   useEffect((): void => {
     // Make sure cart is fetched when component mounts
     if (user) {

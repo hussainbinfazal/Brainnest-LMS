@@ -42,6 +42,7 @@ import {
   buildKey,
   AUTH_USER,
   invalidateCached,
+  USER_BY_ID,
 } from "@repo/shared/server"; // Ensure the path is correct
 import bcrypt from "bcryptjs";
 import { CustomNextRequest } from "@/types/server";
@@ -201,6 +202,7 @@ export async function PUT(
     if (staleUrls.length) await deleteStaleAvatarAssets(staleUrls, savedUser._id).catch((e) => logger.warn(String(e)));
     // console.log("This is the updated User in the backend:",user)
     await invalidateCached(AUTH_USER.namespace, savedUser._id)
+    await invalidateCached(USER_BY_ID.namespace, savedUser._id)
     logger.info("User Updated Successfully");
     return successResponse(
       { message: "User updated successfully", savedUser },

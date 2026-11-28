@@ -50,6 +50,14 @@ export const INSTRUCTOR_COURSE_WITH_ID = {
   usedIn: ['Course Management API'],
 };
 
+export const USER_BY_ID = {
+  namespace: 'user',
+  id: 'userId',
+  ttl: 'MEDIUM',
+  description: 'Single user details ',
+  usedIn: ['Certificate Worker Job ', 'User API'],
+};
+
 export const LIKED_COURSES_BY_USER = {
   namespace: 'liked-courses',
   id: 'page:limit:skip:userId',

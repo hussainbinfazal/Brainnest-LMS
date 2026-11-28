@@ -15,6 +15,8 @@ import {
   connectDB,
   logger,
   userCourse as UserCourse,
+  passJobToWorker,
+  User,
 } from "@repo/shared/server";
 import { invalidateCached } from "@repo/shared/config/redisConfig/cache-helper";
 import { CustomNextRequest, ISessionUser } from "@/types/server";
@@ -25,19 +27,25 @@ import { auth } from "@/auth";
 import { parseBody } from "@/lib/helpers/bodyValidatoryHelper";
 import { z } from "zod";
 import { NextResponse } from "next/server";
+import { workerApiLinks } from "@/utils/workerApiLinks";
+import { getCourseByIdWithCache } from "@/lib/non-Admin-Cached/getCachedCourse";
+import { getUserByIdWithCache } from "@/lib/non-Admin-Cached/getCachedUser";
 
 const updateProgressBodySchema = z.object({
   progressValue: z.number().min(0).max(100),
   lastPositionSeconds: z.number().min(0),
 });
 
-async function recomputeCourseProgress(userId: string, courseId: string) {
+async function recomputeCourseProgress(userId: string, courseId: string,) {
   const now = new Date();
   //All non deleted lessons of the course
   const courseLessons = await Lesson.find({ courseId, isDeleted: { $ne: true } })
     .select('_id')
     .lean()
     .exec();
+  const savedUser = await getUserByIdWithCache(userId)
+  const course = await getCourseByIdWithCache(courseId);
+  if (!course && !savedUser) return
   const courseLessonIds = courseLessons.map(({ _id }) => _id);
   const rows = await LessonProgress.find({ userId, courseId, lessonId: { $in: courseLessonIds } })
     .select('lessonId status progressPercentage')
@@ -65,6 +73,19 @@ async function recomputeCourseProgress(userId: string, courseId: string) {
   }
 
   const isCourseCompleted = courseLessons.length > 0 && completedLessonsCount === courseLessons.length;
+  if (isCourseCompleted) {
+    await passJobToWorker(
+      workerApiLinks.certificate.generateCertificate,
+      {
+        userName: savedUser!.username,
+        courseId: courseId,
+        userId: userId,
+        instructorName: course!.instructorId!.name,
+        courseTitle: course!.title
+      }
+    );
+
+  }
   // Cap at 99 until truly complete, so rounding never shows 100 early
   const courseProgress = isCourseCompleted ? 100 : courseLessons.length > 0
     ? Math.min(99, Math.floor(total / courseLessons.length)) : 0
@@ -217,12 +238,13 @@ export async function POST(
           $max: { progressPercentage: progressValue },
           $setOnInsert: { status: LessonProgressStatus.InProgress },
         };
+    if (progressValue >= 100)
 
-    await LessonProgress.findOneAndUpdate(
-      { userId, courseId, lessonId },
-      lessonProgressUpdate,
-      { upsert: true, returnDocument: 'after', runValidators: true }
-    ).exec();
+      await LessonProgress.findOneAndUpdate(
+        { userId, courseId, lessonId },
+        lessonProgressUpdate,
+        { upsert: true, returnDocument: 'after', runValidators: true }
+      ).exec();
 
     ///Hearbeat Path
     if (progressValue < 100) {
